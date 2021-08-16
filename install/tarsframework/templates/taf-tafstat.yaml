@@ -1,0 +1,76 @@
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
+kind: TImage
+metadata:
+  name: tars-tarsstat
+  namespace: {{.Release.Namespace}}
+  labels:
+    tars.io/ServerApp: tars
+    tars.io/ServerName: tarsstat
+imageType: server
+releases:
+  - id: {{.Values.helm.build.id | quote }}
+    image:
+      {{.Values.helm.dockerhub.registry }}/tars.tarsstat:{{.Values.helm.build.id}}
+---
+
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
+kind: TServer
+metadata:
+  name: tars-tarsstat
+  namespace: {{.Release.Namespace}}
+  labels:
+    tars.io/ServerApp: tars
+    tars.io/ServerName: tarsstat
+    tars.io/SubType: tars
+    tars.io/Template: tars.default
+spec:
+  app: tars
+  server: tarsstat
+  subType: tars
+  tars:
+    template: tars.elk
+    profile: |
+      <tars>
+        <masteripGroup>
+          tars.tarsstat;1.1.1.1
+        </masteripGroup>
+        <elk>
+          indexPre = stat_{{.Release.Namespace}}
+        </elk>
+        <hashmap>
+          factor=1.5
+          file=hashmap.txt
+          insertInterval=5
+          maxBlock=200
+          minBlock=100
+          size=128M
+        </hashmap>
+      </tars>
+    servants:
+      - name: StatObj
+        port: 17000
+  k8s:
+    replicas: 1
+    env:
+      - name: Namespace
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.namespace
+      - name: PodName
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.name
+    mounts:
+      - name: host-log-dir
+        source:
+          hostPath:
+            path: /usr/local/app/tars/app_log
+            type: DirectoryOrCreate
+        mountPath: /usr/local/app/tars/app_log
+        subPathExpr: $(Namespace)/$(PodName)
+    readinessGate: tars.io/active
+  release:
+    source: tars-tarsstat
+    id: {{.Values.helm.build.id | quote }}
+    image:
+      {{.Values.helm.dockerhub.registry }}/tars.tarsstat:{{.Values.helm.build.id}}

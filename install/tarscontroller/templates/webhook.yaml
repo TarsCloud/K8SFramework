@@ -1,0 +1,95 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: tars-validating-webhook
+webhooks:
+  - name: validating.crd.tars.io-0
+    admissionReviewVersions: [ v1 ]
+    clientConfig:
+      caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURBakNDQWVxZ0F3SUJBZ0lKQUpkZTVJYys0OWYxTUEwR0NTcUdTSWIzRFFFQkN3VUFNQll4RkRBU0JnTlYKQkFNTUMzUmhabTl3WlhKaGRHOXlNQjRYRFRJd01UQXhOREF5TkRJeE5sb1hEVE13TVRBeE1qQXlOREl4TmxvdwpGakVVTUJJR0ExVUVBd3dMZEdGbWIzQmxjbUYwYjNJd2dnRWlNQTBHQ1NxR1NJYjNEUUVCQVFVQUE0SUJEd0F3CmdnRUtBb0lCQVFDK0J3U09VS3E1RHhuY09wUEN2a0lxaEhGcGQyRFl5ZHlmSDJyRzFoUURhNC9oYmNYN1YrMUkKSXBETXUzK0t2UG1iODI1OFllQlpQTFlpYjRIYzhTRDFNcS9KOFhwOGtFZkE2aE1GWTFMbnBKWU5hZnpPNlhHNwpYa3BNazB4OEFPampFUkJYODJMVHZoTnNRTmdCYmh1dFk1MFY1ZXFiSCswVFVuQlFCT2ZxUVpzbnZTVDdqQ1dBCmt5VTJ3K2IvZHBCSnFVdFNkN3hNaGRHMlpPSVVObHREQ0dKalI1bk83Q1NUaHZaRTBaMG4vMDJkdUw2UCt0dFoKVTBla3ZoZUQwODA5TFpodElCWGtDeUpFT294OHA1RUNPUkpseE5JbHJEMm5VYzFpN3RyZFFZU2p3VG5lem1nZQpCMWJ0dXFiRHFXcGxOUUQ1UWo5TUVDZ2pnZnFJd2U2ZkFnTUJBQUdqVXpCUk1CMEdBMVVkRGdRV0JCUlZjbGhxCm5naEJiZDdaRERIamVzY0pteVdJM0RBZkJnTlZIU01FR0RBV2dCUlZjbGhxbmdoQmJkN1pEREhqZXNjSm15V0kKM0RBUEJnTlZIUk1CQWY4RUJUQURBUUgvTUEwR0NTcUdTSWIzRFFFQkN3VUFBNElCQVFBenhsdlhpSmQvMWxzbQoxT2pqVGFhQ1Nra1g4UStyTlM0QStHMlFDSFI2UjNNaTQzanJ3OEFhM3c3dTE0ZFRqS3ptTWQ5OVVRVzJDUjJiCnAyajVwYWJ4amx1UWZNTXQyTEFpWFF3SkVDcFFLTFhiSkFzcWQxQk9sWE1RM2lhenNKem9SUEZ3ZVRVTzdKVWcKQlVFR29vMjVQejFYVDlWTFNpSFNBM0gzTWVtczlycWE2cUlqUTF3TFNNZEpNVnJGenZRRDNaaDdZNFQyMFVxWApsNzYxS3JxRXZNbVRnTGtWV0RjeU5ScGtoRE9uTnFXWEFIZzZiWDJISUpXSEVPdk5melRtcUlpaE1vOVhxZ0Q3CjMydUxBMzc1cjBFSEJ3dGo4MFVNQmU5cWl3bHd0WkZpRW5iOHJ2elRCTGNhTzQrWTFMU1pTUC8yTWVBbGMrVUMKN1RPRDBuM0YKLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQ==
+      service:
+        name: tars-webhook-service
+        path: /validating
+        namespace: tars-system
+    sideEffects: None
+    timeoutSeconds: 15
+    failurePolicy: Fail
+    rules:
+      - apiGroups: [ k8s.tars.io ]
+        apiVersions: [ "*" ]
+        operations: [ CREATE,UPDATE,DELETE ]
+        resources: [ tdeploys,tservers,ttemplates,ttrees,tconfigs,taccounts,timages ]
+        scope: Namespaced
+      - apiGroups: [ k8s.tars.io ]
+        apiVersions: [ "*" ]
+        operations: [ CREATE ]
+        resources: [ tendpoints ]
+        scope: Namespaced
+  - name: validating.crd.tars.io-1
+    admissionReviewVersions: [ v1 ]
+    clientConfig:
+      caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURBakNDQWVxZ0F3SUJBZ0lKQUpkZTVJYys0OWYxTUEwR0NTcUdTSWIzRFFFQkN3VUFNQll4RkRBU0JnTlYKQkFNTUMzUmhabTl3WlhKaGRHOXlNQjRYRFRJd01UQXhOREF5TkRJeE5sb1hEVE13TVRBeE1qQXlOREl4TmxvdwpGakVVTUJJR0ExVUVBd3dMZEdGbWIzQmxjbUYwYjNJd2dnRWlNQTBHQ1NxR1NJYjNEUUVCQVFVQUE0SUJEd0F3CmdnRUtBb0lCQVFDK0J3U09VS3E1RHhuY09wUEN2a0lxaEhGcGQyRFl5ZHlmSDJyRzFoUURhNC9oYmNYN1YrMUkKSXBETXUzK0t2UG1iODI1OFllQlpQTFlpYjRIYzhTRDFNcS9KOFhwOGtFZkE2aE1GWTFMbnBKWU5hZnpPNlhHNwpYa3BNazB4OEFPampFUkJYODJMVHZoTnNRTmdCYmh1dFk1MFY1ZXFiSCswVFVuQlFCT2ZxUVpzbnZTVDdqQ1dBCmt5VTJ3K2IvZHBCSnFVdFNkN3hNaGRHMlpPSVVObHREQ0dKalI1bk83Q1NUaHZaRTBaMG4vMDJkdUw2UCt0dFoKVTBla3ZoZUQwODA5TFpodElCWGtDeUpFT294OHA1RUNPUkpseE5JbHJEMm5VYzFpN3RyZFFZU2p3VG5lem1nZQpCMWJ0dXFiRHFXcGxOUUQ1UWo5TUVDZ2pnZnFJd2U2ZkFnTUJBQUdqVXpCUk1CMEdBMVVkRGdRV0JCUlZjbGhxCm5naEJiZDdaRERIamVzY0pteVdJM0RBZkJnTlZIU01FR0RBV2dCUlZjbGhxbmdoQmJkN1pEREhqZXNjSm15V0kKM0RBUEJnTlZIUk1CQWY4RUJUQURBUUgvTUEwR0NTcUdTSWIzRFFFQkN3VUFBNElCQVFBenhsdlhpSmQvMWxzbQoxT2pqVGFhQ1Nra1g4UStyTlM0QStHMlFDSFI2UjNNaTQzanJ3OEFhM3c3dTE0ZFRqS3ptTWQ5OVVRVzJDUjJiCnAyajVwYWJ4amx1UWZNTXQyTEFpWFF3SkVDcFFLTFhiSkFzcWQxQk9sWE1RM2lhenNKem9SUEZ3ZVRVTzdKVWcKQlVFR29vMjVQejFYVDlWTFNpSFNBM0gzTWVtczlycWE2cUlqUTF3TFNNZEpNVnJGenZRRDNaaDdZNFQyMFVxWApsNzYxS3JxRXZNbVRnTGtWV0RjeU5ScGtoRE9uTnFXWEFIZzZiWDJISUpXSEVPdk5melRtcUlpaE1vOVhxZ0Q3CjMydUxBMzc1cjBFSEJ3dGo4MFVNQmU5cWl3bHd0WkZpRW5iOHJ2elRCTGNhTzQrWTFMU1pTUC8yTWVBbGMrVUMKN1RPRDBuM0YKLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQ==
+      service:
+        name: tars-webhook-service
+        path: /validating
+        namespace: tars-system
+    sideEffects: None
+    timeoutSeconds: 15
+    failurePolicy: Ignore
+    rules:
+      - apiGroups: [ k8s.tars.io ]
+        apiVersions: [ "*" ]
+        operations: [ UPDATE ]
+        resources: [ tendpoints ]
+        scope: Namespaced
+  - name: validating.k8s.tars.io-0
+    admissionReviewVersions: [ v1 ]
+    clientConfig:
+      caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURBakNDQWVxZ0F3SUJBZ0lKQUpkZTVJYys0OWYxTUEwR0NTcUdTSWIzRFFFQkN3VUFNQll4RkRBU0JnTlYKQkFNTUMzUmhabTl3WlhKaGRHOXlNQjRYRFRJd01UQXhOREF5TkRJeE5sb1hEVE13TVRBeE1qQXlOREl4TmxvdwpGakVVTUJJR0ExVUVBd3dMZEdGbWIzQmxjbUYwYjNJd2dnRWlNQTBHQ1NxR1NJYjNEUUVCQVFVQUE0SUJEd0F3CmdnRUtBb0lCQVFDK0J3U09VS3E1RHhuY09wUEN2a0lxaEhGcGQyRFl5ZHlmSDJyRzFoUURhNC9oYmNYN1YrMUkKSXBETXUzK0t2UG1iODI1OFllQlpQTFlpYjRIYzhTRDFNcS9KOFhwOGtFZkE2aE1GWTFMbnBKWU5hZnpPNlhHNwpYa3BNazB4OEFPampFUkJYODJMVHZoTnNRTmdCYmh1dFk1MFY1ZXFiSCswVFVuQlFCT2ZxUVpzbnZTVDdqQ1dBCmt5VTJ3K2IvZHBCSnFVdFNkN3hNaGRHMlpPSVVObHREQ0dKalI1bk83Q1NUaHZaRTBaMG4vMDJkdUw2UCt0dFoKVTBla3ZoZUQwODA5TFpodElCWGtDeUpFT294OHA1RUNPUkpseE5JbHJEMm5VYzFpN3RyZFFZU2p3VG5lem1nZQpCMWJ0dXFiRHFXcGxOUUQ1UWo5TUVDZ2pnZnFJd2U2ZkFnTUJBQUdqVXpCUk1CMEdBMVVkRGdRV0JCUlZjbGhxCm5naEJiZDdaRERIamVzY0pteVdJM0RBZkJnTlZIU01FR0RBV2dCUlZjbGhxbmdoQmJkN1pEREhqZXNjSm15V0kKM0RBUEJnTlZIUk1CQWY4RUJUQURBUUgvTUEwR0NTcUdTSWIzRFFFQkN3VUFBNElCQVFBenhsdlhpSmQvMWxzbQoxT2pqVGFhQ1Nra1g4UStyTlM0QStHMlFDSFI2UjNNaTQzanJ3OEFhM3c3dTE0ZFRqS3ptTWQ5OVVRVzJDUjJiCnAyajVwYWJ4amx1UWZNTXQyTEFpWFF3SkVDcFFLTFhiSkFzcWQxQk9sWE1RM2lhenNKem9SUEZ3ZVRVTzdKVWcKQlVFR29vMjVQejFYVDlWTFNpSFNBM0gzTWVtczlycWE2cUlqUTF3TFNNZEpNVnJGenZRRDNaaDdZNFQyMFVxWApsNzYxS3JxRXZNbVRnTGtWV0RjeU5ScGtoRE9uTnFXWEFIZzZiWDJISUpXSEVPdk5melRtcUlpaE1vOVhxZ0Q3CjMydUxBMzc1cjBFSEJ3dGo4MFVNQmU5cWl3bHd0WkZpRW5iOHJ2elRCTGNhTzQrWTFMU1pTUC8yTWVBbGMrVUMKN1RPRDBuM0YKLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQ==
+      service:
+        name: tars-webhook-service
+        path: /validating
+        namespace: tars-system
+    objectSelector:
+      matchExpressions:
+        - key: tars.io/ServerApp
+          operator: Exists
+        - key: tars.io/ServerName
+          operator: Exists
+    sideEffects: None
+    timeoutSeconds: 15
+    matchPolicy: Exact
+    failurePolicy: Fail
+    rules:
+      - apiGroups: [ "" ]
+        apiVersions: [ v1 ]
+        resources: [ services ]
+        operations: [ CREATE,UPDATE ]
+        scope: Namespaced
+      - apiGroups: [ apps ]
+        apiVersions: [ v1 ]
+        resources: [ daemonsets,statefulsets ]
+        operations: [ CREATE,UPDATE ]
+        scope: Namespaced
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: tars-mutating-webhook
+webhooks:
+  - name: mutating.crd.tars.io
+    admissionReviewVersions: [ v1 ]
+    clientConfig:
+      caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURBakNDQWVxZ0F3SUJBZ0lKQUpkZTVJYys0OWYxTUEwR0NTcUdTSWIzRFFFQkN3VUFNQll4RkRBU0JnTlYKQkFNTUMzUmhabTl3WlhKaGRHOXlNQjRYRFRJd01UQXhOREF5TkRJeE5sb1hEVE13TVRBeE1qQXlOREl4TmxvdwpGakVVTUJJR0ExVUVBd3dMZEdGbWIzQmxjbUYwYjNJd2dnRWlNQTBHQ1NxR1NJYjNEUUVCQVFVQUE0SUJEd0F3CmdnRUtBb0lCQVFDK0J3U09VS3E1RHhuY09wUEN2a0lxaEhGcGQyRFl5ZHlmSDJyRzFoUURhNC9oYmNYN1YrMUkKSXBETXUzK0t2UG1iODI1OFllQlpQTFlpYjRIYzhTRDFNcS9KOFhwOGtFZkE2aE1GWTFMbnBKWU5hZnpPNlhHNwpYa3BNazB4OEFPampFUkJYODJMVHZoTnNRTmdCYmh1dFk1MFY1ZXFiSCswVFVuQlFCT2ZxUVpzbnZTVDdqQ1dBCmt5VTJ3K2IvZHBCSnFVdFNkN3hNaGRHMlpPSVVObHREQ0dKalI1bk83Q1NUaHZaRTBaMG4vMDJkdUw2UCt0dFoKVTBla3ZoZUQwODA5TFpodElCWGtDeUpFT294OHA1RUNPUkpseE5JbHJEMm5VYzFpN3RyZFFZU2p3VG5lem1nZQpCMWJ0dXFiRHFXcGxOUUQ1UWo5TUVDZ2pnZnFJd2U2ZkFnTUJBQUdqVXpCUk1CMEdBMVVkRGdRV0JCUlZjbGhxCm5naEJiZDdaRERIamVzY0pteVdJM0RBZkJnTlZIU01FR0RBV2dCUlZjbGhxbmdoQmJkN1pEREhqZXNjSm15V0kKM0RBUEJnTlZIUk1CQWY4RUJUQURBUUgvTUEwR0NTcUdTSWIzRFFFQkN3VUFBNElCQVFBenhsdlhpSmQvMWxzbQoxT2pqVGFhQ1Nra1g4UStyTlM0QStHMlFDSFI2UjNNaTQzanJ3OEFhM3c3dTE0ZFRqS3ptTWQ5OVVRVzJDUjJiCnAyajVwYWJ4amx1UWZNTXQyTEFpWFF3SkVDcFFLTFhiSkFzcWQxQk9sWE1RM2lhenNKem9SUEZ3ZVRVTzdKVWcKQlVFR29vMjVQejFYVDlWTFNpSFNBM0gzTWVtczlycWE2cUlqUTF3TFNNZEpNVnJGenZRRDNaaDdZNFQyMFVxWApsNzYxS3JxRXZNbVRnTGtWV0RjeU5ScGtoRE9uTnFXWEFIZzZiWDJISUpXSEVPdk5melRtcUlpaE1vOVhxZ0Q3CjMydUxBMzc1cjBFSEJ3dGo4MFVNQmU5cWl3bHd0WkZpRW5iOHJ2elRCTGNhTzQrWTFMU1pTUC8yTWVBbGMrVUMKN1RPRDBuM0YKLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQ==
+      service:
+        name: tars-webhook-service
+        namespace: tars-system
+        path: /mutating
+    rules:
+      - apiGroups: [ k8s.tars.io ]
+        apiVersions: [ "*" ]
+        operations: [ CREATE,UPDATE ]
+        resources: [ tdeploys,tservers,tconfigs,ttrees,taccounts,timages ]
+    sideEffects: None
+    timeoutSeconds: 15
+    failurePolicy: Fail

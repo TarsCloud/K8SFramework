@@ -1,0 +1,65 @@
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
+kind: TImage
+metadata:
+  name: tars-tarslog
+  namespace: {{.Release.Namespace}}
+  labels:
+    tars.io/ServerApp: tars
+    tars.io/ServerName: tarslog
+imageType: server
+releases:
+  - id: {{.Values.helm.build.id | quote }}
+    image:
+      {{.Values.helm.dockerhub.registry }}/tars.tarslog:{{.Values.helm.build.id}}
+---
+
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
+kind: TServer
+metadata:
+  name: tars-tarslog
+  namespace: {{.Release.Namespace}}
+  labels:
+    tars.io/ServerApp: tars
+    tars.io/ServerName: tarslog
+    tars.io/SubType: tars
+    tars.io/Template: tars.default
+spec:
+  app: tars
+  server: tarslog
+  subType: tars
+  tars:
+    template: tars.cpp
+    servants:
+      - name: LogObj
+        port: 12111
+        thread: 5
+  k8s:
+    replicas: 1
+    env:
+      - name: Namespace
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.namespace
+      - name: PodName
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.name
+    mounts:
+      - name: host-log-dir
+        source:
+          hostPath:
+            path: /usr/local/app/tars/app_log
+            type: DirectoryOrCreate
+        mountPath: /usr/local/app/tars/app_log
+        subPathExpr: $(Namespace)/$(PodName)
+      - mountPath: /usr/local/app/tars/remote_app_log
+        name: remote-log-dir
+        source:
+          tLocalVolume: { }
+        subPathExpr: $(PodName)
+    readinessGate: tars.io/active
+  release:
+    source: tars-tarslog
+    id: {{.Values.helm.build.id | quote }}
+    image:
+      {{.Values.helm.dockerhub.registry }}/tars.tarslog:{{.Values.helm.build.id}}

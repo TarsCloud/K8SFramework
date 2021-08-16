@@ -1,0 +1,71 @@
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
+kind: TImage
+metadata:
+  name: tars-tarsnotify
+  namespace: {{.Release.Namespace}}
+  labels:
+    tars.io/ServerApp: tars
+    tars.io/ServerName: tarsnotify
+imageType: server
+releases:
+  - id: {{.Values.helm.build.id | quote }}
+    image:
+      {{.Values.helm.dockerhub.registry }}/tars.tarsnotify:{{.Values.helm.build.id}}
+---
+
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
+kind: TServer
+metadata:
+  name: tars-tarsnotify
+  namespace: {{.Release.Namespace}}
+  labels:
+    tars.io/ServerApp: tars
+    tars.io/ServerName: tarsnotify
+    tars.io/SubType: tars
+    tars.io/Template: tars.default
+spec:
+  app: tars
+  server: tarsnotify
+  subType: tars
+  tars:
+    template: tars.elk
+    profile: |
+      <tars>
+        <application>
+          <server>
+            #log = tars.tarslog4other.LogObj
+            logLevel = DEBUG
+          </server>
+        </application>
+        <elk>
+          indexPre = notify_{{.Release.Namespace}}
+        </elk>
+      </tars>
+    servants:
+      - name: NotifyObj
+        port: 13111
+  k8s:
+    replicas: 1
+    env:
+      - name: Namespace
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.namespace
+      - name: PodName
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.name
+    mounts:
+      - name: host-log-dir
+        source:
+          hostPath:
+            path: /usr/local/app/tars/app_log
+            type: DirectoryOrCreate
+        mountPath: /usr/local/app/tars/app_log
+        subPathExpr: $(Namespace)/$(PodName)
+    readinessGate: tars.io/active
+  release:
+    source: tars-tarsnotify
+    id: {{.Values.helm.build.id }}
+    image:
+      {{.Values.helm.dockerhub.registry }}/tars.tarsnotify:{{.Values.helm.build.id}}

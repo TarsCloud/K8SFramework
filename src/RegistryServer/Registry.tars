@@ -1,0 +1,14 @@
+#include "RegistryDescriptor.tars"
+
+
+module tars
+{
+
+    interface Registry
+    {
+        int getServerDescriptor(string serverApp, string serverName, out ServerDescriptor serverDescriptor);
+
+        void updateServerState(string podName,string settingState, string presentState);
+    };
+};
+

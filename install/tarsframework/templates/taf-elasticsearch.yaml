@@ -1,0 +1,36 @@
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
+kind: TServer
+metadata:
+  labels:
+    tars.io/ServerApp: tars
+    tars.io/ServerName: elasticsearch
+    tars.io/SubType: normal
+  name: tars-elasticsearch
+  namespace: {{.Release.Namespace}}
+spec:
+  app: tars
+  server: elasticsearch
+  important: 3
+  subType: normal
+  normal:
+    ports:
+      - isTcp: true
+        name: http
+        port: 9200
+  k8s:
+    env:
+      - name: discovery.type
+        value: single-node
+    mounts:
+      - mountPath: /usr/share/elasticsearch/data
+        name: data
+        readOnly: false
+        source:
+          tLocalVolume: { }
+    podManagementPolicy: Parallel
+    replicas: 1
+  release:
+    source: tars-elasticsearch
+    id: {{.Values.helm.build.id | quote }}
+    image:
+      {{.Values.helm.dockerhub.registry }}/tars.elasticsearch:{{.Values.helm.build.id}}

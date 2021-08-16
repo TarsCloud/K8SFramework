@@ -1,0 +1,124 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tars-agent
+  namespace: tars-system
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: tars-system:tars-agent-local-provisioner
+subjects:
+  - kind: ServiceAccount
+    name: tars-agent
+    namespace: tars-system
+roleRef:
+  kind: ClusterRole
+  name: system:persistent-volume-provisioner
+  apiGroup: rbac.authorization.k8s.io
+---
+
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: tars-system:tars-agent-image-downloader
+rules:
+  - apiGroups: [ "" ]
+    resources: [ secrets, nodes ]
+    verbs: [ get ]
+  - apiGroups: [ k8s.tars.io ]
+    resources: [ timages ]
+    verbs: [ get ,list, watch ]
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: tars-system:tars-agent-image-downloader
+subjects:
+  - kind: ServiceAccount
+    name: tars-agent
+    namespace: tars-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tars-system:tars-agent-image-downloader
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tars-agent
+  namespace: tars-system
+data:
+  crontab.config: |-
+    05 0 * * * ? find /usr/local/app/tars/app_log/ -mtime +5 -name "*.log" | xargs rm -f
+    05 0 * * * ? find /usr/local/app/tars/app_log/ -mtime +5 -name "core.*" | xargs rm -
+---
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: tars-agent
+  namespace: tars-system
+  labels:
+    tars.io/Agent: "true"
+spec:
+  selector:
+    matchLabels:
+      tars.io/Agent: "true"
+  template:
+    metadata:
+      labels:
+        tars.io/Agent: "true"
+    spec:
+      serviceAccountName: tars-agent
+      containers:
+        - image:
+            {{.Values.helm.dockerhub.registry }}/tarsagent:{{.Values.helm.build.id}}
+          imagePullPolicy: "Always"
+          name: tars-agent
+          #command: ["/bin/bash"]
+          #args: ["-c", "while true; do sleep 10;done"]
+          #securityContext:
+          #  privileged: true
+          env:
+            - name: NodeName
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - mountPath: /etc/tarsagent
+              name: etc-tarsagent-dir
+            - mountPath: /etc/localtime
+              name: host-timezone
+              readOnly: true
+            - mountPath: /var/run/docker.sock
+              name: docker-sock
+            - mountPath: /usr/local/app/tars/app_log
+              name: host-log-dir
+            - mountPath: /usr/local/app/tars/host-mount
+              name: host-mount-dir
+      volumes:
+        - configMap:
+            defaultMode: 420
+            name: tars-agent
+            optional: true
+          name: etc-tarsagent-dir
+        - hostPath:
+            path: /etc/localtime
+            type: ""
+          name: host-timezone
+        - hostPath:
+            path: /var/run/docker.sock
+            type: Socket
+          name: docker-sock
+        - hostPath:
+            path: /usr/local/app/tars/app_log
+            type: DirectoryOrCreate
+          name: host-log-dir
+        - hostPath:
+            path: /usr/local/app/tars/host-mount
+            type: DirectoryOrCreate
+          name: host-mount-dir

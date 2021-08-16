@@ -1,0 +1,119 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tars-tarsregistry
+---
+
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: tars-tarsregistry
+rules:
+  - apiGroups: [ "" ]
+    resources: [ pods/status ]
+    verbs: [ patch ]
+  - apiGroups: [ k8s.tars.io ]
+    resources: [ ttemplates,tendpoints ]
+    verbs: [ get ,list, watch ]
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tars-tarsregistry
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: tars-tarsregistry
+subjects:
+  - kind: ServiceAccount
+    name: tars-tarsregistry
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tars-tarsregistry
+data:
+  upchain.conf: |
+    <upchain>
+        <default>
+            #tcp -h 110.110.30.31 -p 8888 -t 60000
+            #tcp -h 110.110.30.32 -p 8888 -t 60000
+        </default>
+        <tars.tarsalarm.AlarmObj>
+            #tcp -h 110.110.30.34 -p 3327 -t 60000
+            #tcp -h 110.110.30.35 -p 3325 -t 60000
+        </tars.tarsalarm.AlarmObj>
+    </upchain>
+---
+
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
+kind: TImage
+metadata:
+  name: tars-tarsregistry
+  namespace: {{.Release.Namespace}}
+  labels:
+    tars.io/ServerApp: tars
+    tars.io/ServerName: tarsregistry
+imageType: server
+releases:
+  - id: {{.Values.helm.build.id | quote }}
+    image:
+      {{.Values.helm.dockerhub.registry }}/tars.tarsregistry:{{.Values.helm.build.id}}
+---
+
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
+kind: TServer
+metadata:
+  name: tars-tarsregistry
+  namespace: {{.Release.Namespace}}
+  labels:
+    tars.io/ServerApp: tars
+    tars.io/ServerName: tarsregistry
+spec:
+  app: tars
+  server: tarsregistry
+  subType: normal
+  normal:
+    ports:
+      - name: registryobj
+        port: 17890
+      - name: queryobj
+        port: 17891
+  k8s:
+    replicas: 2
+    serviceAccount: tars-tarsregistry
+    readinessGate: tars.io/active
+    env:
+      - name: Namespace
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.namespace
+      - name: PodName
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.name
+      - name: PodIP
+        valueFrom:
+          fieldRef:
+            fieldPath: status.podIP
+    mounts:
+      - name: host-log-dir
+        source:
+          hostPath:
+            path: /usr/local/app/tars/app_log
+            type: DirectoryOrCreate
+        mountPath: /usr/local/app/tars/app_log
+        subPathExpr: $(Namespace)/$(PodName)
+      - name: upchain
+        source:
+          configMap:
+            name: tars-tarsregistry
+        mountPath: /etc/upchain
+  release:
+    source: tars-tarsregistry
+    id: {{.Values.helm.build.id | quote }}
+    image:
+      {{.Values.helm.dockerhub.registry }}/tars.tarsregistry:{{.Values.helm.build.id}}

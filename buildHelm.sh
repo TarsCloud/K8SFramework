@@ -1,0 +1,183 @@
+#!/usr/bin/env bash
+
+###### LOG 函数
+function LOG_ERROR() {
+  msg=$(date +%Y-%m-%d" "%H:%M:%S)
+  msg="${msg} $*"
+  echo -e "\033[31m $msg \033[0m"
+}
+
+function LOG_WARNING() {
+  msg=$(date +%Y-%m-%d" "%H:%M:%S)
+  msg="${msg} $*"
+  echo -e "\033[33m $msg \033[0m"
+}
+
+function LOG_INFO() {
+  echo -e "\033[31m $* \033[0m"
+}
+
+function LOG_DEBUG() {
+  msg=$(date +%Y-%m-%d" "%H:%M:%S)
+  msg="${msg} $*"
+  echo -e "\033[40;37m $msg \033[0m"
+}
+###### LOG 函数
+
+if (($# < 4)); then
+  LOG_INFO "Usage: $0 <DOCKER_REGISTRY_URL> <DOCKER_REGISTRY_USER> <DOCKER_REGISTRY_PASSWORD> [id]"
+  LOG_INFO "Example: $0 dockerhub.com/tafk8s tafk8s tafk8s@image v2.1"
+  exit 255
+fi
+
+#仓库信息
+_DOCKER_REGISTRY_URL_=$1
+_DOCKER_REGISTRY_USER_=$2
+_DOCKER_REGISTRY_PASSWORD_=$3
+_BUILD_ID_=$4
+#
+
+#### 构建基础镜像
+declare -a BaseImages=(
+  taf.cppbase
+  taf.javabase
+  taf.nodejs6base
+  taf.nodejs8base
+  taf.nodejs10base
+  taf.nodejs12base
+  taf.nodejs14base
+  taf.tafnode
+  helm.wait
+)
+
+for KEY in "${BaseImages[@]}"; do
+  if ! docker build -t "${KEY}" -f build/"${KEY}.Dockerfile" build; then
+    LOG_ERROR "Build ${KEY} image failed"
+    exit 255
+  fi
+done
+#### 构建基础镜像
+
+#### 构建基础服务镜像
+declare -a FrameworkImages=(
+  tafcontroller
+  tafagent
+  taf.tafregistry
+  taf.tafimage
+  taf.tafweb
+  taf.elasticsearch
+)
+
+for KEY in "${FrameworkImages[@]}"; do
+  if ! docker build -t "${KEY}" -f build/"${KEY}.Dockerfile" build; then
+    LOG_ERROR "Build ${KEY} image failed"
+    exit 255
+  fi
+done
+
+#### 构建基础服务镜像
+declare -a ServerImages=(
+  taflog
+  tafconfig
+  tafnotify
+  tafstat
+  tafproperty
+  tafquerystat
+  tafqueryproperty
+)
+
+for KEY in "${ServerImages[@]}"; do
+  mkdir -p build/files/template/taf."${KEY}"
+  mkdir -p build/files/template/taf."${KEY}"/root/usr/local/server/bin
+
+  if ! cp build/files/binary/"${KEY}" build/files/template/taf."${KEY}"/root/usr/local/server/bin/"${KEY}"; then
+    LOG_ERROR "copy ${KEY} failed, please check ${KEY} is in directory: build/files/binary"
+    exit 255
+  fi
+
+  echo "FROM taf.cppbase
+ENV ServerType=cpp
+COPY /root /
+" >build/files/template/taf."${KEY}"/Dockerfile
+
+  if ! docker build -t taf."${KEY}" build/files/template/taf."${KEY}"; then
+    LOG_ERROR "Build ${KEY} image failed"
+    exit 255
+  fi
+done
+
+#### 构建基础服务镜像
+
+LOG_INFO "Build All Images Ok"
+
+declare -a LocalImages=(
+  taf.tafnode
+  taf.cppbase
+  taf.javabase
+  taf.nodejs6base
+  taf.nodejs8base
+  taf.nodejs10base
+  taf.nodejs12base
+  taf.nodejs14base
+  tafcontroller
+  tafagent
+  taf.elasticsearch
+  taf.tafregistry
+  taf.tafimage
+  taf.tafweb
+  taf.taflog
+  taf.tafconfig
+  taf.tafnotify
+  taf.tafstat
+  taf.tafquerystat
+  taf.tafproperty
+  taf.tafqueryproperty
+  helm.wait
+)
+
+# 登陆
+if ! docker login -u "${_DOCKER_REGISTRY_USER_}" -p "${_DOCKER_REGISTRY_PASSWORD_}" "${_DOCKER_REGISTRY_URL_}"; then
+  LOG_ERROR "docker login to ${_DOCKER_REGISTRY_URL_} failed!"
+  exit 255
+fi
+
+for KEY in "${LocalImages[@]}"; do
+  # Specified BuildID Tag
+  RemoteImagesTag="${_DOCKER_REGISTRY_URL_}"/"${KEY}":${_BUILD_ID_}
+  if ! docker tag "${KEY}" "${RemoteImagesTag}"; then
+    LOG_ERROR "Tag ${KEY} image failed"
+    exit 255
+  fi
+  if ! docker push "${RemoteImagesTag}"; then
+    LOG_ERROR "Push ${RemoteImagesTag} image failed"
+    exit 255
+  fi
+  # Latest Tag
+  RemoteImagesLatestTag="${_DOCKER_REGISTRY_URL_}"/"${KEY}":latest
+  if ! docker tag "${KEY}" "${RemoteImagesLatestTag}"; then
+    LOG_ERROR "Tag ${KEY} image failed"
+    exit 255
+  fi
+  if ! docker push "${RemoteImagesLatestTag}"; then
+    LOG_ERROR "Push ${RemoteImagesLatestTag} image failed"
+    exit 255
+  fi
+done
+
+echo -e "helm:
+    build:
+      id: ${_BUILD_ID_}
+    dockerhub:
+      registry: ${_DOCKER_REGISTRY_URL_}
+" >install/tafcontroller/values.yaml
+helm package install/tafcontroller -d ./install
+
+echo -e "helm:
+    build:
+      id: ${_BUILD_ID_}
+    dockerhub:
+      registry: ${_DOCKER_REGISTRY_URL_}
+" >./install/tafframework/values.yaml
+helm package install/tafframework -d ./install
+
+LOG_INFO "Build Helm File OK "

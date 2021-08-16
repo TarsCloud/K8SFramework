@@ -1,0 +1,15 @@
+
+module tars
+{
+    struct NotifyRecord
+    {
+        1 optional long notifyTime;
+        2 optional string app;
+        3 optional string server;
+        4 optional string podName;
+        5 optional string impThread;   //处理线程id
+        6 optional string level;
+        7 optional string message;
+        8 optional string source;
+    };    
+};

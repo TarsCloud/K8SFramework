@@ -1,0 +1,78 @@
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
+kind: TImage
+metadata:
+  name: node
+  namespace: {{.Release.Namespace}}
+imageType: node
+mark: builtin release
+releases:
+  - id: default-builtin-node-{{.Values.helm.build.id}}
+    image:
+      {{.Values.helm.dockerhub.registry }}/tars.tarsnode:{{.Values.helm.build.id}}
+    mark: builtin release for tarsnode
+---
+
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
+kind: TImage
+metadata:
+  labels:
+    tars.io/ImageType: base
+    tars.io/Supported.cpp: ""
+    tars.io/Supported.go: ""
+  name: cppbase
+  namespace: {{.Release.Namespace}}
+imageType: base
+supportedType: [ cpp,go ]
+mark: builtin release
+releases:
+  - id: builtin-cppbase-{{.Values.helm.build.id}}
+    image:
+      {{.Values.helm.dockerhub.registry }}/tars.cppbase:{{.Values.helm.build.id}}
+    mark: builtin for [cpp,go] server
+---
+
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
+kind: TImage
+metadata:
+  labels:
+    tars.io/ImageType: base
+    tars.io/Supported.java-jar: ""
+    tars.io/Supported.java-war: ""
+  name: javabase
+  namespace: {{.Release.Namespace}}
+imageType: base
+supportedType: [ java-jar,java-war ]
+mark: builtin release
+releases:
+  - id: builtin-java8base-{{.Values.helm.build.id}}
+    image:
+      {{.Values.helm.dockerhub.registry }}/tars.javabase:{{.Values.helm.build.id}}
+---
+
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
+kind: TImage
+metadata:
+  labels:
+    tars.io/ImageType: base
+    tars.io/Supported.nodejs: ""
+  name: nodejsbase
+  namespace: {{.Release.Namespace}}
+imageType: base
+supportedType: [ nodejs ]
+mark: builtin release
+releases:
+  - id: builtin-nodejs6base-{{.Values.helm.build.id}}
+    image:
+      {{.Values.helm.dockerhub.registry }}/tars.nodejs6base:{{.Values.helm.build.id}}
+  - id: builtin-nodejs8base-{{.Values.helm.build.id}}
+    image:
+      {{.Values.helm.dockerhub.registry }}/tars.nodejs8base:{{.Values.helm.build.id}}
+  - id: builtin-nodejs10base-{{.Values.helm.build.id}}
+    image:
+      {{.Values.helm.dockerhub.registry }}/tars.nodejs10base:{{.Values.helm.build.id}}
+  - id: builtin-nodejs12base-{{.Values.helm.build.id}}
+    image:
+      {{.Values.helm.dockerhub.registry }}/tars.nodejs12base:{{.Values.helm.build.id}}
+  - id: builtin-nodejs14base-{{.Values.helm.build.id}}
+    image:
+      {{.Values.helm.dockerhub.registry }}/tars.nodejs14base:{{.Values.helm.build.id}}

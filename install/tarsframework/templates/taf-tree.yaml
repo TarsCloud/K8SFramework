@@ -1,0 +1,17 @@
+apiVersion: k8s.tars.io/v1alpha2
+kind: TTree
+metadata:
+  name: tars-tree
+  #namespace: {{.Release.Namespace }}
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-10"
+apps:
+  - businessRef: TarsFramework
+    name: tars
+  - businessRef: TarsFramework
+    name: base
+businesses:
+  - name: TarsFramework
+    show: tars框架服务
+    weight: 5

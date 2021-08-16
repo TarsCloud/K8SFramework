@@ -1,0 +1,27 @@
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
+kind: TTemplate
+metadata:
+  name: tars.java
+  namespace: {{.Release.Namespace}}
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-9"
+spec:
+  content: |
+    <tars>
+      <application>
+        <server>
+          mainclass=com.tars.server.startup.Main
+          classpath=${basepath}/conf:${basepath}/WEB-INF/classes:${basepath}/WEB-INF/lib
+          jvmparams=-XX:ErrorFile\=${logpath}/${app}/${server}/jvm_error.log -Dtars=true -Xms500m -Xmx2000m
+          sessiontimeout=120000
+          sessioncheckinterval=60000
+          tcpnodelay=true
+          udpbuffersize=8192
+          charsetname=UTF-8
+          backupfiles=conf
+          loglevel=DEBUG
+        </server>
+      </application>
+    </tars>
+  parent: tars.default

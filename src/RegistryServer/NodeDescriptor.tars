@@ -1,0 +1,17 @@
+module tars
+{
+    enum ServerState
+    {
+        Inactive=1,
+        Activating,
+        Active,
+        Deactivating,
+    };
+
+    struct ServerStateInfo
+    {
+        0 optional ServerState settingState;
+        1 optional ServerState presentState;
+    };
+};
+

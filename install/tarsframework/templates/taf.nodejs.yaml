@@ -1,0 +1,19 @@
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
+kind: TTemplate
+metadata:
+  name: tars.nodejs
+  namespace: {{.Release.Namespace}}
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-9"
+spec:
+  content: |
+    <tars>
+      <application>
+        <client>
+          #网络异步回调线程个数
+          asyncthread = 2
+        </client>
+      </application>
+    </tars>
+  parent: tars.default

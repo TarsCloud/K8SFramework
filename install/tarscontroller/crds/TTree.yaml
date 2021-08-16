@@ -1,0 +1,127 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: ttrees.k8s.tars.io
+spec:
+  conversion:
+    strategy: None
+  group: k8s.tars.io
+  names:
+    kind: TTree
+    listKind: TTreeList
+    plural: ttrees
+    singular: ttree
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            apps:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    pattern: ^[a-zA-Z][a-zA-Z0-9]{0,62}$
+                  businessRef:
+                    type: string
+                    pattern: ^([a-zA-Z][a-zA-Z0-9]{0,62}){0,1}$
+                  createTime:
+                    type: string
+                    format: date-time
+                  createPerson:
+                    type: string
+                    maxLength: 800
+                  mark:
+                    type: string
+                    maxLength: 1600
+                required: [ name,businessRef ]
+            businesses:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    pattern: ^[a-zA-Z][a-zA-Z0-9]{0,62}$
+                  show:
+                    type: string
+                    minLength: 1
+                    maxLength: 30
+                  weight:
+                    type: integer
+                    minimum: 1
+                    maximum: 5
+                    default: 3
+                  createTime:
+                    type: string
+                    format: date-time
+                  createPerson:
+                    type: string
+                    maxLength: 800
+                  mark:
+                    type: string
+                    maxLength: 1600
+                required: [ name,show,weight ]
+          required: [ apps,businesses ]
+    - name: v1alpha2
+      served: true
+      storage: false
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            apps:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    pattern: ^[a-zA-Z][a-zA-Z0-9]{0,62}$
+                  businessRef:
+                    type: string
+                    pattern: ^([a-zA-Z][a-zA-Z0-9]{0,62}){0,1}$
+                  createTime:
+                    type: string
+                    format: date-time
+                  createPerson:
+                    type: string
+                    maxLength: 800
+                  mark:
+                    type: string
+                    maxLength: 1600
+                required: [ name,businessRef ]
+            businesses:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    pattern: ^[a-zA-Z][a-zA-Z0-9]{0,62}$
+                  show:
+                    type: string
+                    minLength: 1
+                    maxLength: 30
+                  weight:
+                    type: integer
+                    minimum: 1
+                    maximum: 5
+                    default: 3
+                  createTime:
+                    type: string
+                    format: date-time
+                  createPerson:
+                    type: string
+                    maxLength: 800
+                  mark:
+                    type: string
+                    maxLength: 1600
+                required: [ name,show,weight ]
+          required: [ apps,businesses ]
