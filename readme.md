@@ -1,6 +1,6 @@
 # 关于
 
-- TarsK8S 是为了将 Tars 部署在 K8S平台上而做的适应性改造项目.项目已初具雏形,但还有很多细节和功能需要完善.
+- TarsK8S 是为了将 Tars 部署在 K8S平台上而做的适应性改造项目.
 
 - TarsK8S 改造的原则:
   1. 改造仅限于 framework 程序（tarsregistry ,tarsnode , tarsnotify , tarsconfig）
@@ -46,15 +46,61 @@
 + 删除了 tarspatch , tarsAdminRegistry
 
 # TarsK8S 安装
+## 在K8S上安装TARS框架
   TarsK8S 以 helm 包的形式对外发布.每个 Helm 包包含了 完成的框架服务. 
   在安装时,以k8s命名空间为分割,每个命名空间可以且只可以部署一套框架服务,每套框架服务都有完整的功能组件,与其他命名空间的框架互相独立
 
- ```shell script
-   helm install -n [namesace] --create-namesace tars-framwork -f value.yaml   
- ```
+```sh
+./buildHelm.sh harbor.12345up.com/tars-k8s admin xxxxx v20210816.01
 
-# Todo List
-+ 增加用户登陆,用户管理,用户权限功能
-+ 增加更多的 k8s 选项参数 例如节点,调度策略,存储挂载,资源限制等
-+ 完成 tarscontroller 服务的高可用改造,支持 crd,api 版本升级
-+ 完善的增强 tarsweb功能
+kubectl create ns tars-test
+
+kubectl create secret docker-registry tars-image-secret -n tars-test --docker-server=harbor.12345up.com --docker-username=admin --docker-password=Upchina@999   
+
+helm install tarscontroller -n tars-test --create-namespace --set 'helm.dockerhub.registry=harbor.12345up.com/tars-k8s,helm.build.id=v20210816.01' install/tarscontroller-1.0.2.tgz
+
+helm install tars-test -n tars-test --set 'dockerRegistry=harbor.12345up.com/tars-k8s,dockerSecret=tars-image-secret,els.nodes=es-out-es:9200,helm.build.id=v20210816.01,helm.dockerhub.registry=harbor.12345up.com/tars-k8s,web=tars-test.12345up.com' install/tarsframework-1.0.2.tgz
+
+```
+
+## 给节点打标签
+
+通常K8S集群里面节点比较多, 而TARS可能只需要使用里面部分节点, 为了控制到底TARS服务可以运行在哪些节点上, 需要给节点打上特定的标签如下, 分两个层级:
+
+- 如果希望部署的TARS框架以及后续发布的tars服务能被调度到某些节点, 则这些节点需要打上如下标签:
+
+````tars.io/node.$namespace ```, 比如: ```tars.io/node.tars-test```
+
+**这里$namespace 是K8S的名字空间, 即上面helm安装TARS时指定的名字空间**
+
+使用命令行打标签如下:
+```
+kubectl label nodes $node-name tars.io/node.tars-test=
+```
+
+**注意必须打好标签, tars-test这个名字的空间的所有TARS服务才会被调度上去, 这一步必须手工执行!**
+
+- TARS框架本身也有应用的概念, 可以通过给节点继续打标签, 保证TARS某个应用下所有服务能调度到这些节点, 如下方式:
+
+```tars.io/ability.$namespace.$app ```
+
+注意:
+>- $namespace 是K8S的名字空间, 即上面helm安装TARS时指定的名字空间
+>- $app是TARS下面的应用概念, 即TARS某个应用下的服务可以部署在这些节点(这一步可以在web上控制亲和性)
+>- 默认安装的情况下, ```nodeBind.framework```这个参数指定的节点, 会打上这个标签```tars.io/ability.$namespace.tars ``` 标签
+
+**完成上述两步以后, 可以在K8S上看到, 除了es和tarslog之外, 其他服务已经启动了**
+
+es和tarslog由于需要存储空间, 因此需要特别处理
+
+- 给ES和tarslog分配LocalPV
+
+目前的K8STARS支持LocalPV, 服务需要LocalPV时, 可以申请, 后续文档会介绍. 
+
+这里ES和tarslog由于没有合适的PV一直处于pending中, 只需给可以申请LocalPV的节点打上标签```tars.io/SupportLocalVolume ```
+
+使用命令行打标签如下:
+```
+kubectl label nodes $node-name tars.io/SupportLocalVolume=
+```
+

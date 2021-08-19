@@ -22,15 +22,15 @@ function LOG_DEBUG() {
   msg="${msg} $*"
   echo -e "\033[40;37m $msg \033[0m"
 }
-###### LOG 函数
+###### LOG 
 
 if (($# < 4)); then
   LOG_INFO "Usage: $0 <DOCKER_REGISTRY_URL> <DOCKER_REGISTRY_USER> <DOCKER_REGISTRY_PASSWORD> [id]"
-  LOG_INFO "Example: $0 dockerhub.com/tafk8s tafk8s tafk8s@image v2.1"
+  LOG_INFO "Example: $0 dockerhub.com/tarsk8s tarsk8s tarsk8s@image v2.1"
   exit 255
 fi
 
-#仓库信息
+#docker registry info
 _DOCKER_REGISTRY_URL_=$1
 _DOCKER_REGISTRY_USER_=$2
 _DOCKER_REGISTRY_PASSWORD_=$3
@@ -39,14 +39,13 @@ _BUILD_ID_=$4
 
 #### 构建基础镜像
 declare -a BaseImages=(
-  taf.cppbase
-  taf.javabase
-  taf.nodejs6base
-  taf.nodejs8base
-  taf.nodejs10base
-  taf.nodejs12base
-  taf.nodejs14base
-  taf.tafnode
+  tars.cppbase
+  tars.javabase
+  tars.nodejs10base
+  tars.nodejs12base
+  tars.nodejs14base
+  tars.php74base
+  tars.tarsnode
   helm.wait
 )
 
@@ -60,12 +59,12 @@ done
 
 #### 构建基础服务镜像
 declare -a FrameworkImages=(
-  tafcontroller
-  tafagent
-  taf.tafregistry
-  taf.tafimage
-  taf.tafweb
-  taf.elasticsearch
+  tarscontroller
+  tarsagent
+  tars.tarsregistry
+  tars.tarsimage
+  tars.tarsweb
+  tars.elasticsearch
 )
 
 for KEY in "${FrameworkImages[@]}"; do
@@ -77,30 +76,30 @@ done
 
 #### 构建基础服务镜像
 declare -a ServerImages=(
-  taflog
-  tafconfig
-  tafnotify
-  tafstat
-  tafproperty
-  tafquerystat
-  tafqueryproperty
+  tarslog
+  tarsconfig
+  tarsnotify
+  tarsstat
+  tarsproperty
+  tarsquerystat
+  tarsqueryproperty
 )
 
 for KEY in "${ServerImages[@]}"; do
-  mkdir -p build/files/template/taf."${KEY}"
-  mkdir -p build/files/template/taf."${KEY}"/root/usr/local/server/bin
+  mkdir -p build/files/template/tars."${KEY}"
+  mkdir -p build/files/template/tars."${KEY}"/root/usr/local/server/bin
 
-  if ! cp build/files/binary/"${KEY}" build/files/template/taf."${KEY}"/root/usr/local/server/bin/"${KEY}"; then
+  if ! cp build/files/binary/"${KEY}" build/files/template/tars."${KEY}"/root/usr/local/server/bin/"${KEY}"; then
     LOG_ERROR "copy ${KEY} failed, please check ${KEY} is in directory: build/files/binary"
     exit 255
   fi
 
-  echo "FROM taf.cppbase
+  echo "FROM tars.cppbase
 ENV ServerType=cpp
 COPY /root /
-" >build/files/template/taf."${KEY}"/Dockerfile
+" >build/files/template/tars."${KEY}"/Dockerfile
 
-  if ! docker build -t taf."${KEY}" build/files/template/taf."${KEY}"; then
+  if ! docker build -t tars."${KEY}" build/files/template/tars."${KEY}"; then
     LOG_ERROR "Build ${KEY} image failed"
     exit 255
   fi
@@ -111,27 +110,25 @@ done
 LOG_INFO "Build All Images Ok"
 
 declare -a LocalImages=(
-  taf.tafnode
-  taf.cppbase
-  taf.javabase
-  taf.nodejs6base
-  taf.nodejs8base
-  taf.nodejs10base
-  taf.nodejs12base
-  taf.nodejs14base
-  tafcontroller
-  tafagent
-  taf.elasticsearch
-  taf.tafregistry
-  taf.tafimage
-  taf.tafweb
-  taf.taflog
-  taf.tafconfig
-  taf.tafnotify
-  taf.tafstat
-  taf.tafquerystat
-  taf.tafproperty
-  taf.tafqueryproperty
+  tars.tarsnode
+  tars.cppbase
+  tars.javabase
+  tars.nodejs10base
+  tars.nodejs12base
+  tars.nodejs14base
+  tarscontroller
+  tarsagent
+  tars.elasticsearch
+  tars.tarsregistry
+  tars.tarsimage
+  tars.tarsweb
+  tars.tarslog
+  tars.tarsconfig
+  tars.tarsnotify
+  tars.tarsstat
+  tars.tarsquerystat
+  tars.tarsproperty
+  tars.tarsqueryproperty
   helm.wait
 )
 
@@ -169,15 +166,15 @@ echo -e "helm:
       id: ${_BUILD_ID_}
     dockerhub:
       registry: ${_DOCKER_REGISTRY_URL_}
-" >install/tafcontroller/values.yaml
-helm package install/tafcontroller -d ./install
+" >install/tarscontroller/values.yaml
+helm package install/tarscontroller -d ./install
 
 echo -e "helm:
     build:
       id: ${_BUILD_ID_}
     dockerhub:
       registry: ${_DOCKER_REGISTRY_URL_}
-" >./install/tafframework/values.yaml
-helm package install/tafframework -d ./install
+" >./install/tarsframework/values.yaml
+helm package install/tarsframework -d ./install
 
 LOG_INFO "Build Helm File OK "

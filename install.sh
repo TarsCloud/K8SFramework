@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-# 安装 tafcontroller
-helm install tafcontroller ./install/tafcontroller-*.tgz
+# 安装 tarscontroller
+helm install tarscontroller ./install/tarscontroller-*.tgz
 
-# 等待 tafcontroller 启动
+# 等待 tarscontroller 启动
 sleep 3m
 
-# 安装 tafframework
-helm install tafframework install/tafframework-*.tgz -f install/config.yaml
+# 安装 tarsframework
+helm install tarsframework install/tarsframework-*.tgz -f install/config.yaml

@@ -18,15 +18,16 @@ function LOG_DEBUG() {
   msg="${msg} $*"
   echo -e "\033[40;37m $msg \033[0m"
 }
-###### LOG 函数
+###### LOG
 
-### 构建 Docker 镜像,并在镜像中编译代码
+### build docker for compiler
 if ! docker build -t tars.builder -f build/tars.builder.Dockerfile build; then
   LOG_ERROR "Build \"tars.builder\" image error"
   exit 255
   end
 fi
 
+### build src
 if ! docker run -i -v "${PWD}":/tars-k8s-src -v "${PWD}"/build/files/binary:/tars-k8s-binary tars.builder; then
   LOG_ERROR "Build Source Error"
   exit 255

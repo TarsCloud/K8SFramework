@@ -1,5 +1,5 @@
 ## dockerRegistry 指定 默认的业务服务的镜像仓库地址
-dockerRegistry: harbor-huawei.upchinaproduct.com/whk8s
+dockerRegistry: harbor.tars.com/tars-k8s
 ## dockerSecret 指定 k8s 从 业务仓库 下载/上传镜像时使用的 secret ,
 ## 需要用户主动的 k8s 平台创建 创建命令为
 ## kubectl create secret docker-registry <name> --docker-server=DOCKER_REGISTRY_SERVER --docker-username=DOCKER_USER --docker-password=DOCKER_PASSWORD --docker-email=DOCKER_EMAIL
@@ -7,7 +7,7 @@ dockerSecret: tars-image-secret
 
 helm:
   dockerhub:
-    registry: harbor.upoem2.com/tars-k8s
+    registry: harbor.tars.com/tars-k8s
   build:
     id: v202103241151
 

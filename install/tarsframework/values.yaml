@@ -1,0 +1,6 @@
+helm:
+    build:
+      id: v20210817.01
+    dockerhub:
+      registry: harbor.12345up.com/tars-k8s
+

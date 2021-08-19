@@ -2,4 +2,4 @@
 
 git clone https://github.com/TarsCloud/TarsCpp --recursive
 
-git clone https://github.com/TarsCloud/TarsWeb
+git clone https://github.com/TarsCloud/TarsWeb build/TarsWeb

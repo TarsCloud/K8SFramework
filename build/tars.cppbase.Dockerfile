@@ -1,7 +1,7 @@
 #第一阶段
 FROM debian:stretch-slim AS First
 
-COPY files/sources.list /etc/apt/sources.list
+# COPY files/sources.list /etc/apt/sources.list
 COPY files/entrypoint.sh /bin/entrypoint.sh
 RUN  chmod +x /bin/entrypoint.sh
 

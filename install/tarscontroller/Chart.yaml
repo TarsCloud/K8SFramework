@@ -1,10 +1,7 @@
 apiVersion: v2
 name: tarscontroller
-version: 0.0.2
+version: 1.0.2
 #kubeVersion: ">= 1.17.0 <= 1.19.0"
 type: application
 keywords: [ tars ,tarscontroller ]
-maintainers:
-  - name: adugeek
-    email: root@libssl.com
 appVersion: v1alpha2

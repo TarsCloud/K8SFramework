@@ -76,6 +76,9 @@ rm -rf build/files/taf-node
 rm -rf build/files/taf-web
 
 replace install
+
+exit 0
+
 replace build
 replace doc
 replace src/CMakeLists.txt
@@ -92,8 +95,9 @@ replace src/NotifyServer
 replace src/PropertyServer
 replace src/RegistryServer
 replace src/StatServer
-replace *.sh
-replace *.md
+replace buildBinary.sh
+replace buildHelm.sh
+replace readme.md
 
 mv src/k8s.taf.io src/k8s.tars.io
 
