@@ -59,7 +59,7 @@ kubectl create secret docker-registry tars-image-secret -n tars-test --docker-se
 
 helm install tarscontroller -n tars-test --create-namespace --set 'helm.dockerhub.registry=harbor.12345up.com/tars-k8s,helm.build.id=v20210816.01' install/tarscontroller-1.0.2.tgz
 
-helm install tars-test -n tars-test --set 'dockerRegistry=harbor.12345up.com/tars-k8s,dockerSecret=tars-image-secret,els.nodes=es-out-es:9200,helm.build.id=v20210816.01,helm.dockerhub.registry=harbor.12345up.com/tars-k8s,web=tars-test.12345up.com' install/tarsframework-1.0.2.tgz
+helm install tars-test -n tars-test --set 'dockerRegistry=harbor.12345up.com/tars-k8s,dockerSecret=tars-image-secret,els.nodes=es-out-es:9200,helm.build.id=v20210816.01,helm.dockerhub.registry=harbor.12345up.com/tars-k8s,web=tars-test.12345up.com' install/-1.0.2.tgz
 
 ```
 

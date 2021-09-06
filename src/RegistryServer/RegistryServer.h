@@ -22,7 +22,7 @@ protected:
     void destroyApp() override;
 
 private:
-     std::thread  upchainThread;
+     std::thread  upchainThread_;
 };
 
 

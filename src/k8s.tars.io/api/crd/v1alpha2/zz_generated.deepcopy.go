@@ -216,11 +216,6 @@ func (in *TConfig) DeepCopyInto(out *TConfig) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
 	in.ObjectMeta.DeepCopyInto(&out.ObjectMeta)
-	if in.PodSeq != nil {
-		in, out := &in.PodSeq, &out.PodSeq
-		*out = new(string)
-		**out = **in
-	}
 	in.UpdateTime.DeepCopyInto(&out.UpdateTime)
 	return
 }

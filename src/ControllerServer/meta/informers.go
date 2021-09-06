@@ -17,15 +17,18 @@ type EventsReceiver interface {
 }
 
 type Informers struct {
-	K8sInformerFactory        k8sInformers.SharedInformerFactory
-	K8sMetadataInformerFactor metadatainformer.SharedInformerFactory
-	CrdInformerFactory        crdInformers.SharedInformerFactory
+	k8sInformerFactory           k8sInformers.SharedInformerFactory
+	k8sInformerFactoryWithFilter k8sInformers.SharedInformerFactory
+	k8sMetadataInformerFactor    metadatainformer.SharedInformerFactory
+	crdInformerFactory           crdInformers.SharedInformerFactory
 
 	synced  bool
 	synceds []cache.InformerSynced
 
-	ServiceInformer k8sInformersCoreV1.ServiceInformer
-	PodInformer     k8sInformersCoreV1.PodInformer
+	NodeInformer                  k8sInformersCoreV1.NodeInformer
+	ServiceInformer               k8sInformersCoreV1.ServiceInformer
+	PodInformer                   k8sInformersCoreV1.PodInformer
+	PersistentVolumeClaimInformer k8sInformersCoreV1.PersistentVolumeClaimInformer
 
 	DaemonSetInformer   k8sInformersAppsV1.DaemonSetInformer
 	StatefulSetInformer k8sInformersAppsV1.StatefulSetInformer
@@ -74,9 +77,10 @@ func setEventHandler(resourceKind string, resourceInformer cache.SharedInformer,
 }
 
 func (i *Informers) Start(stop chan struct{}) {
-	i.K8sInformerFactory.Start(stop)
-	i.K8sMetadataInformerFactor.Start(stop)
-	i.CrdInformerFactory.Start(stop)
+	i.k8sInformerFactory.Start(stop)
+	i.k8sInformerFactoryWithFilter.Start(stop)
+	i.k8sMetadataInformerFactor.Start(stop)
+	i.crdInformerFactory.Start(stop)
 }
 
 func (i *Informers) Synced() bool {

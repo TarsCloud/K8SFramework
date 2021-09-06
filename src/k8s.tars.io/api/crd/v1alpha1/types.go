@@ -372,7 +372,7 @@ type TConfig struct {
 	k8sMetaV1.ObjectMeta `json:"metadata,omitempty"`
 	App                  string         `json:"app"`
 	Server               string         `json:"server"`
-	PodSeq               *string        `json:"podSeq"`
+	PodSeq               string         `json:"podSeq"`
 	ConfigName           string         `json:"configName"`
 	Version              string         `json:"version"`
 	ConfigContent        string         `json:"configContent"`

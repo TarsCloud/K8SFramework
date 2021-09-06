@@ -120,34 +120,20 @@ static std::shared_ptr<TarsInfo> buildTarsInfoFromDocument(const rapidjson::Valu
         pTarsInfo->adapters.push_back(pAdapter);
     }
 
-    auto pHostPorts = rapidjson::GetValueByPointer(pDocument, "/spec/hostPorts");
-
-    if (pHostPorts != nullptr) {
-
-        assert(pHostPorts->IsArray());
-
-        for (const auto &hostPort :pHostPorts->GetArray()) {
-
-            auto pNameRef = rapidjson::GetValueByPointer(hostPort, "/nameRef");
-            assert(pNameRef != nullptr && pNameRef->IsString());
-            auto nameRef = SFromP(pNameRef);
-
-            for (auto &adapter:pTarsInfo->adapters) {
-
-                if (adapter->name == nameRef) {
-                    auto pPort = rapidjson::GetValueByPointer(hostPort, "/port");
-                    assert(pPort != nullptr && pPort->IsInt());
-                    adapter->hostPort = pPort->GetInt();
-                    break;
-                }
-            }
-        }
-    }
-
     return pTarsInfo;
 }
 
 static std::shared_ptr<ServerInfo> buildServerInfoFromDocument(const rapidjson::Value &pDocument) {
+    auto pSubType = rapidjson::GetValueByPointer(pDocument, "/spec/subType");
+    assert(pSubType != nullptr && pSubType->IsString());
+
+    std::string subTypeStr = SFromP(pSubType);
+
+    constexpr char TarsType[] = "tars";
+
+    if (subTypeStr != TarsType) {
+        return nullptr;
+    }
 
     auto pServerInfo = std::make_shared<ServerInfo>();
 
@@ -159,31 +145,7 @@ static std::shared_ptr<ServerInfo> buildServerInfoFromDocument(const rapidjson::
     assert(pServerName != nullptr && pServerName->IsString());
     pServerInfo->serverName = SFromP(pServerName);
 
-    auto pSubType = rapidjson::GetValueByPointer(pDocument, "/spec/subType");
-    assert(pSubType != nullptr && pSubType->IsString());
-
-    std::string subTypeStr = SFromP(pSubType);
-
-    constexpr char TarsType[] = "tars";
-    constexpr char NormalType[] = "normal";
-
-    if (subTypeStr == TarsType) {
-        pServerInfo->subType = ServerSubType::Tars;
-    } else if (subTypeStr == NormalType) {
-        pServerInfo->subType = ServerSubType::Normal;
-    } else {
-        assert(false);
-        return nullptr;
-    }
-
-    switch (pServerInfo->subType) {
-        case ServerSubType::Tars:
-            pServerInfo->tarsInfo = buildTarsInfoFromDocument(pDocument);
-            break;
-        case ServerSubType::Normal:
-            // todo pServerInfo->normalInfo = buildNormalInfoFromDocument(pDocument);
-            break;
-    }
+    pServerInfo->tarsInfo = buildTarsInfoFromDocument(pDocument);
 
     auto pPods = rapidjson::GetValueByPointer(pDocument, "/status/pods");
     if (pPods != nullptr) {
@@ -194,14 +156,6 @@ static std::shared_ptr<ServerInfo> buildServerInfoFromDocument(const rapidjson::
             auto pName = rapidjson::GetValueByPointer(pod, "/name");
             assert(pName != nullptr && pName->IsString());
             pPod->name = SFromP(pName);
-
-            auto pPodIP = rapidjson::GetValueByPointer(pod, "/podIP");
-            assert(pPodIP != nullptr && pPodIP->IsString());
-            pPod->podIP = SFromP(pPodIP);
-
-            auto pHostIP = rapidjson::GetValueByPointer(pod, "/hostIP");
-            assert(pHostIP != nullptr && pHostIP->IsString());
-            pPod->hostIP = SFromP(pHostIP);
 
             auto pPresentState = rapidjson::GetValueByPointer(pod, "/presentState");
             assert(pPresentState != nullptr && pPresentState->IsString());

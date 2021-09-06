@@ -116,6 +116,7 @@ declare -a LocalImages=(
   tars.nodejs10base
   tars.nodejs12base
   tars.nodejs14base
+  tars.php74base
   tarscontroller
   tarsagent
   tars.elasticsearch
@@ -174,7 +175,7 @@ echo -e "helm:
       id: ${_BUILD_ID_}
     dockerhub:
       registry: ${_DOCKER_REGISTRY_URL_}
-" >./install/tarsframework/values.yaml
-helm package install/tarsframework -d ./install
+" >./install//values.yaml
+helm package install/ -d ./install
 
 LOG_INFO "Build Helm File OK "

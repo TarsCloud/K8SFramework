@@ -25,6 +25,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"os"
 	"path/filepath"
+	"syscall"
 )
 
 // APIUtil is an interface for the K8s API
@@ -99,6 +100,14 @@ type VolumeUtil interface {
 
 	// GetFsCapacityByte gets capacity for fs on full path
 	GetFsCapacityByte(fullPath string) (int64, error)
+
+	GetFilePerm(fullPath string) (os.FileMode, error)
+
+	GetFileUidGid(fullPath string) (int, int, error)
+
+	DeleteEmptyDir(fullPath string) error
+
+	MakeDir(fullPath string) error
 }
 
 var _ VolumeUtil = &volumeUtil{}
@@ -178,4 +187,55 @@ func (u *volumeUtil) DeleteContents(fullPath string) error {
 // Capacity returned here is total capacity.
 func (u *volumeUtil) GetFsCapacityByte(fullPath string) (int64, error) {
 	return 5*GiB, nil
+}
+
+func (u *volumeUtil) GetFilePerm(fullPath string) (os.FileMode, error) {
+	stat, err := os.Stat(fullPath)
+	if err != nil {
+		return 0, err
+	}
+	return stat.Mode().Perm(), nil
+}
+
+func (u *volumeUtil) GetFileUidGid(fullPath string) (int, int, error) {
+	stat, err := os.Stat(fullPath)
+	if err != nil {
+		return 0, 0, err
+	}
+	var uid, gid int
+	if info, ok := stat.Sys().(*syscall.Stat_t); ok {
+		uid = int(info.Uid)
+		gid = int(info.Gid)
+	} else {
+		uid = os.Getuid()
+		gid = os.Getgid()
+	}
+	return uid, gid, nil
+}
+
+func (u *volumeUtil) DeleteEmptyDir(fullPath string) error {
+	if ret, err := u.IsDir(fullPath); err == nil && ret {
+		if files, err := u.ReadDir(fullPath); err == nil && len(files) == 0 {
+			return os.RemoveAll(fullPath)
+		} else {
+			return err
+		}
+	} else {
+		return err
+	}
+}
+
+func (u *volumeUtil) MakeDir(fullPath string) error {
+	if u.Existed(fullPath) {
+		return nil
+	}
+
+	// unix permissions are 'filtered' by whatever umask has been set.
+	oldMask := syscall.Umask(0)
+	if err := os.MkdirAll(fullPath, 0755); err != nil {
+		return err
+	}
+	syscall.Umask(oldMask)
+
+	return nil
 }

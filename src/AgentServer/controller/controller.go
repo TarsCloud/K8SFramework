@@ -48,12 +48,12 @@ func StartController(namespace string, k8sConfig *rest.Config) {
 
 	k8sClient, crdClient, err := getClientSet(k8sConfig)
 	if err != nil {
-		return
+		glog.Fatalf("getClientSet error% %s", err)
 	}
 
 	k8sNode, err := getNode(k8sClient)
 	if err != nil {
-		return
+		glog.Fatalf("getNode error% %s", err)
 	}
 
 	startController(namespace, k8sClient, crdClient, k8sNode)
@@ -64,14 +64,12 @@ func StartController(namespace string, k8sConfig *rest.Config) {
 func getClientSet(k8sConfig *rest.Config) (*kubernetes.Clientset, *crdClientSet.Clientset, error) {
 	k8sClient, err := kubernetes.NewForConfig(k8sConfig)
 	if err != nil {
-		glog.Fatalf("Error creating clientset: %v\n", err)
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("Error creating clientset: %v\n", err)
 	}
 
 	crdClient, err := crdClientSet.NewForConfig(k8sConfig)
 	if err != nil {
-		glog.Fatalf("Error creating clientset: %v\n", err)
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("Error creating clientset: %v\n", err)
 	}
 
 	return k8sClient, crdClient, nil
@@ -80,22 +78,20 @@ func getClientSet(k8sConfig *rest.Config) (*kubernetes.Clientset, *crdClientSet.
 func getNode(k8sClient *kubernetes.Clientset) (*v1.Node, error) {
 	nodeName := os.Getenv("NodeName")
 	if nodeName == "" {
-		glog.Fatalf("environment variable NodeName not set\n")
-		return nil, fmt.Errorf("empty node name.\n")
+		return nil, fmt.Errorf("environment variable NodeName not set.\n")
 	}
 
 	k8sNode, err := k8sClient.CoreV1().Nodes().Get(context.TODO(), nodeName, metav1.GetOptions{})
 	if err != nil {
-		glog.Fatalf("Could not get node information: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("Could not get node information: %v.\n", err)
 	}
 
 	return k8sNode, nil
 }
 
 func startController(namespace string, k8sClient *kubernetes.Clientset, crdClient *crdClientSet.Clientset, k8sNode *v1.Node) {
-	discoveryMap := make(map[string]common.MountConfig)
-	discoveryMap[common.TStorageClassName] = common.MountConfig{
+	tstorageClass := common.MountConfig{
+		Name: common.TStorageClassName,
 		HostDir: common.TLocalVolumeHostDir,
 		MountDir: common.TLocalVolumeHostDir,
 		VolumeMode: common.TLocalVolumeMode,
@@ -105,7 +101,7 @@ func startController(namespace string, k8sClient *kubernetes.Clientset, crdClien
 
 	usrConfig := &common.UserConfig{
 		Node:            k8sNode,
-		DiscoveryMap:	 discoveryMap,
+		TStorageClass:	 tstorageClass,
 		NodeLabelsForPV: nodeLabelForPV,
 		MinResyncPeriod: metav1.Duration{Duration: 5 * time.Minute},
 		Namespace:       namespace,
@@ -160,10 +156,16 @@ func startController(namespace string, k8sClient *kubernetes.Clientset, crdClien
 		}
 	}
 	for {
-		runtimeConfig.Node, _ = getNode(k8sClient)
 		deleter.DeletePVs()
-		discoverer.DiscoverLocalVolumes()
+		discoverer.DiscoverVolumes()
 		time.Sleep(10 * time.Second)
+		// get node periodically for image downloader
+		node, err := getNode(k8sClient)
+		if err != nil {
+			glog.Errorf("Loop getNode error: %s.", err)
+			continue
+		}
+		runtimeConfig.Node = node
 	}
 }
 

@@ -26,7 +26,8 @@ spec:
         name: data
         readOnly: false
         source:
-          tLocalVolume: { }
+          tLocalVolume:
+            uid: "1000"
     podManagementPolicy: Parallel
     replicas: 1
   release:

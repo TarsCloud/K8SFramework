@@ -34,3 +34,5 @@ if ! docker run -i -v "${PWD}":/tars-k8s-src -v "${PWD}"/build/files/binary:/tar
   end
 fi
 
+## for debug, into build docker
+# docker run -it -v "${PWD}":/tars-k8s-src -v "${PWD}"/build/files/binary:/tars-k8s-binary --entrypoint=bash tars.builder 

@@ -67,7 +67,7 @@ k8s:
         fieldPath: metadata.name
     mounts:
     - name: remote-log-dir
-      mountPath: /usr/local/app/taf/remote_app_log
+      mountPath: /usr/local/app/tars/remote_app_log
       source:
         tLocalVolume:
           gid: "0"
@@ -80,14 +80,14 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
     annotations:
-        taf.io/LocalVolumeGID: "0"
-        taf.io/LocalVolumeMode: "755"
-        taf.io/LocalVolumeUID: "1000"
+        tars.io/LocalVolumeGID: "0"
+        tars.io/LocalVolumeMode: "755"
+        tars.io/LocalVolumeUID: "1000"
     labels:
-        taf.io/LocalVolume: remote-log-dir
-        taf.io/ServerApp: taf
-        taf.io/ServerName: taflog
-    name: remote-log-dir-taf-taflog-0
+        tars.io/LocalVolume: remote-log-dir
+        tars.io/ServerApp: tars
+        tars.io/ServerName: tarslog
+    name: remote-log-dir-tars-tarslog-0
     namespace: default
 spec:
     resources:
@@ -95,15 +95,15 @@ spec:
             storage: 1G
     selector:
         matchLabels:
-        taf.io/LocalVolume: remote-log-dir
-        taf.io/ServerApp: taf
-        taf.io/ServerName: taflog
+        tars.io/LocalVolume: remote-log-dir
+        tars.io/ServerApp: tars
+        tars.io/ServerName: tarslog
     storageClassName: t-storage-class
     volumeMode: Filesystem
-    volumeName: default-remote-log-dir-taf-taflog-c4e31c6
+    volumeName: default-remote-log-dir-tars-tarslog-c4e31c6
 ```
 
-pv:  -> tafagent 建立， k8s 控制器 执行 bound, release 操作
+pv:  -> tarsagent 建立， k8s 控制器 执行 bound, release 操作
 
 ```yaml
 apiVersion: v1
@@ -114,10 +114,10 @@ annotations:
     pv.kubernetes.io/provisioned-by: agent-downloader-provisioner-node8.67
 labels:
     kubernetes.io/hostname: node8.67
-    taf.io/LocalVolume: remote-log-dir
-    taf.io/ServerApp: taf
-    taf.io/ServerName: taflog
-name: default-remote-log-dir-taf-taflog-36520b71
+    tars.io/LocalVolume: remote-log-dir
+    tars.io/ServerApp: tars
+    tars.io/ServerName: tarslog
+name: default-remote-log-dir-tars-tarslog-36520b71
 spec:
     accessModes:
     - ReadWriteOnce
@@ -126,12 +126,12 @@ spec:
     claimRef:
         apiVersion: v1
         kind: PersistentVolumeClaim
-        name: remote-log-dir-taf-taflog-1
+        name: remote-log-dir-tars-tarslog-1
         namespace: default
         resourceVersion: "42308569"
         uid: 869d9f9f-7313-49aa-b583-08a8fdce8668
     local:
-        path: /usr/local/app/taf/host-mount/default/taf.taflog/remote-log-dir
+        path: /usr/local/app/tars/host-mount/default/tars.tarslog/remote-log-dir
     nodeAffinity:
         required:
             nodeSelectorTerms:
@@ -179,24 +179,24 @@ statefulset:
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-    name: taf-tafconfig
+    name: tars-tarsconfig
 spec:
     template:
         metadata:
-            name: taf-tafconfig
+            name: tars-tarsconfig
         spec:
             hostIPC: true
             containers:
-            -   image: harbor.12345up.com/taf-helm/taf.tafconfig:p7
-                name: taf-tafconfig
+            -   image: harbor.12345up.com/tars-helm/tars.tarsconfig:p7
+                name: tars-tarsconfig
 volumeClaimTemplates:
 - apiVersion: v1
   kind: PersistentVolumeClaim
   metadata:
     labels:
-        taf.io/LocalVolume: delay-bind
-        taf.io/ServerApp: taf
-        taf.io/ServerName: tafconfig
+        tars.io/LocalVolume: delay-bind
+        tars.io/ServerApp: tars
+        tars.io/ServerName: tarsconfig
     name: delay-bind
   spec:
     accessModes:
@@ -206,9 +206,9 @@ volumeClaimTemplates:
             storage: 1G
     selector:
         matchLabels:
-            taf.io/LocalVolume: delay-bind
-            taf.io/ServerApp: taf
-            taf.io/ServerName: tafconfig
+            tars.io/LocalVolume: delay-bind
+            tars.io/ServerApp: tars
+            tars.io/ServerName: tarsconfig
     storageClassName: t-storage-class
     volumeMode: Filesystem
 ```
@@ -225,7 +225,7 @@ volumeClaimTemplates:
 
 ### 升级后的亲和性使用方式
 
-- App 级别 节点标签不变: taf.io/ability.${App} , 新增 Server级标签  taf.io/ability.${App}.${Server}
+- App 级别 节点标签不变: tars.io/ability.${App} , 新增 Server级标签  tars.io/ability.${App}.${Server}
 
 - 添加独立字段表示亲和性选项
 
@@ -242,11 +242,11 @@ k8s:
 
 释义：
 
-+ AppRequired：            在满足其他条件后，节点必须有 taf.io/ability.${App} 标签
++ AppRequired：            在满足其他条件后，节点必须有 tars.io/ability.${App} 标签
 
-+ ServerRequired           在满足其他条件后，节点必须有 taf.io/ability.${App}.${Server} 标签
++ ServerRequired           在满足其他条件后，节点必须有 tars.io/ability.${App}.${Server} 标签
 
-+ AppOrServerPreferred:    在满足其他条件后，优先选择有 taf.io/ability.${App}.${Server}, taf.io/ability.${App} 标签的节点. 如果节点 没有 ability 标签， 则忽略
++ AppOrServerPreferred:    在满足其他条件后，优先选择有 tars.io/ability.${App}.${Server}, tars.io/ability.${App} 标签的节点. 如果节点 没有 ability 标签， 则忽略
 
 + None： 不对节点标签做要求
 

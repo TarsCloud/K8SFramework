@@ -48,6 +48,9 @@ func (r *TExitedRecordReconciler) EnqueueObj(resourceName string, resourceEvent 
 		key := fmt.Sprintf("%s/%s", texitedRecord.Namespace, texitedRecord.Name)
 		r.workQueue.Add(key)
 	case *k8sCoreV1.Pod:
+		if !meta.IsControllerLeader() {
+			return
+		}
 		pod := resourceObj.(*k8sCoreV1.Pod)
 		if pod.DeletionTimestamp != nil && pod.UID != "" && pod.Labels != nil {
 			app, appExist := pod.Labels[meta.TServerAppLabel]

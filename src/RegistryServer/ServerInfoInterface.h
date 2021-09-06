@@ -13,19 +13,16 @@
 
 struct PodStatus {
     std::string name;
-    std::string podIP;
-    std::string hostIP;
     std::string presentState;
 };
 
 struct Adapter {
     int port;
-    int hostPort;
     std::string name;
-    uint thread;
-    uint connection;
-    uint timeout;
-    uint capacity;
+    int32_t thread;
+    int32_t connection;
+    int32_t timeout;
+    int32_t capacity;
     bool isTcp;
     bool isTars;
 };
@@ -99,7 +96,8 @@ private:
 
     int getTarsServerDescriptor(const shared_ptr<ServerInfo> &serverInfo, ServerDescriptor &descriptor);
 
-    void findTarsEndpoint(const std::shared_ptr<ServerInfo> &serverInfo, const string &sPortName, vector<EndpointF> *pActiveEp, vector<EndpointF> *pInactiveEp);
+    void findTarsEndpoint(const std::shared_ptr<ServerInfo> &serverInfo, const string &sPortName,
+                         vector<EndpointF> *pActiveEp, vector<EndpointF> *pInactiveEp);
 
     void findUpChainEndpoint(const std::string &id, vector<EndpointF> *pActiveEp, vector<EndpointF> *pInactiveEp);
 };

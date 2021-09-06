@@ -5,6 +5,7 @@ import (
 	"fmt"
 	k8sAppsV1 "k8s.io/api/apps/v1"
 	k8sCoreV1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/api/errors"
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -24,6 +25,43 @@ type StatefulSetReconciler struct {
 	informers *meta.Informers
 	threads   int
 	workQueue workqueue.RateLimitingInterface
+}
+
+func diffVolumeClaimTemplate(currents, targets []k8sCoreV1.PersistentVolumeClaim) (bool, []string) {
+	if currents == nil && targets != nil {
+		return false, nil
+	}
+
+	targetVCS := make(map[string]*k8sCoreV1.PersistentVolumeClaim, len(targets))
+	for i := range targets {
+		targetVCS[targets[i].Name] = &targets[i]
+	}
+
+	var equal = true
+	var shouldDelete []string
+
+	for i := range currents {
+		c := &currents[i]
+		t, ok := targetVCS[c.Name]
+		if !ok {
+			equal = false
+			shouldDelete = append(shouldDelete, c.Name)
+			continue
+		}
+
+		if equal == true {
+			if !equality.Semantic.DeepEqual(c.ObjectMeta, t.ObjectMeta) {
+				equal = false
+				continue
+			}
+
+			if !equality.Semantic.DeepEqual(c.Spec, t.Spec) {
+				equal = false
+				continue
+			}
+		}
+	}
+	return equal, shouldDelete
 }
 
 func NewStatefulSetReconciler(clients *meta.Clients, informers *meta.Informers, threads int) *StatefulSetReconciler {
@@ -113,7 +151,7 @@ func (r *StatefulSetReconciler) syncStatefulset(tserver *crdV1alpha2.TServer, st
 	return reconclie.AllOk
 }
 
-func (r *StatefulSetReconciler) recreateStatefulset(tserver *crdV1alpha2.TServer) reconclie.ReconcileResult {
+func (r *StatefulSetReconciler) recreateStatefulset(tserver *crdV1alpha2.TServer, shouldDeletePVCS []string) reconclie.ReconcileResult {
 	namespace := tserver.Namespace
 	name := tserver.Name
 	err := r.clients.K8sClient.AppsV1().StatefulSets(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
@@ -122,16 +160,21 @@ func (r *StatefulSetReconciler) recreateStatefulset(tserver *crdV1alpha2.TServer
 		return reconclie.RateLimit
 	}
 
-	appRequirement, _ := labels.NewRequirement(meta.TServerAppLabel, "==", []string{tserver.Spec.App})
-	serverRequirement, _ := labels.NewRequirement(meta.TServerNameLabel, "==", []string{tserver.Spec.Server})
-	localVolumeRequirement, _ := labels.NewRequirement(meta.TLocalVolumeLabel, "==", []string{meta.THostBindPlaceholder})
-	labelSelector := labels.NewSelector().Add(*appRequirement, *serverRequirement, *localVolumeRequirement)
+	if shouldDeletePVCS != nil {
+		appRequirement, _ := labels.NewRequirement(meta.TServerAppLabel, "==", []string{tserver.Spec.App})
+		serverRequirement, _ := labels.NewRequirement(meta.TServerNameLabel, "==", []string{tserver.Spec.Server})
+		labelSelector := labels.NewSelector().Add(*appRequirement, *serverRequirement)
 
-	err = r.clients.K8sClient.CoreV1().PersistentVolumeClaims(namespace).DeleteCollection(context.TODO(), k8sMetaV1.DeleteOptions{}, k8sMetaV1.ListOptions{
-		LabelSelector: labelSelector.String(),
-	})
-	if err != nil {
-		utilRuntime.HandleError(fmt.Errorf(meta.ResourceDeleteCollectionError, "persistentvolumeclaims", labelSelector.String(), err.Error()))
+		localVolumeRequirement, _ := labels.NewRequirement(meta.TLocalVolumeLabel, "==", shouldDeletePVCS)
+		labelSelector.Add(*localVolumeRequirement)
+
+		err = r.clients.K8sClient.CoreV1().PersistentVolumeClaims(namespace).DeleteCollection(context.TODO(), k8sMetaV1.DeleteOptions{}, k8sMetaV1.ListOptions{
+			LabelSelector: labelSelector.String(),
+		})
+
+		if err != nil {
+			utilRuntime.HandleError(fmt.Errorf(meta.ResourceDeleteCollectionError, "persistentvolumeclaims", labelSelector.String(), err.Error()))
+		}
 	}
 	return reconclie.AddAfter
 }
@@ -196,9 +239,9 @@ func (r *StatefulSetReconciler) reconcile(key string) reconclie.ReconcileResult 
 	}
 
 	volumeClaimTemplates := meta.BuildStatefulSetVolumeClainTemplates(tserver)
-	equal := meta.EqualVolumeClaimTemplate(volumeClaimTemplates, statefulSet.Spec.VolumeClaimTemplates)
+	equal, names := diffVolumeClaimTemplate(statefulSet.Spec.VolumeClaimTemplates, volumeClaimTemplates)
 	if !equal {
-		return r.recreateStatefulset(tserver)
+		return r.recreateStatefulset(tserver, names)
 	}
 
 	anyChanged := !meta.EqualTServerAndStatefulSet(tserver, statefulSet)

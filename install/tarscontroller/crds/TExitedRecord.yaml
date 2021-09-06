@@ -14,66 +14,66 @@ spec:
   scope: Namespaced
   versions:
     - name: v1alpha1
-      schema:
-        openAPIV3Schema:
-          type: object
-          properties:
-            app:
-              type: string
-            server:
-              type: string
-            pods:
-              type: array
-              items:
-                type: object
-                properties:
-                  uid:
-                    type: string
-                  name:
-                    type: string
-                  id:
-                    type: string
-                  nodeIP:
-                    type: string
-                  podIP:
-                    type: string
-                  createTime:
-                    type: string
-                  deleteTime:
-                    type: string
-              maxItems: 150
-          required: [ app,server,pods ]
-      served: true
-      storage: true
-    - name: v1alpha2
-      schema:
-        openAPIV3Schema:
-          type: object
-          properties:
-            app:
-              type: string
-            server:
-              type: string
-            pods:
-              type: array
-              items:
-                type: object
-                properties:
-                  uid:
-                    type: string
-                  name:
-                    type: string
-                  id:
-                    type: string
-                  nodeIP:
-                    type: string
-                  podIP:
-                    type: string
-                  createTime:
-                    type: string
-                  deleteTime:
-                    type: string
-              maxItems: 150
-          required: [ app,server,pods ]
       served: true
       storage: false
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            app:
+              type: string
+            server:
+              type: string
+            pods:
+              type: array
+              items:
+                type: object
+                properties:
+                  uid:
+                    type: string
+                  name:
+                    type: string
+                  id:
+                    type: string
+                  nodeIP:
+                    type: string
+                  podIP:
+                    type: string
+                  createTime:
+                    type: string
+                  deleteTime:
+                    type: string
+              maxItems: 150
+          required: [ app,server,pods ]
+    - name: v1alpha2
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            app:
+              type: string
+            server:
+              type: string
+            pods:
+              type: array
+              items:
+                type: object
+                properties:
+                  uid:
+                    type: string
+                  name:
+                    type: string
+                  id:
+                    type: string
+                  nodeIP:
+                    type: string
+                  podIP:
+                    type: string
+                  createTime:
+                    type: string
+                  deleteTime:
+                    type: string
+              maxItems: 150
+          required: [ app,server,pods ]

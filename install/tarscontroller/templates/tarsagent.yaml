@@ -54,7 +54,8 @@ metadata:
 data:
   crontab.config: |-
     05 0 * * * ? find /usr/local/app/tars/app_log/ -mtime +5 -name "*.log" | xargs rm -f
-    05 0 * * * ? find /usr/local/app/tars/app_log/ -mtime +5 -name "core.*" | xargs rm -
+    05 0 * * * ? find /usr/local/app/tars/app_log/ -mtime +5 -name "core.*" | xargs rm -f
+    05 0 * * * ? find /usr/local/app/tars/app_log/tars-agent -mtime +5 | xargs rm -f
 ---
 
 apiVersion: apps/v1
@@ -73,6 +74,14 @@ spec:
       labels:
         tars.io/Agent: "true"
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: tars.io/node
+                    operator: Exists
+                    values: [ ]
       serviceAccountName: tars-agent
       containers:
         - image:

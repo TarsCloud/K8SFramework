@@ -196,11 +196,7 @@ func mutatingCreateTConfig(requestAdmissionView *k8sAdmissionV1.AdmissionReview)
 	patchContents = append(patchContents, []byte(fmt.Sprintf("{\"op\":\"add\",\"path\":\"/metadata/labels/tars.io~1ServerApp\",\"value\":\"%s\"}", tconfig.App)))
 	patchContents = append(patchContents, []byte(fmt.Sprintf("{\"op\":\"add\",\"path\":\"/metadata/labels/tars.io~1ServerName\",\"value\":\"%s\"}", tconfig.Server)))
 	patchContents = append(patchContents, []byte(fmt.Sprintf("{\"op\":\"add\",\"path\":\"/metadata/labels/tars.io~1ConfigName\",\"value\":\"%s\"}", tconfig.ConfigName)))
-	if tconfig.PodSeq == nil {
-		patchContents = append(patchContents, []byte(fmt.Sprintf("{\"op\":\"add\",\"path\":\"/metadata/labels/tars.io~1PodSeq\",\"value\":\"%s\"}", "m")))
-	} else {
-		patchContents = append(patchContents, []byte(fmt.Sprintf("{\"op\":\"add\",\"path\":\"/metadata/labels/tars.io~1PodSeq\",\"value\":\"%s\"}", *tconfig.PodSeq)))
-	}
+	patchContents = append(patchContents, []byte(fmt.Sprintf("{\"op\":\"add\",\"path\":\"/metadata/labels/tars.io~1PodSeq\",\"value\":\"%s\"}", tconfig.PodSeq)))
 	patchContents = append(patchContents, []byte(fmt.Sprintf("{\"op\":\"add\",\"path\":\"/metadata/labels/tars.io~1Activated\",\"value\":\"%t\"}", tconfig.Activated)))
 
 	versionString := fmt.Sprintf("%s-%x", time.Now().Format("20060102030405"), crc32.ChecksumIEEE([]byte(tconfig.Name)))
@@ -230,11 +226,8 @@ func mutatingUpdateTConfig(requestAdmissionView *k8sAdmissionV1.AdmissionReview)
 	patchContents = append(patchContents, []byte(fmt.Sprintf("{\"op\":\"add\",\"path\":\"/metadata/labels/tars.io~1ServerApp\",\"value\":\"%s\"}", tconfig.App)))
 	patchContents = append(patchContents, []byte(fmt.Sprintf("{\"op\":\"add\",\"path\":\"/metadata/labels/tars.io~1ServerName\",\"value\":\"%s\"}", tconfig.Server)))
 	patchContents = append(patchContents, []byte(fmt.Sprintf("{\"op\":\"add\",\"path\":\"/metadata/labels/tars.io~1ConfigName\",\"value\":\"%s\"}", tconfig.ConfigName)))
-	if tconfig.PodSeq == nil {
-		patchContents = append(patchContents, []byte(fmt.Sprintf("{\"op\":\"add\",\"path\":\"/metadata/labels/tars.io~1PodSeq\",\"value\":\"%s\"}", "m")))
-	} else {
-		patchContents = append(patchContents, []byte(fmt.Sprintf("{\"op\":\"add\",\"path\":\"/metadata/labels/tars.io~1PodSeq\",\"value\":\"%s\"}", *tconfig.PodSeq)))
-	}
+	patchContents = append(patchContents, []byte(fmt.Sprintf("{\"op\":\"add\",\"path\":\"/metadata/labels/tars.io~1PodSeq\",\"value\":\"%s\"}", tconfig.PodSeq)))
+
 	patchContents = append(patchContents, []byte(fmt.Sprintf("{\"op\":\"add\",\"path\":\"/metadata/labels/tars.io~1Activated\",\"value\":\"%t\"}", tconfig.Activated)))
 	patchContents = append(patchContents, []byte(fmt.Sprintf("{\"op\":\"add\",\"path\":\"/metadata/labels/tars.io~1Version\",\"value\":\"%s\"}", tconfig.Version)))
 

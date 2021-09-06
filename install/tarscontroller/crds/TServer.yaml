@@ -25,6 +25,8 @@ spec:
   scope: Namespaced
   versions:
     - name: v1alpha1
+      served: true
+      storage: false
       schema:
         openAPIV3Schema:
           type: object
@@ -34,10 +36,12 @@ spec:
               properties:
                 app:
                   type: string
-                  pattern: ^[a-zA-Z][a-zA-Z0-9]{0,62}$
+                  pattern: ^[a-zA-Z][a-zA-Z0-9]*$
+                  maxLength: 63
                 server:
                   type: string
-                  pattern: ^[a-zA-Z][a-zA-Z0-9]{0,62}$
+                  pattern: ^[a-zA-Z][a-zA-Z0-9]*$
+                  maxLength: 63
                 important:
                   type: integer
                   minimum: 1
@@ -463,6 +467,7 @@ spec:
                             enum: [ None,HostToContainer,Bidirectional ]
                           subPathExpr:
                             type: string
+                        require: [ name,source,mountPath ]
                     nodeSelector:
                       type: object
                       properties:
@@ -602,8 +607,6 @@ spec:
                   type: string
               required: [ replicas,readyReplicas,currentReplicas,selector ]
           required: [ spec ]
-      served: true
-      storage: true
       subresources:
         status: { }
         scale:
@@ -627,6 +630,8 @@ spec:
           type: integer
           jsonPath: .status.readyReplicas
     - name: v1alpha2
+      served: true
+      storage: true
       schema:
         openAPIV3Schema:
           type: object
@@ -636,10 +641,12 @@ spec:
               properties:
                 app:
                   type: string
-                  pattern: ^[a-zA-Z][a-zA-Z0-9]{0,62}$
+                  pattern: ^[a-zA-Z][a-zA-Z0-9]*$
+                  maxLength: 63
                 server:
                   type: string
-                  pattern: ^[a-zA-Z][a-zA-Z0-9]{0,62}$
+                  pattern: ^[a-zA-Z][a-zA-Z0-9]*$
+                  maxLength: 63
                 important:
                   type: integer
                   minimum: 1
@@ -1055,7 +1062,19 @@ spec:
                                 required: [ spec ]
                               tLocalVolume:
                                 type: object
-                                property: { }
+                                properties:
+                                  uid:
+                                    type: string
+                                    pattern: ^(0|[1-9][0-9]{0,5})$
+                                    default: "0"
+                                  gid:
+                                    type: string
+                                    pattern: ^(0|[1-9][0-9]{0,5})$
+                                    default: "0"
+                                  mode:
+                                    type: string
+                                    parrern: ^0?[1-7]{3,3}$
+                                    default: "755"
                             oneOf:
                               - required: [ configMap ]
                               - required: [ secret ]
@@ -1076,6 +1095,7 @@ spec:
                             enum: [ None,HostToContainer,Bidirectional ]
                           subPathExpr:
                             type: string
+                        require: [ name,source,mountPath ]
                     nodeSelector:
                       type: array
                       items:
@@ -1139,7 +1159,6 @@ spec:
                   properties:
                     source:
                       type: string
-                      #                      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                       maxLength: 253
                     id:
                       type: string
@@ -1172,8 +1191,6 @@ spec:
                   type: string
               required: [ replicas,readyReplicas,currentReplicas,selector ]
           required: [ spec ]
-      served: true
-      storage: false
       subresources:
         status: { }
         scale:

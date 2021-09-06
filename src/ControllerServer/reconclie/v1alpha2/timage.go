@@ -42,16 +42,6 @@ func (r *TImageReconciler) EnqueueObj(resourceName string, resourceEvent k8sWatc
 
 		timage := resourceObj.(*crdV1alpha2.TImage)
 
-		//if timage.ImageType == "node" {
-		//	for _, release := range timage.Releases {
-		//		if strings.HasPrefix(release.ID, "default") {
-		//			meta.DefaultNodeImage = release.Image
-		//			meta.DefaultNodeImageSecret = release.Secret
-		//		}
-		//	}
-		//	return
-		//}
-
 		if timage.ImageType == "server" {
 			if timage.Build != nil && timage.Build.Running != nil {
 				key := fmt.Sprintf("%s/%s/%s", timage.Namespace, timage.Name, timage.Build.Running.ID)

@@ -16,124 +16,124 @@ spec:
   scope: Namespaced
   versions:
     - name: v1alpha1
-      schema:
-        openAPIV3Schema:
-          type: object
-          properties:
-            app:
-              type: string
-              pattern: ^[a-zA-Z][a-zA-Z0-9]{0,62}$
-            server:
-              type: string
-              pattern: ^([a-zA-Z][a-zA-Z0-9]{0,62}){0,1}$
-            configName:
-              type: string
-              pattern: ^([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]$
-              maxLength: 63
-            configContent:
-              type: string
-              maxLength: 1560000
-            podSeq:
-              type: string
-              pattern: ^[0-9]$|[1-9][0-9]$
-            updateTime:
-              type: string
-              format: date-time
-            updatePerson:
-              type: string
-              maxLength: 800
-            updateReason:
-              type: string
-              maxLength: 1600
-            activated:
-              type: boolean
-              default: true
-            version:
-              type: string
-              pattern: ^([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]$
-              maxLength: 63
-      additionalPrinterColumns:
-        - name: App
-          type: string
-          description: The cron spec defining the interval a CronJob is run
-          jsonPath: .app
-        - name: Server
-          type: string
-          description: The cron spec defining the interval a CronJob is run
-          jsonPath: .server
-        - name: PodSeq
-          type: string
-          description: The cron spec defining the interval a CronJob is run
-          jsonPath: .podSeq
-        - name: ConfigName
-          type: string
-          jsonPath: .configName
-        - name: Version
-          type: string
-          jsonPath: .version
-        - name: Activated
-          type: boolean
-          jsonPath: .activated
-      served: true
-      storage: true
-    - name: v1alpha2
-      schema:
-        openAPIV3Schema:
-          type: object
-          properties:
-            app:
-              type: string
-              pattern: ^[a-zA-Z][a-zA-Z0-9]{0,62}$
-            server:
-              type: string
-              pattern: ^([a-zA-Z][a-zA-Z0-9]{0,62}){0,1}$
-            configName:
-              type: string
-              pattern: ^([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]$
-              maxLength: 63
-            configContent:
-              type: string
-              maxLength: 1560000
-            podSeq:
-              type: string
-              pattern: ^[0-9]$|[1-9][0-9]$
-            updateTime:
-              type: string
-              format: date-time
-            updatePerson:
-              type: string
-              maxLength: 800
-            updateReason:
-              type: string
-              maxLength: 1600
-            activated:
-              type: boolean
-              default: true
-            version:
-              type: string
-              pattern: ^([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]$
-              maxLength: 63
-      additionalPrinterColumns:
-        - name: App
-          type: string
-          description: The cron spec defining the interval a CronJob is run
-          jsonPath: .app
-        - name: Server
-          type: string
-          description: The cron spec defining the interval a CronJob is run
-          jsonPath: .server
-        - name: PodSeq
-          type: string
-          description: The cron spec defining the interval a CronJob is run
-          jsonPath: .podSeq
-        - name: ConfigName
-          type: string
-          jsonPath: .configName
-        - name: Version
-          type: string
-          jsonPath: .version
-        - name: Activated
-          type: boolean
-          jsonPath: .activated
       served: true
       storage: false
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            app:
+              type: string
+              pattern: ^[a-zA-Z][a-zA-Z0-9]*$
+              maxLength: 63
+            server:
+              type: string
+              pattern: ^[a-zA-Z][a-zA-Z0-9]*$
+              maxLength: 63
+            configName:
+              type: string
+              pattern: ^[A-Za-z0-9]([-A-Za-z0-9_.]*[A-Za-z0-9])?$
+              maxLength: 63
+            configContent:
+              type: string
+              maxLength: 1560000
+            podSeq:
+              type: string
+              pattern: ^(m|0|[1-9][0-9]?)$
+              default: "m"
+            updateTime:
+              type: string
+              format: date-time
+            updatePerson:
+              type: string
+              maxLength: 100
+            updateReason:
+              type: string
+              maxLength: 1600
+            activated:
+              type: boolean
+              default: true
+            version:
+              type: string
+              pattern: ^[A-Za-z0-9]([-A-Za-z0-9_.]*[A-Za-z0-9])?$
+              maxLength: 63
+      additionalPrinterColumns:
+        - name: App
+          type: string
+          jsonPath: .app
+        - name: Server
+          type: string
+          jsonPath: .server
+        - name: PodSeq
+          type: string
+          jsonPath: .podSeq
+        - name: ConfigName
+          type: string
+          jsonPath: .configName
+        - name: Version
+          type: string
+          jsonPath: .version
+        - name: Activated
+          type: boolean
+          jsonPath: .activated
+    - name: v1alpha2
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            app:
+              type: string
+              pattern: ^[a-zA-Z][a-zA-Z0-9]*$
+              maxLength: 63
+            server:
+              type: string
+              pattern: ^[a-zA-Z][a-zA-Z0-9]*$
+              maxLength: 63
+            configName:
+              type: string
+              pattern: ^[A-Za-z0-9]([-A-Za-z0-9_.]*[A-Za-z0-9])?$
+              maxLength: 63
+            configContent:
+              type: string
+              maxLength: 1560000
+            podSeq:
+              type: string
+              pattern: ^(m|0|[1-9][0-9]?)$
+              default: "m"
+            updateTime:
+              type: string
+              format: date-time
+            updatePerson:
+              type: string
+              maxLength: 100
+            updateReason:
+              type: string
+              maxLength: 1600
+            activated:
+              type: boolean
+              default: true
+            version:
+              type: string
+              pattern: ^[A-Za-z0-9]([-A-Za-z0-9_.]*[A-Za-z0-9])?$
+              maxLength: 63
+      additionalPrinterColumns:
+        - name: App
+          type: string
+          jsonPath: .app
+        - name: Server
+          type: string
+          jsonPath: .server
+        - name: PodSeq
+          type: string
+          jsonPath: .podSeq
+        - name: ConfigName
+          type: string
+          jsonPath: .configName
+        - name: Version
+          type: string
+          jsonPath: .version
+        - name: Activated
+          type: boolean
+          jsonPath: .activated

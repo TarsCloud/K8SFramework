@@ -1,12 +1,14 @@
 package meta
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	k8sCoreV1 "k8s.io/api/core/v1"
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilRuntime "k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/apimachinery/pkg/util/uuid"
 	k8sInformers "k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	k8sSchema "k8s.io/client-go/kubernetes/scheme"
@@ -15,18 +17,23 @@ import (
 	"k8s.io/client-go/metadata/metadatainformer"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/leaderelection"
+	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	"k8s.io/client-go/tools/record"
 	crdV1Alpha2 "k8s.tars.io/api/crd/v1alpha2"
 	crdVersioned "k8s.tars.io/client-go/clientset/versioned"
 	crdScheme "k8s.tars.io/client-go/clientset/versioned/scheme"
 	crdInformers "k8s.tars.io/client-go/informers/externalversions"
+	"os"
 	"strings"
+	"time"
 )
 
 var k8sClient kubernetes.Interface
 var crdClient crdVersioned.Interface
 var k8sMetadataClient k8sMetadata.Interface
 var informers *Informers
+var isControllerLeader bool
 
 var controllerServiceAccount string
 var recorders map[string]record.EventRecorder
@@ -59,7 +66,10 @@ func loadClients() (*Clients, error) {
 }
 
 func newInformers(clients *Clients) *Informers {
-	k8sInformerFactory := k8sInformers.NewSharedInformerFactoryWithOptions(clients.K8sClient, 0, k8sInformers.WithTweakListOptions(
+
+	k8sInformerFactory := k8sInformers.NewSharedInformerFactory(clients.K8sClient, 0)
+
+	k8sInformerFactoryWithFilter := k8sInformers.NewSharedInformerFactoryWithOptions(clients.K8sClient, 0, k8sInformers.WithTweakListOptions(
 		func(options *k8sMetaV1.ListOptions) {
 			options.LabelSelector = fmt.Sprintf("%s,%s", TServerAppLabel, TServerNameLabel)
 		}))
@@ -68,11 +78,13 @@ func newInformers(clients *Clients) *Informers {
 
 	metadataInformerFactory := metadatainformer.NewSharedInformerFactory(clients.K8sMetadataClient, 0)
 
-	serviceInformer := k8sInformerFactory.Core().V1().Services()
-	podInformer := k8sInformerFactory.Core().V1().Pods()
+	nodeInformer := k8sInformerFactory.Core().V1().Nodes()
 
-	daemonSetInformer := k8sInformerFactory.Apps().V1().DaemonSets()
-	statefulSetInformer := k8sInformerFactory.Apps().V1().StatefulSets()
+	serviceInformer := k8sInformerFactoryWithFilter.Core().V1().Services()
+	podInformer := k8sInformerFactoryWithFilter.Core().V1().Pods()
+	persistentVolumeClaimInformer := k8sInformerFactoryWithFilter.Core().V1().PersistentVolumeClaims()
+	daemonSetInformer := k8sInformerFactoryWithFilter.Apps().V1().DaemonSets()
+	statefulSetInformer := k8sInformerFactoryWithFilter.Apps().V1().StatefulSets()
 
 	tserverInformer := crdInformerFactory.Crd().V1alpha2().TServers()
 	tendpointInformer := crdInformerFactory.Crd().V1alpha2().TEndpoints()
@@ -86,12 +98,15 @@ func newInformers(clients *Clients) *Informers {
 	tconfigInformer := metadataInformerFactory.ForResource(crdV1Alpha2.SchemeGroupVersion.WithResource("tconfigs"))
 
 	informers = &Informers{
-		K8sInformerFactory:        k8sInformerFactory,
-		K8sMetadataInformerFactor: metadataInformerFactory,
-		CrdInformerFactory:        crdInformerFactory,
+		k8sInformerFactory:           k8sInformerFactory,
+		k8sInformerFactoryWithFilter: k8sInformerFactoryWithFilter,
+		k8sMetadataInformerFactor:    metadataInformerFactory,
+		crdInformerFactory:           crdInformerFactory,
 
-		ServiceInformer: serviceInformer,
-		PodInformer:     podInformer,
+		NodeInformer:                  nodeInformer,
+		ServiceInformer:               serviceInformer,
+		PodInformer:                   podInformer,
+		PersistentVolumeClaimInformer: persistentVolumeClaimInformer,
 
 		DaemonSetInformer:   daemonSetInformer,
 		StatefulSetInformer: statefulSetInformer,
@@ -104,11 +119,15 @@ func newInformers(clients *Clients) *Informers {
 		TExitedRecordInformer: texitedRecordInformer,
 		TDeployInformer:       tdeployInformer,
 		TAccountInformer:      taccountInformer,
-		TConfigInformer:       tconfigInformer,
-		synced:                false,
+
+		TConfigInformer: tconfigInformer,
+
+		synced: false,
 		synceds: []cache.InformerSynced{
+			nodeInformer.Informer().HasSynced,
 			serviceInformer.Informer().HasSynced,
 			podInformer.Informer().HasSynced,
+			persistentVolumeClaimInformer.Informer().HasSynced,
 
 			statefulSetInformer.Informer().HasSynced,
 			daemonSetInformer.Informer().HasSynced,
@@ -126,8 +145,10 @@ func newInformers(clients *Clients) *Informers {
 		},
 	}
 
+	setEventHandler("node", informers.NodeInformer.Informer(), informers)
 	setEventHandler("service", informers.ServiceInformer.Informer(), informers)
 	setEventHandler("pod", informers.PodInformer.Informer(), informers)
+	setEventHandler("persistentvolumeclaim", persistentVolumeClaimInformer.Informer(), informers)
 
 	setEventHandler("statefulset", informers.StatefulSetInformer.Informer(), informers)
 	setEventHandler("daemonset", informers.DaemonSetInformer.Informer(), informers)
@@ -203,4 +224,74 @@ func GetControllerContext() (*Clients, *Informers, error) {
 	}
 
 	return clients, informers, nil
+}
+
+func GetEventRecorder(namespace string) record.EventRecorder {
+	recorder, ok := recorders[namespace]
+	if !ok {
+		eventBroadcaster := record.NewBroadcaster()
+		eventBroadcaster.StartRecordingToSink(&k8sCoreTypedV1.EventSinkImpl{Interface: k8sClient.CoreV1().Events(namespace)})
+		recorder = eventBroadcaster.NewRecorder(k8sSchema.Scheme, k8sCoreV1.EventSource{
+			Component: "tarscontroller",
+			Host:      "",
+		})
+		if recorders == nil {
+			recorders = make(map[string]record.EventRecorder, 0)
+		}
+		recorders[namespace] = recorder
+		return recorder
+	}
+	return recorder
+}
+
+func IsControllerLeader() bool {
+	return isControllerLeader
+}
+
+func LeaderElectAndRun(callbacks leaderelection.LeaderCallbacks) {
+	isControllerLeader = false
+	id, err := os.Hostname()
+	if err != nil {
+		fmt.Printf("GetHostName Error: %s\n", err.Error())
+		return
+	}
+	id = id + "_" + string(uuid.NewUUID())
+
+	rl, err := resourcelock.New("leases",
+		"tars-system",
+		"tars-tarscontroller",
+		k8sClient.CoreV1(),
+		k8sClient.CoordinationV1(),
+		resourcelock.ResourceLockConfig{
+			Identity:      id,
+			EventRecorder: GetEventRecorder("tars-system"),
+		})
+
+	if err != nil {
+		fmt.Printf("Create ResourceLock Error: %s\n", err.Error())
+		return
+	}
+
+	leaderelection.RunOrDie(context.TODO(), leaderelection.LeaderElectionConfig{
+		Lock:          rl,
+		LeaseDuration: 15 * time.Second,
+		RenewDeadline: 10 * time.Second,
+		RetryPeriod:   2 * time.Second,
+		Callbacks: leaderelection.LeaderCallbacks{
+			OnStartedLeading: func(ctx context.Context) {
+				isControllerLeader = true
+				if callbacks.OnStartedLeading != nil {
+					callbacks.OnStartedLeading(ctx)
+				}
+			},
+			OnStoppedLeading: func() {
+				isControllerLeader = false
+				if callbacks.OnStoppedLeading != nil {
+					callbacks.OnStoppedLeading()
+				}
+			},
+			OnNewLeader: callbacks.OnNewLeader,
+		},
+		Name: "tars-tarscontroller",
+	})
 }

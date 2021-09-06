@@ -15,62 +15,6 @@ spec:
   versions:
     - name: v1alpha1
       served: true
-      storage: true
-      schema:
-        openAPIV3Schema:
-          type: object
-          properties:
-            apps:
-              type: array
-              items:
-                type: object
-                properties:
-                  name:
-                    type: string
-                    pattern: ^[a-zA-Z][a-zA-Z0-9]{0,62}$
-                  businessRef:
-                    type: string
-                    pattern: ^([a-zA-Z][a-zA-Z0-9]{0,62}){0,1}$
-                  createTime:
-                    type: string
-                    format: date-time
-                  createPerson:
-                    type: string
-                    maxLength: 800
-                  mark:
-                    type: string
-                    maxLength: 1600
-                required: [ name,businessRef ]
-            businesses:
-              type: array
-              items:
-                type: object
-                properties:
-                  name:
-                    type: string
-                    pattern: ^[a-zA-Z][a-zA-Z0-9]{0,62}$
-                  show:
-                    type: string
-                    minLength: 1
-                    maxLength: 30
-                  weight:
-                    type: integer
-                    minimum: 1
-                    maximum: 5
-                    default: 3
-                  createTime:
-                    type: string
-                    format: date-time
-                  createPerson:
-                    type: string
-                    maxLength: 800
-                  mark:
-                    type: string
-                    maxLength: 1600
-                required: [ name,show,weight ]
-          required: [ apps,businesses ]
-    - name: v1alpha2
-      served: true
       storage: false
       schema:
         openAPIV3Schema:
@@ -83,16 +27,17 @@ spec:
                 properties:
                   name:
                     type: string
-                    pattern: ^[a-zA-Z][a-zA-Z0-9]{0,62}$
+                    pattern: ^[a-zA-Z][a-zA-Z0-9]*$
+                    maxLength: 63
                   businessRef:
                     type: string
-                    pattern: ^([a-zA-Z][a-zA-Z0-9]{0,62}){0,1}$
+                    pattern: ^(|[\x21-\x7e\p{Han}]{2,32})$
                   createTime:
                     type: string
                     format: date-time
                   createPerson:
                     type: string
-                    maxLength: 800
+                    maxLength: 100
                   mark:
                     type: string
                     maxLength: 1600
@@ -104,11 +49,11 @@ spec:
                 properties:
                   name:
                     type: string
-                    pattern: ^[a-zA-Z][a-zA-Z0-9]{0,62}$
+                    pattern: ^[\x21-\x7e\p{Han}]{2,32}$
                   show:
                     type: string
                     minLength: 1
-                    maxLength: 30
+                    maxLength: 100
                   weight:
                     type: integer
                     minimum: 1
@@ -119,7 +64,64 @@ spec:
                     format: date-time
                   createPerson:
                     type: string
-                    maxLength: 800
+                    maxLength: 100
+                  mark:
+                    type: string
+                    maxLength: 1600
+                required: [ name,show,weight ]
+          required: [ apps,businesses ]
+    - name: v1alpha2
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            apps:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    pattern: ^[a-zA-Z][a-zA-Z0-9]*$
+                    maxLength: 63
+                  businessRef:
+                    type: string
+                    pattern: ^(|[\x21-\x7e\p{Han}]{2,32})$
+                  createTime:
+                    type: string
+                    format: date-time
+                  createPerson:
+                    type: string
+                    maxLength: 100
+                  mark:
+                    type: string
+                    maxLength: 1600
+                required: [ name,businessRef ]
+            businesses:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    pattern: ^[\x21-\x7e\p{Han}]{2,32}$
+                  show:
+                    type: string
+                    minLength: 1
+                    maxLength: 100
+                  weight:
+                    type: integer
+                    minimum: 1
+                    maximum: 5
+                    default: 3
+                  createTime:
+                    type: string
+                    format: date-time
+                  createPerson:
+                    type: string
+                    maxLength: 100
                   mark:
                     type: string
                     maxLength: 1600

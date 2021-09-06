@@ -26,13 +26,12 @@ import (
 	"k8s.io/apimachinery/pkg/selection"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
-	"syscall"
 	"tarsagent/controller/common"
+	"time"
 
 	"k8s.io/api/core/v1"
-	storagev1listers "k8s.io/client-go/listers/storage/v1"
-	"k8s.io/client-go/tools/cache"
 )
 
 // Discoverer finds available volumes and creates PVs for them
@@ -40,26 +39,16 @@ import (
 type Discoverer struct {
 	*common.RuntimeConfig
 	Labels map[string]string
-	// ProcTable is a reference to running processes so that we can prevent PV from being created while
-	// it is being cleaned
+	// ProcTable is a reference to running processes so that we can prevent PV from being created while it is being cleaned
 	CleanupTracker  *CleanupStatusTracker
 	nodeAffinityAnn string
 	nodeAffinity    *v1.VolumeNodeAffinity
-	classLister     storagev1listers.StorageClassLister
+	pvcLabelSelector labels.Selector
 }
 
 // NewDiscoverer creates a Discoverer object that will scan through
 // the configured directories and create local PVs for any new directories found
 func NewDiscoverer(config *common.RuntimeConfig, cleanupTracker *CleanupStatusTracker) (*Discoverer, error) {
-	sharedInformer := config.K8sInformerFactory.Storage().V1().StorageClasses()
-	sharedInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
-		// We don't need an actual event handler for StorageClasses,
-		// but we must pass a non-nil one to cache.NewInformer()
-		AddFunc:    nil,
-		UpdateFunc: nil,
-		DeleteFunc: nil,
-	})
-
 	labelMap := make(map[string]string)
 	for _, labelName := range config.NodeLabelsForPV {
 		labelVal, ok := config.Node.Labels[labelName]
@@ -77,8 +66,205 @@ func NewDiscoverer(config *common.RuntimeConfig, cleanupTracker *CleanupStatusTr
 		RuntimeConfig:  config,
 		Labels:         labelMap,
 		CleanupTracker: cleanupTracker,
-		classLister:    sharedInformer.Lister(),
-		nodeAffinity:   volumeNodeAffinity}, nil
+		nodeAffinity:   volumeNodeAffinity,
+		pvcLabelSelector: generatePVCLabelSelector(),
+	}, nil
+}
+
+func (d *Discoverer) DiscoverVolumes() {
+	pvcs, err := d.RuntimeConfig.K8sClient.CoreV1().PersistentVolumeClaims("").List(
+		context.TODO(), metav1.ListOptions{LabelSelector: d.pvcLabelSelector.String()})
+	if err != nil {
+		glog.Errorf("Error list pvcs: %v", err)
+		return
+	}
+
+	for _, pvc := range pvcs.Items {
+		if pvc.Status.Phase == v1.ClaimPending {
+			d.pendingPVC(pvc)
+		} else if pvc.Status.Phase == v1.ClaimBound {
+			d.boundPVC(pvc)
+		}
+	}
+}
+
+func (d *Discoverer) pendingPVC(pvc v1.PersistentVolumeClaim) bool {
+	reclaimPolicy, mountOptions, err := d.getReclaimPolicyMountOptions(d.TStorageClass.Name)
+	if err != nil {
+		glog.Errorf("Failed to get ReclaimPolicy from storage class %q: %v", d.TStorageClass.Name, err)
+		return false
+	}
+	if reclaimPolicy != v1.PersistentVolumeReclaimRetain && reclaimPolicy != v1.PersistentVolumeReclaimDelete {
+		glog.Errorf("Unsupported ReclaimPolicy %q from storage class %q, supported policy are Retain and Delete.",
+			reclaimPolicy, d.TStorageClass.Name)
+		return false
+	}
+
+	app := pvc.Labels[common.TServerAppLabel]
+	server := pvc.Labels[common.TServerNameLabel]
+	directory := pvc.Labels[common.TLocalVolumeLabel]
+	if app == "" || server == "" || directory == "" {
+		glog.Errorf("pvc: %s has empty param. app: %s, server: %s, dir: %s", pvc.Name, app, server, directory)
+		return false
+	}
+
+	// Ignore the label match if host-ipc or host-network etc.
+	if directory != common.TLocalVolumeFakeName {
+		if _, ok := d.RuntimeConfig.Node.Labels[common.TNodeSupportLabel]; !ok {
+			return false
+		}
+	}
+
+	// the rule of pvc name and local path
+	prefix, postfix := getPVPrefixPosfix(pvc.Namespace, strings.ToLower(app), strings.ToLower(server), directory)
+
+	pvName := generatePVName(prefix, d.Node.Name, d.TStorageClass.Name)
+	pv, exists := d.Cache.GetPV(pvName)
+	if exists {
+		if pv.Spec.VolumeMode != nil && *pv.Spec.VolumeMode == v1.PersistentVolumeBlock {
+			errStr := fmt.Sprintf("UnSupported Volume Mode: %s.%s requires block mode.\n",
+				pvc.Namespace, pvName)
+			glog.Errorf(errStr)
+			d.Recorder.Eventf(pv, v1.EventTypeWarning, common.EventVolumeFailedDelete, errStr)
+		}
+		return false
+	}
+
+	if d.CleanupTracker.InProgress(pvName) {
+		glog.Infof("PV %s is still being cleaned, not going to recreate it", pvName)
+		return false
+	}
+
+	// Create directory in agent container
+	insidePath := filepath.Join(d.TStorageClass.MountDir, postfix)
+	if err := d.changeHostDir(insidePath, pvc.Annotations, v1.ClaimPending); err != nil {
+		glog.Error(fmt.Sprintf("pvc %s.%s chown %s, err: %s.\n", pvc.Namespace, pvc.Name, insidePath, err))
+		return false
+	}
+
+	// Create PV resource
+	localPVConfig := &common.LocalPVConfig{
+		Name:            pvName,
+		HostPath:        filepath.Join(d.TStorageClass.HostDir, postfix),
+		Capacity:        roundDownCapacityPretty(5 * common.GiB),
+		StorageClass:    d.TStorageClass.Name,
+		ReclaimPolicy:   reclaimPolicy,
+		ProvisionerName: d.Name,
+		VolumeMode:      v1.PersistentVolumeFilesystem,
+		Labels:          d.Labels,
+		MountOptions:    mountOptions,
+		NodeAffinity: 	 d.nodeAffinity,
+	}
+	// PV labels must matches to pvc
+	localPVConfig.Labels[common.TServerAppLabel] = app
+	localPVConfig.Labels[common.TServerNameLabel] = server
+	localPVConfig.Labels[common.TLocalVolumeLabel] = directory
+
+	_, err = d.APIUtil.CreatePV(common.CreateLocalPVSpec(localPVConfig))
+	if err != nil {
+		glog.Errorf("Error creating PV %q for volume at %q: %v", pvName, insidePath, err)
+		return false
+	}
+
+	// Hack for waiting populator's cache
+	time.Sleep(1 * time.Second)
+	glog.Infof("Created PV %q for volume at %q", pvName, insidePath)
+	return true
+}
+
+func (d *Discoverer) boundPVC(pvc v1.PersistentVolumeClaim) bool {
+	if pv, exists := d.Cache.GetPV(pvc.Spec.VolumeName); exists {
+		if err := d.changeHostDir(pv.Spec.Local.Path, pvc.Annotations, v1.ClaimBound); err != nil {
+			glog.Error(fmt.Sprintf("pvc %s.%s chown %s, err: %s.\n", pvc.Namespace, pvc.Name, pv.Spec.Local.Path, err))
+			return false
+		}
+	}
+	return true
+}
+
+func (d *Discoverer) changeHostDir(dirPath string, annotations map[string]string, phase v1.PersistentVolumeClaimPhase) error {
+	if !d.VolUtil.Existed(dirPath) {
+		if phase == v1.ClaimBound {
+			return fmt.Errorf("phase: %s has no dirPath: %s.\n", phase, dirPath)
+		} else {
+			if err := d.VolUtil.MakeDir(dirPath); err != nil {
+				return err
+			}
+			glog.Infof("phase: %s create dirPath: %s", dirPath, phase)
+		}
+	}
+
+	if permAnn, ok := annotations[common.TLocalVolumePermAnn]; ok && permAnn != "" {
+		 perm, err := strconv.ParseInt(permAnn, 8, 32)
+		 if err != nil {
+		 	return err
+		 }
+		 newPerm := os.FileMode(uint32(perm))
+
+		 oldPerm, err := d.VolUtil.GetFilePerm(dirPath)
+		 if err != nil {
+		 	return err
+		 }
+
+		 if oldPerm != newPerm {
+			 glog.Infof("change dirPath: %s mode, from: %o to %o", dirPath, oldPerm, newPerm)
+			 if err := os.Chmod(dirPath, newPerm); err != nil {
+				 return err
+			 }
+		 }
+	}
+
+	uidAnn, ok1 := annotations[common.TLocalVolumeUIDAnn]
+	gidAnn, ok2 := annotations[common.TLocalVolumeGIDAnn]
+	if ok1 && ok2 && uidAnn != "" && gidAnn != "" {
+		newUid, err := strconv.Atoi(uidAnn)
+		if err != nil {
+			return err
+		}
+		newGid, err := strconv.Atoi(gidAnn)
+		if err != nil {
+			return err
+		}
+
+		oldUid, oldGid, err := d.VolUtil.GetFileUidGid(dirPath)
+		if err != nil {
+			return err
+		}
+
+		if oldUid != newUid || oldGid != newGid {
+			glog.Infof("change dirPath: %s owner, from: %d.%d to %d.%d", dirPath, oldUid, oldGid, newUid, newGid)
+			if err := os.Chown(dirPath, newUid, newGid); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func (d *Discoverer) getReclaimPolicyMountOptions(name string) (v1.PersistentVolumeReclaimPolicy, []string, error) {
+	class, err := d.K8sClient.StorageV1().StorageClasses().Get(context.TODO(), name, metav1.GetOptions{})
+	if err != nil {
+		return "", nil, err
+	}
+	if class.ReclaimPolicy != nil {
+		return *class.ReclaimPolicy, class.MountOptions, nil
+	}
+	return v1.PersistentVolumeReclaimDelete, nil, nil
+}
+
+func generatePVName(prefix, node, class string) string {
+	h := fnv.New32a()
+	h.Write([]byte(node))
+	h.Write([]byte(class))
+	// This is the FNV-1a 32-bit hash
+	return fmt.Sprintf("%s-%x", prefix, h.Sum32())
+}
+
+func getPVPrefixPosfix(namespace, app, server, dir string) (string, string) {
+	prefix := fmt.Sprintf("%s-%s-%s-%s", namespace, dir, app, server)
+	posfix := fmt.Sprintf("%s/%s.%s/%s", namespace, app, server, dir)
+	return prefix, posfix
 }
 
 func generateVolumeNodeAffinity(node *v1.Node) (*v1.VolumeNodeAffinity, error) {
@@ -107,200 +293,13 @@ func generateVolumeNodeAffinity(node *v1.Node) (*v1.VolumeNodeAffinity, error) {
 	}, nil
 }
 
-// DiscoverLocalVolumes reads the configured discovery paths, and creates PVs for the new volumes
-func (d *Discoverer) DiscoverLocalVolumes() {
-	if _, ok := d.RuntimeConfig.Node.Labels[common.TNodeSupportLabel]; !ok {
-		return
-	}
-	for class, config := range d.DiscoveryMap {
-		d.discoverVolumesAtPath(class, config)
-	}
-}
-
-func (d *Discoverer) getReclaimPolicyFromStorageClass(name string) (v1.PersistentVolumeReclaimPolicy, error) {
-	class, err := d.classLister.Get(name)
-	if err != nil {
-		return "", err
-	}
-	if class.ReclaimPolicy != nil {
-		return *class.ReclaimPolicy, nil
-	}
-	return v1.PersistentVolumeReclaimDelete, nil
-}
-
-func (d *Discoverer) getMountOptionsFromStorageClass(name string) ([]string, error) {
-	class, err := d.classLister.Get(name)
-	if err != nil {
-		return nil, err
-	}
-	return class.MountOptions, nil
-}
-
-func (d *Discoverer) discoverVolumesAtPath(class string, config common.MountConfig) {
-	glog.V(7).Infof("Discovering volumes at hostpath %q, mount path %q for storage class %q", config.HostDir, config.MountDir, class)
-
-	reclaimPolicy, err := d.getReclaimPolicyFromStorageClass(class)
-	if err != nil {
-		glog.Errorf("Failed to get ReclaimPolicy from storage class %q: %v", class, err)
-		return
-	}
-
-	if reclaimPolicy != v1.PersistentVolumeReclaimRetain && reclaimPolicy != v1.PersistentVolumeReclaimDelete {
-		glog.Errorf("Unsupported ReclaimPolicy %q from storage class %q, supported policy are Retain and Delete.", reclaimPolicy, class)
-		return
-	}
-
+func generatePVCLabelSelector() labels.Selector {
 	tServerAppLabel		, _  := labels.NewRequirement(common.TServerAppLabel, selection.Exists, nil)
 	tServerNameLabel	, _  := labels.NewRequirement(common.TServerNameLabel, selection.Exists, nil)
 	tLocalVolumeLabel	, _  := labels.NewRequirement(common.TLocalVolumeLabel, selection.Exists, nil)
+
 	tPVCLabelSelector := labels.NewSelector().Add(*tLocalVolumeLabel, *tServerAppLabel, *tServerNameLabel)
-	tPVCs, err := d.RuntimeConfig.K8sClient.CoreV1().PersistentVolumeClaims("").List(
-		context.TODO(), metav1.ListOptions{LabelSelector: tPVCLabelSelector.String()})
-	if err != nil {
-		glog.Errorf("Error list pvcs: %v", err)
-		return
-	}
-
-	// Put pv name into set for filter pod seq
-	unitMap := make(map[string]bool)
-
-	for _, pvc := range tPVCs.Items {
-		if pvc.Status.Phase != v1.ClaimPending {
-			continue
-		}
-
-		app := pvc.Labels[common.TServerAppLabel]
-		server := pvc.Labels[common.TServerNameLabel]
-		dirName := pvc.Labels[common.TLocalVolumeLabel]
-		if app == "" || server == "" || dirName == "" {
-			continue
-		}
-
-		// Check if PV already exists for it
-		prefix, posfix := getPVPrefixPosfix(pvc.Namespace, strings.ToLower(app), strings.ToLower(server), dirName)
-		if _, ok := unitMap[prefix]; ok {
-			continue
-		}
-
-		pvName := generatePVName(prefix, d.Node.Name, class)
-		pv, exists := d.Cache.GetPV(pvName)
-		if exists {
-			if pv.Spec.VolumeMode != nil && *pv.Spec.VolumeMode == v1.PersistentVolumeBlock {
-				errStr := fmt.Sprintf("UnSupported Volume Mode: %s.%s requires block mode.\n",
-					pvc.Namespace, pvName)
-				glog.Errorf(errStr)
-				d.Recorder.Eventf(pv, v1.EventTypeWarning, common.EventVolumeFailedDelete, errStr)
-			}
-			unitMap[prefix] = true
-			continue
-		}
-		if d.CleanupTracker.InProgress(pvName) {
-			glog.Infof("PV %s is still being cleaned, not going to recreate it", pvName)
-			continue
-		}
-
-		// Create directory
-		dirPath := filepath.Join(config.MountDir, posfix)
-		if !d.VolUtil.Existed(dirPath) {
-			// unix permissions are 'filtered' by whatever umask has been set.
-			oldMask := syscall.Umask(0)
-			if err := os.MkdirAll(dirPath, os.ModePerm); err != nil {
-				glog.Error(fmt.Sprintf("pvc %s.%s mkdir %s, err: %s.\n", pvc.Namespace, pvc.Name, dirPath, err))
-				continue
-			}
-			syscall.Umask(oldMask)
-		}
-
-		volMode, err := common.GetVolumeMode(d.VolUtil, dirPath)
-		if err != nil {
-			glog.Error(err)
-			continue
-		}
-
-		mountOptions, err := d.getMountOptionsFromStorageClass(class)
-		if err != nil {
-			glog.Errorf("Failed to get mount options from storage class %s: %v", class, err)
-			continue
-		}
-
-		var capacityByte int64
-		desireVolumeMode := v1.PersistentVolumeMode(config.VolumeMode)
-		switch volMode {
-		case v1.PersistentVolumeFilesystem:
-			if desireVolumeMode == v1.PersistentVolumeBlock {
-				glog.Errorf("Path %q of filesystem mode cannot be used to create block volume", dirPath)
-				continue
-			}
-			capacityByte, err = d.VolUtil.GetFsCapacityByte(dirPath)
-			if err != nil {
-				glog.Errorf("Path %q fs stats error: %v", dirPath, err)
-				continue
-			}
-		default:
-			glog.Errorf("Path %q has unexpected volume type %q", dirPath, volMode)
-			continue
-		}
-
-		if err := d.createPV(class, pvc, reclaimPolicy, mountOptions, config, capacityByte, desireVolumeMode); err == nil {
-			unitMap[prefix] = true
-		}
-	}
-}
-
-func generatePVName(prefix, node, class string) string {
-	h := fnv.New32a()
-	h.Write([]byte(node))
-	h.Write([]byte(class))
-	// This is the FNV-1a 32-bit hash
-	return fmt.Sprintf("%s-%x", prefix, h.Sum32())
-}
-
-func getPVPrefixPosfix(namespace, app, server, dir string) (string, string) {
-	prefix := fmt.Sprintf("%s-%s-%s-%s", namespace, dir, app, server)
-	posfix := fmt.Sprintf("%s/%s.%s/%s", namespace, app, server, dir)
-	return prefix, posfix
-}
-
-func (d *Discoverer) createPV(class string, pvc v1.PersistentVolumeClaim, reclaimPolicy v1.PersistentVolumeReclaimPolicy,
-	mountOptions []string,	config common.MountConfig, capacityByte int64, volMode v1.PersistentVolumeMode) error {
-	// Basic Info
-	app := pvc.Labels[common.TServerAppLabel]
-	server := pvc.Labels[common.TServerNameLabel]
-	dirName := pvc.Labels[common.TLocalVolumeLabel]
-
-	prefix, posfix := getPVPrefixPosfix(pvc.Namespace, strings.ToLower(app), strings.ToLower(server), dirName)
-	pvName := generatePVName(prefix, d.Node.Name, class)
-	outsidePath := filepath.Join(config.HostDir, posfix)
-	glog.Infof("Found new volume at host path %q with capacity %d, creating Local PV %q, required volumeMode %q",
-		outsidePath, capacityByte, pvName, volMode)
-
-	// Init PV resource
-	localPVConfig := &common.LocalPVConfig{
-		Name:            pvName,
-		HostPath:        outsidePath,
-		Capacity:        roundDownCapacityPretty(capacityByte),
-		StorageClass:    class,
-		ReclaimPolicy:   reclaimPolicy,
-		ProvisionerName: d.Name,
-		VolumeMode:      volMode,
-		Labels:          d.Labels,
-		MountOptions:    mountOptions,
-		NodeAffinity: 	 d.nodeAffinity,
-	}
-	// pv labels must matches to pvc
-	localPVConfig.Labels[common.TServerAppLabel] = app
-	localPVConfig.Labels[common.TServerNameLabel] = server
-	localPVConfig.Labels[common.TLocalVolumeLabel] = dirName
-
-	// Create PV resource
-	_, err := d.APIUtil.CreatePV(common.CreateLocalPVSpec(localPVConfig))
-	if err != nil {
-		glog.Errorf("Error creating PV %q for volume at %q: %v", pvName, outsidePath, err)
-		return err
-	}
-	glog.Infof("Created PV %q for volume at %q", pvName, outsidePath)
-
-	return nil
+	return tPVCLabelSelector
 }
 
 // Round down the capacity to an easy to read value.

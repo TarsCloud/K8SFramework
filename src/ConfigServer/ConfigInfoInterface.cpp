@@ -72,7 +72,7 @@ ConfigInfoInterface::loadAppConfig(const std::string &sServerApp, const std::str
                                    std::string &sConfigContent, std::string &sErrorInfo) {
     sConfigContent.clear();
     std::ostringstream stream;
-    stream << "/apis/k8s.tars.io/v1alpha1/namespaces/" << K8SParams::instance().bindNamespace()
+    stream << "/apis/k8s.tars.io/v1alpha2/namespaces/" << K8SParams::instance().bindNamespace()
            << "/tconfigs?labelSelector="
            << "tars.io/ServerApp=" << sServerApp
            << ",tars.io/ServerName="
@@ -144,7 +144,7 @@ ConfigInfoInterface::loadServerConfig(const std::string &sServerApp, const std::
     }
 
     std::ostringstream stream;
-    stream << "/apis/k8s.tars.io/v1alpha1/namespaces/" << K8SParams::instance().bindNamespace()
+    stream << "/apis/k8s.tars.io/v1alpha2/namespaces/" << K8SParams::instance().bindNamespace()
            << "/tconfigs?labelSelector="
            << "tars.io/ServerApp=" << sServerApp
            << ",tars.io/ServerName=" << sSeverName
@@ -261,7 +261,7 @@ ConfigInfoInterface::listAppConfig(const std::string &sServerApp, std::vector<st
 
     vector.clear();
     std::ostringstream stream;
-    stream << "/apis/k8s.tars.io/v1alpha1/namespaces/" << K8SParams::instance().bindNamespace()
+    stream << "/apis/k8s.tars.io/v1alpha2/namespaces/" << K8SParams::instance().bindNamespace()
            << "/tconfigs?labelSelector="
            << "tars.io/ServerApp=" << sServerApp
            << ",tars.io/ServerName="
@@ -312,7 +312,7 @@ ConfigInfoInterface::listServerConfig(const std::string &sServerApp, const std::
 
     vector.clear();
     std::ostringstream stream;
-    stream << "/apis/k8s.tars.io/v1alpha1/namespaces/" << K8SParams::instance().bindNamespace()
+    stream << "/apis/k8s.tars.io/v1alpha2/namespaces/" << K8SParams::instance().bindNamespace()
            << "/tconfigs?labelSelector=tars.io/ServerApp=" << sServerApp
            << ",tars.io/ServerName=" << sServerName
            << ",tars.io/Activated=true"

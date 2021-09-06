@@ -1,7 +1,10 @@
 apiVersion: v2
-name: tarsframework
-version: 1.0.2
+name: 
+version: 0.0.2
 #kubeVersion: ">= 1.17.0 <= 1.19.0"
-keywords: [ tars ]
+keywords: [ tars ,  ]
 type: application
+maintainers:
+  - name: adugeek
+    email: root@libssl.com
 appVersion: v1alpha2

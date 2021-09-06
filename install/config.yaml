@@ -5,14 +5,7 @@ dockerRegistry: harbor.tars.com/tars-k8s
 ## kubectl create secret docker-registry <name> --docker-server=DOCKER_REGISTRY_SERVER --docker-username=DOCKER_USER --docker-password=DOCKER_PASSWORD --docker-email=DOCKER_EMAIL
 dockerSecret: tars-image-secret
 
-helm:
-  dockerhub:
-    registry: harbor.tars.com/tars-k8s
-  build:
-    id: v202103241151
-
 els:
-  nodes: 172.16.8.229:9200
-
+  nodes: tars-elasticsearch:9200
 ## web打开的地址
 web: web.k8s.com

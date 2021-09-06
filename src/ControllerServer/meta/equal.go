@@ -39,7 +39,7 @@ func equalServicePort(l, r []k8sCoreV1.ServicePort) bool {
 	return true
 }
 
-func containLabel(l, r map[string]string) bool {
+func ContainLabel(l, r map[string]string) bool {
 	if len(l) > len(r) {
 		return false
 	}
@@ -593,7 +593,7 @@ func EqualTServerAndService(tserver *crdV1alpha2.TServer, service *k8sCoreV1.Ser
 		TServerNameLabel: tserverSpec.Server,
 	}
 
-	if !containLabel(targetLabels, service.Labels) {
+	if !ContainLabel(targetLabels, service.Labels) {
 		return false
 	}
 
@@ -618,7 +618,7 @@ func EqualTServerAndDaemonSet(tserver *crdV1alpha2.TServer, daemonSet *k8sAppsV1
 		TServerNameLabel: tserver.Spec.Server,
 	}
 
-	if !containLabel(targetLabels, daemonSet.Labels) {
+	if !ContainLabel(targetLabels, daemonSet.Labels) {
 		return false
 	}
 
@@ -693,21 +693,6 @@ func EqualTServerAndDaemonSet(tserver *crdV1alpha2.TServer, daemonSet *k8sAppsV1
 	return true
 }
 
-func EqualVolumeClaimTemplate(l, r []k8sCoreV1.PersistentVolumeClaim) bool {
-	if len(l) != len(r) {
-		return false
-	}
-	for i := range l {
-		if !equality.Semantic.DeepEqual(l[i].ObjectMeta, r[i].ObjectMeta) {
-			return false
-		}
-		if !equality.Semantic.DeepEqual(l[i].Spec, r[i].Spec) {
-			return false
-		}
-	}
-	return true
-}
-
 func EqualTServerAndStatefulSet(tserver *crdV1alpha2.TServer, statefulSet *k8sAppsV1.StatefulSet) bool {
 
 	if *tserver.Spec.K8S.Replicas != *statefulSet.Spec.Replicas {
@@ -719,7 +704,7 @@ func EqualTServerAndStatefulSet(tserver *crdV1alpha2.TServer, statefulSet *k8sAp
 		TServerNameLabel: tserver.Spec.Server,
 	}
 
-	if !containLabel(targetLabels, statefulSet.Labels) {
+	if !ContainLabel(targetLabels, statefulSet.Labels) {
 		return false
 	}
 
@@ -734,7 +719,7 @@ func EqualTServerAndStatefulSet(tserver *crdV1alpha2.TServer, statefulSet *k8sAp
 		targetTemplateLabels[TServerIdLabel] = tserver.Spec.Release.ID
 	}
 
-	if !containLabel(targetTemplateLabels, statefulSet.Spec.Template.Labels) {
+	if !ContainLabel(targetTemplateLabels, statefulSet.Spec.Template.Labels) {
 		return false
 	}
 

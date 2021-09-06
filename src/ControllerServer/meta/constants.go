@@ -69,6 +69,9 @@ const TConfigPodSeqLabel = "tars.io/PodSeq"
 const TConfigDeletingLabel = "tars.io/Deleting"
 const TConfigDeactivateLabel = "tars.io/Deactivate"
 const TLocalVolumeLabel = "tars.io/LocalVolume"
+const TLocalVolumeUIDLabel = "tars.io/LocalVolumeUID"
+const TLocalVolumeGIDLabel = "tars.io/LocalVolumeGID"
+const TLocalVolumeModeLabel = "tars.io/LocalVolumeMode"
 
 const NodeServantName = "nodeobj"
 const NodeServantPort = 19385

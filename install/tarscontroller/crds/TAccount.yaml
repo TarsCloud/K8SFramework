@@ -16,7 +16,7 @@ spec:
   versions:
     - name: v1alpha1
       served: true
-      storage: true
+      storage: false
       schema:
         openAPIV3Schema:
           type: object
@@ -26,7 +26,9 @@ spec:
               properties:
                 username:
                   type: string
-                  pattern: ^[\x21-\x7e\p{Han}]{4,16}$
+                  pattern: ^[\x21-\x7e\p{Han}]*$
+                  minLength: 2
+                  maxLength: 16
                 extra:
                   type: array
                   items:
@@ -37,7 +39,9 @@ spec:
                   properties:
                     password:
                       type: string
-                      pattern: ^[\x21-\x7e]{6,32}$
+                      pattern: ^[\x21-\x7e]*$
+                      minLength: 6
+                      maxLength: 32
                     bcryptPassword:
                       type: string
                       minLength: 60
@@ -52,7 +56,9 @@ spec:
                         properties:
                           name:
                             type: string
-                            pattern: ^[\x21-\x7e]{1,32}$
+                            pattern: ^[\x21-\x7e]*$
+                            minLength: 2
+                            maxLength: 32
                           content:
                             type: string
                             maxLength: 8092
@@ -87,7 +93,7 @@ spec:
               required: [ username,authentication,authorization ]
     - name: v1alpha2
       served: true
-      storage: false
+      storage: true
       schema:
         openAPIV3Schema:
           type: object
@@ -97,7 +103,9 @@ spec:
               properties:
                 username:
                   type: string
-                  pattern: ^[\x21-\x7e\p{Han}]{4,16}$
+                  pattern: ^[\x21-\x7e\p{Han}]*$
+                  minLength: 2
+                  maxLength: 16
                 extra:
                   type: array
                   items:
@@ -108,7 +116,9 @@ spec:
                   properties:
                     password:
                       type: string
-                      pattern: ^[\x21-\x7e]{6,32}$
+                      pattern: ^[\x21-\x7e]*$
+                      minLength: 6
+                      maxLength: 32
                     bcryptPassword:
                       type: string
                       minLength: 60
@@ -123,7 +133,9 @@ spec:
                         properties:
                           name:
                             type: string
-                            pattern: ^[\x21-\x7e]{1,32}$
+                            pattern: ^[\x21-\x7e]*$
+                            minLength: 2
+                            maxLength: 32
                           content:
                             type: string
                             maxLength: 8092

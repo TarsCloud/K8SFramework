@@ -17,7 +17,6 @@ limitations under the License.
 package common
 
 import (
-	"fmt"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -65,7 +64,15 @@ const (
 	TLocalVolumeHostDir = "/usr/local/app/tars/host-mount"
 	// TLocalVolumeMode is the tars volume mode of local pv
 	TLocalVolumeMode = "Filesystem"
+	// TLocalVolumeFakeName is specific pvc name for hostipc etc.
+	TLocalVolumeFakeName = "delay-bind"
 
+	// TLocalVolumeUIDAnn is pvc uid
+	TLocalVolumeUIDAnn  = "tars.io/LocalVolumeUID"
+	// TLocalVolumeGIDAnn is pvc gid
+	TLocalVolumeGIDAnn = "tars.io/LocalVolumeGID"
+	// TLocalVolumePermAnn is pvc perm
+	TLocalVolumePermAnn = "tars.io/LocalVolumeMode"
 	// AnnProvisionedBy is the external provisioner annotation in PV object
 	AnnProvisionedBy = "pv.kubernetes.io/provisioned-by"
 	// EventVolumeFailedDelete copied from k8s.io/kubernetes/pkg/controller/volume/events
@@ -81,7 +88,7 @@ type UserConfig struct {
 	// Node object for this node
 	Node *v1.Node
 	// key = storageclass, value = mount configuration for the storageclass
-	DiscoveryMap map[string]MountConfig
+	TStorageClass MountConfig
 	// Labels and their values that are added to PVs created by the provisioner
 	NodeLabelsForPV []string
 	// Namespace of this Pod (optional)
@@ -93,6 +100,8 @@ type UserConfig struct {
 
 // MountConfig stores a configuration for discoverying a specific storageclass
 type MountConfig struct {
+	// the storageclass name
+	Name string `json:"name" yaml:"name"`
 	// The hostpath directory
 	HostDir string `json:"hostDir" yaml:"hostDir"`
 	// The mount point of the hostpath volume
@@ -177,7 +186,7 @@ func CreateLocalPVSpec(config *LocalPVConfig) *v1.PersistentVolume {
 func GetContainerPath(pv *v1.PersistentVolume, config MountConfig) (string, error) {
 	relativePath, err := filepath.Rel(config.HostDir, pv.Spec.Local.Path)
 	if err != nil {
-		return "", fmt.Errorf("Could not get relative path for pv %q: %v", pv.Name, err)
+		return "", err
 	}
 
 	return filepath.Join(config.MountDir, relativePath), nil
@@ -185,9 +194,9 @@ func GetContainerPath(pv *v1.PersistentVolume, config MountConfig) (string, erro
 
 // GetVolumeMode check volume mode of given path.
 func GetVolumeMode(volUtil VolumeUtil, fullPath string) (v1.PersistentVolumeMode, error) {
-	isdir, errdir := volUtil.IsDir(fullPath)
+	isdir, err := volUtil.IsDir(fullPath)
 	if isdir {
 		return v1.PersistentVolumeFilesystem, nil
 	}
-	return "", fmt.Errorf("Directory check for %q failed: %s", fullPath, errdir)
+	return "", err
 }

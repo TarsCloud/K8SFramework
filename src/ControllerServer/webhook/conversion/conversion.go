@@ -143,7 +143,10 @@ func _convertTServerV1alpha2ToV1alpha1(src *crdV1alpha2.TServer) (dst *crdV1alph
 			if srcMount.Source.TLocalVolume != nil {
 				dstMount.Source.PersistentVolumeClaimTemplate = meta.BuildTVolumeClainTemplates(src, srcMount.Name)
 				dstMount.Source.PersistentVolumeClaimTemplate.Annotations = map[string]string{
-					"tars.io/ConversionFromTLV": "true",
+					"tars.io/ConversionFromTLV": "",
+					meta.TLocalVolumeUIDLabel:  srcMount.Source.TLocalVolume.UID,
+					meta.TLocalVolumeGIDLabel:  srcMount.Source.TLocalVolume.GID,
+					meta.TLocalVolumeModeLabel: srcMount.Source.TLocalVolume.Mode,
 				}
 			}
 			dst.Spec.K8S.Mounts = append(dst.Spec.K8S.Mounts, *dstMount)
@@ -200,7 +203,7 @@ func _convertTServerV1alpha1ToV1alpha2(src *crdV1alpha1.TServer) (dst *crdV1alph
 
 	if src.Spec.K8S.NodeSelector.DaemonSet != nil {
 		dst.Spec.K8S.DaemonSet = true
-	}else if src.Spec.K8S.NodeSelector.NodeBind != nil {
+	} else if src.Spec.K8S.NodeSelector.NodeBind != nil {
 		dst.Spec.K8S.NodeSelector = []k8sCoreV1.NodeSelectorRequirement{
 			{
 				Key:      meta.K8SHostNameLabel,
@@ -240,7 +243,14 @@ func _convertTServerV1alpha1ToV1alpha2(src *crdV1alpha1.TServer) (dst *crdV1alph
 					if !ok {
 						newMount.Source.PersistentVolumeClaimTemplate = mount.Source.PersistentVolumeClaimTemplate
 					} else {
-						newMount.Source.TLocalVolume = &crdV1alpha2.TLocalVolume{}
+						uid, _ := mount.Source.PersistentVolumeClaimTemplate.Annotations[meta.TLocalVolumeUIDLabel]
+						gid, _ := mount.Source.PersistentVolumeClaimTemplate.Annotations[meta.TLocalVolumeGIDLabel]
+						mode, _ := mount.Source.PersistentVolumeClaimTemplate.Annotations[meta.TLocalVolumeModeLabel]
+						newMount.Source.TLocalVolume = &crdV1alpha2.TLocalVolume{
+							UID:  uid,
+							GID:  gid,
+							Mode: mode,
+						}
 					}
 				}
 			}

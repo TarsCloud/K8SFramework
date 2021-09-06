@@ -14,10 +14,6 @@ var config = flag.String("config", "/root/.kube/config", "string类型参数：�
 var namespace = flag.String("namespace", "tars", "string类型参数：本地启动时，K8S命名空间")
 
 func LoadEnv() (string, *rest.Config, error) {
-	flag.Set("v", "3")
-	flag.Set("logtostderr", "true")
-	flag.Parse()
-
 	glog.Infof("load controller dev: %t, conf: %s\n", *dev, *config)
 
 	var k8sNamespace string

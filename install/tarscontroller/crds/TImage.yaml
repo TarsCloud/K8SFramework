@@ -16,131 +16,6 @@ spec:
   versions:
     - name: v1alpha1
       served: true
-      storage: true
-      schema:
-        openAPIV3Schema:
-          type: object
-          properties:
-            imageType:
-              type: string
-              enum: [ base,server,node ]
-            supportedType:
-              type: array
-              items:
-                type: string
-                enum: [ cpp,nodejs,nodejs-pkg,java-war,java-jar,go ]
-              minItems: 1
-            releases:
-              type: array
-              items:
-                type: object
-                properties:
-                  id:
-                    type: string
-                    pattern: ^([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]$
-                    maxLength: 63
-                  image:
-                    type: string
-                    maxLength: 500
-                  secret:
-                    type: string
-                    pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*){0,1}$
-                    maxLength: 253
-                  createPerson:
-                    type: string
-                    maxLength: 800
-                  createTime:
-                    type: string
-                    format: date-time
-                  mark:
-                    type: string
-                    maxLength: 1600
-              minItems: 0
-              maxItems: 120
-            mark:
-              type: string
-              maxLength: 1600
-            build:
-              type: object
-              properties:
-                last:
-                  type: object
-                  properties:
-                    id:
-                      type: string
-                      pattern: ^([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]$
-                      maxLength: 63
-                    baseImage:
-                      type: string
-                      maxLength: 500
-                    baseImageSecret:
-                      type: string
-                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*){0,1}$
-                      maxLength: 253
-                    image:
-                      type: string
-                      maxLength: 500
-                    secret:
-                      type: string
-                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*){0,1}$
-                      maxLength: 253
-                    serverType:
-                      type: string
-                      enum: [ cpp,nodejs,nodejs-pkg,java-war,java-jar,go ]
-                    createPerson:
-                      type: string
-                      maxLength: 800
-                    createTime:
-                      type: string
-                      format: date-time
-                    mark:
-                      type: string
-                      maxLength: 1600
-                    phase:
-                      type: string
-                    message:
-                      type: string
-                      maxLength: 800
-                running:
-                  type: object
-                  properties:
-                    id:
-                      type: string
-                      pattern: ^([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]$
-                      maxLength: 63
-                    baseImage:
-                      type: string
-                      maxLength: 500
-                    baseImageSecret:
-                      type: string
-                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*){0,1}$
-                      maxLength: 253
-                    image:
-                      type: string
-                      maxLength: 500
-                    secret:
-                      type: string
-                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*){0,1}$
-                      maxLength: 253
-                    serverType:
-                      type: string
-                      enum: [ cpp,nodejs,nodejs-pkg,java-war,java-jar,go ]
-                    createPerson:
-                      type: string
-                      maxLength: 800
-                    createTime:
-                      type: string
-                      format: date-time
-                    mark:
-                      type: string
-                      maxLength: 1600
-                    phase:
-                      type: string
-                    message:
-                      type: string
-                      maxLength: 800
-    - name: v1alpha2
-      served: true
       storage: false
       schema:
         openAPIV3Schema:
@@ -155,6 +30,9 @@ spec:
                 type: string
                 enum: [ cpp,nodejs,nodejs-pkg,java-war,java-jar,go ]
               minItems: 1
+            mark:
+              type: string
+              maxLength: 1600
             releases:
               type: array
               items:
@@ -169,7 +47,7 @@ spec:
                     maxLength: 500
                   secret:
                     type: string
-                    pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*){0,1}$
+                    pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*)?$
                     maxLength: 253
                   createPerson:
                     type: string
@@ -180,11 +58,9 @@ spec:
                   mark:
                     type: string
                     maxLength: 1600
+                required: [ id , image ]
               minItems: 0
               maxItems: 120
-            mark:
-              type: string
-              maxLength: 1600
             build:
               type: object
               properties:
@@ -200,14 +76,14 @@ spec:
                       maxLength: 500
                     baseImageSecret:
                       type: string
-                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*){0,1}$
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*)?$
                       maxLength: 253
                     image:
                       type: string
                       maxLength: 500
                     secret:
                       type: string
-                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*){0,1}$
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*)?$
                       maxLength: 253
                     serverType:
                       type: string
@@ -225,7 +101,8 @@ spec:
                       type: string
                     message:
                       type: string
-                      maxLength: 800
+                      maxLength: 1600
+                  required: [ id,baseImage,image ]
                 running:
                   type: object
                   properties:
@@ -238,14 +115,14 @@ spec:
                       maxLength: 500
                     baseImageSecret:
                       type: string
-                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*){0,1}$
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*)?$
                       maxLength: 253
                     image:
                       type: string
                       maxLength: 500
                     secret:
                       type: string
-                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*){0,1}$
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*)?$
                       maxLength: 253
                     serverType:
                       type: string
@@ -263,4 +140,133 @@ spec:
                       type: string
                     message:
                       type: string
+                      maxLength: 1600
+                  required: [ id,baseImage,image ]
+    - name: v1alpha2
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            imageType:
+              type: string
+              enum: [ base,server,node ]
+            supportedType:
+              type: array
+              items:
+                type: string
+                enum: [ cpp,nodejs,nodejs-pkg,java-war,java-jar,go ]
+              minItems: 1
+            mark:
+              type: string
+              maxLength: 1600
+            releases:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    pattern: ^([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]$
+                    maxLength: 63
+                  image:
+                    type: string
+                    maxLength: 500
+                  secret:
+                    type: string
+                    pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*)?$
+                    maxLength: 253
+                  createPerson:
+                    type: string
+                    maxLength: 100
+                  createTime:
+                    type: string
+                    format: date-time
+                  mark:
+                    type: string
+                    maxLength: 1600
+                required: [ id , image ]
+              minItems: 0
+              maxItems: 120
+            build:
+              type: object
+              properties:
+                last:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      pattern: ^([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]$
+                      maxLength: 63
+                    baseImage:
+                      type: string
+                      maxLength: 500
+                    baseImageSecret:
+                      type: string
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*)?$
+                      maxLength: 253
+                    image:
+                      type: string
+                      maxLength: 500
+                    secret:
+                      type: string
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*)?$
+                      maxLength: 253
+                    serverType:
+                      type: string
+                      enum: [ cpp,nodejs,nodejs-pkg,java-war,java-jar,go ]
+                    createPerson:
+                      type: string
                       maxLength: 800
+                    createTime:
+                      type: string
+                      format: date-time
+                    mark:
+                      type: string
+                      maxLength: 1600
+                    phase:
+                      type: string
+                    message:
+                      type: string
+                      maxLength: 1600
+                  required: [ id,baseImage,image ]
+                running:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      pattern: ^([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]$
+                      maxLength: 63
+                    baseImage:
+                      type: string
+                      maxLength: 500
+                    baseImageSecret:
+                      type: string
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*)?$
+                      maxLength: 253
+                    image:
+                      type: string
+                      maxLength: 500
+                    secret:
+                      type: string
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*)?$
+                      maxLength: 253
+                    serverType:
+                      type: string
+                      enum: [ cpp,nodejs,nodejs-pkg,java-war,java-jar,go ]
+                    createPerson:
+                      type: string
+                      maxLength: 800
+                    createTime:
+                      type: string
+                      format: date-time
+                    mark:
+                      type: string
+                      maxLength: 1600
+                    phase:
+                      type: string
+                    message:
+                      type: string
+                      maxLength: 1600
+                  required: [ id,baseImage,image ]

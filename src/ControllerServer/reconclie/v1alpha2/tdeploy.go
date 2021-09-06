@@ -145,7 +145,7 @@ func (r *TDeployReconcile) reconcile(key string) reconclie.ReconcileResult {
 	deployed := true
 	tdeployCopy := tdeploy.DeepCopy()
 	tdeployCopy.Deployed = &deployed
-	if _, err := r.clients.CrdClient.CrdV1alpha2().TDeploys(namespace).Update(context.TODO(), tdeployCopy, k8sMetaV1.UpdateOptions{}); err != nil {
+	if _, err = r.clients.CrdClient.CrdV1alpha2().TDeploys(namespace).Update(context.TODO(), tdeployCopy, k8sMetaV1.UpdateOptions{}); err != nil {
 		utilRuntime.HandleError(fmt.Errorf(meta.ResourceUpdateError, "tdeploy", namespace, name, err.Error()))
 		return reconclie.RateLimit
 	}

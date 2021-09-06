@@ -7,7 +7,7 @@ import (
 	k8sCoreV1 "k8s.io/api/core/v1"
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/cache"
-	crdV1Alpha1 "k8s.tars.io/api/crd/v1alpha1"
+	crdV1Alpha2 "k8s.tars.io/api/crd/v1alpha2"
 	"strings"
 	"tarsagent/controller/common"
 	"time"
@@ -21,39 +21,23 @@ type Downloader struct {
 // NewDownloader returns a Downloader object to download image
 func NewDownloader(config *common.RuntimeConfig) *Downloader {
 	d := &Downloader{RuntimeConfig: config}
-	sharedInformer := config.CrdInformerFactory.Crd().V1alpha1().TImages()
+	sharedInformer := config.CrdInformerFactory.Crd().V1alpha2().TImages()
 	sharedInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			timage, ok := obj.(*crdV1Alpha1.TImage)
-			if !ok {
-				glog.Errorf("Added object is not a crdV1Alpha1.TImage type")
+			if !d.check(obj) {
 				return
 			}
-			if !d.preDownloadCheck(timage) {
-				return
-			}
-			glog.Infof("Ready to download image %s.%s", timage.ImageType, timage.Name)
-			go d.downloadDockerImage(timage)
+			go d.download(obj)
 		},
 		UpdateFunc: func(oldObj, newObj interface{}) {
-			oldTImage, ok := newObj.(*crdV1Alpha1.TImage)
-			if !ok {
-				glog.Errorf("Updated object is not a crdV1Alpha1.TImage type")
-				return
+			oldMeta := oldObj.(k8sMetaV1.Object)
+			newMeta := newObj.(k8sMetaV1.Object)
+			if newMeta.GetResourceVersion() != oldMeta.GetResourceVersion() {
+				if !d.check(newObj) {
+					return
+				}
+				go d.download(newObj)
 			}
-			newTImage, ok := newObj.(*crdV1Alpha1.TImage)
-			if !ok {
-				glog.Errorf("Updated object is not a crdV1Alpha1.TImage type")
-				return
-			}
-			if oldTImage.GetResourceVersion() == newTImage.GetResourceVersion() {
-				return
-			}
-			if !d.preDownloadCheck(newTImage) {
-				return
-			}
-			glog.Infof("Ready to download image %s.%s", newTImage.ImageType, newTImage.Name)
-			go d.downloadDockerImage(newTImage)
 		},
 		DeleteFunc: func(obj interface{}) {
 			return
@@ -62,7 +46,13 @@ func NewDownloader(config *common.RuntimeConfig) *Downloader {
 	return d
 }
 
-func (d *Downloader) preDownloadCheck(timage *crdV1Alpha1.TImage) bool {
+func (d *Downloader) check(obj interface{}) bool {
+	timage, ok := obj.(*crdV1Alpha2.TImage)
+	if !ok {
+		glog.Errorf("Added object is not a crdV1Alpha2.TImage type")
+		return false
+	}
+
 	// timage empty
 	if len(timage.Releases) <= 0 {
 		return false
@@ -89,7 +79,7 @@ func (d *Downloader) preDownloadCheck(timage *crdV1Alpha1.TImage) bool {
 		return false
 	}
 
-	_, ok := node.Labels[fmt.Sprintf("%s.%s",
+	_, ok = node.Labels[fmt.Sprintf("%s.%s",
 		common.NodeNamespaceAffinityPrefix, timage.Namespace)]
 	if !ok {
 		return false
@@ -113,9 +103,11 @@ func (d *Downloader) preDownloadCheck(timage *crdV1Alpha1.TImage) bool {
 	return true
 }
 
-func (d *Downloader) downloadDockerImage(timage *crdV1Alpha1.TImage) {
+func (d *Downloader) download(obj interface{}) {
+	timage, _ := obj.(*crdV1Alpha2.TImage)
+
 	// Ready to download images with builtin or createTime properties in healthy node
-	validImages := make([]*crdV1Alpha1.TImageRelease, 0, len(timage.Releases))
+	validImages := make([]*crdV1Alpha2.TImageRelease, 0, len(timage.Releases))
 	for _, image := range timage.Releases {
 		if strings.Contains(image.ID, "builtin") {
 			validImages = append(validImages, image)
@@ -138,9 +130,9 @@ func (d *Downloader) downloadDockerImage(timage *crdV1Alpha1.TImage) {
 	for _, image := range validImages {
 		var secret *k8sCoreV1.Secret
 
-		if image.Secret != "" {
+		if image.Secret != nil && *image.Secret != "" {
 			secret, err = d.K8sClient.CoreV1().Secrets(timage.Namespace).
-				Get(context.TODO(), image.Secret, k8sMetaV1.GetOptions{})
+				Get(context.TODO(), *image.Secret, k8sMetaV1.GetOptions{})
 			if err != nil {
 				glog.Errorf("get secret %s error: %s\n", image.Secret, err.Error())
 				continue

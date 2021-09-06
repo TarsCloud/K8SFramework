@@ -5,14 +5,40 @@ metadata:
   namespace: tars-system
 ---
 
-kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: tars-controller
+  namespace: tars-system
+rules:
+  - apiGroups: [ coordination.k8s.io ]
+    resources: [ leases ]
+    verbs: [ create, get, list, watch, patch, update ]
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tars-controller
+  namespace: tars-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: tars-controller
+subjects:
+  - kind: ServiceAccount
+    name: tars-controller
+    namespace: tars-system
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
 metadata:
   name: tars-system:tars-controller
 rules:
   - apiGroups: [ "" ]
-    resources: [ services ]
-    verbs: [ create, get ,list,delete, watch ,patch,update ]
+    resources: [ services ,persistentvolumeclaims ]
+    verbs: [ create, get, list, delete, watch, patch, update , deletecollection ]
   - apiGroups: [ "" ]
     resources: [ pods,pods/status ]
     verbs: [ list,get,watch ]
@@ -20,17 +46,17 @@ rules:
     resources: [ events ]
     verbs: [ create ]
   - apiGroups: [ "" ]
-    verbs: [ deletecollection ]
-    resources: [ persistentvolumeclaims ]
+    resources: [ nodes ]
+    verbs: [ get, list, watch, patch, update ]
   - apiGroups: [ apps ]
     resources: [ statefulsets,daemonsets ]
-    verbs: [ create, get ,list,delete, watch ,patch,update ]
+    verbs: [ create, get, list, delete, watch, patch, update , deletecollection ]
   - apiGroups: [ k8s.tars.io ]
-    resources: [ ttrees,ttemplates,treleases,tdeploys,timages ]
-    verbs: [ get ,list, watch ,patch, update ]
+    resources: [ ttrees, ttemplates, treleases, tdeploys, timages ]
+    verbs: [ get, list, watch ,patch, update ]
   - apiGroups: [ k8s.tars.io ]
     resources: [ taccounts,tconfigs,tservers,tservers/status,texitedrecords,tgateways,tendpoints,tendpoints/status ]
-    verbs: [ create, get ,list, watch,patch,update,delete,deletecollection ]
+    verbs: [ create, get, list, delete, watch, patch, update , deletecollection ]
 ---
 
 apiVersion: rbac.authorization.k8s.io/v1

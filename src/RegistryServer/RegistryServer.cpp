@@ -14,11 +14,13 @@ void RegistryServer::initialize() {
     K8SParams::instance().init();
 
     std::string tendpointsWatchUrl =
-            std::string("/apis/k8s.tars.io/v1alpha1/namespaces/") + K8SParams::instance().bindNamespace() + "/tendpoints";
+            std::string("/apis/k8s.tars.io/v1alpha2/namespaces/") + K8SParams::instance().bindNamespace() +
+            "/tendpoints";
     K8SWatcher::instance().postWatch(tendpointsWatchUrl, handleEndpointsEvent);
 
     std::string ttemplatesWatchUrl =
-            std::string("/apis/k8s.tars.io/v1alpha1/namespaces/") + K8SParams::instance().bindNamespace() + "/ttemplates";
+            std::string("/apis/k8s.tars.io/v1alpha2/namespaces/") + K8SParams::instance().bindNamespace() +
+            "/ttemplates";
     K8SWatcher::instance().postWatch(ttemplatesWatchUrl, handleTemplateEvent);
 
     K8SClient::instance().start();
@@ -53,7 +55,8 @@ void RegistryServer::initialize() {
     strStream << R"({"status":{"conditions":[{"type":"tars.io/active","status":"True","reason":"Active/Active"}]}})";
     const std::string setActiveBody = strStream.str();
 
-    auto setActiveTask = K8SClient::instance().postRequest(K8SClientRequestMethod::StrategicMergePatch, setActiveUrl, setActiveBody);
+    auto setActiveTask = K8SClient::instance().postRequest(K8SClientRequestMethod::StrategicMergePatch, setActiveUrl,
+                                                           setActiveBody);
     bool finish = setActiveTask->waitFinish(std::chrono::seconds(1));
     if (!finish) {
         LOG->error() << "Set Registry Server State To \"Active/Active\" Overtime" << std::endl;
@@ -61,11 +64,12 @@ void RegistryServer::initialize() {
     }
 
     if (setActiveTask->state() != Done) {
-        LOG->error() << "Set Registry Server State To \"Active/Active\" Error: " << setActiveTask->stateMessage() << std::endl;
+        LOG->error() << "Set Registry Server State To \"Active/Active\" Error: " << setActiveTask->stateMessage()
+                     << std::endl;
         exit(-1);
     }
 
-    upchainThread = std::thread([]() {
+    upchainThread_ = std::thread([]() {
         while (true) {
             ServerInfoInterface::instance().loadUpChainConf();
             usleep(3 * 1000 * 1000);

@@ -159,7 +159,7 @@ func (r *TEndpointReconciler) reconcile(key string) reconclie.ReconcileResult {
 		return reconclie.AllOk
 	}
 
-	if !k8sMetaV1.IsControlledBy(tendpoint,tserver) {
+	if !k8sMetaV1.IsControlledBy(tendpoint, tserver) {
 		// 此处意味着出现了非由 controller 管理的同名 tendpoint, 需要警告和重试
 		msg := fmt.Sprintf(meta.ResourceOutControlError, "tendpoint", namespace, tendpoint.Name, namespace, name)
 		meta.Event(namespace, tserver, k8sCoreV1.EventTypeWarning, meta.ResourceOutControlReason, msg)

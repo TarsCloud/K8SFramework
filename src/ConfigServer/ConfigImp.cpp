@@ -1,11 +1,8 @@
 ﻿#include "ConfigImp.h"
-#include "servant/RemoteLogger.h"
 #include "ConfigServer.h"
 #include "ConfigInfoInterface.h"
-
+#include "servant/Application.h"
 using namespace tars;
-
-#define TARS_NOTIFY_ERR(x, y)
 
 void ConfigImp::initialize() {
 }
@@ -20,7 +17,7 @@ int ConfigImp::ListConfig(const string &app, const string &server, vector<string
         LOG->debug() << "list config error: " << errorInfo << std::endl;
         return -1;
     } else if (loadConfigResult == ConfigInfoInterface::K8SError) {
-        TARS_NOTIFY_ERR("request k8s api-server error", errorInfo);
+        TARS_NOTIFY_ERROR("request k8s api-server error:" + errorInfo);
         LOG->error() << "request k8s api-server error : " << errorInfo << std::endl;
         return -1;
     }
@@ -48,7 +45,7 @@ int ConfigImp::loadConfigByHost(const std::string &appServerName, const std::str
         std::swap(result, errorInfo);
         return -1;
     } else if (loadConfigResult == ConfigInfoInterface::K8SError) {
-        TARS_NOTIFY_ERR("request k8s api-server error", errorInfo);
+        TARS_NOTIFY_ERROR("request k8s api-server error:" + errorInfo);
         LOG->error() << "request k8s api-server error : " << errorInfo << std::endl;
         result = "internal error, please try again or contact  administrator";
         return -1;
@@ -70,7 +67,7 @@ ConfigImp::loadConfig(const std::string &app, const std::string &server, const s
         std::swap(result, errorInfo);
         return -1;
     } else if (loadConfigResult == ConfigInfoInterface::K8SError) {
-        TARS_NOTIFY_ERR("request k8s api-server error", errorInfo);
+        TARS_NOTIFY_ERROR("request k8s api-server error:" + errorInfo);
         LOG->error() << "request k8s api-server error : " << errorInfo << std::endl;
         result = "internal error, please try again or contact  administrator";
         return -1;
@@ -99,7 +96,7 @@ int ConfigImp::checkConfig(const std::string &appServerName, const std::string &
         std::swap(result, errorInfo);
         return -1;
     } else if (loadConfigResult == ConfigInfoInterface::K8SError) {
-        TARS_NOTIFY_ERR("request k8s api-server error", errorInfo);
+        TARS_NOTIFY_ERROR("request k8s api-server error:" + errorInfo);
         LOG->error() << "request k8s api-server error : " << errorInfo << std::endl;
         result = "internal error, please try again or contact  administrator";
         return -1;
@@ -132,7 +129,7 @@ int ConfigImp::ListConfigByInfo(const ConfigInfo &configInfo, vector<string> &vf
         LOG->debug() << "list config error: " << errorInfo << std::endl;
         return -1;
     } else if (loadConfigResult == ConfigInfoInterface::K8SError) {
-        TARS_NOTIFY_ERR("request k8s api-server error", errorInfo);
+        TARS_NOTIFY_ERROR("request k8s api-server error:" + errorInfo);
         LOG->error() << "request k8s api-server error : " << errorInfo << std::endl;
         return -1;
     }
@@ -159,7 +156,7 @@ int ConfigImp::loadConfigByInfo(const ConfigInfo &configInfo, string &config, Cu
         std::swap(config, errorInfo);
         return -1;
     } else if (loadConfigResult == ConfigInfoInterface::K8SError) {
-        TARS_NOTIFY_ERR("request k8s api-server error", errorInfo);
+        TARS_NOTIFY_ERROR("request k8s api-server error:" + errorInfo);
         LOG->error() << "request k8s api-server error : " << errorInfo << std::endl;
         return -1;
     }
@@ -186,7 +183,7 @@ int ConfigImp::checkConfigByInfo(const ConfigInfo &configInfo, string &result, C
         std::swap(result, errorInfo);
         return -1;
     } else if (loadConfigResult == ConfigInfoInterface::K8SError) {
-        TARS_NOTIFY_ERR("request k8s api-server error", errorInfo);
+        TARS_NOTIFY_ERROR("request k8s api-server error:" + errorInfo);
         LOG->error() << "request k8s api-server error : " << errorInfo << std::endl;
         result = "internal error, please try again or contact  administrator";
         return -1;

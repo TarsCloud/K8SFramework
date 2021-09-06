@@ -51,18 +51,32 @@ function replace()
     path=$1
 
     if [ -d $path ]; then
+ 
         for file in `find $path`
         do
+            echo "$file" | grep -q "TarsWeb"
+            if [ $? -eq 0 ]; then
+                continue
+            fi
+
             replaceFilePath $file taf tars    
         done
 
         for file in `find $path`
         do
+            echo "$file" | grep -q "TarsWeb"
+            if [ $? -eq 0 ]; then
+                continue
+            fi
             replaceFilePath $file jce tars    
         done
 
         for file in `find $path`
         do
+            echo "$file" | grep -q "TarsWeb"
+            if [ $? -eq 0 ]; then
+                continue
+            fi
             replaceContent $file
         done
     elif [ -f $path ]; then
@@ -76,8 +90,6 @@ rm -rf build/files/taf-node
 rm -rf build/files/taf-web
 
 replace install
-
-exit 0
 
 replace build
 replace doc

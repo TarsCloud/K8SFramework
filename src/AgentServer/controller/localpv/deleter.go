@@ -18,7 +18,9 @@ package localpv
 
 import (
 	"fmt"
+	"os"
 	"strings"
+	"syscall"
 	"tarsagent/controller/common"
 	"time"
 
@@ -63,6 +65,7 @@ func NewDeleter(config *common.RuntimeConfig, cleanupTracker *CleanupStatusTrack
 // DeletePVs will scan through all the existing PVs that are released, and cleanup and
 // delete them
 func (d *Deleter) DeletePVs() {
+	nowTime := time.Now()
 	for _, pv := range d.Cache.ListPVs() {
 		if pv.Status.Phase != v1.VolumeReleased && pv.Status.Phase != v1.VolumeAvailable {
 			continue
@@ -70,17 +73,19 @@ func (d *Deleter) DeletePVs() {
 		name := pv.Name
 		switch pv.Spec.PersistentVolumeReclaimPolicy {
 		case v1.PersistentVolumeReclaimRetain:
-			glog.V(4).Infof("reclaimVolume[%s]: policy is Retain, nothing to do", name)
+			glog.Infof("reclaimVolume[%s]: policy is Retain, nothing to do", name)
 		case v1.PersistentVolumeReclaimRecycle:
-			glog.V(4).Infof("reclaimVolume[%s]: policy is Recycle which is not supported", name)
+			glog.Infof("reclaimVolume[%s]: policy is Recycle which is not supported", name)
 			d.RuntimeConfig.Recorder.Eventf(pv, v1.EventTypeWarning, "VolumeUnsupportedReclaimPolicy", "Volume has unsupported PersistentVolumeReclaimPolicy: Recycle")
 		case v1.PersistentVolumeReclaimDelete:
-			glog.V(4).Infof("reclaimVolume[%s]: policy is Delete", name)
+			glog.Infof("reclaimVolume[%s]: policy is Delete", name)
 			var err error
 			if pv.Status.Phase == v1.VolumeReleased {
-				err = d.deleteReleasedPV(pv)
+				err = d.deletePV(pv)
 			} else {
-				err = d.deleteAvailablePV(pv)
+				if pv.CreationTimestamp.Add(24 * time.Hour).Before(nowTime) {
+					err = d.deletePV(pv)
+				}
 			}
 			if err != nil {
 				cleaningLocalPVErr := fmt.Errorf("Error cleaning PV %q: %v", name, err.Error())
@@ -94,42 +99,23 @@ func (d *Deleter) DeletePVs() {
 	}
 }
 
-func (d *Deleter) getVolMode(pv *v1.PersistentVolume) (v1.PersistentVolumeMode, error) {
-	config, ok := d.DiscoveryMap[pv.Spec.StorageClassName]
-	if !ok {
-		return "", fmt.Errorf("Unknown storage class name %s", pv.Spec.StorageClassName)
-	}
-
-	mountPath, err := common.GetContainerPath(pv, config)
+func (d *Deleter) getVolPathMode(pv *v1.PersistentVolume) (string, v1.PersistentVolumeMode, error) {
+	mountPath, err := common.GetContainerPath(pv, d.TStorageClass)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	volMode, err := common.GetVolumeMode(d.VolUtil, mountPath)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	return volMode, nil
+	return mountPath, volMode, nil
 }
 
-func (d *Deleter) deleteReleasedPV(pv *v1.PersistentVolume) error {
+func (d *Deleter) deletePV(pv *v1.PersistentVolume) error {
 	if pv.Spec.Local == nil {
 		return fmt.Errorf("Unsupported volume type")
-	}
-
-	config, ok := d.DiscoveryMap[pv.Spec.StorageClassName]
-	if !ok {
-		return fmt.Errorf("Unknown storage class name %s", pv.Spec.StorageClassName)
-	}
-
-	mountPath, err := common.GetContainerPath(pv, config)
-	if err != nil {
-		return err
-	}
-	volMode, err := d.getVolMode(pv)
-	if err != nil {
-		return fmt.Errorf("failed to get volume mode of path %q: %v", mountPath, err)
 	}
 
 	// Exit if cleaning is still in progress.
@@ -163,15 +149,29 @@ func (d *Deleter) deleteReleasedPV(pv *v1.PersistentVolume) error {
 		return fmt.Errorf("Unexpected state %d for pv %s", state, pv.Name)
 	}
 
-	return d.runProcess(pv, volMode, mountPath, config)
+	return d.runProcess(pv, d.TStorageClass)
 }
 
-func (d *Deleter) runProcess(pv *v1.PersistentVolume, volMode v1.PersistentVolumeMode, mountPath string,
-	config common.MountConfig) error {
+func (d *Deleter) runProcess(pv *v1.PersistentVolume, config common.MountConfig) error {
 	// Run as exec script.
 	err := d.CleanupStatus.ProcTable.MarkRunning(pv.Name)
 	if err != nil {
 		return err
+	}
+
+	mountPath, volMode, err := d.getVolPathMode(pv)
+	if err != nil {
+		pathErr, ok := err.(*os.PathError)
+		if ok && pathErr.Err == syscall.ENOENT {
+			glog.Errorf("failed to get volume mode of path %q: %v, delete pv directly.", mountPath, err)
+			// Set process as succeeded.
+			if err := d.CleanupStatus.ProcTable.MarkSucceeded(pv.Name); err != nil {
+				glog.Error(err)
+			}
+			return nil
+		} else {
+			return fmt.Errorf("failed to get volume mode of path %q: %v", mountPath, err)
+		}
 	}
 
 	go d.asyncCleanPV(pv, volMode, mountPath, config)
@@ -217,26 +217,24 @@ func (d *Deleter) cleanPV(pv *v1.PersistentVolume, volMode v1.PersistentVolumeMo
 func (d *Deleter) cleanFilePV(pv *v1.PersistentVolume, mountPath string) error {
 	glog.Infof("Deleting PV file volume %q contents at hostpath %q, mountpath %q",
 		pv.Name, pv.Spec.Local.Path, mountPath)
-	return d.VolUtil.DeleteContents(mountPath)
-}
-
-func (d *Deleter) deleteAvailablePV(pv *v1.PersistentVolume) error {
-	nowTime := time.Now()
-	if pv.CreationTimestamp.Add(24 * time.Hour).Before(nowTime) {
-		if err := d.APIUtil.DeletePV(pv.Name); err != nil {
-			if !errors.IsNotFound(err) {
-				d.RuntimeConfig.Recorder.Eventf(pv, v1.EventTypeWarning, common.EventVolumeFailedDelete,
-					err.Error())
-				return fmt.Errorf("Error deleting PV %q: %v", pv.Name, err.Error())
-			}
+	if pv.Status.Phase == v1.VolumeAvailable {
+		// A little of bit non-sense because of the server dir remained
+		return d.VolUtil.DeleteEmptyDir(mountPath)
+	} else if pv.Status.Phase == v1.VolumeReleased {
+		if err := d.VolUtil.DeleteContents(mountPath); err != nil {
+			return err
 		}
+		// A little of bit non-sense because of the server dir remained
+		return d.VolUtil.DeleteEmptyDir(mountPath)
+		return nil
+	} else {
+		return fmt.Errorf("Deleting PV file volume %q has unexpected phase %s\n", pv.Name, pv.Status.Phase)
 	}
-	return nil
 }
 
 // CleanupStatusTracker tracks cleanup processes that are either process based or jobs based.
 type CleanupStatusTracker struct {
-	ProcTable     ProcTable
+	ProcTable	ProcTable
 }
 
 // InProgress returns true if the cleaning for the specified PV is in progress.
