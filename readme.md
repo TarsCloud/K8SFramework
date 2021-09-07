@@ -136,4 +136,19 @@ kubectl label nodes $node-name tars.io/SupportLocalVolume=
 
 注意这里的node-name必须已经打上了```tars.io/node.tars-test=```标签, 否则无效!
 
-至此, TARS看框架已经
+至此, TARS看框架已经安装完成, 可以打开: ${web_host} 看到tars web管理平台!
+
+## 升级说明
+
+如果升级TARS版本, 按照上述流程重新执行即可, 需要注意的是, 如果TARS框架的crd文件做了变更(install/tarscontroller/crds), 则需要自己手工执行以下, helm upgrade不会再执行crd文件!
+
+示例脚本如下:
+
+```
+helm upgrade tarscontroller --set 'helm.dockerhub.registry=${harbor},helm.build.id=${version} ' charts/tarscontroller-${version}.tgz
+
+helm upgrade tars-test -n tars-test --set 'dockerRegistry=${harbor},dockerSecret=tars-image-secret,els.nodes=els.nodes=tars-elasticsearch:9200,helm.build.id=${version},helm.dockerhub.registry=${harbor},web=${web_host}' install/tarsframework-${version}.tgz
+
+```
+
+## 
