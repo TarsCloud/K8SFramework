@@ -4,7 +4,7 @@ import (
 	k8sAppsV1 "k8s.io/api/apps/v1"
 	k8sCoreV1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
-	crdV1alpha2 "k8s.tars.io/api/crd/v1alpha2"
+	crdV1beta1 "k8s.tars.io/api/crd/v1beta1"
 )
 
 func equalServicePort(l, r []k8sCoreV1.ServicePort) bool {
@@ -428,7 +428,7 @@ func equalContainerPorts(l, r []k8sCoreV1.ContainerPort) bool {
 	return true
 }
 
-func equalTarsServants(l, r []*crdV1alpha2.TServerServant) bool {
+func equalTarsServants(l, r []*crdV1beta1.TServerServant) bool {
 	if len(l) != len(r) {
 		return false
 	}
@@ -460,7 +460,7 @@ func equalTarsServants(l, r []*crdV1alpha2.TServerServant) bool {
 	return true
 }
 
-func equalTars(l, r *crdV1alpha2.TServerTars) bool {
+func equalTars(l, r *crdV1beta1.TServerTars) bool {
 
 	if l == nil {
 		if r == nil {
@@ -496,7 +496,7 @@ func equalTars(l, r *crdV1alpha2.TServerTars) bool {
 	return true
 }
 
-func equalTServerPorts(l, r []*crdV1alpha2.TServerPort) bool {
+func equalTServerPorts(l, r []*crdV1beta1.TServerPort) bool {
 
 	if len(l) != len(r) {
 		return false
@@ -513,7 +513,7 @@ func equalTServerPorts(l, r []*crdV1alpha2.TServerPort) bool {
 	return true
 }
 
-func equalNormal(l, r *crdV1alpha2.TServerNormal) bool {
+func equalNormal(l, r *crdV1beta1.TServerNormal) bool {
 	if l == nil {
 		if r == nil {
 			return true
@@ -532,7 +532,7 @@ func equalNormal(l, r *crdV1alpha2.TServerNormal) bool {
 	return true
 }
 
-func equalK8SHostPorts(l, r []*crdV1alpha2.TK8SHostPort) bool {
+func equalK8SHostPorts(l, r []*crdV1beta1.TK8SHostPort) bool {
 	if len(l) != len(r) {
 		return false
 	}
@@ -547,7 +547,7 @@ func equalK8SHostPorts(l, r []*crdV1alpha2.TK8SHostPort) bool {
 	return true
 }
 
-func EqualTServerAndTEndpoint(tserver *crdV1alpha2.TServer, endpoint *crdV1alpha2.TEndpoint) bool {
+func EqualTServerAndTEndpoint(tserver *crdV1beta1.TServer, endpoint *crdV1beta1.TEndpoint) bool {
 
 	if tserver.Spec.App != endpoint.Spec.App {
 		return false
@@ -570,9 +570,9 @@ func EqualTServerAndTEndpoint(tserver *crdV1alpha2.TServer, endpoint *crdV1alpha
 	}
 
 	switch tserver.Spec.SubType {
-	case crdV1alpha2.TARS:
+	case crdV1beta1.TARS:
 		return equalTars(tserver.Spec.Tars, endpoint.Spec.Tars)
-	case crdV1alpha2.Normal:
+	case crdV1beta1.Normal:
 		return equalNormal(tserver.Spec.Normal, endpoint.Spec.Normal)
 	}
 
@@ -580,7 +580,7 @@ func EqualTServerAndTEndpoint(tserver *crdV1alpha2.TServer, endpoint *crdV1alpha
 	return false
 }
 
-func EqualTServerAndService(tserver *crdV1alpha2.TServer, service *k8sCoreV1.Service) bool {
+func EqualTServerAndService(tserver *crdV1beta1.TServer, service *k8sCoreV1.Service) bool {
 	tserverSpec := &tserver.Spec
 	serviceSpec := &service.Spec
 
@@ -609,7 +609,7 @@ func EqualTServerAndService(tserver *crdV1alpha2.TServer, service *k8sCoreV1.Ser
 	return true
 }
 
-func EqualTServerAndDaemonSet(tserver *crdV1alpha2.TServer, daemonSet *k8sAppsV1.DaemonSet) bool {
+func EqualTServerAndDaemonSet(tserver *crdV1beta1.TServer, daemonSet *k8sAppsV1.DaemonSet) bool {
 	tserverSpec := &tserver.Spec
 	daemonSetSpec := &daemonSet.Spec
 
@@ -693,7 +693,7 @@ func EqualTServerAndDaemonSet(tserver *crdV1alpha2.TServer, daemonSet *k8sAppsV1
 	return true
 }
 
-func EqualTServerAndStatefulSet(tserver *crdV1alpha2.TServer, statefulSet *k8sAppsV1.StatefulSet) bool {
+func EqualTServerAndStatefulSet(tserver *crdV1beta1.TServer, statefulSet *k8sAppsV1.StatefulSet) bool {
 
 	if *tserver.Spec.K8S.Replicas != *statefulSet.Spec.Replicas {
 		return false

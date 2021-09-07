@@ -1,4 +1,4 @@
-apiVersion: k8s.tars.io/v1alpha2
+apiVersion: k8s.tars.io/v1beta1
 kind: TTree
 metadata:
   name: tars-tree

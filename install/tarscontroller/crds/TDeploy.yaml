@@ -475,7 +475,7 @@ spec:
               default: false
           required: [ apply ]
           type: object
-    - name: v1alpha2
+    - name: v1beta1
       served: true
       storage: true
       schema:

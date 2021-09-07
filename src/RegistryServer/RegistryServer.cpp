@@ -14,12 +14,12 @@ void RegistryServer::initialize() {
     K8SParams::instance().init();
 
     std::string tendpointsWatchUrl =
-            std::string("/apis/k8s.tars.io/v1alpha2/namespaces/") + K8SParams::instance().bindNamespace() +
+            std::string("/apis/k8s.tars.io/v1beta1/namespaces/") + K8SParams::instance().bindNamespace() +
             "/tendpoints";
     K8SWatcher::instance().postWatch(tendpointsWatchUrl, handleEndpointsEvent);
 
     std::string ttemplatesWatchUrl =
-            std::string("/apis/k8s.tars.io/v1alpha2/namespaces/") + K8SParams::instance().bindNamespace() +
+            std::string("/apis/k8s.tars.io/v1beta1/namespaces/") + K8SParams::instance().bindNamespace() +
             "/ttemplates";
     K8SWatcher::instance().postWatch(ttemplatesWatchUrl, handleTemplateEvent);
 

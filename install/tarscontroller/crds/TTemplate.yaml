@@ -32,7 +32,7 @@ spec:
                   pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                   maxLength: 253
               required: [ content,parent ]
-    - name: v1alpha2
+    - name: v1beta1
       served: true
       storage: true
       schema:

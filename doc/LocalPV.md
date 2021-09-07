@@ -8,7 +8,7 @@
 ## 在 配置 Hostnetwork ,HostIPC ,HostPort 后，Pod 与 节点延迟 绑定
 
 ```
-    在当前的版本中(v1alpha2),使用 Nodebind 方式实现 节点绑定的效果 ,但该方式存在严重缺陷
+    在当前的版本中(v1beta1),使用 Nodebind 方式实现 节点绑定的效果 ,但该方式存在严重缺陷
 ```
 
 3. 在 TServer 中，除 LabelMatch 由用户主动输入节点名外，不与集群的特定信息关联.
@@ -153,7 +153,7 @@ status:
 则会在 生成的 statefulset 中 添加  虚拟的名为 "dealy-bind" VolumeClainTemplates 项
 
 ```go
-    func BuildStatefulSetVolumeClainTemplates(tserver *crdV1alpha2.TServer) []k8sCoreV1.PersistentVolumeClaim {
+    func BuildStatefulSetVolumeClainTemplates(tserver *crdV1beta1.TServer) []k8sCoreV1.PersistentVolumeClaim {
         var volumeClainTemplates []k8sCoreV1.PersistentVolumeClaim
         for _, mount := range tserver.Spec.K8S.Mounts {
             if mount.Source.PersistentVolumeClaimTemplate != nil {

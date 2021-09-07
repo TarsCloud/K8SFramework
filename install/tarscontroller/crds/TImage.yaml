@@ -142,7 +142,7 @@ spec:
                       type: string
                       maxLength: 1600
                   required: [ id,baseImage,image ]
-    - name: v1alpha2
+    - name: v1beta1
       served: true
       storage: true
       schema:

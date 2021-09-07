@@ -25,13 +25,13 @@ import (
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
 	crdv1alpha1 "k8s.tars.io/client-go/clientset/versioned/typed/crd/v1alpha1"
-	crdv1alpha2 "k8s.tars.io/client-go/clientset/versioned/typed/crd/v1alpha2"
+	crdv1beta1 "k8s.tars.io/client-go/clientset/versioned/typed/crd/v1beta1"
 )
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
 	CrdV1alpha1() crdv1alpha1.CrdV1alpha1Interface
-	CrdV1alpha2() crdv1alpha2.CrdV1alpha2Interface
+	CrdV1beta1() crdv1beta1.CrdV1beta1Interface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
@@ -39,7 +39,7 @@ type Interface interface {
 type Clientset struct {
 	*discovery.DiscoveryClient
 	crdV1alpha1 *crdv1alpha1.CrdV1alpha1Client
-	crdV1alpha2 *crdv1alpha2.CrdV1alpha2Client
+	crdV1beta1  *crdv1beta1.CrdV1beta1Client
 }
 
 // CrdV1alpha1 retrieves the CrdV1alpha1Client
@@ -47,9 +47,9 @@ func (c *Clientset) CrdV1alpha1() crdv1alpha1.CrdV1alpha1Interface {
 	return c.crdV1alpha1
 }
 
-// CrdV1alpha2 retrieves the CrdV1alpha2Client
-func (c *Clientset) CrdV1alpha2() crdv1alpha2.CrdV1alpha2Interface {
-	return c.crdV1alpha2
+// CrdV1beta1 retrieves the CrdV1beta1Client
+func (c *Clientset) CrdV1beta1() crdv1beta1.CrdV1beta1Interface {
+	return c.crdV1beta1
 }
 
 // Discovery retrieves the DiscoveryClient
@@ -77,7 +77,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	if err != nil {
 		return nil, err
 	}
-	cs.crdV1alpha2, err = crdv1alpha2.NewForConfig(&configShallowCopy)
+	cs.crdV1beta1, err = crdv1beta1.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +94,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
 	cs.crdV1alpha1 = crdv1alpha1.NewForConfigOrDie(c)
-	cs.crdV1alpha2 = crdv1alpha2.NewForConfigOrDie(c)
+	cs.crdV1beta1 = crdv1beta1.NewForConfigOrDie(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClientForConfigOrDie(c)
 	return &cs
@@ -104,7 +104,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
 	cs.crdV1alpha1 = crdv1alpha1.New(c)
-	cs.crdV1alpha2 = crdv1alpha2.New(c)
+	cs.crdV1beta1 = crdv1beta1.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &cs

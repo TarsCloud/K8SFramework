@@ -1,0 +1,21 @@
+name: build-docker
+
+on:
+  push:
+    tags:
+      - v*
+jobs:
+  build:
+    runs-on: self-hosted
+    steps:
+      - name: docker login
+        run: |
+          docker login -u ${{ secrets.name }} -p ${{ secrets.pass }} 
+          env
+      - uses: actions/checkout@v1
+      - name: Pull code
+        run: env && ./prepare.sh    
+      - name: Build binary
+        run: ./buildBinary
+      - name: Build docker
+        run: ./buildHelm.sh index.docker.io/ruanshudong ${{ secrets.name }} ${{ secrets.pass }} v0.0.0-nightly 

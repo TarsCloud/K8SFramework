@@ -7,7 +7,7 @@ import (
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	crdV1alpha1 "k8s.tars.io/api/crd/v1alpha1"
-	crdV1alpha2 "k8s.tars.io/api/crd/v1alpha2"
+	crdV1beta1 "k8s.tars.io/api/crd/v1beta1"
 	"net/http"
 	"tarscontroller/meta"
 	"unsafe"
@@ -56,7 +56,7 @@ func extractAPIVersion(in runtime.RawExtension) (*k8sMetaV1.TypeMeta, error) {
 	return typeMeta, nil
 }
 
-func _convertTServerV1alpha2ToV1alpha1(src *crdV1alpha2.TServer) (dst *crdV1alpha1.TServer) {
+func _convertTServerV1beta1ToV1alpha1(src *crdV1beta1.TServer) (dst *crdV1alpha1.TServer) {
 	dst = &crdV1alpha1.TServer{
 		TypeMeta: k8sMetaV1.TypeMeta{
 			APIVersion: "k8s.tars.io/v1alpha1",
@@ -155,21 +155,21 @@ func _convertTServerV1alpha2ToV1alpha1(src *crdV1alpha2.TServer) (dst *crdV1alph
 	return dst
 }
 
-func _convertTServerV1alpha1ToV1alpha2(src *crdV1alpha1.TServer) (dst *crdV1alpha2.TServer) {
-	dst = &crdV1alpha2.TServer{
+func _convertTServerV1alpha1ToV1beta1(src *crdV1alpha1.TServer) (dst *crdV1beta1.TServer) {
+	dst = &crdV1beta1.TServer{
 		TypeMeta: k8sMetaV1.TypeMeta{
-			APIVersion: "k8s.tars.io/v1alpha2",
+			APIVersion: "k8s.tars.io/v1beta1",
 			Kind:       meta.TServerKind,
 		},
 		ObjectMeta: src.ObjectMeta,
-		Spec: crdV1alpha2.TServerSpec{
+		Spec: crdV1beta1.TServerSpec{
 			App:       src.Spec.App,
 			Server:    src.Spec.Server,
-			SubType:   crdV1alpha2.TServerSubType(src.Spec.SubType),
+			SubType:   crdV1beta1.TServerSubType(src.Spec.SubType),
 			Important: src.Spec.Important,
-			Tars:       (*crdV1alpha2.TServerTars)(unsafe.Pointer(src.Spec.Tars)),
-			Normal:    (*crdV1alpha2.TServerNormal)(unsafe.Pointer(src.Spec.Normal)),
-			K8S: crdV1alpha2.TServerK8S{
+			Tars:       (*crdV1beta1.TServerTars)(unsafe.Pointer(src.Spec.Tars)),
+			Normal:    (*crdV1beta1.TServerNormal)(unsafe.Pointer(src.Spec.Normal)),
+			K8S: crdV1beta1.TServerK8S{
 				ServiceAccount:      src.Spec.K8S.ServiceAccount,
 				Env:                 src.Spec.K8S.Env,
 				EnvFrom:             src.Spec.K8S.EnvFrom,
@@ -179,16 +179,16 @@ func _convertTServerV1alpha1ToV1alpha2(src *crdV1alpha1.TServer) (dst *crdV1alph
 				Mounts:              nil,
 				DaemonSet:           false,
 				NodeSelector:        []k8sCoreV1.NodeSelectorRequirement{},
-				AbilityAffinity:     crdV1alpha2.AppOrServerPreferred,
+				AbilityAffinity:     crdV1beta1.AppOrServerPreferred,
 				NotStacked:          src.Spec.K8S.NotStacked,
 				PodManagementPolicy: src.Spec.K8S.PodManagementPolicy,
 				Replicas:            src.Spec.K8S.Replicas,
 				ReadinessGate:       src.Spec.K8S.ReadinessGate,
 				Resources:           src.Spec.K8S.Resources,
 			},
-			Release: (*crdV1alpha2.TServerRelease)(src.Spec.Release),
+			Release: (*crdV1beta1.TServerRelease)(src.Spec.Release),
 		},
-		Status: crdV1alpha2.TServerStatus{
+		Status: crdV1beta1.TServerStatus{
 			Replicas:        src.Status.Replicas,
 			ReadyReplicas:   src.Status.ReadyReplicas,
 			CurrentReplicas: src.Status.CurrentReplicas,
@@ -217,14 +217,14 @@ func _convertTServerV1alpha1ToV1alpha2(src *crdV1alpha1.TServer) (dst *crdV1alph
 
 	if src.Spec.K8S.Mounts != nil {
 		for _, mount := range src.Spec.K8S.Mounts {
-			newMount := &crdV1alpha2.TK8SMount{
+			newMount := &crdV1beta1.TK8SMount{
 				Name:             mount.Name,
 				ReadOnly:         mount.ReadOnly,
 				MountPath:        mount.MountPath,
 				SubPath:          mount.SubPath,
 				MountPropagation: mount.MountPropagation,
 				SubPathExpr:      mount.SubPathExpr,
-				Source: crdV1alpha2.TK8SMountSource{
+				Source: crdV1beta1.TK8SMountSource{
 					HostPath:              mount.Source.HostPath,
 					EmptyDir:              mount.Source.EmptyDir,
 					Secret:                mount.Source.Secret,
@@ -246,7 +246,7 @@ func _convertTServerV1alpha1ToV1alpha2(src *crdV1alpha1.TServer) (dst *crdV1alph
 						uid, _ := mount.Source.PersistentVolumeClaimTemplate.Annotations[meta.TLocalVolumeUIDLabel]
 						gid, _ := mount.Source.PersistentVolumeClaimTemplate.Annotations[meta.TLocalVolumeGIDLabel]
 						mode, _ := mount.Source.PersistentVolumeClaimTemplate.Annotations[meta.TLocalVolumeModeLabel]
-						newMount.Source.TLocalVolume = &crdV1alpha2.TLocalVolume{
+						newMount.Source.TLocalVolume = &crdV1beta1.TLocalVolume{
 							UID:  uid,
 							GID:  gid,
 							Mode: mode,
@@ -260,36 +260,36 @@ func _convertTServerV1alpha1ToV1alpha2(src *crdV1alpha1.TServer) (dst *crdV1alph
 	return dst
 }
 
-func convertTServerV1alpha2ToV1alpha1(s []runtime.RawExtension) []runtime.RawExtension {
+func convertTServerV1beta1ToV1alpha1(s []runtime.RawExtension) []runtime.RawExtension {
 	d := make([]runtime.RawExtension, len(s), len(s))
 	for i, _ := range s {
-		var src = &crdV1alpha2.TServer{}
+		var src = &crdV1beta1.TServer{}
 		_ = json.Unmarshal(s[i].Raw, src)
-		dst := _convertTServerV1alpha2ToV1alpha1(src)
+		dst := _convertTServerV1beta1ToV1alpha1(src)
 		d[i].Raw, _ = json.Marshal(dst)
 	}
 	return d
 }
 
-func convertTServerV1alpha1ToV1alpha2(s []runtime.RawExtension) []runtime.RawExtension {
+func convertTServerV1alpha1ToV1beta1(s []runtime.RawExtension) []runtime.RawExtension {
 	d := make([]runtime.RawExtension, len(s), len(s))
 	for i, _ := range s {
 		var src = &crdV1alpha1.TServer{}
 		_ = json.Unmarshal(s[i].Raw, src)
-		dst := _convertTServerV1alpha1ToV1alpha2(src)
+		dst := _convertTServerV1alpha1ToV1beta1(src)
 		d[i].Raw, _ = json.Marshal(dst)
 	}
 	return d
 }
 
-func convertTDeployV1alpha2ToV1alpha1(s []runtime.RawExtension) []runtime.RawExtension {
+func convertTDeployV1beta1ToV1alpha1(s []runtime.RawExtension) []runtime.RawExtension {
 	d := make([]runtime.RawExtension, len(s), len(s))
 
 	for i, _ := range s {
-		var src = &crdV1alpha2.TDeploy{}
+		var src = &crdV1beta1.TDeploy{}
 		_ = json.Unmarshal(s[i].Raw, src)
 
-		fakeTserver := &crdV1alpha2.TServer{
+		fakeTserver := &crdV1beta1.TServer{
 			Spec: src.Apply,
 		}
 
@@ -299,7 +299,7 @@ func convertTDeployV1alpha2ToV1alpha1(s []runtime.RawExtension) []runtime.RawExt
 				Kind:       "TDeploy",
 			},
 			ObjectMeta: src.ObjectMeta,
-			Apply:      _convertTServerV1alpha2ToV1alpha1(fakeTserver).Spec,
+			Apply:      _convertTServerV1beta1ToV1alpha1(fakeTserver).Spec,
 			Approve:    (*crdV1alpha1.TDeployApprove)(src.Approve),
 			Deployed:   src.Deployed,
 		}
@@ -308,7 +308,7 @@ func convertTDeployV1alpha2ToV1alpha1(s []runtime.RawExtension) []runtime.RawExt
 	return d
 }
 
-func convertTDeployV1alpha1ToV1alpha2(s []runtime.RawExtension) []runtime.RawExtension {
+func convertTDeployV1alpha1ToV1beta1(s []runtime.RawExtension) []runtime.RawExtension {
 	d := make([]runtime.RawExtension, len(s), len(s))
 	for i, _ := range s {
 		var src = &crdV1alpha1.TDeploy{}
@@ -318,14 +318,14 @@ func convertTDeployV1alpha1ToV1alpha2(s []runtime.RawExtension) []runtime.RawExt
 			Spec: src.Apply,
 		}
 
-		var dst = &crdV1alpha2.TDeploy{
+		var dst = &crdV1beta1.TDeploy{
 			TypeMeta: k8sMetaV1.TypeMeta{
-				APIVersion: "k8s.tars.io/v1alpha2",
+				APIVersion: "k8s.tars.io/v1beta1",
 				Kind:       "TDeploy",
 			},
 			ObjectMeta: src.ObjectMeta,
-			Apply:      _convertTServerV1alpha1ToV1alpha2(fakeTserver).Spec,
-			Approve:    (*crdV1alpha2.TDeployApprove)(src.Approve),
+			Apply:      _convertTServerV1alpha1ToV1beta1(fakeTserver).Spec,
+			Approve:    (*crdV1beta1.TDeployApprove)(src.Approve),
 			Deployed:   src.Deployed,
 		}
 		d[i].Raw, _ = json.Marshal(dst)
@@ -339,12 +339,12 @@ var conversionFunctions map[string]map[string]map[string]func([]runtime.RawExten
 func init() {
 	conversionFunctions = map[string]map[string]map[string]func([]runtime.RawExtension) []runtime.RawExtension{
 		"TServer": {
-			"k8s.tars.io/v1alpha2": {"k8s.tars.io/v1alpha1": convertTServerV1alpha2ToV1alpha1},
-			"k8s.tars.io/v1alpha1": {"k8s.tars.io/v1alpha2": convertTServerV1alpha1ToV1alpha2},
+			"k8s.tars.io/v1beta1": {"k8s.tars.io/v1alpha1": convertTServerV1beta1ToV1alpha1},
+			"k8s.tars.io/v1alpha1": {"k8s.tars.io/v1beta1": convertTServerV1alpha1ToV1beta1},
 		},
 		"TDeploy": {
-			"k8s.tars.io/v1alpha2": {"k8s.tars.io/v1alpha1": convertTDeployV1alpha2ToV1alpha1},
-			"k8s.tars.io/v1alpha1": {"k8s.tars.io/v1alpha2": convertTDeployV1alpha1ToV1alpha2},
+			"k8s.tars.io/v1beta1": {"k8s.tars.io/v1alpha1": convertTDeployV1beta1ToV1alpha1},
+			"k8s.tars.io/v1alpha1": {"k8s.tars.io/v1beta1": convertTDeployV1alpha1ToV1beta1},
 		},
 	}
 }

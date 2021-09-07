@@ -7,7 +7,7 @@ import (
 	k8sCoreV1 "k8s.io/api/core/v1"
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/cache"
-	crdV1Alpha2 "k8s.tars.io/api/crd/v1alpha2"
+	crdV1beta1 "k8s.tars.io/api/crd/v1beta1"
 	"strings"
 	"tarsagent/controller/common"
 	"time"
@@ -21,7 +21,7 @@ type Downloader struct {
 // NewDownloader returns a Downloader object to download image
 func NewDownloader(config *common.RuntimeConfig) *Downloader {
 	d := &Downloader{RuntimeConfig: config}
-	sharedInformer := config.CrdInformerFactory.Crd().V1alpha2().TImages()
+	sharedInformer := config.CrdInformerFactory.Crd().V1beta1().TImages()
 	sharedInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			if !d.check(obj) {
@@ -47,9 +47,9 @@ func NewDownloader(config *common.RuntimeConfig) *Downloader {
 }
 
 func (d *Downloader) check(obj interface{}) bool {
-	timage, ok := obj.(*crdV1Alpha2.TImage)
+	timage, ok := obj.(*crdV1beta1.TImage)
 	if !ok {
-		glog.Errorf("Added object is not a crdV1Alpha2.TImage type")
+		glog.Errorf("Added object is not a crdV1beta1.TImage type")
 		return false
 	}
 
@@ -104,10 +104,10 @@ func (d *Downloader) check(obj interface{}) bool {
 }
 
 func (d *Downloader) download(obj interface{}) {
-	timage, _ := obj.(*crdV1Alpha2.TImage)
+	timage, _ := obj.(*crdV1beta1.TImage)
 
 	// Ready to download images with builtin or createTime properties in healthy node
-	validImages := make([]*crdV1Alpha2.TImageRelease, 0, len(timage.Releases))
+	validImages := make([]*crdV1beta1.TImageRelease, 0, len(timage.Releases))
 	for _, image := range timage.Releases {
 		if strings.Contains(image.ID, "builtin") {
 			validImages = append(validImages, image)

@@ -10,12 +10,12 @@ import (
 	appsV1 "tarscontroller/webhook/validating/apps/v1"
 	coreV1 "tarscontroller/webhook/validating/core/v1"
 	crdV1alpha1 "tarscontroller/webhook/validating/k8s.tars.io/v1alpha1"
-	crdV1alpha2 "tarscontroller/webhook/validating/k8s.tars.io/v1alpha2"
+	crdV1beta1 "tarscontroller/webhook/validating/k8s.tars.io/v1beta1"
 )
 
 type Validating struct {
 	crdV1alpha1Handler *crdV1alpha1.Handler
-	crdV2alpha1Handler *crdV1alpha2.Handler
+	crdV2alpha1Handler *crdV1beta1.Handler
 	coreV1Handler      *coreV1.Handler
 	appsV1Handler      *appsV1.Handler
 }
@@ -23,7 +23,7 @@ type Validating struct {
 func New(clients *meta.Clients, informers *meta.Informers) *Validating {
 	v := &Validating{
 		crdV1alpha1Handler: crdV1alpha1.New(clients, informers),
-		crdV2alpha1Handler: crdV1alpha2.New(clients, informers),
+		crdV2alpha1Handler: crdV1beta1.New(clients, informers),
 		coreV1Handler:      coreV1.New(clients, informers),
 		appsV1Handler:      appsV1.New(clients, informers),
 	}
@@ -42,7 +42,7 @@ func (v *Validating) Handle(w http.ResponseWriter, r *http.Request) {
 	switch gv {
 	case "k8s.tars.io/v1alpha1":
 		err = v.crdV1alpha1Handler.Handle(requestView)
-	case "k8s.tars.io/v1alpha2":
+	case "k8s.tars.io/v1beta1":
 		err = v.crdV2alpha1Handler.Handle(requestView)
 	case "apps/v1":
 		err = v.appsV1Handler.Handle(requestView)

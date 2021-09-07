@@ -629,7 +629,7 @@ spec:
         - name: Ready
           type: integer
           jsonPath: .status.readyReplicas
-    - name: v1alpha2
+    - name: v1beta1
       served: true
       storage: true
       schema:

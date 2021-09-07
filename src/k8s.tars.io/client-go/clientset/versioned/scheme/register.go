@@ -25,7 +25,7 @@ import (
 	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	crdv1alpha1 "k8s.tars.io/api/crd/v1alpha1"
-	crdv1alpha2 "k8s.tars.io/api/crd/v1alpha2"
+	crdv1beta1 "k8s.tars.io/api/crd/v1beta1"
 )
 
 var Scheme = runtime.NewScheme()
@@ -33,7 +33,7 @@ var Codecs = serializer.NewCodecFactory(Scheme)
 var ParameterCodec = runtime.NewParameterCodec(Scheme)
 var localSchemeBuilder = runtime.SchemeBuilder{
 	crdv1alpha1.AddToScheme,
-	crdv1alpha2.AddToScheme,
+	crdv1beta1.AddToScheme,
 }
 
 // AddToScheme adds all types of this clientset into the given scheme. This allows composition

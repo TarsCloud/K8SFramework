@@ -27,8 +27,8 @@ import (
 	clientset "k8s.tars.io/client-go/clientset/versioned"
 	crdv1alpha1 "k8s.tars.io/client-go/clientset/versioned/typed/crd/v1alpha1"
 	fakecrdv1alpha1 "k8s.tars.io/client-go/clientset/versioned/typed/crd/v1alpha1/fake"
-	crdv1alpha2 "k8s.tars.io/client-go/clientset/versioned/typed/crd/v1alpha2"
-	fakecrdv1alpha2 "k8s.tars.io/client-go/clientset/versioned/typed/crd/v1alpha2/fake"
+	crdv1beta1 "k8s.tars.io/client-go/clientset/versioned/typed/crd/v1beta1"
+	fakecrdv1beta1 "k8s.tars.io/client-go/clientset/versioned/typed/crd/v1beta1/fake"
 )
 
 // NewSimpleClientset returns a clientset that will respond with the provided objects.
@@ -83,7 +83,7 @@ func (c *Clientset) CrdV1alpha1() crdv1alpha1.CrdV1alpha1Interface {
 	return &fakecrdv1alpha1.FakeCrdV1alpha1{Fake: &c.Fake}
 }
 
-// CrdV1alpha2 retrieves the CrdV1alpha2Client
-func (c *Clientset) CrdV1alpha2() crdv1alpha2.CrdV1alpha2Interface {
-	return &fakecrdv1alpha2.FakeCrdV1alpha2{Fake: &c.Fake}
+// CrdV1beta1 retrieves the CrdV1beta1Client
+func (c *Clientset) CrdV1beta1() crdv1beta1.CrdV1beta1Interface {
+	return &fakecrdv1beta1.FakeCrdV1beta1{Fake: &c.Fake}
 }

@@ -20,7 +20,7 @@ import (
 	"k8s.io/client-go/tools/leaderelection"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	"k8s.io/client-go/tools/record"
-	crdV1Alpha2 "k8s.tars.io/api/crd/v1alpha2"
+	crdV1beta1 "k8s.tars.io/api/crd/v1beta1"
 	crdVersioned "k8s.tars.io/client-go/clientset/versioned"
 	crdScheme "k8s.tars.io/client-go/clientset/versioned/scheme"
 	crdInformers "k8s.tars.io/client-go/informers/externalversions"
@@ -86,16 +86,16 @@ func newInformers(clients *Clients) *Informers {
 	daemonSetInformer := k8sInformerFactoryWithFilter.Apps().V1().DaemonSets()
 	statefulSetInformer := k8sInformerFactoryWithFilter.Apps().V1().StatefulSets()
 
-	tserverInformer := crdInformerFactory.Crd().V1alpha2().TServers()
-	tendpointInformer := crdInformerFactory.Crd().V1alpha2().TEndpoints()
-	ttemplateInformer := crdInformerFactory.Crd().V1alpha2().TTemplates()
-	timageInformer := crdInformerFactory.Crd().V1alpha2().TImages()
-	ttreeInformer := crdInformerFactory.Crd().V1alpha2().TTrees()
-	texitedRecordInformer := crdInformerFactory.Crd().V1alpha2().TExitedRecords()
-	tdeployInformer := crdInformerFactory.Crd().V1alpha2().TDeploys()
-	taccountInformer := crdInformerFactory.Crd().V1alpha2().TAccounts()
+	tserverInformer := crdInformerFactory.Crd().V1beta1().TServers()
+	tendpointInformer := crdInformerFactory.Crd().V1beta1().TEndpoints()
+	ttemplateInformer := crdInformerFactory.Crd().V1beta1().TTemplates()
+	timageInformer := crdInformerFactory.Crd().V1beta1().TImages()
+	ttreeInformer := crdInformerFactory.Crd().V1beta1().TTrees()
+	texitedRecordInformer := crdInformerFactory.Crd().V1beta1().TExitedRecords()
+	tdeployInformer := crdInformerFactory.Crd().V1beta1().TDeploys()
+	taccountInformer := crdInformerFactory.Crd().V1beta1().TAccounts()
 
-	tconfigInformer := metadataInformerFactory.ForResource(crdV1Alpha2.SchemeGroupVersion.WithResource("tconfigs"))
+	tconfigInformer := metadataInformerFactory.ForResource(crdV1beta1.SchemeGroupVersion.WithResource("tconfigs"))
 
 	informers = &Informers{
 		k8sInformerFactory:           k8sInformerFactory,

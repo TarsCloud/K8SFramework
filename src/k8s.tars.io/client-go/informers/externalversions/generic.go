@@ -24,7 +24,7 @@ import (
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 	v1alpha1 "k8s.tars.io/api/crd/v1alpha1"
-	v1alpha2 "k8s.tars.io/api/crd/v1alpha2"
+	v1beta1 "k8s.tars.io/api/crd/v1beta1"
 )
 
 // GenericInformer is type of SharedIndexInformer which will locate and delegate to other
@@ -73,25 +73,25 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	case v1alpha1.SchemeGroupVersion.WithResource("ttrees"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Crd().V1alpha1().TTrees().Informer()}, nil
 
-		// Group=crd, Version=v1alpha2
-	case v1alpha2.SchemeGroupVersion.WithResource("taccounts"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Crd().V1alpha2().TAccounts().Informer()}, nil
-	case v1alpha2.SchemeGroupVersion.WithResource("tconfigs"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Crd().V1alpha2().TConfigs().Informer()}, nil
-	case v1alpha2.SchemeGroupVersion.WithResource("tdeploys"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Crd().V1alpha2().TDeploys().Informer()}, nil
-	case v1alpha2.SchemeGroupVersion.WithResource("tendpoints"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Crd().V1alpha2().TEndpoints().Informer()}, nil
-	case v1alpha2.SchemeGroupVersion.WithResource("texitedrecords"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Crd().V1alpha2().TExitedRecords().Informer()}, nil
-	case v1alpha2.SchemeGroupVersion.WithResource("timages"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Crd().V1alpha2().TImages().Informer()}, nil
-	case v1alpha2.SchemeGroupVersion.WithResource("tservers"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Crd().V1alpha2().TServers().Informer()}, nil
-	case v1alpha2.SchemeGroupVersion.WithResource("ttemplates"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Crd().V1alpha2().TTemplates().Informer()}, nil
-	case v1alpha2.SchemeGroupVersion.WithResource("ttrees"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Crd().V1alpha2().TTrees().Informer()}, nil
+		// Group=crd, Version=v1beta1
+	case v1beta1.SchemeGroupVersion.WithResource("taccounts"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Crd().V1beta1().TAccounts().Informer()}, nil
+	case v1beta1.SchemeGroupVersion.WithResource("tconfigs"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Crd().V1beta1().TConfigs().Informer()}, nil
+	case v1beta1.SchemeGroupVersion.WithResource("tdeploys"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Crd().V1beta1().TDeploys().Informer()}, nil
+	case v1beta1.SchemeGroupVersion.WithResource("tendpoints"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Crd().V1beta1().TEndpoints().Informer()}, nil
+	case v1beta1.SchemeGroupVersion.WithResource("texitedrecords"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Crd().V1beta1().TExitedRecords().Informer()}, nil
+	case v1beta1.SchemeGroupVersion.WithResource("timages"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Crd().V1beta1().TImages().Informer()}, nil
+	case v1beta1.SchemeGroupVersion.WithResource("tservers"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Crd().V1beta1().TServers().Informer()}, nil
+	case v1beta1.SchemeGroupVersion.WithResource("ttemplates"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Crd().V1beta1().TTemplates().Informer()}, nil
+	case v1beta1.SchemeGroupVersion.WithResource("ttrees"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Crd().V1beta1().TTrees().Informer()}, nil
 
 	}
 

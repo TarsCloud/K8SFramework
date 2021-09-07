@@ -1,0 +1,24 @@
+name: framework-nightly-build
+
+on: 
+  push:
+    branches: 
+      - master
+  schedule:
+    - cron: '0 02 * * *'
+jobs:
+
+  build:
+
+    runs-on: self-hosted
+
+    steps:
+    - name: docker login
+      run: |
+        docker login -u ${{ secrets.name }} -p ${{ secrets.pass }} 
+    - name: Pull code
+      run: ./prepare.sh    
+    - name: Build binary
+      run: ./buildBinary
+    - name: Build docker
+      run: ./buildHelm.sh index.docker.io/ruanshudong ${{ secrets.name }} ${{ secrets.pass }} v0.0.0-nightly 

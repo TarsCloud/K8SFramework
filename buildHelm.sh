@@ -37,6 +37,13 @@ _DOCKER_REGISTRY_PASSWORD_=$3
 _BUILD_ID_=$4
 #
 
+
+# export DOCKER_CLI_EXPERIMENTAL=enabled 
+# docker buildx create --use --name tars-builder-k8s-framework
+# docker buildx inspect tars-builder-k8s-framework --bootstrap
+# docker run --rm --privileged docker/binfmt:a7996909642ee92942dcd6cff44b9b95f08dad64
+
+
 #### 构建基础镜像
 declare -a BaseImages=(
   tars.cppbase
@@ -50,6 +57,7 @@ declare -a BaseImages=(
 )
 
 for KEY in "${BaseImages[@]}"; do
+  # if ! docker buildx build --platform=linux/amd64,linux/arm64 -o type=docker  -t "${KEY}" -f build/"${KEY}.Dockerfile" build; then
   if ! docker build -t "${KEY}" -f build/"${KEY}.Dockerfile" build; then
     LOG_ERROR "Build ${KEY} image failed"
     exit 255
@@ -68,6 +76,7 @@ declare -a FrameworkImages=(
 )
 
 for KEY in "${FrameworkImages[@]}"; do
+  # if ! docker buildx build --platform=linux/amd64,linux/arm64 -o type=docker -t "${KEY}" -f build/"${KEY}.Dockerfile" build; then
   if ! docker build -t "${KEY}" -f build/"${KEY}.Dockerfile" build; then
     LOG_ERROR "Build ${KEY} image failed"
     exit 255
@@ -85,6 +94,8 @@ declare -a ServerImages=(
   tarsqueryproperty
 )
 
+# #--------------------------------------------------------------------------------------------
+
 for KEY in "${ServerImages[@]}"; do
   mkdir -p build/files/template/tars."${KEY}"
   mkdir -p build/files/template/tars."${KEY}"/root/usr/local/server/bin
@@ -99,6 +110,8 @@ ENV ServerType=cpp
 COPY /root /
 " >build/files/template/tars."${KEY}"/Dockerfile
 
+
+  # if ! docker buildx build --platform=linux/amd64,linux/arm64 -o type=docker -t tars."${KEY}" build/files/template/tars."${KEY}"; then
   if ! docker build -t tars."${KEY}" build/files/template/tars."${KEY}"; then
     LOG_ERROR "Build ${KEY} image failed"
     exit 255
@@ -168,7 +181,7 @@ echo -e "helm:
     dockerhub:
       registry: ${_DOCKER_REGISTRY_URL_}
 " >install/tarscontroller/values.yaml
-helm package install/tarscontroller -d ./install
+helm package install/tarscontroller --version ${_BUILD_ID_} -d ./charts
 
 echo -e "helm:
     build:
@@ -176,6 +189,6 @@ echo -e "helm:
     dockerhub:
       registry: ${_DOCKER_REGISTRY_URL_}
 " >./install//values.yaml
-helm package install/ -d ./install
+helm package install/tarsframework --version ${_BUILD_ID_} -d ./charts
 
 LOG_INFO "Build Helm File OK "

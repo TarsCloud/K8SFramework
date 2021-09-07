@@ -16,12 +16,12 @@ webhooks:
     failurePolicy: Fail
     rules:
       - apiGroups: [ k8s.tars.io ]
-        apiVersions: [ v1alpha1,v1alpha2 ]
+        apiVersions: [ v1alpha1,v1beta1 ]
         operations: [ CREATE,UPDATE,DELETE ]
         resources: [ tdeploys,tservers,ttemplates,ttrees,tconfigs,taccounts,timages ]
         scope: Namespaced
       - apiGroups: [ k8s.tars.io ]
-        apiVersions: [ v1alpha1,v1alpha2 ]
+        apiVersions: [ v1alpha1,v1beta1 ]
         operations: [ CREATE ]
         resources: [ tendpoints ]
         scope: Namespaced
@@ -38,7 +38,7 @@ webhooks:
     failurePolicy: Ignore
     rules:
       - apiGroups: [ k8s.tars.io ]
-        apiVersions: [ v1alpha1,v1alpha2 ]
+        apiVersions: [ v1alpha1,v1beta1 ]
         operations: [ UPDATE ]
         resources: [ tendpoints ]
         scope: Namespaced
@@ -87,7 +87,7 @@ webhooks:
         path: /mutating
     rules:
       - apiGroups: [ k8s.tars.io ]
-        apiVersions: [ v1alpha1,v1alpha2 ]
+        apiVersions: [ v1alpha1,v1beta1 ]
         operations: [ CREATE,UPDATE ]
         resources: [ tdeploys,tservers,tconfigs,ttrees,taccounts,timages ]
     sideEffects: None

@@ -8,18 +8,18 @@ import (
 	"net/http"
 	"tarscontroller/meta"
 	crdV1alpha1 "tarscontroller/webhook/mutating/k8s.tars.io/v1alpha1"
-	crdV1alpha2 "tarscontroller/webhook/mutating/k8s.tars.io/v1alpha2"
+	crdV1beta1 "tarscontroller/webhook/mutating/k8s.tars.io/v1beta1"
 )
 
 type Mutating struct {
 	crdV1alpha1Handler *crdV1alpha1.Handler
-	crdV1alpha2Handler *crdV1alpha2.Handler
+	crdV1beta1Handler *crdV1beta1.Handler
 }
 
 func New(clients *meta.Clients, informers *meta.Informers) *Mutating {
 	v := &Mutating{
 		crdV1alpha1Handler: crdV1alpha1.New(clients, informers),
-		crdV1alpha2Handler: crdV1alpha2.New(clients, informers),
+		crdV1beta1Handler: crdV1beta1.New(clients, informers),
 	}
 	return v
 }
@@ -47,8 +47,8 @@ func (v Mutating) Handle(w http.ResponseWriter, r *http.Request) {
 	switch gv {
 	case "k8s.tars.io/v1alpha1":
 		patchContent, err = v.crdV1alpha1Handler.Handle(requestView)
-	case "k8s.tars.io/v1alpha2":
-		patchContent, err = v.crdV1alpha2Handler.Handle(requestView)
+	case "k8s.tars.io/v1beta1":
+		patchContent, err = v.crdV1beta1Handler.Handle(requestView)
 	default:
 		err = fmt.Errorf("unsupported mutating %s.%s", gv, requestView.Request.Kind.Kind)
 	}

@@ -7,7 +7,7 @@ RUN  chmod +x /bin/entrypoint.sh
 RUN  ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 RUN  echo Asia/Shanghai > /etc/timezone
 
-RUN  apt update
+RUN  apt-get clean && apt update
 RUN  apt install busybox -y
 RUN  busybox --install
 RUN  apt install ca-certificates -y

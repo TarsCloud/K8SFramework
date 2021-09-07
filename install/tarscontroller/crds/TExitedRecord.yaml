@@ -45,7 +45,7 @@ spec:
                     type: string
               maxItems: 150
           required: [ app,server,pods ]
-    - name: v1alpha2
+    - name: v1beta1
       served: true
       storage: true
       schema:

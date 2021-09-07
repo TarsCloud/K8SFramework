@@ -7,7 +7,7 @@ import (
 	"os"
 	"tarscontroller/meta"
 	"tarscontroller/reconclie"
-	reconcileV1alpha2 "tarscontroller/reconclie/v1alpha2"
+	reconcileV1beta1 "tarscontroller/reconclie/v1beta1"
 	"tarscontroller/webhook"
 	"time"
 )
@@ -30,19 +30,19 @@ func main() {
 
 	// new reconcile should before call informers.start() => because reconcile should registry into informers
 	reconciles := []reconclie.Reconcile{
-		reconcileV1alpha2.NewNodeReconciler(clients, informers, 1),
-		reconcileV1alpha2.NewTDeployReconciler(clients, informers, 1),
-		reconcileV1alpha2.NewDaemonSetReconciler(clients, informers, 1),
-		reconcileV1alpha2.NewTTreeReconciler(clients, informers, 1),
-		reconcileV1alpha2.NewServiceReconciler(clients, informers, 1),
-		reconcileV1alpha2.NewTExitedPodReconciler(clients, informers, 1),
-		reconcileV1alpha2.NewStatefulSetReconciler(clients, informers, 3),
-		reconcileV1alpha2.NewTServerReconciler(clients, informers, 1),
-		reconcileV1alpha2.NewTEndpointReconciler(clients, informers, 3),
-		reconcileV1alpha2.NewTAccountReconciler(clients, informers, 1),
-		reconcileV1alpha2.NewTConfigReconciler(clients, informers, 1),
-		reconcileV1alpha2.NewTImageReconciler(clients, informers, 1),
-		reconcileV1alpha2.NewPVCReconciler(clients, informers, 1),
+		reconcileV1beta1.NewNodeReconciler(clients, informers, 1),
+		reconcileV1beta1.NewTDeployReconciler(clients, informers, 1),
+		reconcileV1beta1.NewDaemonSetReconciler(clients, informers, 1),
+		reconcileV1beta1.NewTTreeReconciler(clients, informers, 1),
+		reconcileV1beta1.NewServiceReconciler(clients, informers, 1),
+		reconcileV1beta1.NewTExitedPodReconciler(clients, informers, 1),
+		reconcileV1beta1.NewStatefulSetReconciler(clients, informers, 3),
+		reconcileV1beta1.NewTServerReconciler(clients, informers, 1),
+		reconcileV1beta1.NewTEndpointReconciler(clients, informers, 3),
+		reconcileV1beta1.NewTAccountReconciler(clients, informers, 1),
+		reconcileV1beta1.NewTConfigReconciler(clients, informers, 1),
+		reconcileV1beta1.NewTImageReconciler(clients, informers, 1),
+		reconcileV1beta1.NewPVCReconciler(clients, informers, 1),
 	}
 
 	informers.Start(stopCh)

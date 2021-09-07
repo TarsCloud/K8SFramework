@@ -9,7 +9,7 @@ import (
 	"k8s.io/client-go/metadata/metadatainformer"
 	"k8s.io/client-go/tools/cache"
 	crdInformers "k8s.tars.io/client-go/informers/externalversions"
-	crdInformersV1alpha2 "k8s.tars.io/client-go/informers/externalversions/crd/v1alpha2"
+	crdInformersV1beta1 "k8s.tars.io/client-go/informers/externalversions/crd/v1beta1"
 )
 
 type EventsReceiver interface {
@@ -33,14 +33,14 @@ type Informers struct {
 	DaemonSetInformer   k8sInformersAppsV1.DaemonSetInformer
 	StatefulSetInformer k8sInformersAppsV1.StatefulSetInformer
 
-	TServerInformer       crdInformersV1alpha2.TServerInformer
-	TEndpointInformer     crdInformersV1alpha2.TEndpointInformer
-	TTemplateInformer     crdInformersV1alpha2.TTemplateInformer
-	TImageInformer        crdInformersV1alpha2.TImageInformer
-	TTreeInformer         crdInformersV1alpha2.TTreeInformer
-	TExitedRecordInformer crdInformersV1alpha2.TExitedRecordInformer
-	TDeployInformer       crdInformersV1alpha2.TDeployInformer
-	TAccountInformer      crdInformersV1alpha2.TAccountInformer
+	TServerInformer       crdInformersV1beta1.TServerInformer
+	TEndpointInformer     crdInformersV1beta1.TEndpointInformer
+	TTemplateInformer     crdInformersV1beta1.TTemplateInformer
+	TImageInformer        crdInformersV1beta1.TImageInformer
+	TTreeInformer         crdInformersV1beta1.TTreeInformer
+	TExitedRecordInformer crdInformersV1beta1.TExitedRecordInformer
+	TDeployInformer       crdInformersV1beta1.TDeployInformer
+	TAccountInformer      crdInformersV1beta1.TAccountInformer
 
 	TConfigInformer k8sInformers.GenericInformer
 
