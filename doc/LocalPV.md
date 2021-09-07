@@ -1,41 +1,14 @@
 
-# 关于存储
-
-## 支持 LocalPV ，并可以在 Web 上配置
+# LocalPV
    
-- 我们的大部分使用场景是自建集群,没有使用网络盘的条件, 因此,支持并且可以简单配置 LocalPV 非常重要
+我们的大部分使用场景是自建集群,没有使用网络盘的条件, 因此可以简单配置 LocalPV 非常重要
 
-## 在 配置 Hostnetwork ,HostIPC ,HostPort 后，Pod 与 节点延迟 绑定
+## tserver中的描述
 
-```
-    在当前的版本中(v1beta1),使用 Nodebind 方式实现 节点绑定的效果 ,但该方式存在严重缺陷
-```
+在自定义资源server中, 有描述字段专门描述LocalPV, 即字段: ```tsever.k8s.mounts.source.TLocalVolume```
 
-3. 在 TServer 中，除 LabelMatch 由用户主动输入节点名外，不与集群的特定信息关联.
+如下所示:
 
-```
-   TServer 与集群特定信息关联后，非常影响移植性.
-```
-
-4. 融合亲和性与LabelMatch
-```
-  在小集群和客户集群中，亲和性功能显得比较多余
-  同时, 亲和性与 LabelMath ,NodeBind 无法共存. 有特殊需求时,使用方式违反直觉
-```
-
-5. 支持未来的 某个业务服务的特殊需求
-
-```
-  比如，业务服务需求节点由特定在资源 ，比如 SSD, 公网，GPU
-```
-
-
-
-# 升级方式
-
-## 1. 增加 tsever.k8s.mounts.source.TLocalVolume 项
-
-schema:
 ```yaml
 tLocalVolume:
     type: object
@@ -53,7 +26,8 @@ tLocalVolume:
         parrern: ^0?[1-7]{3,3}$
         default: "755"
 ```
-sample:
+
+示例如下:
 ```yaml
 k8s:
     env:
@@ -74,7 +48,16 @@ k8s:
           mode: "755"
           uid: "1000"
 ```
-pvc:
+
+以上代码申请了pv操作, 说明:
+- 注意实际的pv申请是有tars.tarsagent来操作的(它是TarsK8S框架部署, daemonset类型, 每个节点部署一个, 它会给需要申请的pv的服务创建pv)
+- tars服务部署以后, tserver的yaml会被展开如下两段yaml, 以下以tarslog为例:
+- /usr/local/app/tars/remote_app_log 是pod内路径, 会映射到宿主机路径中, 请参考后续说明
+
+### LocalPV对应的pvc
+
+pvc是由tarscontroller根据tserver的yaml来展开得到的.
+
 ```yaml
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -103,7 +86,9 @@ spec:
     volumeName: default-remote-log-dir-tars-tarslog-c4e31c6
 ```
 
-pv:  -> tarsagent 建立， k8s 控制器 执行 bound, release 操作
+### LocalPV对应pv
+
+pv是由tars.tarsagent来展开生成, 并创建的, 并且会每台节点机都会创建出来(default-remote-log-dir-tars-tarslog-36520b71 名字每台节点机都不同), 当完成tars服务根据pvc完成pv绑定后, 就动态绑定到具体某一个pv了, 从而不再偏移. tars.tarsagent会定期删除一直没有绑定的pv.
 
 ```yaml
 apiVersion: v1
@@ -147,10 +132,17 @@ status:
     phase: Bound     
 ```
 
-## 2. 使用虚拟的 Delay-Bind LocalPV 达到延迟绑定效果
+说明:
+- 由于使用的是LocalPV, 因此这里存储容量其实没用, 只是占位符!
+- ```/usr/local/app/tars/host-mount```实际是宿主机路径
+- 实际pod中的存储路径, 会映射到宿主机的: /usr/local/app/taf/host-mount/${namespace}/$app.$server/${LocalPV Name}, 目录下
 
-控制器发现 tserver 中定义了 HostIPC, HostNetwork, HostPorts.
-则会在 生成的 statefulset 中 添加  虚拟的名为 "dealy-bind" VolumeClainTemplates 项
+
+## 使用虚拟的 Delay-Bind LocalPV 达到延迟绑定效果
+
+tserver 中定义了 HostIPC, HostNetwork, HostPorts时, 这些服务一般也不能漂移了, 因此这里也用到LocalPV的方式来实现这个技巧!
+
+tarscontroller控制器会根据tserver, 并在生成的statefulset中添加虚拟的名为 "delay-bind" VolumeClainTemplates 项:
 
 ```go
     func BuildStatefulSetVolumeClainTemplates(tserver *crdV1beta1.TServer) []k8sCoreV1.PersistentVolumeClaim {
@@ -166,6 +158,7 @@ status:
             }
         }
 
+        //代码重点是这里!
         if tserver.Spec.K8S.HostIPC || tserver.Spec.K8S.HostNetwork || len(tserver.Spec.K8S.HostPorts) > 0 {
             volumeClainTemplates = append(volumeClainTemplates, *BuildTVolumeClainTemplates(tserver, THostBindPlaceholder))
         }
@@ -174,7 +167,9 @@ status:
     }
 ```
 
-statefulset:
+从而相当于有一个LocalPV(虽然这个LocalPV不存储数据), 完成了服务和机器的绑定(不再漂移), tars服务自己的LocalPV就不能去delay-bind名字了!
+
+展开的statefulset示例如下:
 ```yaml
 apiVersion: apps/v1
 kind: StatefulSet
@@ -212,41 +207,4 @@ volumeClaimTemplates:
     storageClassName: t-storage-class
     volumeMode: Filesystem
 ```
-
-
-## 3. 调整亲和性的逻辑
-
-### 当前的亲和性逻辑的问题
-- AbilityPool 和 LabelMath |Nodebind 互斥，当业务服务有特殊需求时,会选择
-  LabelMath, NodeBind，使得亲和性逻辑失效,造成“惊讶”.
-
-- 在小规模集群，亲和性不具备使用意义，反而对业务部署造成干扰.
-
-
-### 升级后的亲和性使用方式
-
-- App 级别 节点标签不变: tars.io/ability.${App} , 新增 Server级标签  tars.io/ability.${App}.${Server}
-
-- 添加独立字段表示亲和性选项
-
-```yaml
-k8s:
-  type: object
-  properties:
-    abilityAffinity:
-      type: string
-      enum: [ AppRequired,ServerRequired, AppOrServerPreferred,None ]
-      default: AppOrServerPreferred
-```
-
-
-释义：
-
-+ AppRequired：            在满足其他条件后，节点必须有 tars.io/ability.${App} 标签
-
-+ ServerRequired           在满足其他条件后，节点必须有 tars.io/ability.${App}.${Server} 标签
-
-+ AppOrServerPreferred:    在满足其他条件后，优先选择有 tars.io/ability.${App}.${Server}, tars.io/ability.${App} 标签的节点. 如果节点 没有 ability 标签， 则忽略
-
-+ None： 不对节点标签做要求
 
