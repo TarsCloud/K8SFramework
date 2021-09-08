@@ -19,6 +19,6 @@ jobs:
     - name: Pull code
       run: ./prepare.sh    
     - name: Build binary
-      run: ./buildBinary
+      run: ./buildBinary.sh
     - name: Build docker
       run: ./buildHelm.sh tarscloud ${{ secrets.name }} ${{ secrets.pass }} v1.0.0-nightly 
