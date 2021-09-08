@@ -1,5 +1,4 @@
 FROM ubuntu:20.04
-# COPY files/sources.list /etc/apt/sources.list
 COPY files/entrypoint.sh /bin/entrypoint.sh
 RUN  chmod +x /bin/entrypoint.sh
 
@@ -38,8 +37,6 @@ RUN  ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 RUN  echo Asia/Shanghai > /etc/timezone
 
 RUN  apt update
-RUN  apt install busybox -y
-RUN  busybox --install
 RUN  apt install ca-certificates -y
 
 RUN mkdir -p /usr/local/app/tars/
@@ -54,7 +51,4 @@ RUN  rm -rf /var/lib/apt/lists/*
 RUN  rm -rf /var/cache/*.dat-old
 RUN  rm -rf /var/log/*.log /var/log/*/*.log
 
-# #　第二阶段
-# FROM scratch
-# COPY --from=First / /
 CMD ["/bin/entrypoint.sh"]

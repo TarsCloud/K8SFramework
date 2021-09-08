@@ -1,6 +1,4 @@
-# FROM golang:1.14-stretch As First
 FROM ubuntu:20.04
-# COPY files/sources.list  /etc/apt/sources.list
 ENV DEBIAN_FRONTEND=noninteractive
 ENV GOPATH=/usr/local/go
 

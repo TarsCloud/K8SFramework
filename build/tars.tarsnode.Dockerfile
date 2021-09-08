@@ -1,10 +1,9 @@
-# FROM tars.cppbase As First
 FROM ubuntu:20.04
-COPY files/template/tarsnode/root /
-COPY files/binary/tarsnode /tarsnode/bin/tarsnode
+
+COPY files/template/tarsnode/root/bin/entrypoint.sh /bin/
+RUN mkdir -p /tarsnode
+COPY files/template/tarsnode/root/tarsnode/* /tarsnode/
+COPY files/binary/tarsnode /tarsnode/bin/
 RUN  chmod +x /tarsnode/bin/tarsnode
 
-# 　第二阶段
-# FROM scratch
-# COPY --from=First / /
 CMD ["/bin/entrypoint.sh"]

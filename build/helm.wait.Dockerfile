@@ -1,4 +1,3 @@
-# FROM tars.cppbase AS First
 FROM ubuntu:20.04
 RUN apt update && apt install curl jq -y
 
@@ -9,6 +8,3 @@ RUN  rm -rf /var/lib/apt/lists/*
 RUN  rm -rf /var/cache/*.dat-old
 RUN  rm -rf /var/log/*.log /var/log/*/*.log
 
-#　第二阶段
-# FROM scratch
-# COPY --from=First / /

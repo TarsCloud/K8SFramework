@@ -1,9 +1,8 @@
-# FROM tars.cppbase As First
 FROM ubuntu:20.04
-COPY files/template/tarsregistry/root /
+COPY files/template/tarsregistry/root/bin/entrypoint.sh /bin/
+COPY files/template/tarsregistry/root/usr/local/app /usr/local/app/
+
 COPY files/binary/tarsregistry /usr/local/app/tars/tarsregistry/bin/tarsregistry
 RUN  chmod +x /usr/local/app/tars/tarsregistry/bin/tarsregistry
-# 　第二阶段
-# FROM scratch
-# COPY --from=First / /
+
 CMD ["/bin/entrypoint.sh"]
