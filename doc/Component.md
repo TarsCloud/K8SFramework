@@ -41,6 +41,6 @@
     > k8st tarsnode 程序经过轻量化改造，集成在每一个业务服务镜像中. 作为容器内的1号进程运行
             
 + tarsimage
-    > 此服务程序是 tars-k8s  框架新增的服务，用于提供镜像生成功能.
+    > 此服务程序是 tars-k8s  框架新增的服务，用于提供镜像生成功能, web平台上可以直接上传服务的tgz包, tarsimage会把tars服务制作成docker镜像.
 
 + 删除了 tarspatch , tarsAdminRegistry

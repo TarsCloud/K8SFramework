@@ -1,0 +1,22 @@
+<?js
+	process.stdout.on('finish', function() {
+		// Finished here
+	});
+	
+	process.stdout.on('error', function() {
+		// Error here
+	});
+
+	process.stdout.setDefaultEncoding('utf8');
+	process.stdout.write('test\n', function() {
+		process.stdout.write('done writing'); // This wouldn't be executed since pages aren't async (yet)
+	});
+	process.stdout.cork();
+	process.stdout.write('next write step');
+	try {
+		process.stdout.write();
+	}
+	catch(ex) { }
+	process.stdout.end('ending');
+	process.stdout.uncork();
+	process.stdout.write('this should error');

@@ -1,0 +1,12 @@
+language: node_js
+node_js:
+  - "0.12"
+  - "0.11"
+  - "iojs"
+  - "4.0"
+  - "4.1"
+  - "5.0"
+  - "5.1"
+after_script:
+  - npm install -g istanbul && npm install codecov.io
+  - istanbul cover ./node_modules/nodeunit/bin/nodeunit ./test/test.js -- --reporter lcov && cat ./coverage/coverage.json | ./node_modules/codecov.io/bin/codecov.io.js

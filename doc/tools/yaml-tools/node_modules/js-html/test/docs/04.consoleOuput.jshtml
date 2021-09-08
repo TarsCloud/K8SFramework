@@ -1,0 +1,6 @@
+<?js
+	console.log('Being outputed from the console');
+	console.log({
+		test: 'object testing'
+	});
+	process.stdout.write({ test: 'object' });

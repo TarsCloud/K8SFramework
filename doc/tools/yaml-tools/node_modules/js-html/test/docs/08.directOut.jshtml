@@ -1,0 +1,4 @@
+<?js for(var i = 0; i < 10; i++) {
+	?>
+		<div>#:<?js:i?></div>
+	<?js }

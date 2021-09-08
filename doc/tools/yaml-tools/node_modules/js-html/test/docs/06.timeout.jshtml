@@ -1,0 +1,2 @@
+<?js
+	clearTimeout(setTimeout(function(){}, 50));

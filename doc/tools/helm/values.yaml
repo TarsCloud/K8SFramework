@@ -1,0 +1,35 @@
+
+app: 
+server: 
+important: 5
+template: taf.default
+profile: ""
+asyncThread: 3
+user: ""
+reason: ""
+servants:
+  - name: Obj
+    port: 10000
+    isTaf: false
+    isTcp: true
+    thread: 5
+    capacity: 100000
+    connection: 100000
+    timeout: 60000
+repo:
+  id: ""
+  image: 
+  secret: taf-image-secret
+replicas: 1
+envVars:
+hostNetwork: false
+hostIPC: false
+hostPorts: []
+appConfig:
+config:
+      
+
+
+
+
+    

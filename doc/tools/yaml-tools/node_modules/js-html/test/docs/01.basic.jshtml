@@ -1,0 +1,9 @@
+<html>
+	<head>
+		<title>Example 01 - Basic</title>
+	</head>
+	<body>
+		<h1>Example 01 - Basic</h1>
+		<p>A simple JsHtml page with no JavaScript server/client side code</p>
+	</body>
+</html>

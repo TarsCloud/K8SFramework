@@ -1,0 +1,9 @@
+<html>
+	<head>
+		<title>Example 02 - Inline Code</title>
+	</head>
+	<body>
+		<h1>Example 02 - Inline Code</h1>
+		<p><?js process.stdout.write('This is being written to the page via process.stdout.write()'); ?></p>
+	</body>
+</html>

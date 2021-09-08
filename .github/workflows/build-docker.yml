@@ -18,4 +18,4 @@ jobs:
       - name: Build binary
         run: ./buildBinary
       - name: Build docker
-        run: ./buildHelm.sh index.docker.io/ruanshudong ${{ secrets.name }} ${{ secrets.pass }} v0.0.0-nightly 
+        run: ./buildHelm.sh index.docker.io/tascloud ${{ secrets.name }} ${{ secrets.pass }} v1.0.0-dev 
