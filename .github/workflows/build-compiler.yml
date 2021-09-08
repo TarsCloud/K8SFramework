@@ -1,9 +1,20 @@
 name: build-base-compiler
 
+
 on:
   push:
-    tags:
+    branches:
       - master
+    paths:
+      - "doc/tools"
+      - "doc/base-compiler.Dockerfile"
+  pull_request:
+    branches:
+      - master
+    paths:
+      - "doc/tools"
+      - "doc/base-compiler.Dockerfile"
+      
 jobs:
   build:
     runs-on: ubuntu-latest
