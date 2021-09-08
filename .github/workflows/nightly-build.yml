@@ -1,4 +1,4 @@
-name: framework-nightly-build
+name: k8s-framework-nightly-build
 
 on: 
   push:

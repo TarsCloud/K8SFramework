@@ -1,4 +1,4 @@
-name: build-compiler
+name: build-base-compiler
 
 on:
   push:
