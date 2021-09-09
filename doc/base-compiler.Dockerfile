@@ -95,7 +95,9 @@ RUN cd /root/ \
     && cd build \
     && cmake .. \
     && make -j4 \
-    && make install
+    && make install \
+    && cd /root \
+    && rm -rf /root/TarsCpp
 
 RUN  apt-get clean
 

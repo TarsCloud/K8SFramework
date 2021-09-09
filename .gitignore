@@ -1,7 +1,7 @@
 build-tmp/
 build/files/binary
 build/taf-web-nodejs/
-build/TarsWeb
+build/TarsWeb/
 *.tgz
 TarsCpp
-TarsWeb
+# TarsWeb
