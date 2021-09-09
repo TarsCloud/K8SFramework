@@ -158,9 +158,14 @@ fi
 for KEY in "${LocalImages[@]}"; do
 
   # Specified BuildID Tag
-  RemoteImagesTag="${_DOCKER_REGISTRY_}/${_DOCKER_REPOSITORY_}/${KEY}":${_BUILD_ID_}
-  if ! docker tag "${KEY}" "${RemoteImagesTag}"; then
-    LOG_ERROR "Tag ${KEY} image failed"
+  if [ "${_DOCKER_REGISTRY_}" != "" ]; then 
+    RemoteImagesTag="${_DOCKER_REGISTRY_}/${_DOCKER_REPOSITORY_}/${KEY}:${_BUILD_ID_}"
+  else
+    RemoteImagesTag="${_DOCKER_REPOSITORY_}/${KEY}:${_BUILD_ID_}"
+  fi
+
+  if ! docker tag "${_DOCKER_REPOSITORY_}/${KEY}" "${RemoteImagesTag}"; then
+    LOG_ERROR "Tag ${_DOCKER_REPOSITORY_}/${KEY} image failed"
     exit 255
   fi
   if ! docker push "${RemoteImagesTag}"; then
