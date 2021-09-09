@@ -100,7 +100,7 @@ RUN cd /root/Tars/ \
 RUN  apt-get clean
 
 COPY tools/yaml-tools /root/yaml-tools
-COPY tools/helm /root/helm
+COPY tools/helm-lib /root/helm-lib
 COPY tools/helm-template /root/helm-template
 COPY tools/Dockerfile /root/Dockerfile
 COPY tools/exec-build.sh /usr/bin/
