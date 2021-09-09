@@ -9,8 +9,8 @@ Dockerfile:
 - base-compiler.Dockerfile
 
 ```
-docker build . -f base-compiler.Dockerfile -t tarscloud/base-compiler
-docker push tarscloud/base-compiler
+docker build . -f base-compiler.Dockerfile -t tarscloud/base-compiler:master --build-arg master
+docker push tarscloud/base-compiler:master
 ```
 
 **注意base-compiler镜像内部的tarscpp/php/go等各语言版本都是最新版本, 使用的时候请注意!**

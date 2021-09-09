@@ -2,6 +2,7 @@ FROM ubuntu:20.04
 
 WORKDIR /root/
 
+ARG BRANCH
 
 ENV GOPATH=/usr/local/go
 ENV DEBIAN_FRONTEND=noninteractive
@@ -86,11 +87,10 @@ RUN go get github.com/TarsCloud/TarsGo/tars \
     && chmod a+x /usr/local/go/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go/tars2go \
     && ln -s /usr/local/go/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go/tars2go /usr/local/go/bin/tars2go 
 
-RUN cd /root/Tars/ \
-    && git submodule update --init --recursive cpp \ 
-    && cd /root/Tars/cpp \
-    && git checkout cor && cd servant/protocol && git checkout release/2.4 \
-    && cd /root/Tars/cpp \
+RUN cd /root/ \
+    && git clone https://github.com/TarsCloud/TarsCpp.git --recursive \ 
+    && cd /root/TarsCpp \
+    && git checkout $BRANCH && git submodule update --remote --recursive \
     && mkdir -p build \
     && cd build \
     && cmake .. \
