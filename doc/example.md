@@ -12,7 +12,7 @@ docker pull tarscloud/base-compiler
 ```
 - 进入镜像
 ```
-docker run -it -v/var/run/docker.sock:/var/run/docker.sock -v:${服务源码目录}:/data/src tarscloud/base-compiler bash
+docker run -it -v/var/run/docker.sock:/var/run/docker.sock -v`pwd`:/data/src tarscloud/base-compiler bash
 ```
 - tars服务的yaml文件
 
@@ -27,7 +27,7 @@ exec-deploy.sh LANG(cpp/nodejs/java-war/java-jar/go/php) Files YamlFile Namespac
 
 例如:
 ```
-exec-deploy.sh cpp build/StorageServer yaml/value.yaml tars-dev ruanshudong v1.0.0
+exec-deploy.sh cpp build/bin/StorageServer yaml/values.yaml tars-dev ruanshudong v1.0.0
 ```
 
 执行完脚本后会生成:

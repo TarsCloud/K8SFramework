@@ -24,6 +24,8 @@ jobs:
       - name: env
         run: env
       - uses: actions/checkout@v1
+      - name: login docker hub
+        run: docker login -u ${{ secrets.name }} -p ${{ secrets.pass }}
       - name: Build docker
         run: cd doc && docker build . -f base-compiler.Dockerfile -t tarscloud/base-compiler 
       - name: push docker

@@ -97,81 +97,15 @@ RUN cd /root/Tars/ \
     && make -j4 \
     && make install
 
-
-# # Install cmake for cpp
-# RUN mkdir -p /tmp/cmake/  \
-#     && cd /tmp/cmake \
-#     && curl -O https://tars-thirdpart-1300910346.cos.ap-guangzhou.myqcloud.com/src/cmake-3.19.7.tar.gz  \
-#     && tar xzf cmake-3.19.7.tar.gz \
-#     && cd cmake-3.19.7 \
-#     && ./configure  \
-#     && make -j4 && make install \
-#     && rm -rf /tmp/cmake
-
-# # -- env settings for php
-# ENV SWOOLE_VERSION=v4.4.16 
-
-# ENV DEBIAN_FRONTEND=noninteractive
-
-# #intall php tars
-# RUN apt update && apt install -y php php-dev php-cli php-gd php-curl php-mysql \
-#     php-zip php-fileinfo php-redis php-mbstring tzdata git make wget \
-#     build-essential libmcrypt-dev php-pear
-
-# # Clone Tars repo and init php submodule
-# RUN cd /root/ && git clone https://gitee.com/TarsCloud/Tars.git \
-#     && cd /root/Tars/ \
-#     && git submodule update --init --recursive php \
-#     #intall PHP Tars module
-#     && cd /root/Tars/php/tars-extension/ && phpize \
-#     && ./configure --enable-phptars && make && make install \
-#     && echo "extension=phptars.so" > /etc/php/7.4/cli/conf.d/10-phptars.ini \
-#     # Install PHP swoole module
-#     && cd /root && git clone https://github.com/swoole/swoole \
-#     && cd /root/swoole && git checkout $SWOOLE_VERSION \
-#     && cd /root/swoole \
-#     && phpize && ./configure --with-php-config=/usr/bin/php-config \
-#     && make \
-#     && make install \
-#     && echo "extension=swoole.so" > /etc/php/7.4/cli/conf.d/20-swoole.ini \
-#     # Do somethine clean
-#     && cd /root && rm -rf swoole \
-#     && mkdir -p /root/phptars && cp -f /root/Tars/php/tars2php/src/tars2php.php /root/phptars 
-
 RUN  apt-get clean
-
-
-# RUN cd / && curl -O https://tars-thirdpart-1300910346.cos.ap-guangzhou.myqcloud.com/src/apache-maven-3.8.1-bin.tar.gz \
-#     && tar xzf apache-maven-3.8.1-bin.tar.gz 
-
-# ENV MAVEN_HOME=/apache-maven-3.8.1
-# ENV PATH=${PATH}:${MAVEN_HOME}/bin
-
-# # Install tars go
-# RUN go get github.com/TarsCloud/TarsGo/tars \
-#     && cd $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go \
-#     && go build .  \
-#     && mkdir -p /usr/local/go/bin \
-#     && chmod a+x /usr/local/go/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go/tars2go \
-#     && ln -s /usr/local/go/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go/tars2go /usr/local/go/bin/tars2go 
-
-# # Intall tarscpp
-# RUN cd /root/Tars/ \
-#     && git submodule update --init --recursive cpp \ 
-#     && cd /root/Tars/cpp \
-#     && mkdir -p build \
-#     && cd build \
-#     && cmake .. \
-#     && make -j4 \
-#     && make install
-
-# RUN npm install -g @tars/deploy
 
 COPY tools/yaml-tools /root/yaml-tools
 COPY tools/helm /root/helm
 COPY tools/helm-template /root/helm-template
 COPY tools/Dockerfile /root/Dockerfile
+COPY tools/exec-build.sh /usr/bin/
 COPY tools/exec-deploy.sh /usr/bin/
 
 RUN cd /root/yaml-tools && npm install 
 RUN chmod a+x /usr/bin/exec-deploy.sh
+RUN chmod a+x /usr/bin/exec-build.sh

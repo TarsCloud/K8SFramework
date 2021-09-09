@@ -1,141 +1,40 @@
 #!/bin/bash
 
-if [ $# -lt 5 ]; then
-    echo "Usage: $0 LANG(cpp/nodejs/java-war/java-jar/go/php) Files YamlFile Namespace Registry Tag Dockerfile"
-    echo "for example, $0 nodejs . yaml/values.yaml true tars-dev Dockerfile"
-    echo "for example, $0 cpp build/bin/TestServer yaml/values.yaml false tars-dev"
+if [ $# -lt 2 ]; then
+    echo "Usage: $0 Namespace HelmPackage"
+    echo "for example, $0 tars-dev od-storageserver-v1.0.0.tgz"
     exit -1
 fi
 
-LANG=$1
+NAMESPACE=$1
+HELMPACKAGE=$2
+APP=`echo ${HELMPACKAGE} | cut -d'-' -f1`
+SERVER=`echo ${HELMPACKAGE} | cut -d'-' -f2`
 
-if [ "$LANG" != "cpp" ] && [ "$LANG" != "nodejs" ] && [ "$LANG" != "java-war" ] && [ "$LANG" != "java-jar" ] && [ "$LANG" != "go" ] && [ "$LANG" != "php" ] ; then  
-    echo "Usage: $0 LANG(cpp/nodejs/java-war/java-jar/go/php)"
-    exit -1
-fi
-
-BIN=$2
-VALUES=$3
-NAMESPACE=$4
-REGISTRY=$5
-TAG=$6
-Dockerfile=$7
-
-if [ "${Dockerfile}" == "" ]; then
-    echo "use /root/Dockerfile/Dockerfile.${LANG}"
-    Dockerfile=/root/Dockerfile/Dockerfile.${LANG}
-else
-    echo "use ${Dockerfile}"
-fi
-
-
-#-------------------------------------------------------------------------------------------
-
-if [ ! -f $VALUES ] && [ ! -d $BIN ] ; then
-    echo "yaml file($VALUES) not exists, exit."
-    exit -1
-fi
-
-if [ ! -f $BIN ] && [ ! -d $BIN ] ; then
-    echo "bin file or dir ($BIN) not exists, exit."
-    exit -1
-fi
-
-if [ -z $NAMESPACE ]; then
-    echo "k8s namespace($NAMESPACE) must not be empty, exit"
-    exit -1
-fi
-
-if [ -z $TAG ]; then
-    echo "TAG must not be empty, exit"
-    exit -1
-fi
-
-APP=`node /root/yaml-tools/index -f $VALUES -g app`
-SERVER=`node /root/yaml-tools/index -f $VALUES -g server`
-
-K8SSERVER="$APP-$SERVER"
-IMAGE="$REGISTRY/$APP/$SERVER:$TAG"
-
-DATE=`date +"%Y%m%d%H%M%S"`
-
-OLD_CHART_VERSION=`node /root/yaml-tools/index -f /root/helm-template/Chart.yaml -g version`
-CHART_VERSION="$OLD_CHART_VERSION-$CI_COMMIT_REF_NAME"
-
-REPO_ID="${DATE}-${TAG}"
 
 echo "---------------------Environment---------------------------------"
-echo "BIN:                  "$BIN
-echo "VALUES:               "$VALUES
 echo "NAMESPACE:            "$NAMESPACE
-echo "REGISTRY:             "$REGISTRY
-echo "DATE:                 "$DATE
-echo "TAG:                  "$TAG
+echo "HELMPACKAGE:          "$HELMPACKAGE
 echo "APP:                  "$APP
 echo "SERVER:               "$SERVER
-echo "K8SSERVER:            "$K8SSERVER
-echo "REPO_ID:              "$REPO_ID
-echo "IMAGE:                "$IMAGE
-echo "CHARTS:               "$CHARTS
-echo "CHART_VERSION:        "$CHART_VERSION
 
-cp /root/helm-template/Chart.yaml /tmp/Chart.yaml.backup
-#-------------------------------------------------------------------------------------------
-function build_helm() 
-{
-    echo "------------------------build helm: ${1} ------------------------------"
+if [[ "${APP}" == "" ]] || [[ "${SERVER}" == "" ]]; then
+    echo "app or server is empty, HELMPACKAGE(${HELMPACKAGE}) is invalid, format must be: app-server-tag.tgz"
+fi
 
-    TMP_HELM_CHARTS=$1
-    TMP_HELM_IMAGE=$2
+K8SSERVER="${APP}-${SERVER}"
 
-    cp -rf ${VALUES} /root/helm-template/values.yaml
+echo "------------------------deploy------------------------------"
 
-    # 修改charts里面的参数
-    node /root/yaml-tools/index -f /root/helm-template/Chart.yaml -s name -v $K8SSERVER -u
-    node /root/yaml-tools/index -f /root/helm-template/Chart.yaml -s version -v $CHART_VERSION -u
-    node /root/yaml-tools/index -f /root/helm-template/Chart.yaml -s appVersion -v "$TAG" -u
-    node /root/yaml-tools/index -f /root/helm-template/Chart.yaml -s dependencies[0].repository -v $TMP_HELM_CHARTS -u
+HELM_SERVER=`helm list -f ^${K8SSERVER}$ -n ${NAMESPACE} --deployed -q`
 
-    # 更新values
-    node /root/yaml-tools/values -f /root/helm-template/values.yaml -d $REPO_ID -i $TMP_HELM_IMAGE -u
+if [ "${HELM_SERVER}" = "${K8SSERVER}" ]; then
+    echo "helm upgrade ${K8SSERVER} -n ${NAMESPACE} ${HELMPACKAGE}"
+    helm upgrade ${K8SSERVER} -n ${NAMESPACE} ${HELMPACKAGE}
 
-    helm dependency update /root/helm-template
+else
+    echo "helm install ${K8SSERVER} -n ${NAMESPACE} ${HELMPACKAGE}"
+    helm install ${K8SSERVER} -n ${NAMESPACE} ${HELMPACKAGE}
+fi
 
-    echo "------------------------helm chart------------------------------"
-    cat /root/helm-template/Chart.yaml
-}
-
-#-------------------------------------------------------------------------------------------
-
-echo "----------------------Build docker--------------------------------"
-
-echo "docker build . -f ${Dockerfile} -t $IMAGE --build-arg BIN=$BIN"
-docker build . -f ${Dockerfile} -t $IMAGE --build-arg BIN=$BIN
-
-echo "----------------------Push docker--------------------------------"
-
-build_helm $CHARTS $IMAGE
-
-# if [ "$DEPLOY" == "true" ]; then
-#     echo "------------------------deploy------------------------------"
-
-#     HELM_SERVER=`helm list -f ^${K8SSERVER}$ -n ${NAMESPACE} --deployed -q`
-
-#     if [ "${HELM_SERVER}" = "${K8SSERVER}" ]; then
-#         node /root/yaml-tools/k8s.js -f /root/helm-template/values.yaml -n ${NAMESPACE} -i $IMAGE -d ${TAG} -u
-
-#         echo "helm upgrade ${K8SSERVER} -n ${NAMESPACE} /root/helm-template"
-#         helm upgrade ${K8SSERVER} -n ${NAMESPACE} /root/helm-template
-
-#     else
-#         echo "helm install ${K8SSERVER} -n ${NAMESPACE} /root/helm-template"
-#         helm install ${K8SSERVER} -n ${NAMESPACE} /root/helm-template
-#     fi
-
-# fi
-
-echo "------------------------helm push------------------------------"
-#restore chart.yaml
-cp /tmp/Chart.yaml.backup /root/helm-template/Chart.yaml
-echo "----------------finish $K8SSERVER---------------------"
 
