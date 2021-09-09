@@ -55,7 +55,7 @@ APP=`node /root/yaml-tools/index -f $VALUES -g app`
 SERVER=`node /root/yaml-tools/index -f $VALUES -g server`
 
 K8SSERVER="$APP-$SERVER"
-IMAGE="$REGISTRY/$APP/$SERVER:$TAG"
+IMAGE="$REGISTRY/$APP.$SERVER:$TAG"
 
 DATE=`date +"%Y%m%d%H%M%S"`
 
