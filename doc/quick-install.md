@@ -13,7 +13,7 @@ helm repo add tars-k8s https://tarscloud.github.io/K8SFramework/charts
 - 安装控制器
 
 ```
-helm install tarscontroller tars-k8s/tarscontroller-v1.0.0.tgz
+helm install tarscontroller tars-k8s/tarscontroller
 ```
 
 - 在k8s中创建访问仓库的secret
@@ -28,7 +28,7 @@ kubectl create secret docker-registry tars-image-secret -n tars-dev --docker-ser
 ```
 kubectl create ns tars-dev
 
-helm install tarsframework -n tars-dev --set 'dockerRegistry=${docker_registry},web=${web_host}' tars-k8s/tarsframework-v1.0.0.tgz
+helm install tarsframework -n tars-dev --set 'dockerRegistry=${docker_registry},web=${web_host}' tars-k8s/tarsframework
 
 ```
 
