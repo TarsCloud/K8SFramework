@@ -9,11 +9,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: env
-        run: env
+        run: env && echo ${{ github.ref }} 
       - uses: actions/checkout@v1
       - name: Pull code
         run: env && ./prepare.sh    
       - name: Build binary
         run: ./buildBinary.sh
       - name: Build docker
-        run: ./buildHelm.sh tarscloud ${{ secrets.name }} ${{ secrets.pass }} v1.0.0 
+        run: ./buildHelm.sh tarscloud ${{ secrets.name }} ${{ secrets.pass }} ${{ github.ref }} 
