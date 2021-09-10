@@ -9,7 +9,7 @@ RUN  echo Asia/Shanghai > /etc/timezone
 
 RUN  apt update
 # 安装 ssl 证书
-RUN  apt install ca-certificates -y
+RUN  apt install ca-certificates openssl libssl-dev -y
 
 RUN apt install -y mysql-client 
 

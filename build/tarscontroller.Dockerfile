@@ -1,5 +1,9 @@
 FROM ubuntu:20.04
 
+RUN apt update
+
+RUN apt install -y openssl libssl-dev
+
 COPY files/template/tarscontroller/root/bin/entrypoint.sh /bin/
 COPY files/template/tarscontroller/root/etc/ /etc/
 

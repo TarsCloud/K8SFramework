@@ -28,6 +28,7 @@
 >- 可以为空, 为空则为公共仓库
 >- 如果是私有仓库, 则需要路径: xxx.xxx.com
 >- 生成的依赖docker前缀是: $DOCKER_REGISTRY/DOCKER_REPOSITORY
+
 - 安装控制器
 ```
 helm install tarscontroller --set 'helm.dockerhub.registry=${DOCKER_REGISTRY}/${DOCKER_REPOSITORY},helm.build.id=v1.0.0 ' tarscontroller-v1.0.0.tgz

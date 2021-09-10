@@ -6,7 +6,7 @@ COPY files/binary/tarsimage /usr/local/app/tars/tarsimage/bin/tarsimage
 RUN apt update
 
 # 安装docker
-RUN apt install -y apt-transport-https ca-certificates curl gnupg2 software-properties-common
+RUN apt install -y openssl libssl-dev apt-transport-https ca-certificates curl gnupg2 software-properties-common
 RUN curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg | apt-key add -
 RUN add-apt-repository \
     "deb [arch=amd64] https://mirrors.aliyun.com/docker-ce/linux/ubuntu \
