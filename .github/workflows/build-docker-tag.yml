@@ -1,4 +1,4 @@
-name: build-docker
+name: build-docker-tag
 
 on:
   push:
@@ -16,4 +16,4 @@ jobs:
       - name: Build binary
         run: ./buildBinary.sh
       - name: Build docker
-        run: ./buildHelm.sh tarscloud ${{ secrets.name }} ${{ secrets.pass }} v1.0.0-dev 
+        run: ./buildHelm.sh tarscloud ${{ secrets.name }} ${{ secrets.pass }} v1.0.0 
