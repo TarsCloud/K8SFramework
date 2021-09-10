@@ -1,6 +1,0 @@
-helm:
-    build:
-      id: v0.0.0-dev
-    dockerhub:
-      registry: 
-

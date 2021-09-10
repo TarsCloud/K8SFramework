@@ -1,0 +1,28 @@
+apiVersion: v1
+entries:
+  tarscontroller:
+  - apiVersion: v2
+    appVersion: v1beta1
+    created: "2021-09-10T09:52:56.030786+08:00"
+    digest: eb68c8cffeb8acc504050c803505d1d492fa767b9238a12badafd129ef094d4d
+    keywords:
+    - tars
+    - tarscontroller
+    name: tarscontroller
+    type: application
+    urls:
+    - https://tarscloud.github.io/K8SFramework/charts/tarscontroller-1.0.0.tgz
+    version: 1.0.0
+  tarsframework:
+  - apiVersion: v2
+    appVersion: v1beta1
+    created: "2021-09-10T09:52:56.031262+08:00"
+    digest: 1879525125964e0119c231b89944c6523aaf3f51405039b2b625a6b3aa2ac32b
+    keywords:
+    - tars
+    name: tarsframework
+    type: application
+    urls:
+    - https://tarscloud.github.io/K8SFramework/charts/tarsframework-1.0.0.tgz
+    version: 1.0.0
+generated: "2021-09-10T09:52:56.029938+08:00"

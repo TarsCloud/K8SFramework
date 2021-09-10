@@ -185,20 +185,20 @@ for KEY in "${LocalImages[@]}"; do
   # fi
 done
 
-echo -e "helm:
-    build:
-      id: ${_BUILD_ID_}
-    dockerhub:
-      registry: ${_DOCKER_REGISTRY_}
-" >install/tarscontroller/values.yaml
-helm package install/tarscontroller --version ${_BUILD_ID_} -d ./charts
+# echo -e "helm:
+#     build:
+#       id: ${_BUILD_ID_}
+#     dockerhub:
+#       registry: ${_DOCKER_REGISTRY_}
+# " >install/tarscontroller/values.yaml
+helm package install/tarscontroller -d ./
 
-echo -e "helm:
-    build:
-      id: ${_BUILD_ID_}
-    dockerhub:
-      registry: ${_DOCKER_REGISTRY_}
-" >./install//values.yaml
-helm package install/tarsframework --version ${_BUILD_ID_} -d ./charts
+# echo -e "helm:
+#     build:
+#       id: ${_BUILD_ID_}
+#     dockerhub:
+#       registry: ${_DOCKER_REGISTRY_}
+# " >./install//values.yaml
+helm package install/tarsframework -d ./
 
 LOG_INFO "Build Helm File OK "

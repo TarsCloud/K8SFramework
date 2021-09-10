@@ -1,5 +1,14 @@
+
+# 指定tars框架服务的镜像地址
+helm:
+    build:
+      id: v1.0.0
+    dockerhub:
+      registry: docker.io/tarscloud
+
 ## dockerRegistry 指定 默认的业务服务的镜像仓库地址
-dockerRegistry: harbor.tars.com/tars-k8s
+dockerRegistry: 
+  
 ## dockerSecret 指定 k8s 从 业务仓库 下载/上传镜像时使用的 secret ,
 ## 需要用户主动的 k8s 平台创建 创建命令为
 ## kubectl create secret docker-registry <name> --docker-server=DOCKER_REGISTRY_SERVER --docker-username=DOCKER_USER --docker-password=DOCKER_PASSWORD --docker-email=DOCKER_EMAIL
