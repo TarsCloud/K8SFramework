@@ -9,15 +9,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
-      - name: env
-        env:
-          CURRENT_TAG: ${{ steps.version_tag.outputs.VERSION }}
-        run: echo "CURRENT_TAG:"$CURRENT_TAG
+      - name: Get version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      - name: echo version
+        run: echo ${{ steps.get_version.outputs.VERSION }}
       - name: Pull code
         run: env && ./prepare.sh    
       - name: Build binary
         run: ./buildBinary.sh
       - name: Build docker
-        env:
-          CURRENT_TAG: ${{ steps.version_tag.outputs.VERSION }}
-        run: ./buildHelm.sh tarscloud ${{ secrets.name }} ${{ secrets.pass }} $CURRENT_TAG
+        run: ./buildHelm.sh tarscloud ${{ secrets.name }} ${{ secrets.pass }} ${{ steps.get_version.outputs.VERSION }}
