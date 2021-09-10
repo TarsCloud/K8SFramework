@@ -2,5 +2,5 @@ helm:
     build:
       id: v1.0.0
     dockerhub:
-      registry: docker.io/tarscloud
+      registry: tarscloud
 
