@@ -6,11 +6,12 @@
 
 该脚本的使用如下:
 ```
-exec-build.sh LANG(cpp/nodejs/java-war/java-jar/go/php) Files YamlFile Namespace Registry Tag Dockerfile
+exec-build.sh BaseImage SERVERTYPE(cpp/nodejs/java-war/java-jar/go/php) Files YamlFile Namespace Registry Tag Dockerfile
 ```
 
 参数说明:
-- LANG: 语言, 目前支持: cpp/nodejs/java-war/java-jar/go/php
+- BaseImage: 依赖的基础镜像(官方镜像为: tarscloud/tars.cppbase:$tag)
+- SERVERTYPE: 语言, 目前支持: cpp/nodejs/java-war/java-jar/go/php
 - Files: 需要打包进docker中的文件或者目录
 - YamlFile: yaml文件描述服务用, 可以参考[helm包](./helm.md)
 - Namespace: k8s上的名字空间, 安装Tars时指定的
@@ -19,7 +20,7 @@ exec-build.sh LANG(cpp/nodejs/java-war/java-jar/go/php) Files YamlFile Namespace
 - Dockerfile: 制作镜像的dockerfile路径, 正常情况不需要提供, 你如果希望自己改写Dockerfile, 则需要提供, 请参考[Dockerfile](../Dockerfile.md)
 例如:
 ```
-exec-build.sh cpp build/StorageServer yaml/value.yaml tars-dev xxx.harbor.com v1.0.0
+exec-build.sh tarscloud/tars.cppbase:v1.0.0 cpp build/StorageServer yaml/value.yaml tars-dev xxx.harbor.com v1.0.0
 ```
 
 执行完脚本后会生成:

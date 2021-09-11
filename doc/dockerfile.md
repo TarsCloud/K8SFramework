@@ -48,10 +48,10 @@ docker push xxx/notifyproxyserver
 ```
 
 说明:
-- 如果你自己源码构建的(例如: ./buildHelm.sh tars-k8s user pass v1.0.0 harbor.xxxx.com), tars.cppbase地址为: harbor.xxxx.com/tars-k8s/tars.cppbase
+- 如果你自己源码构建的(例如: ./buildHelm.sh tars-k8s user pass v1.0.0 harbor.xxxx.com), tars.cppbase地址为: harbor.xxxx.com/tars-k8s/tars.cppbase:v1.0.0
 - 此时构建服务镜像的命令为:
 ```
-docker build . -t xxx/notifyproxyserver --build-arg BIN=build/bin/NotifyProxyServer --build-arg BaseImage=harbor.xxxx.com/tars-k8s/tars.cppbase --build-arg ServerType=cpp
+docker build . -t xxx/notifyproxyserver --build-arg BIN=build/bin/NotifyProxyServer --build-arg BaseImage=harbor.xxxx.com/tars-k8s/tars.cppbase:v1.0.0 --build-arg ServerType=cpp
 ```
 
 这个语句其实被```exec-build.sh```中执行, 在CI/CD中自动构建业务服务的镜像.
