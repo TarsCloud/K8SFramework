@@ -32,10 +32,14 @@ profile: ""
 # servant列表
 servants:
   - name: AuthObj
+    # 容器内端口
     port: 10000
-    isTaf: false
+    # 是否是tars服务, 如果是http服务, 这里为false
+    isTars: true
+    #是否是tcp服务
     isTcp: true
-    thread: 2
+    #业务线程个数
+    thread: 4
     capacity: 100000
     connection: 100000
     timeout: 60000
@@ -106,7 +110,7 @@ profile: ""
 servants:
   - name: AuthObj
     port: 10000
-    isTaf: false
+    isTars: true
     isTcp: true
     thread: 2
     capacity: 100000
@@ -170,7 +174,7 @@ profile: ""
 servants:
   - name: AuthObj
     port: 10000
-    isTaf: false
+    isTars: true
     isTcp: true
     thread: 2
     capacity: 100000

@@ -5,7 +5,7 @@ profile: ""
 servants:
   - name: WebObj
     port: 10000
-    isTaf: false
+    isTars: true
     isTcp: true
     thread: 3
     capacity: 10000

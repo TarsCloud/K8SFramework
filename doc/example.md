@@ -47,7 +47,7 @@ profile: ""
 servants:
   - name: StorageObj
     port: 10000
-    isTaf: false
+    isTars: true 
     isTcp: true
     thread: 2
     capacity: 100000
