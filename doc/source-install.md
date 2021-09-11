@@ -31,7 +31,7 @@
 
 - 安装控制器
 ```
-helm install tarscontroller --set 'helm.dockerhub.registry=${DOCKER_REGISTRY}/${DOCKER_REPOSITORY},helm.build.id=v1.0.0 ' tarscontroller-v1.0.0.tgz
+helm install tarscontroller --set 'helm.dockerhub.registry=${DOCKER_REGISTRY}/${DOCKER_REPOSITORY},helm.build.id=v1.0.0' tarscontroller-v1.0.0.tgz
 ```
 
 **注意这个v1.0.0和buildHelm中生成的tarscontroller版本相关, 具体需要看当前实际的版本号!**
@@ -66,7 +66,7 @@ helm install tarsframework -n tars-dev --set 'dockerRegistry=${DOCKER_REGISTRY},
 示例脚本如下:
 
 ```
-helm upgrade tarscontroller --set 'helm.dockerhub.registry=${DOCKER_REGISTRY}/${DOCKER_REPOSITORY},helm.build.id=${TAG} ' tarscontroller-v1.0.0.tgz
+helm upgrade tarscontroller --set 'helm.dockerhub.registry=${DOCKER_REGISTRY}/${DOCKER_REPOSITORY},helm.build.id=${TAG}' tarscontroller-v1.0.0.tgz
 
 helm upgrade tarsframework -n tars-dev --set 'helm.dockerhub.registry=${DOCKER_REGISTRY}/${DOCKER_REPOSITORY},,helm.build.id=${TAG},dockerRegistry=${DOCKER_REGISTRY},web=${web_host}' tarsframework-v1.0.0.tgz
 

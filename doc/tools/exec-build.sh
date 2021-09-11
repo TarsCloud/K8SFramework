@@ -1,33 +1,31 @@
 #!/bin/bash
 
-if [ $# -lt 5 ]; then
-    echo "Usage: $0 LANG(cpp/nodejs/java-war/java-jar/go/php) Files YamlFile Namespace Registry Tag Dockerfile"
-    echo "for example, $0 nodejs . yaml/values.yaml true tars-dev Dockerfile"
-    echo "for example, $0 cpp build/bin/TestServer yaml/values.yaml false tars-dev"
+if [ $# -lt 8 ]; then
+    echo "Usage: $0 BaseImage SERVERTYPE(cpp/nodejs/java-war/java-jar/go/php) Files YamlFile Namespace Registry Tag Dockerfile"
+    echo "for example, $0 tarscloud/tars.cppbase nodejs . yaml/values.yaml true tars-dev Dockerfile"
+    echo "for example, $0 tarscloud/tars.cppbase cpp build/bin/TestServer yaml/values.yaml false tars-dev"
     exit -1
 fi
 
-LANG=$1
+BASEIMAGE=$1
+SERVERTYPE=$2
+BIN=$3
+VALUES=$4
+NAMESPACE=$5
+REGISTRY=$6
+TAG=$7
+Dockerfile=$8
 
-if [ "$LANG" != "cpp" ] && [ "$LANG" != "nodejs" ] && [ "$LANG" != "java-war" ] && [ "$LANG" != "java-jar" ] && [ "$LANG" != "go" ] && [ "$LANG" != "php" ] ; then  
-    echo "Usage: $0 LANG(cpp/nodejs/java-war/java-jar/go/php)"
+if [ "$SERVERTYPE" != "cpp" ] && [ "$SERVERTYPE" != "nodejs" ] && [ "$SERVERTYPE" != "java-war" ] && [ "$SERVERTYPE" != "java-jar" ] && [ "$SERVERTYPE" != "go" ] && [ "$SERVERTYPE" != "php" ] ; then  
+    echo "Usage: $0 SERVERTYPE(cpp/nodejs/java-war/java-jar/go/php)"
     exit -1
 fi
-
-BIN=$2
-VALUES=$3
-NAMESPACE=$4
-REGISTRY=$5
-TAG=$6
-Dockerfile=$7
 
 if [ "${Dockerfile}" == "" ]; then
-    echo "use /root/Dockerfile/Dockerfile.${LANG}"
-    Dockerfile=/root/Dockerfile/Dockerfile.${LANG}
+    Dockerfile=/root/Dockerfile/Dockerfile
 else
     echo "use ${Dockerfile}"
 fi
-
 
 #-------------------------------------------------------------------------------------------
 
@@ -64,6 +62,8 @@ REPO_ID="${DATE}-${TAG}"
 echo "---------------------Environment---------------------------------"
 echo "BIN:                  "$BIN
 echo "VALUES:               "$VALUES
+echo "BASEIMAGE:            "$BASEIMAGE
+echo "SERVERTYPE:           "$SERVERTYPE
 echo "NAMESPACE:            "$NAMESPACE
 echo "REGISTRY:             "$REGISTRY
 echo "DATE:                 "$DATE
@@ -73,7 +73,10 @@ echo "SERVER:               "$SERVER
 echo "K8SSERVER:            "$K8SSERVER
 echo "REPO_ID:              "$REPO_ID
 echo "IMAGE:                "$IMAGE
-# echo "CHARTS:               "$CHARTS
+echo "----------------------Build docker--------------------------------"
+
+echo "docker build . -f ${Dockerfile} -t $IMAGE --build-arg BIN=$BIN --build-arg BaseImage=$BASEIMAGE --build-arg ServerType=$SERVERTYPE"
+docker build . -f ${Dockerfile} -t $IMAGE --build-arg BIN=$BIN --build-arg BaseImage=$BASEIMAGE --build-arg ServerType=$SERVERTYPE
 
 cp /root/helm-template/Chart.yaml /tmp/Chart.yaml.backup
 #-------------------------------------------------------------------------------------------
@@ -100,10 +103,6 @@ function build_helm()
     cat /root/helm-template/Chart.yaml
 }
 
-echo "----------------------Build docker--------------------------------"
-
-echo "docker build . -f ${Dockerfile} -t $IMAGE --build-arg BIN=$BIN"
-docker build . -f ${Dockerfile} -t $IMAGE --build-arg BIN=$BIN
 
 # build helm包
 build_helm 

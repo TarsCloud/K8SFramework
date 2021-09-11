@@ -16,7 +16,7 @@ exec-build.sh LANG(cpp/nodejs/java-war/java-jar/go/php) Files YamlFile Namespace
 - Namespace: k8s上的名字空间, 安装Tars时指定的
 - Registry: 镜像仓库的地址, 最后生成的镜像是: $Registry/$APP/$SERVER:$TAG
 - Tag: 版本号, 格式必须符合版本号规范: vx.x.x, 例如v1.0.2
-- Dockerfile: 制作镜像的dockerfile路径, 正常情况不需要提供, 你如果希望自己改写Dockerfile, 则需要提供, 请参考[Dockerfile](../DockerfileAbout.md)
+- Dockerfile: 制作镜像的dockerfile路径, 正常情况不需要提供, 你如果希望自己改写Dockerfile, 则需要提供, 请参考[Dockerfile](../Dockerfile.md)
 例如:
 ```
 exec-build.sh cpp build/StorageServer yaml/value.yaml tars-dev xxx.harbor.com v1.0.0

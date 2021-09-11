@@ -1,4 +1,4 @@
-FROM harbor.12345up.com/tars.cppbase
+FROM tars-k8s/tars.cppbase
 ENV ServerType=cpp
 COPY /root /
 
