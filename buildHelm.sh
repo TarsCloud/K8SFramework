@@ -113,14 +113,15 @@ for KEY in "${ServerImages[@]}"; do
   echo "FROM ${_DOCKER_REPOSITORY_}/tars.cppbase
 ENV ServerType=cpp
 COPY /root /
-" >build/files/template/tars."${KEY}"/Dockerfile
+" > Dockerfile.tars."${KEY}"
 
 
   # if ! docker buildx build --platform=linux/amd64,linux/arm64 -o type=docker -t tars."${KEY}" build/files/template/tars."${KEY}"; then
-  if ! docker build -t ${_DOCKER_REPOSITORY_}/tars."${KEY}" build/files/template/tars."${KEY}"; then
+  if ! docker build -t ${_DOCKER_REPOSITORY_}/tars."${KEY}" -f Dockerfile.tars."${KEY}" build/files/template/tars."${KEY}"; then
     LOG_ERROR "Build ${KEY} image failed"
     exit 255
   fi
+  rm -rf Dockerfile.tars."${KEY}"
 done
 
 #### 构建基础服务镜像
