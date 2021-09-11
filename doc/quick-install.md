@@ -28,7 +28,7 @@ kubectl create secret docker-registry tars-image-secret -n tars-dev --docker-ser
 ```
 kubectl create ns tars-dev
 
-helm install tarsframework -n tars-dev --set 'dockerRegistry=${docker_registry},web=${web_host}' tars-k8s/tarsframework
+helm install tarsframework -n tars-dev --set 'dockerRegistry=tarscloud,web=${web_host}' tars-k8s/tarsframework
 
 ```
 
