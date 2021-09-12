@@ -28,7 +28,7 @@ exec-build.sh BaseImage SERVERTYPE(cpp/nodejs/java-war/java-jar/go/php) Files Ya
 
 例如:
 ```
-exec-build.sh tarscloud/tars.cppbase:v1.0.0 cpp build/bin/StorageServer yaml/values.yaml tars-dev tarscloud v1.0.0
+exec-build.sh tarscloud/tars.cppbase:v1.0.0 cpp build/bin/StorageServer yaml/values.yaml tars-dev yourrepository v1.0.0
 
 ```
 

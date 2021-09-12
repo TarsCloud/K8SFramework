@@ -1,9 +1,9 @@
 #!/bin/bash
 
-if [ $# -lt 8 ]; then
+if [ $# -lt 7 ]; then
     echo "Usage: $0 BaseImage SERVERTYPE(cpp/nodejs/java-war/java-jar/go/php) Files YamlFile Namespace Registry Tag Dockerfile"
-    echo "for example, $0 tarscloud/tars.cppbase nodejs . yaml/values.yaml true tars-dev Dockerfile"
-    echo "for example, $0 tarscloud/tars.cppbase cpp build/bin/TestServer yaml/values.yaml false tars-dev"
+    echo "for example, $0 tarscloud/tars.cppbase nodejs . yaml/values.yaml tars-dev tarscloud Dockerfile"
+    echo "for example, $0 tarscloud/tars.cppbase cpp build/bin/TestServer yaml/values.yaml tarscloud tars-dev"
     exit -1
 fi
 
