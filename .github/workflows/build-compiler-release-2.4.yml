@@ -7,14 +7,14 @@ on:
       - master
     paths:
       - ".github/workflows/build-compiler-release-2.4.yml"
-      - "doc/tools"
+      - "doc/tools/*"
       - "doc/base-compiler.Dockerfile"
   pull_request:
     branches:
       - master
     paths:
       - ".github/workflows/build-compiler-release-2.4.yml"
-      - "doc/tools"
+      - "doc/tools/*"
       - "doc/base-compiler.Dockerfile"
       
 jobs:
