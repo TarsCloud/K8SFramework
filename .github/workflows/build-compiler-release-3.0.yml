@@ -1,4 +1,4 @@
-name: build-base-compiler-cor
+name: build-base-compiler-release-3.0
 
 
 on:
@@ -6,15 +6,15 @@ on:
     branches:
       - master
     paths:
-      - ".github/workflows/build-compiler-cor.yml"
+      - ".github/workflows/build-compiler-release-3.0.yml"
       - "doc/tools/*"
       - "doc/base-compiler.Dockerfile"
   pull_request:
     branches:
       - master
     paths:
-      - ".github/workflows/build-compiler-cor.yml"
-      - "doc/tools"
+      - ".github/workflows/build-compiler-release-3.0.yml"
+      - "doc/tools/*"
       - "doc/base-compiler.Dockerfile"
       
 jobs:
@@ -27,7 +27,7 @@ jobs:
       - name: login docker hub
         run: docker login -u ${{ secrets.name }} -p ${{ secrets.pass }}
       - name: Build docker
-        run: cd doc && docker build . -f base-compiler.Dockerfile -t tarscloud/base-compiler:cor --build-arg cor
+        run: cd doc && docker build . -f base-compiler.Dockerfile -t tarscloud/base-compiler:v3.0 --build-arg v3.0
       - name: push master docker
-        run: docker push tarscloud/base-compiler:cor
+        run: docker push tarscloud/base-compiler:v3.0
 
