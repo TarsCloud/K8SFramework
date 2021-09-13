@@ -1,8 +1,9 @@
 ARG BaseImage
-ARG ServerType
-ARG BIN
 
 FROM ${BaseImage}
+
+ARG BIN
+ARG ServerType
 
 ENV ServerType=${ServerType}
 

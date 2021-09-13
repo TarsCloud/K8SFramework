@@ -6,7 +6,7 @@
 
 该脚本的使用如下:
 ```
-exec-build.sh BaseImage SERVERTYPE(cpp/nodejs/java-war/java-jar/go/php) Files YamlFile Namespace Registry Tag Dockerfile
+exec-build.sh BaseImage SERVERTYPE(cpp/nodejs/java-war/java-jar/go/php) Files YamlFile Namespace Registry Tag Push(true/false) Dockerfile
 ```
 
 参数说明:
@@ -17,6 +17,7 @@ exec-build.sh BaseImage SERVERTYPE(cpp/nodejs/java-war/java-jar/go/php) Files Ya
 - Namespace: k8s上的名字空间, 安装Tars时指定的
 - Registry: 镜像仓库的地址, 最后生成的镜像是: $Registry/$APP/$SERVER:$TAG
 - Tag: 版本号, 格式必须符合版本号规范: vx.x.x, 例如v1.0.2
+- Push: 制作好的docker是否push到仓库中($Registry/$APP/$SERVER:$TAG)
 - Dockerfile: 制作镜像的dockerfile路径, 正常情况不需要提供, 你如果希望自己改写Dockerfile, 则需要提供, 请参考[Dockerfile](../Dockerfile.md)
 例如:
 ```

@@ -50,13 +50,11 @@ spec:
     hostPorts:
 {{- include "tserver.host-ports" . | indent 6 }}
 {{- end}}
-    nodeSelector:
 {{- if .Values.labelMatch}}      
-      labelMatch:
+    nodeSelector:
 {{ toYaml .Values.labelMatch | indent 6}}
 {{- else}}
-      abilityPool:
-        values: []
+    nodeSelector: []
 {{- end}}      
     env:
 {{ include "tserver.env-vars" . | indent 6 }}

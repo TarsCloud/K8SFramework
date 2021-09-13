@@ -37,13 +37,6 @@ mounts:
     mountPath: /storage-data
     source:
       tLocalVolume: {}
-labelMatch:
-  - key: tars.io/ServerApp
-    operator: In
-    values: ["tars"]
-  - key: kubernetes.io/hostname
-    operator: In
-    values: ["node87","node88"]  
 appConfig: 
   - name: app.json
     content: |

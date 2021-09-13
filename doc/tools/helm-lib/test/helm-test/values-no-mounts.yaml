@@ -20,30 +20,6 @@ repo:
   id: id-test-6
   image: busybox:latest
   secret: tars-image-secret
-mounts:
-  - name: test-host-path
-    source:
-      hostPath:
-        path: /data/test-host-path
-        type: DirectoryOrCreate
-    mountPath: /data/mount-path
-    subPathExpr: $(Namespace)/$(PodName)
-  - name: test-pvc
-    source:
-      persistentVolumeClaim:
-        claimName: remote_log_pvc
-        readOnly: false
-  - name: storage-data
-    mountPath: /storage-data
-    source:
-      tLocalVolume: {}
-labelMatch:
-  - key: tars.io/ServerApp
-    operator: In
-    values: ["tars"]
-  - key: kubernetes.io/hostname
-    operator: In
-    values: ["node87","node88"]  
 appConfig: 
   - name: app.json
     content: |

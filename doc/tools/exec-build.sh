@@ -1,9 +1,9 @@
 #!/bin/bash
 
-if [ $# -lt 7 ]; then
-    echo "Usage: $0 BaseImage SERVERTYPE(cpp/nodejs/java-war/java-jar/go/php) Files YamlFile Namespace Registry Tag Dockerfile"
-    echo "for example, $0 tarscloud/tars.cppbase nodejs . yaml/values.yaml tars-dev tarscloud Dockerfile"
-    echo "for example, $0 tarscloud/tars.cppbase cpp build/bin/TestServer yaml/values.yaml tarscloud tars-dev"
+if [ $# -lt 8 ]; then
+    echo "Usage: $0 BaseImage SERVERTYPE(cpp/nodejs/java-war/java-jar/go/php) Files YamlFile Namespace Registry Tag Push Dockerfile"
+    echo "for example, $0 tarscloud/tars.cppbase:v1.0.0 nodejs . yaml/values.yaml tars-dev tarscloud true Dockerfile"
+    echo "for example, $0 tarscloud/tars.cppbase:v1.0.0 cpp build/bin/TestServer yaml/values.yaml tarscloud true tars-dev"
     exit -1
 fi
 
@@ -14,11 +14,16 @@ VALUES=$4
 NAMESPACE=$5
 REGISTRY=$6
 TAG=$7
-Dockerfile=$8
+PUSH=$8
+Dockerfile=$9
 
 if [ "$SERVERTYPE" != "cpp" ] && [ "$SERVERTYPE" != "nodejs" ] && [ "$SERVERTYPE" != "java-war" ] && [ "$SERVERTYPE" != "java-jar" ] && [ "$SERVERTYPE" != "go" ] && [ "$SERVERTYPE" != "php" ] ; then  
     echo "Usage: $0 SERVERTYPE(cpp/nodejs/java-war/java-jar/go/php)"
     exit -1
+fi
+
+if [ "${PUSH}" == "" ]; then
+    PUSH="true"
 fi
 
 if [ "${Dockerfile}" == "" ]; then
@@ -26,6 +31,7 @@ if [ "${Dockerfile}" == "" ]; then
 else
     echo "use ${Dockerfile}"
 fi
+
 
 #-------------------------------------------------------------------------------------------
 
@@ -70,6 +76,7 @@ echo "DATE:                 "$DATE
 echo "TAG:                  "$TAG
 echo "APP:                  "$APP
 echo "SERVER:               "$SERVER
+echo "PUSH:                 "$PUSH
 echo "K8SSERVER:            "$K8SSERVER
 echo "REPO_ID:              "$REPO_ID
 echo "IMAGE:                "$IMAGE
@@ -77,6 +84,10 @@ echo "----------------------Build docker--------------------------------"
 
 echo "docker build . -f ${Dockerfile} -t $IMAGE --build-arg BIN=$BIN --build-arg BaseImage=$BASEIMAGE --build-arg ServerType=$SERVERTYPE"
 docker build . -f ${Dockerfile} -t $IMAGE --build-arg BIN=$BIN --build-arg BaseImage=$BASEIMAGE --build-arg ServerType=$SERVERTYPE
+
+if [ "${PUSH}" == "true" ]; then
+    docker push $IMAGE
+fi
 
 cp /root/helm-template/Chart.yaml /tmp/Chart.yaml.backup
 #-------------------------------------------------------------------------------------------
@@ -89,7 +100,6 @@ function build_helm()
     # 修改charts里面的参数
     node /root/yaml-tools/index -f /root/helm-template/Chart.yaml -s name -v $K8SSERVER -u
     node /root/yaml-tools/index -f /root/helm-template/Chart.yaml -s appVersion -v "$TAG" -u
-    # node /root/yaml-tools/index -f /root/helm-template/Chart.yaml -s dependencies[0].repository -v $TMP_HELM_CHARTS -u
 
     # 更新values
     node /root/yaml-tools/values -f /root/helm-template/values.yaml -d $REPO_ID -i $IMAGE -u
