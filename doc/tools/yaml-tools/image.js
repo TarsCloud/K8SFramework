@@ -5,7 +5,7 @@ const k8s = require('@kubernetes/client-node');
 
 //测试用
 
-//node image.js -n taf-dev -a test -s testserver
+//node image.js -n tars-dev -a test -s testserver
 
 const NAMESPACE = yargs.argv.n;
 
@@ -17,11 +17,11 @@ kc.applyToRequest(opts);
 
 const k8sApi = kc.makeApiClient(k8s.CustomObjectsApi);
 
-const GROUP = "k8s.taf.io";
-const VERSION = "v1alpha1";
-const TImageTypeLabel = "taf.io/ImageType"
-const TServerAppLabel = "taf.io/ServerApp"
-const TServerNameLabel = "taf.io/ServerName"
+const GROUP = "k8s.tars.io";
+const VERSION = "v1beta1";
+const TImageTypeLabel = "tars.io/ImageType"
+const TServerAppLabel = "tars.io/ServerApp"
+const TServerNameLabel = "tars.io/ServerName"
 
 const getObject = async (plural, name) => {
 

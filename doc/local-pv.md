@@ -135,7 +135,7 @@ status:
 说明:
 - 由于使用的是LocalPV, 因此这里存储容量其实没用, 只是占位符!
 - ```/usr/local/app/tars/host-mount```实际是宿主机路径
-- 实际pod中的存储路径, 会映射到宿主机的: /usr/local/app/taf/host-mount/${namespace}/$app.$server/${LocalPV Name}, 目录下
+- 实际pod中的存储路径, 会映射到宿主机的: /usr/local/app/tars/host-mount/${namespace}/$app.$server/${LocalPV Name}, 目录下
 
 
 ## 使用虚拟的 Delay-Bind LocalPV 达到延迟绑定效果

@@ -2,7 +2,7 @@
 app: 
 server: 
 important: 5
-template: taf.default
+template: tars.default
 profile: ""
 asyncThread: 3
 user: ""
@@ -19,7 +19,7 @@ servants:
 repo:
   id: ""
   image: 
-  secret: taf-image-secret
+  secret: tars-image-secret
 replicas: 1
 envVars:
 hostNetwork: false

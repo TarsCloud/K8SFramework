@@ -82,7 +82,7 @@ cp /root/helm-template/Chart.yaml /tmp/Chart.yaml.backup
 #-------------------------------------------------------------------------------------------
 function build_helm() 
 {
-    echo "--------------------build helm: ${1} ------------------------"
+    echo "--------------------build helm------------------------"
 
     cp -rf ${VALUES} /root/helm-template/values.yaml
 

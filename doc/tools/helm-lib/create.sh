@@ -11,7 +11,7 @@
 helm package tars-server 
 mv tserver*.tgz charts
 
-# helm repo index charts --url http://taf.gitlab.whup.io/taf-deploy-platform/charts
+# helm repo index charts --url http://tars.gitlab.whup.io/tars-deploy-platform/charts
 
-# helm push taf-server/ upchina-charts 
+# helm push tars-server/ upchina-charts 
 
