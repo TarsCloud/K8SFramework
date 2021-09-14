@@ -71,7 +71,7 @@ spec:
 {{- end}}
   release:
     source: {{ .Values.app | lower }}-{{ .Values.server | lower }}
-    id: {{ .Values.repo.id | quote }} 
+    id: {{ .Values.repo.id | quote }}
     image: {{ .Values.repo.image }}
     secret: {{ .Values.repo.secret }}
 
