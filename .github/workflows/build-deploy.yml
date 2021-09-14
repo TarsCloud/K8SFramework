@@ -1,0 +1,33 @@
+name: build-base-deploy
+
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - ".github/workflows/build-deploy.yml"
+      - "doc/tools/*"
+      - "doc/base-deploy.Dockerfile"
+  pull_request:
+    branches:
+      - master
+    paths:
+      - ".github/workflows/build-deploy.yml"
+      - "doc/tools/*"
+      - "doc/base-deploy.Dockerfile"
+      
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: env
+        run: env
+      - uses: actions/checkout@v1
+      - name: login docker hub
+        run: docker login -u ${{ secrets.name }} -p ${{ secrets.pass }}
+      - name: Build docker
+        run: cd doc && docker build . -f base-deploy.Dockerfile -t tarscloud/base-deploy
+      - name: push master docker
+        run: docker push tarscloud/base-deploy
+
