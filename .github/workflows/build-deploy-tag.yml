@@ -1,0 +1,25 @@
+name: build-base-deploy-tag
+
+
+on:
+  push:
+    branches:
+      - v*
+      
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: env
+        run: env
+      - uses: actions/checkout@v1
+      - name: Get version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      - name: login docker hub
+        run: docker login -u ${{ secrets.name }} -p ${{ secrets.pass }}
+      - name: Build docker
+        run: cd doc && docker build . -f base-deploy.Dockerfile -t tarscloud/base-deploy:${{ steps.get_version.outputs.VERSION }}
+      - name: push master docker
+        run: docker push tarscloud/base-deploy:${{ steps.get_version.outputs.VERSION }}
+
