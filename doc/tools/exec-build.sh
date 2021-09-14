@@ -103,7 +103,6 @@ function build_helm()
 
     # 更新values
     node /root/yaml-tools/values -f /root/helm-template/values.yaml -d $REPO_ID -i $IMAGE -u
-    node /root/yaml-tools/k8s.js -f /root/helm-template/values.yaml -n ${NAMESPACE} -i $IMAGE -d ${TAG} -u
 
     helm dependency update /root/helm-template
 
@@ -112,7 +111,6 @@ function build_helm()
     echo "---------------------helm chart--------------------------"
     cat /root/helm-template/Chart.yaml
 }
-
 
 # build helm包
 build_helm 

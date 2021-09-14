@@ -19,7 +19,7 @@ echo "APP:                  "$APP
 echo "SERVER:               "$SERVER
 
 if [[ "${APP}" == "" ]] || [[ "${SERVER}" == "" ]]; then
-    echo "app or server is empty, HELMPACKAGE(${HELMPACKAGE}) is invalid, format must be: app-server-tag.tgz"
+    echo "app or server is empty, HELMPACKAGE(${HELMPACKAGE}) is invalid, format must be: app-server-tag.tgz, for example: od-storageserver-v1.0.0.tgz"
 fi
 
 K8SSERVER="${APP}-${SERVER}"
