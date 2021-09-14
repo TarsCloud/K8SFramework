@@ -74,9 +74,5 @@ spec:
           logLevel=DEBUG
         </server>
       </application>
-     <log>
-       logpath=/usr/local/app/tars/remote_app_log
-       logthread=2
-     </log>
     </tars>
   parent: tars.default
