@@ -15,7 +15,7 @@
 - [Dockerfile说明](doc/dockerfile.md)
 - [使用helm包发布tars服务](doc/helm.md)
 - [制作基础编译镜像](doc/base-compiler.md)
-- [制作基础部署镜像](doc/base-deploy.md)
+- [制作基础部署镜像](doc/base-build.md)
 - [制作镜像以及Helm包](doc/exec-build.md)
 - [发布镜像到K8S+Tars集群](doc/exec-deploy.md)
 - [服务发布示例](doc/example.md)

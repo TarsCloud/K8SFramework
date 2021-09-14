@@ -23,7 +23,7 @@ docker run -it -v/var/run/docker.sock:/var/run/docker.sock -v`pwd`:/data/src tar
 
 在base-compiler容器内部, 使用exec-build.sh制作tars服务的镜像, 示例如下:
 ```
-exec-build.sh BaseImage SERVERTYPE(cpp/nodejs/java-war/java-jar/go/php) Files YamlFile Namespace Registry Tag Dockerfile
+exec-build.sh BaseImage SERVERTYPE(cpp/nodejs/java-war/java-jar/go/php) Files YamlFile Namespace Registry Tag Dockerfile(可选)
 ```
 
 例如:
