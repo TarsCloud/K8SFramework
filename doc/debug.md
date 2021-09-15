@@ -72,3 +72,5 @@ kubectl exec -it tars-compiler-0 -n tars-dev -- bash
 ```
 
 这时候服务可以连接集群中任何服务!主控地址为: tcp -h tars-tarsregistry -p 17890
+
+**注意进入容器/data目录开发!**

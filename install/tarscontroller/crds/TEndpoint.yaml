@@ -314,6 +314,8 @@ spec:
                       type: string
                     source:
                       type: string
+                    time:
+                      type: string
             status:
               properties:
                 pods:
