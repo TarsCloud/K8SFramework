@@ -1,7 +1,7 @@
 # TarsK8S说明文档
 
 ## TarsK8S说明
-- [介绍](doc/tars-k8S.md)
+- [介绍](doc/tars-k8s.md)
 - [组件说明](doc/component.md)
 - [快速安装指南](doc/quick-install.md)
 - [源码安装指南](doc/source-install.md)
