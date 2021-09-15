@@ -21,4 +21,6 @@ jobs:
     - name: Build binary
       run: ./buildBinary.sh
     - name: Build docker
-      run: ./buildHelm.sh tarscloud ${{ secrets.name }} ${{ secrets.pass }} v1.0.0-nightly 
+      run: |
+        ./buildHelm.sh tarscloud ${{ secrets.name }} ${{ secrets.pass }} v1.0.0-nightly 
+        ./buildHelm.sh tarscloud ${{ secrets.name }} ${{ secrets.pass }} latest 
