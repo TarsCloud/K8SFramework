@@ -112,6 +112,6 @@ RUN cd /root/yaml-tools && npm install
 RUN chmod a+x /usr/bin/exec-deploy.sh
 RUN chmod a+x /usr/bin/exec-build.sh
 
-RUN echo "#!/bin/bash" > /bin/start.sh && echo "while true; do sleep 10; done" >> /bin/start.sh
+RUN echo "#!/bin/bash" > /bin/start.sh && echo "while true; do sleep 10; done" >> /bin/start.sh && chmod a+x /bin/start.sh
 
 ENTRYPOINT ["/bin/start.sh"]
