@@ -10,6 +10,7 @@
 - [LocalPV](doc/local-pv.md)
 - [节点亲和性](doc/affinity.md)
 - [运维](doc/operator.md)
+- [证书](doc/ca.md)
 
 ## 开发环境构建
 - [Dockerfile说明](doc/dockerfile.md)
