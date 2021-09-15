@@ -6,7 +6,7 @@ _TARSNODE_ENVIRONMENT_FILE_="/usr/local/app/tars/tarsnode/util/environment"
 
 _IMAGE_BIND_SERVER_DIR_="/usr/local/server/bin"
 
-echo "${PodIP}  ${PodName}" >>/etc/hosts
+echo "${PodIP} ${PodName}" >>/etc/hosts
 
 source $_TARSNODE_ENVIRONMENT_FILE_
 

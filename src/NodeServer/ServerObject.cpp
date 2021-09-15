@@ -45,7 +45,7 @@ int ServerObject::MetaData::updateConfFromDescriptor(const ServerDescriptor &des
         m["${logpath}"] = container_detail::imageBindServerLogDir;
         m["${localip}"] = container_detail::listenAddress;
         m["${locator}"] = FIXED_QUERY_PROXY_NAME;
-        m["${local}"] = "tcp -h 127.0.0.1 -p " + std::to_string(_adminPort) + " -t 3000";
+        m["${local}"] = "tcp -h 127.0.0.1 -p " + std::to_string(_adminPort) + " -t 10000";
         m["${asyncthread}"] = TC_Common::tostr(descriptor.asyncThreadNum);
         m["${mainclass}"] = "com.qq." + TC_Common::lower(_sServerApp) + "." + TC_Common::lower(_sServerName) + "." + _sServerName;
         m["${enableset}"] = "n";

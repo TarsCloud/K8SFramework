@@ -18,8 +18,6 @@ if [ -z "$_K8S_POD_IP_" ]; then
   exit 255
 fi
 
-_LISTEN_ADDRESS_=${_K8S_POD_NAME_}
-
 _TARS_SERVER_APP_=${ServerApp}
 if [ -z "$_TARS_SERVER_APP_" ]; then
   echo "got empty [ServerApp] env value"
@@ -31,6 +29,12 @@ if [ -z "$_TARS_SERVER_NAME_" ]; then
   echo "got empty [ServerName] env value"
   exit 255
 fi
+
+_LOW_TARS_SERVER_APP_=`echo "${_TARS_SERVER_APP_}" | tr 'A-Z' 'a-z'`
+_LOW_TARS_SERVER_NAME_=`echo "${_TARS_SERVER_NAME_}" | tr 'A-Z' 'a-z'`
+_LISTEN_ADDRESS_=${_K8S_POD_NAME_}.${_LOW_TARS_SERVER_APP_}-${_LOW_TARS_SERVER_NAME_}
+
+echo "${PodIP} ${_LISTEN_ADDRESS_}" >>/etc/hosts
 
 _IMAGE_BIND_TARSNODE_EXECUTION_FILE_="/tarsnode/bin/tarsnode"
 _IMAGE_BIND_TARSNODE_CONF_FILE_="/tarsnode/conf/tarsnode.conf"
@@ -111,7 +115,7 @@ export ServerConfDir=${ServerBaseDir}/conf
 export ServerConfFile=${ServerConfDir}/${_TARS_SERVER_APP_}"."${_TARS_SERVER_NAME_}.config.conf
 export ServerLogDir=${_TARSNODE_LOG_DIR_}
 
-ListenAddress=$_LISTEN_ADDRESS_
+ListenAddress=${_LISTEN_ADDRESS_}
 
 declare -a ForwardENVKeyList=(
   PodName
