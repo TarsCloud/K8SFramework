@@ -13,7 +13,7 @@ SERVER=`echo ${HELMPACKAGE} | cut -d'-' -f2`
 
 DATE=`date +"%Y%m%d%H%M%S"`
 
-REPO_ID="${DATE}"
+REPO_ID="v-${DATE}"
 
 echo "---------------------Environment---------------------------------"
 echo "DATE:                 "$DATE
