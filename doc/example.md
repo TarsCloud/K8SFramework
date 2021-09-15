@@ -89,8 +89,8 @@ nodeConfig:
 config:
 ```
 执行完脚本后会生成:
-* 服务的镜像(tarscloud/od.storageserver:v1.0.0)
-* helm包(od.storageserver:v1.0.0.tgz), 注意helm包中镜像地址指向的是: tarscloud/od.storageserver:v1.0.0
+* 服务的镜像(${yourrepository}/od.storageserver:v1.0.0)
+* helm包(od-storageserver-v1.0.0.tgz), 注意helm包中镜像地址指向的是: ${yourrepository}/od.storageserver:v1.0.0
 
 ### 执行部署
 

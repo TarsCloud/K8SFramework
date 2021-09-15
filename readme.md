@@ -19,3 +19,4 @@
 - [制作镜像以及Helm包](doc/exec-build.md)
 - [发布镜像到K8S+Tars集群](doc/exec-deploy.md)
 - [服务发布示例](doc/example.md)
+- [如何调试业务服务](doc/debug.md)
