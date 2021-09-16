@@ -1,13 +1,13 @@
 #!/bin/bash
 
 if [ $# -lt 2 ]; then
-    echo "Usage: $0 YamlFile Image"
-    echo "for example, $0 yaml/values.yaml tarscloud/base.gatewayserver"
+    echo "Usage: $0 YamlFile Tag"
+    echo "for example, $0 yaml/values.yaml latest"
     exit -1
 fi
 
 VALUES=$1
-IMAGE=$2
+TAG=$2
 
 #-------------------------------------------------------------------------------------------
 
@@ -16,20 +16,18 @@ if [ ! -f $VALUES ] && [ ! -d $BIN ] ; then
     exit -1
 fi
 
-if [ -z $IMAGE ]; then
-    echo "IMAGE must not be empty, exit"
+if [ -z $TAG ]; then
+    echo "TAG must not be empty, exit"
     exit -1
 fi
 
 APP=`node /root/yaml-tools/index -f $VALUES -g app`
 SERVER=`node /root/yaml-tools/index -f $VALUES -g server`
+IMAGE=`node /root/yaml-tools/index -f $VALUES -g repo.image`
+
+IMAGE="$IMAGE:$TAG"
 
 K8SSERVER="$APP-$SERVER"
-
-TAG=`echo $IMAGE | cut -d':' -f2`
-if [ "$TAG" == "" ]; then
-    TAG="latest"
-fi
 
 DATE=`date +"%Y%m%d%H%M%S"`
 
@@ -55,20 +53,19 @@ function build_helm()
 
     # 修改charts里面的参数
     node /root/yaml-tools/index -f /root/helm-template/Chart.yaml -s name -v $K8SSERVER -u
-    node /root/yaml-tools/index -f /root/helm-template/Chart.yaml -s appVersion -v "$TAG" -u
+    # node /root/yaml-tools/index -f /root/helm-template/Chart.yaml -s appVersion -v "$TAG" -u
 
     # 更新values
     node /root/yaml-tools/values -f /root/helm-template/values.yaml -d $REPO_ID -i $IMAGE -u
 
     helm dependency update /root/helm-template
 
-    helm package /root/helm-template --version "$TAG"
+    helm package /root/helm-template
     
     echo "---------------------helm chart--------------------------"
     cat /root/helm-template/Chart.yaml
 }
 
-# build helm包
 build_helm 
 
 #restore chart.yaml

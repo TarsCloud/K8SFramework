@@ -2,7 +2,7 @@
 
 if [ $# -lt 2 ]; then
     echo "Usage: $0 Namespace HelmPackage"
-    echo "for example, $0 tars-dev od-storageserver-v1.0.0.tgz"
+    echo "for example, $0 tars-dev od-storageserver.tgz"
     exit -1
 fi
 
@@ -24,7 +24,7 @@ echo "SERVER:               "$SERVER
 echo "REPO_ID:              "$REPO_ID
 
 if [[ "${APP}" == "" ]] || [[ "${SERVER}" == "" ]]; then
-    echo "app or server is empty, HELMPACKAGE(${HELMPACKAGE}) is invalid, format must be: app-server-tag.tgz, for example: od-storageserver-v1.0.0.tgz"
+    echo "app or server is empty, HELMPACKAGE(${HELMPACKAGE}) is invalid, format must be: app-server.tgz, for example: od-storageserver.tgz"
 fi
 
 K8SSERVER="${APP}-${SERVER}"

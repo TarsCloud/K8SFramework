@@ -23,12 +23,12 @@ docker run -it -v/var/run/docker.sock:/var/run/docker.sock -v`pwd`:/data/src tar
 
 在base-compiler容器内部, 使用exec-build.sh制作tars服务的镜像, 示例如下:
 ```
-exec-build.sh BaseImage SERVERTYPE(cpp/nodejs/java-war/java-jar/go/php) Files YamlFile Registry Tag Dockerfile(可选)
+exec-build.sh BaseImage SERVERTYPE(cpp/nodejs/java-war/java-jar/go/php) Files YamlFile Tag Push Dockerfile(可选)
 ```
 
 例如:
 ```
-exec-build.sh tarscloud/tars.cppbase:v1.0.0 cpp build/bin/StorageServer yaml/values.yaml yourrepository v1.0.0
+exec-build.sh tarscloud/tars.cppbase:v1.0.0 cpp build/bin/StorageServer yaml/values.yaml v1.0.0 true
 
 ```
 
@@ -72,7 +72,7 @@ hostPorts: []
 # 发布地址, id/image必填, 这个通常是CI/CD时自动填写的
 repo:
   id:
-  image: 
+  image: yourregistry/od.storageserver
   secret: tars-image-secret
 #应用级配置, 通常为空
 appConfig:
@@ -89,9 +89,25 @@ nodeConfig:
 config:
 ```
 执行完脚本后会生成:
-* 服务的镜像(${yourrepository}/od.storageserver:v1.0.0)
-* helm包(od-storageserver-v1.0.0.tgz), 注意helm包中镜像地址指向的是: ${yourrepository}/od.storageserver:v1.0.0
+* 服务的镜像(yourrepository/od.storageserver:v1.0.0)
 
+### 制作Helm包
+
+
+执行以下命令, 完成部署:
+```
+exec-helm.sh YamlFile Tag 
+```
+
+例如:
+```
+exec-helm.sh yaml/values.yaml v1.0.0
+```
+
+说明:
+- 这里yaml/values.yaml, TAG和上一步exec-build.sh中的tag要一致
+- 会生成一个helm包: od-storageserver.tgz
+- 使用这个od-storageserver.tgz可以完成服务的发布
 ### 执行部署
 
 执行以下命令, 完成部署:
@@ -101,7 +117,7 @@ exec-deploy.sh Namespace HelmPackage
 
 例如:
 ```
-exec-deploy.sh tars-dev od-storageserver-v1.0.0.tgz
+exec-deploy.sh tars-dev od-storageserver.tgz
 ```
 
 注意, 此时你需要有连接到K8S集群的能力, 即当前环境中有K8S集群的config

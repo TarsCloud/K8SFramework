@@ -61,10 +61,10 @@ hostPorts: []
 #hostPorts:
 #  - nameRef: HelloObj
 #    port: 22394
-# 发布地址, id/image必填, 这个通常是CI/CD时自动填写的
+# 发布地址, id必填, image可以自己加tag, 这个通常是CI/CD时自动填写的
 repo:
   id:
-  image: 
+  image: tarscloud/base.helloserver
   secret: tars-image-secret
 #应用级配置, 通常为空
 appConfig:

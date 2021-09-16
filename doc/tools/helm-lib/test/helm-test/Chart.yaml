@@ -21,9 +21,9 @@ version: 1.0.1
 # incremented each time you make changes to the application. Versions are not expected to
 # follow Semantic Versioning. They should reflect the version the application is using.
 # It is recommended to use it with quotes.
-appVersion: v1beta1
+appVersion: latest 
 
 dependencies:
 - name: tserver
-  version: 1.0.15
+  version: 1.0.1
   repository: file://../../tars-server

@@ -10,13 +10,16 @@
 
 脚本的使用如下:
 ```
-exec-helm.sh YamlFile Image
+exec-helm.sh YamlFile Tag 
 ```
 
 参数说明:
 - YamlFile: yaml文件地址, [yaml文件请参考](./helm.md), 你可以根据自己安装的情况, 调整values.yaml值
-- Image: 镜像地址
+- Tag: 镜像Tag, 镜像的全地址是: YamlFile文件中, repo.image:$TAG
+
 例如:
 ```
-exec-helm.sh yaml/value.yaml tarscloud/base.gatewayserver
+exec-helm.sh yaml/value.yaml latest
 ```
+
+最终会生成一个helm包: $APP.$SERVER.tgz, 你可以使用```exec-deploy.sh```来完成部署

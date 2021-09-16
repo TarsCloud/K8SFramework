@@ -7,7 +7,7 @@
 
 该脚本的使用如下:
 ```
-exec-build.sh BaseImage SERVERTYPE(cpp/nodejs/java-war/java-jar/go/php) Files YamlFile Registry Tag Push(true/false) Dockerfile
+exec-build.sh BaseImage SERVERTYPE(cpp/nodejs/java-war/java-jar/go/php) Files YamlFile Tag Push(true/false) Dockerfile
 ```
 
 参数说明:
@@ -15,18 +15,16 @@ exec-build.sh BaseImage SERVERTYPE(cpp/nodejs/java-war/java-jar/go/php) Files Ya
 - SERVERTYPE: 语言, 目前支持: cpp/nodejs/java-war/java-jar/go/php
 - Files: 需要打包进docker中的文件或者目录
 - YamlFile: yaml文件描述服务用, 可以参考[helm包](./helm.md)
-- Registry: 镜像仓库的地址, 最后生成的镜像是: $Registry/$APP/$SERVER:$TAG
 - Tag: 版本号, 格式必须符合版本号规范: vx.x.x, 例如v1.0.2
 - Push: 制作好的docker是否push到仓库中($Registry/$APP/$SERVER:$TAG)
 - Dockerfile: 制作镜像的dockerfile路径, 正常情况不需要提供, 你如果希望自己改写Dockerfile, 则需要提供, 请参考[Dockerfile](../Dockerfile.md)
 例如:
 ```
-exec-build.sh tarscloud/tars.cppbase:v1.0.0 cpp build/StorageServer yaml/value.yaml xxx.harbor.com v1.0.0
+exec-build.sh tarscloud/tars.cppbase cpp build/StorageServer yaml/value.yaml v1.0.0
 ```
 
 执行完脚本后会生成:
-- 服务的镜像: $Registry/$APP/$SERVER:$TAG, 可以通过```docker images```查看到, 你需要自己推送到docker仓库
-- helm包: $APP-$SERVER-$TAG.tgz, 该helm包对应了当前镜像, 该helm压缩文件会被生成在当前文件夹, 你可以自己把helm包推送到自己的charts仓库
+- 服务的镜像是 YamlFile中: repo.image:$TAG, 可以通过```docker images```查看到, 你需要自己推送到docker仓库
 
 后续流程:
 - 为了方便你部署, 提供了```exec-helm```脚本, 快速制作helm包, 具体请参考[exec-helm](./exec-helm.md)

@@ -17,7 +17,7 @@ exec-deploy.sh Namespace HelmPackage
 - HelmPackage: exec-build.sh脚本生成的helm包 
 例如:
 ```
-exec-deploy.sh tars-dev od-storageserver-v1.0.0.tgz
+exec-deploy.sh tars-dev od-storageserver.tgz
 ```
 
 ## 特殊说明

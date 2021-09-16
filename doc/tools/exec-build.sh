@@ -1,9 +1,9 @@
 #!/bin/bash
 
-if [ $# -lt 8 ]; then
-    echo "Usage: $0 BaseImage SERVERTYPE(cpp/nodejs/java-war/java-jar/go/php) Files YamlFile Registry Tag Push Dockerfile"
-    echo "for example, $0 tarscloud/tars.cppbase:v1.0.0 nodejs . yaml/values.yaml tarscloud true Dockerfile"
-    echo "for example, $0 tarscloud/tars.cppbase:v1.0.0 cpp build/bin/TestServer yaml/values.yaml tarscloud true"
+if [ $# -lt 6 ]; then
+    echo "Usage: $0 BaseImage SERVERTYPE(cpp/nodejs/java-war/java-jar/go/php) Files YamlFile Tag Push Dockerfile"
+    echo "for example, $0 tarscloud/tars.cppbase:v1.0.0 nodejs . yaml/values.yaml latest true Dockerfile"
+    echo "for example, $0 tarscloud/tars.cppbase:v1.0.0 cpp build/bin/TestServer yaml/values.yaml v1.0.0 true"
     exit -1
 fi
 
@@ -11,10 +11,9 @@ BASEIMAGE=$1
 SERVERTYPE=$2
 BIN=$3
 VALUES=$4
-REGISTRY=$5
-TAG=$6
-PUSH=$7
-Dockerfile=$8
+TAG=$5
+PUSH=$6
+Dockerfile=$7
 
 if [ "$SERVERTYPE" != "cpp" ] && [ "$SERVERTYPE" != "nodejs" ] && [ "$SERVERTYPE" != "java-war" ] && [ "$SERVERTYPE" != "java-jar" ] && [ "$SERVERTYPE" != "go" ] && [ "$SERVERTYPE" != "php" ] ; then  
     echo "Usage: $0 SERVERTYPE(cpp/nodejs/java-war/java-jar/go/php)"
@@ -50,8 +49,14 @@ fi
 
 APP=`node /root/yaml-tools/index -f $VALUES -g app`
 SERVER=`node /root/yaml-tools/index -f $VALUES -g server`
+IMAGE=`node /root/yaml-tools/index -f $VALUES -g repo.image `
 
-IMAGE="$REGISTRY/$APP.$SERVER:$TAG"
+if [ -z $IMAGE ]; then
+    echo "repo.image in ${VALUES} must not be empty"
+    exit -1
+fi
+
+IMAGE="$IMAGE:$TAG"
 
 echo "---------------------Environment---------------------------------"
 echo "BIN:                  "$BIN
