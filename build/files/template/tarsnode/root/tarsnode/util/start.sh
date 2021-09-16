@@ -27,6 +27,7 @@ if [ -z "${PodName}" ]; then
 fi
 
 echo ${PodIP} ${PodName} >>/etc/hosts
+echo "${PodIP} ${ListenAddress}" >>/etc/hosts
 
 if [ -z "${ServerType}" ]; then
   echo "got empty [ServerType] env value"
