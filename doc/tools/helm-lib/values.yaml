@@ -1,6 +1,7 @@
 
 app: 
 server: 
+subtype: tars
 important: 5
 template: tars.default
 profile: ""

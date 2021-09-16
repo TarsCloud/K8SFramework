@@ -10,7 +10,7 @@ metadata:
   labels:
     tars.io/ServerApp: {{ .Values.app }}
     tars.io/ServerName: {{ .Values.server }}
-    tars.io/SubType: tars
+    tars.io/SubType: {{ .Values.subtype | default "tars" }}
     tars.io/Template: {{ .Values.template }}
   annotations:
     name: {{ $id }}

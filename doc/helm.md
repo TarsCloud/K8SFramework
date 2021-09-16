@@ -27,6 +27,8 @@ helm的使用和说明请自己查询相关的文档.
 app: Base 
 # 服务名称
 server: HelloServer
+# subtype(tars/normal)
+subtype: tars
 # 使用的模板(tars.nodejs/tars.cpp/tars.java/tars.go/tars.php)
 template: tars.nodejs
 # 私有模板(通常为空)
@@ -96,7 +98,7 @@ config:
 - tars-image-secret这个私有仓库的secret, 是你在K8S上部署TARS框架上之前, 创建的仓库secret, 以便k8s从你的仓库获取镜像
 - repo.id是自动构建时```exec-helm.sh```填充的
 - repo.image不能为空, 指向镜像地址且不带TAG, 自动构建时会在后面添加TAG
-
+- subtype: 表示服务的类型(tars/normal), tars:表示是tars服务生成的镜像, normal:表示普通的镜像, 比如mysql等
 # 如何映射宿主机HostPath
 
 部分服务由于需要涉及到本地存储, 需要将宿主机目录映射到, values.yaml采用如下方式(注意参考mounts这段):
@@ -106,6 +108,8 @@ config:
 app: Base 
 # 服务名称
 server: HelloServer
+# subtype(tars/normal)
+subtype: tars
 # 使用的模板(tars.nodejs/tars.cpp/tars.java/tars.go)
 template: tars.nodejs
 # 私有模板(通常为空)
@@ -138,7 +142,7 @@ mounts:
         path: /data/test-host-path
         type: DirectoryOrCreate
     mountPath: /data/mount-path
-    subPatchExpr: $(Namespace)/$(PodName)
+    subPathExpr: $(Namespace)/$(PodName)
   - name: test-pvc
     source:
       persistentVolumeClaim:
@@ -175,6 +179,8 @@ mounts:
 app: Base 
 # 服务名称
 server: HelloServer
+# subtype(tars/normal)
+subtype: tars
 # 使用的模板(tars.nodejs/tars.cpp/tars.java/tars.go)
 template: tars.nodejs
 # 私有模板(通常为空)
