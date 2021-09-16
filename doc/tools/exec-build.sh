@@ -49,7 +49,7 @@ fi
 
 APP=`node /root/yaml-tools/index -f $VALUES -g app`
 SERVER=`node /root/yaml-tools/index -f $VALUES -g server`
-IMAGE=`node /root/yaml-tools/index -f $VALUES -g repo.image `
+IMAGE=`node /root/yaml-tools/index -f $VALUES -g repo.image`
 
 if [ -z $IMAGE ]; then
     echo "repo.image in ${VALUES} must not be empty"

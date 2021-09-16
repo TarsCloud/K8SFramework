@@ -93,7 +93,9 @@ config:
 ```
 
 说明:
-- tars-image-secret 这个私有仓库的secret, 是你在K8S上部署TARS框架上之前, 创建的仓库secret, 以便k8s从你的仓库获取镜像
+- tars-image-secret这个私有仓库的secret, 是你在K8S上部署TARS框架上之前, 创建的仓库secret, 以便k8s从你的仓库获取镜像
+- repo.id是自动构建时```exec-helm.sh```填充的
+- repo.image不能为空, 指向镜像地址且不带TAG, 自动构建时会在后面添加TAG
 
 # 如何映射宿主机HostPath
 
@@ -103,7 +105,7 @@ config:
 # 应用名称
 app: Base 
 # 服务名称
-server: UpGitbookServer
+server: HelloServer
 # 使用的模板(tars.nodejs/tars.cpp/tars.java/tars.go)
 template: tars.nodejs
 # 私有模板(通常为空)
@@ -120,6 +122,11 @@ servants:
     timeout: 60000
 # 服务部署个数    
 replicas: 2
+# 发布地址, id必填, image可以自己加tag, 这个通常是CI/CD时自动填写的
+repo:
+  id:
+  image: base/base.helloserver
+  secret: tars-image-secret
 # 环境变量, 默认为空
 envVars:
   - name: name1 
@@ -167,7 +174,7 @@ mounts:
 # 应用名称
 app: Base 
 # 服务名称
-server: UpGitbookServer
+server: HelloServer
 # 使用的模板(tars.nodejs/tars.cpp/tars.java/tars.go)
 template: tars.nodejs
 # 私有模板(通常为空)
@@ -182,6 +189,11 @@ servants:
     capacity: 100000
     connection: 100000
     timeout: 60000
+# 发布地址, id必填, image可以自己加tag, 这个通常是CI/CD时自动填写的
+repo:
+  id:
+  image: base/base.helloserver
+  secret: tars-image-secret
 # 服务部署个数    
 replicas: 2
 # 环境变量, 默认为空
