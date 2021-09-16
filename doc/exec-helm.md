@@ -16,10 +16,12 @@ exec-helm.sh YamlFile Tag
 参数说明:
 - YamlFile: yaml文件地址, [yaml文件请参考](./helm.md), 你可以根据自己安装的情况, 调整values.yaml值
 - Tag: 镜像Tag, 镜像的全地址是: YamlFile文件中, repo.image:$TAG
-
+- 最终会生成一个helm包: $APP.$SERVER-1.0.0.tgz
+- 这里```1.0.0``` 是helm包的版本, 目前helm包Chart的版本是1.0.0, 不排除未来会升级!
 例如:
 ```
 exec-helm.sh yaml/value.yaml latest
 ```
 
-最终会生成一个helm包: $APP.$SERVER.tgz, 你可以使用```exec-deploy.sh```来完成部署
+最终会生成一个helm包: $APP.$SERVER-v1.0.0.tgz, 你可以使用```exec-deploy.sh```来完成部署
+

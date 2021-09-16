@@ -15,7 +15,7 @@ exec-build.sh BaseImage SERVERTYPE(cpp/nodejs/java-war/java-jar/go/php) Files Ya
 - SERVERTYPE: 语言, 目前支持: cpp/nodejs/java-war/java-jar/go/php
 - Files: 需要打包进docker中的文件或者目录
 - YamlFile: yaml文件描述服务用, 可以参考[helm包](./helm.md)
-- Tag: 版本号, 格式必须符合版本号规范: vx.x.x, 例如v1.0.2
+- Tag: docker版本号, 例如v1.0.2
 - Push: 制作好的docker是否push到仓库中($Registry/$APP/$SERVER:$TAG)
 - Dockerfile: 制作镜像的dockerfile路径, 正常情况不需要提供, 你如果希望自己改写Dockerfile, 则需要提供, 请参考[Dockerfile](../Dockerfile.md)
 例如:

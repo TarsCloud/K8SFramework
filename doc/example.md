@@ -117,7 +117,7 @@ exec-deploy.sh Namespace HelmPackage
 
 例如:
 ```
-exec-deploy.sh tars-dev od-storageserver.tgz
+exec-deploy.sh tars-dev od-storageserver-1.0.0.tgz
 ```
 
 注意, 此时你需要有连接到K8S集群的能力, 即当前环境中有K8S集群的config
