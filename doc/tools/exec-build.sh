@@ -2,8 +2,8 @@
 
 if [ $# -lt 8 ]; then
     echo "Usage: $0 BaseImage SERVERTYPE(cpp/nodejs/java-war/java-jar/go/php) Files YamlFile Registry Tag Push Dockerfile"
-    echo "for example, $0 tarscloud/tars.cppbase:v1.0.0 nodejs . yaml/values.yaml tars-dev tarscloud true Dockerfile"
-    echo "for example, $0 tarscloud/tars.cppbase:v1.0.0 cpp build/bin/TestServer yaml/values.yaml tarscloud true tars-dev"
+    echo "for example, $0 tarscloud/tars.cppbase:v1.0.0 nodejs . yaml/values.yaml tarscloud true Dockerfile"
+    echo "for example, $0 tarscloud/tars.cppbase:v1.0.0 cpp build/bin/TestServer yaml/values.yaml tarscloud true"
     exit -1
 fi
 
@@ -51,12 +51,7 @@ fi
 APP=`node /root/yaml-tools/index -f $VALUES -g app`
 SERVER=`node /root/yaml-tools/index -f $VALUES -g server`
 
-K8SSERVER="$APP-$SERVER"
 IMAGE="$REGISTRY/$APP.$SERVER:$TAG"
-
-DATE=`date +"%Y%m%d%H%M%S"`
-
-REPO_ID="${DATE}-${TAG}"
 
 echo "---------------------Environment---------------------------------"
 echo "BIN:                  "$BIN
@@ -64,13 +59,10 @@ echo "VALUES:               "$VALUES
 echo "BASEIMAGE:            "$BASEIMAGE
 echo "SERVERTYPE:           "$SERVERTYPE
 echo "REGISTRY:             "$REGISTRY
-echo "DATE:                 "$DATE
 echo "TAG:                  "$TAG
 echo "APP:                  "$APP
 echo "SERVER:               "$SERVER
 echo "PUSH:                 "$PUSH
-echo "K8SSERVER:            "$K8SSERVER
-echo "REPO_ID:              "$REPO_ID
 echo "IMAGE:                "$IMAGE
 echo "----------------------Build docker--------------------------------"
 
@@ -81,33 +73,4 @@ if [ "${PUSH}" == "true" ]; then
     docker push $IMAGE
 fi
 
-cp /root/helm-template/Chart.yaml /tmp/Chart.yaml.backup
-#-------------------------------------------------------------------------------------------
-function build_helm() 
-{
-    echo "--------------------build helm------------------------"
-
-    cp -rf ${VALUES} /root/helm-template/values.yaml
-
-    # 修改charts里面的参数
-    node /root/yaml-tools/index -f /root/helm-template/Chart.yaml -s name -v $K8SSERVER -u
-    node /root/yaml-tools/index -f /root/helm-template/Chart.yaml -s appVersion -v "$TAG" -u
-
-    # 更新values
-    node /root/yaml-tools/values -f /root/helm-template/values.yaml -d $REPO_ID -i $IMAGE -u
-
-    helm dependency update /root/helm-template
-
-    helm package /root/helm-template --version "$TAG"
-    
-    echo "---------------------helm chart--------------------------"
-    cat /root/helm-template/Chart.yaml
-}
-
-# build helm包
-build_helm 
-
-#restore chart.yaml
-cp /tmp/Chart.yaml.backup /root/helm-template/Chart.yaml
-echo "----------------finish $K8SSERVER---------------------"
 

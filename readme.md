@@ -14,11 +14,10 @@
 
 ## 开发环境构建
 - [Dockerfile说明](doc/dockerfile.md)
-- [使用helm包发布tars服务](doc/helm.md)
-- [制作基础编译镜像](doc/base-compiler.md)
-- [制作基础部署镜像](doc/base-build.md)
-- [制作业务服务镜像以及Helm包](doc/exec-build.md)
-- [发布业务镜像到K8S集群](doc/exec-deploy.md)
-- [制作Helm包](doc/exec-helm.md)
+- [服务发布流程说明](doc/helm.md)
+>- [制作基础编译镜像](doc/base-compiler.md)
+>- [制作业务服务镜像](doc/exec-build.md)
+>- [制作Helm包](doc/exec-helm.md)
+>- [发布业务镜像到K8S集群](doc/exec-deploy.md)
 - [服务发布示例](doc/example.md)
 - [如何调试业务服务](doc/debug.md)

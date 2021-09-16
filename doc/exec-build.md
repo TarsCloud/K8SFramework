@@ -3,7 +3,7 @@
 # 制作业务服务镜像
 
 ## 镜像制作
-为了方便开发者制作tars服务的镜像, 以及对应版本的helm包, 特提供了一个```exec-build.sh```来完成, 该脚本已经被内置到编译镜像中了, 你可以在编译镜像中直接使用!
+为了方便开发者制作tars服务的镜像, 特提供了一个```exec-build.sh```来完成, 该脚本已经被内置到编译镜像```tarscloud/compiler```中了, 你可以在编译镜像中直接使用!
 
 该脚本的使用如下:
 ```
@@ -28,7 +28,9 @@ exec-build.sh tarscloud/tars.cppbase:v1.0.0 cpp build/StorageServer yaml/value.y
 - 服务的镜像: $Registry/$APP/$SERVER:$TAG, 可以通过```docker images```查看到, 你需要自己推送到docker仓库
 - helm包: $APP-$SERVER-$TAG.tgz, 该helm包对应了当前镜像, 该helm压缩文件会被生成在当前文件夹, 你可以自己把helm包推送到自己的charts仓库
 
-为了方便你部署, 提供了```exec-deploy```脚本, 方便你部署到K8S集群, 具体请参考[exec-deploy](./exec-deploy.md)
+后续流程:
+- 为了方便你部署, 提供了```exec-helm```脚本, 快速制作helm包, 具体请参考[exec-helm](./exec-helm.md)
+- 为了方便你部署, 提供了```exec-deploy```脚本, 方便你部署到K8S集群, 具体请参考[exec-deploy](./exec-deploy.md)
 
 ## 镜像说明
 

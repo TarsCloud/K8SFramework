@@ -11,9 +11,11 @@ helm的使用和说明请自己查询相关的文档.
 基本说明:
 - 每个TARS服务最终在正式环境以及对外输出时都是生成一个对应代码tag的helm包来完成部署. 
 - 框架提供了一个基础的[helm libary](./helm/README.md) 以及 tars服务的helm模板(helm-template目录), 使用它们你可以快速生成一个tars服务的helm包.
-- 具体每个tars业务服务的helm包是需要你自己生成的, 官方也提供了一个CI/CD中自动制作[exec-deploy.sh](./exec-deploy.md), 来帮助你快速生成helm, 这个helm包的制作通常在你CI/CD环节自动完成.
-- 注意上面提到的helm包的模板, 可以参考helm-template这个目录, 最终是引用tserver的helm包来实现
-
+- 具体每个tars业务服务的helm包是需要你自己生成的, 官方提供了多个脚本帮你完成 镜像制作/helm包制作/发布K8S 的过程
+>- 自动镜像制作的脚本[exec-build.sh](./exec-build.md), 它完成了镜像的制作和推送
+>- Helm包制作脚本[exec-helm.sh](./exec-helm.md), 来帮助你快速生成helm
+>- 使用Helm发布到K8S[exec-deploy.sh](./exec-deploy.md), 发布镜像到K8S中
+- 服务制作镜像以及发布到K8S中, 每个服务都需要有一个values.yaml来描述服务基本信息, 参见后续文档
 # values.yaml
 
 每个TARS服务都需要对应一个values.yaml文件, 这个文件在helm包模板中(helm-template目录)是不存在的, 这个文件通常跟随服务的源码, 在服务自动构建过程中, 传递给exec-deploy.sh脚本, 完成helm包的制作.
