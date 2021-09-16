@@ -107,10 +107,12 @@ COPY tools/helm-template /root/helm-template
 COPY tools/Dockerfile /root/Dockerfile
 COPY tools/exec-build.sh /usr/bin/
 COPY tools/exec-deploy.sh /usr/bin/
+COPY tools/exec-helm.sh /usr/bin/
 
 RUN cd /root/yaml-tools && npm install 
 RUN chmod a+x /usr/bin/exec-deploy.sh
 RUN chmod a+x /usr/bin/exec-build.sh
+RUN chmod a+x /usr/bin/exec-helm.sh
 
 RUN echo "#!/bin/bash" > /bin/start.sh && echo "while true; do sleep 10; done" >> /bin/start.sh && chmod a+x /bin/start.sh
 

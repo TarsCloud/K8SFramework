@@ -7,7 +7,7 @@
 
 该脚本的使用如下:
 ```
-exec-build.sh BaseImage SERVERTYPE(cpp/nodejs/java-war/java-jar/go/php) Files YamlFile Namespace Registry Tag Push(true/false) Dockerfile
+exec-build.sh BaseImage SERVERTYPE(cpp/nodejs/java-war/java-jar/go/php) Files YamlFile Registry Tag Push(true/false) Dockerfile
 ```
 
 参数说明:
@@ -15,14 +15,13 @@ exec-build.sh BaseImage SERVERTYPE(cpp/nodejs/java-war/java-jar/go/php) Files Ya
 - SERVERTYPE: 语言, 目前支持: cpp/nodejs/java-war/java-jar/go/php
 - Files: 需要打包进docker中的文件或者目录
 - YamlFile: yaml文件描述服务用, 可以参考[helm包](./helm.md)
-- Namespace: k8s上的名字空间, 安装Tars时指定的
 - Registry: 镜像仓库的地址, 最后生成的镜像是: $Registry/$APP/$SERVER:$TAG
 - Tag: 版本号, 格式必须符合版本号规范: vx.x.x, 例如v1.0.2
 - Push: 制作好的docker是否push到仓库中($Registry/$APP/$SERVER:$TAG)
 - Dockerfile: 制作镜像的dockerfile路径, 正常情况不需要提供, 你如果希望自己改写Dockerfile, 则需要提供, 请参考[Dockerfile](../Dockerfile.md)
 例如:
 ```
-exec-build.sh tarscloud/tars.cppbase:v1.0.0 cpp build/StorageServer yaml/value.yaml tars-dev xxx.harbor.com v1.0.0
+exec-build.sh tarscloud/tars.cppbase:v1.0.0 cpp build/StorageServer yaml/value.yaml xxx.harbor.com v1.0.0
 ```
 
 执行完脚本后会生成:

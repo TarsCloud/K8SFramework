@@ -24,4 +24,11 @@ RUN curl -O https://tars-thirdpart-1300910346.cos.ap-guangzhou.myqcloud.com/src/
 RUN helm plugin install https://github.com/chartmuseum/helm-push
 
 COPY tools/exec-deploy.sh /usr/bin/
+COPY tools/exec-helm.sh /usr/bin/
+
 RUN chmod a+x /usr/bin/exec-deploy.sh
+RUN chmod a+x /usr/bin/exec-helm.sh
+
+RUN echo "#!/bin/bash" > /bin/start.sh && echo "while true; do sleep 10; done" >> /bin/start.sh && chmod a+x /bin/start.sh
+
+ENTRYPOINT ["/bin/start.sh"]

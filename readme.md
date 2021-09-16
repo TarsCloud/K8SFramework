@@ -19,5 +19,6 @@
 - [制作基础部署镜像](doc/base-build.md)
 - [制作业务服务镜像以及Helm包](doc/exec-build.md)
 - [发布业务镜像到K8S集群](doc/exec-deploy.md)
+- [制作Helm包](doc/exec-helm.md)
 - [服务发布示例](doc/example.md)
 - [如何调试业务服务](doc/debug.md)
