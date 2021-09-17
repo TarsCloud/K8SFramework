@@ -77,7 +77,7 @@ case ${ServerType} in
     exit 255
   fi
 
-  export ServerLauncherArgv="${NODE_AGENT_BIN} ${ServerBinDir}/ -c ${ServerConfFile}"
+  export ServerLauncherArgv="node ${NODE_AGENT_BIN} ${ServerBinDir}/ -c ${ServerConfFile}"
   ;;
 "java-war")
   export ServerLauncherFile=$JAVA_HOME/bin/java
