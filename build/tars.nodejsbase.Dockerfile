@@ -1,5 +1,6 @@
 FROM ubuntu:20.04
 COPY files/entrypoint.sh /bin/entrypoint.sh
+
 RUN  chmod +x /bin/entrypoint.sh
 
 # 设置时区
@@ -13,6 +14,9 @@ RUN apt install -y nodejs npm \
 RUN  apt install ca-certificates -y
 RUN mkdir -p /usr/local/app/tars/
 
+RUN npm install -g @tars/node-agent
+ENV NODE_AGENT_BIN=node-agent
+
 # 设置别名，兼容使用习惯
 RUN echo alias ll=\'ls -l\' >> /etc/bashrc
 
@@ -22,5 +26,6 @@ RUN  apt clean all
 RUN  rm -rf /var/lib/apt/lists/*
 RUN  rm -rf /var/cache/*.dat-old
 RUN  rm -rf /var/log/*.log /var/log/*/*.log
+
 
 CMD ["/bin/entrypoint.sh"]
