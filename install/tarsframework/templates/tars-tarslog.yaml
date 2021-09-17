@@ -29,6 +29,17 @@ spec:
   subType: tars
   tars:
     template: tars.cpp
+    profile: |
+      <tars>
+      	<log>
+          logpath=/usr/local/app/tars/remote_app_log
+          logthread=10
+          compressed=true
+          <format>
+            hour=xx
+          </format>
+        </log>
+      </tars>
     servants:
       - name: LogObj
         port: 12111
