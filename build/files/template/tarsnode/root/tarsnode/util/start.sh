@@ -6,8 +6,6 @@ _TARSNODE_ENVIRONMENT_FILE_="/usr/local/app/tars/tarsnode/util/environment"
 
 _IMAGE_BIND_SERVER_DIR_="/usr/local/server/bin"
 
-echo "${PodIP} ${PodName}" >>/etc/hosts
-
 source $_TARSNODE_ENVIRONMENT_FILE_
 
 mkdir -p "${ServerBaseDir}"
@@ -26,8 +24,8 @@ if [ -z "${PodName}" ]; then
   exit 255
 fi
 
-echo ${PodIP} ${PodName} >>/etc/hosts
-echo "${PodIP} ${ListenAddress}" >>/etc/hosts
+echo "${PodIP}" "${PodName}" >>/etc/hosts
+echo "${PodIP}" "${ListenAddress}" >>/etc/hosts
 
 if [ -z "${ServerType}" ]; then
   echo "got empty [ServerType] env value"
@@ -44,7 +42,7 @@ case ${ServerType} in
     exit 255
   fi
 
-  chmod +x ${ServerLauncherFile}
+  chmod +x "${ServerLauncherFile}"
 
   if [ ! -x "$ServerLauncherFile" ]; then
     echo "$ServerLauncherFile had no execution permission"
@@ -87,7 +85,7 @@ case ${ServerType} in
     exit 255
   fi
 
-  chmod +x ${ServerLauncherFile}
+  chmod +x "${ServerLauncherFile}"
 
   if [ ! -x "$ServerLauncherFile" ]; then
     echo "$ServerLauncherFile had no execution permission"
@@ -103,7 +101,7 @@ case ${ServerType} in
     exit 255
   fi
 
-  chmod +x ${ServerLauncherFile}
+  chmod +x "${ServerLauncherFile}"
 
   if [ ! -x "$ServerLauncherFile" ]; then
     echo "$ServerLauncherFile had no execution permission"

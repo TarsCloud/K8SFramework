@@ -30,10 +30,7 @@ if [ -z "$_TARS_SERVER_NAME_" ]; then
   exit 255
 fi
 
-_LOW_TARS_SERVER_APP_=`echo "${_TARS_SERVER_APP_}" | tr 'A-Z' 'a-z'`
-_LOW_TARS_SERVER_NAME_=`echo "${_TARS_SERVER_NAME_}" | tr 'A-Z' 'a-z'`
-_LISTEN_ADDRESS_=${_K8S_POD_NAME_}.${_LOW_TARS_SERVER_APP_}-${_LOW_TARS_SERVER_NAME_}
-
+declare -l _LISTEN_ADDRESS_=${_K8S_POD_NAME_}.${_TARS_SERVER_APP_}-${_TARS_SERVER_NAME_}
 
 _IMAGE_BIND_TARSNODE_EXECUTION_FILE_="/tarsnode/bin/tarsnode"
 _IMAGE_BIND_TARSNODE_CONF_FILE_="/tarsnode/conf/tarsnode.conf"
