@@ -51,7 +51,9 @@ case ${ServerType} in
   export ServerLauncherArgv="${ServerName} --config=${ServerConfFile}"
   ;;
 "nodejs")
-  export ServerLauncherFile="/usr/local/bin/node"
+
+
+  export ServerLauncherFile=$(command -v node) 
 
   if [ ! -f "$ServerLauncherFile" ]; then
     echo "$ServerLauncherFile file not exist"
