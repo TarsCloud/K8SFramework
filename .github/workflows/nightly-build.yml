@@ -5,12 +5,12 @@ on:
     branches: 
       - master
   schedule:
-    - cron: '0 02 * * *'
+    - cron: '0 04 * * *'
 jobs:
 
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
     - name: env
