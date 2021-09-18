@@ -72,6 +72,12 @@ helm upgrade tarsframework -n tars-dev --set 'helm.dockerhub.registry=${DOCKER_R
 
 ```
 
+手动执行crd!!!
+```
+cd install/tarscontroller/crds
+kubectl apply -f ....yaml
+
+```
 ## 调度
 
 完成以上步骤以后, 实际框架并没有在K8S上调度起来, 请参考[框架调度](./framework-affinity.md)

@@ -39,8 +39,20 @@ helm install tarsframework -n tars-dev --set 'dockerRegistry=tarscloud,web=${web
 
 ## 升级说明
 
+如果是升级, 方式类似, 使用 helm upgrade命令即可, 比如:
 
+```
+helm upgrade tarscontroller tars-k8s/tarscontroller
+helm upgrade tarsframework -n tars-dev --set 'dockerRegistry=tarscloud,web=${web_host}' tars-k8s/tarsframework
 
+```
+
+但是注意: 如果是升级, 比如手动执行crd!!!
+```
+cd install/tarscontroller/crds
+kubectl apply -f ....yaml
+
+```
 
 ## 调度
 
