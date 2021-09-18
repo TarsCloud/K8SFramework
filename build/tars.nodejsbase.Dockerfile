@@ -12,10 +12,6 @@ RUN  apt-get clean && apt update
 RUN apt install -y nodejs npm \ 
     && npm install -g npm pm2
 RUN  apt install ca-certificates -y
-RUN mkdir -p /usr/local/app/tars/
-
-RUN npm install -g @tars/node-agent
-ENV NODE_AGENT_BIN=node-agent
 
 # 设置别名，兼容使用习惯
 RUN echo alias ll=\'ls -l\' >> /etc/bashrc
@@ -27,5 +23,11 @@ RUN  rm -rf /var/lib/apt/lists/*
 RUN  rm -rf /var/cache/*.dat-old
 RUN  rm -rf /var/log/*.log /var/log/*/*.log
 
+RUN mkdir -p /usr/local/app/tars/
 
+RUN npm install -g @tars/node-agent \
+    && mv /usr/local/lib/node_modules/@tars/node-agent /usr/local/app/tars/ \
+    && cd /usr/local/app/tars/node-agent && npm install
+
+ENV NODE_AGENT_BIN=/usr/local/app/tars/node-agent/bin/node-agent
 CMD ["/bin/entrypoint.sh"]
