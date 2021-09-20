@@ -186,6 +186,7 @@ ConfigInfoInterface::loadServerConfig(const std::string &sServerApp, const std::
 
         assert(pItem->IsArray());
 
+
         const char *masterConfigContent{};
         size_t masterConfigContentLength{};
 
@@ -204,13 +205,15 @@ ConfigInfoInterface::loadServerConfig(const std::string &sServerApp, const std::
             auto pPodSeq = rapidjson::GetValueByPointer(item, "/podSeq");
             auto pConfigDeactivate = rapidjson::GetValueByPointer(item, "/metadata/labels/Deactivate");
 
-            if (pPodSeq == nullptr) {
+            if (pPodSeq == nullptr || string(pPodSeq->GetString()) == "m") {
+
                 if (pConfigDeactivate != nullptr) {
                     existDeactivateMasterConfig = true;
                 } else {
                     masterConfigContent = pConfigContent->GetString();
                     masterConfigContentLength = pConfigContent->GetStringLength();
                 }
+
                 continue;
             }
 
