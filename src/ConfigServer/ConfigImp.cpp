@@ -64,12 +64,12 @@ ConfigImp::loadConfig(const std::string &app, const std::string &server, const s
                                                                        errorInfo);
 
     if (loadConfigResult == ConfigInfoInterface::ConfigError) {
-        TLOG_DEBUG( "load config error: " << errorInfo << ", app:" << app << ", server:" << server << ", fileName:" << fileName << std::endl);
+        TLOG_DEBUG( "load config error: " << errorInfo << ", app:" << app << ", server:" << server << ", fileName:" << fileName << ", sClientIP:" << sClientIP << std::endl);
         std::swap(result, errorInfo);
         return -1;
     } else if (loadConfigResult == ConfigInfoInterface::K8SError) {
         TARS_NOTIFY_ERROR("request k8s api-server error:" + errorInfo);
-        TLOG_ERROR("request k8s api-server error : " << errorInfo << ", app:" << app << ", server:" << server << ", fileName:" << fileName << std::endl);
+        TLOG_ERROR("request k8s api-server error : " << errorInfo << ", app:" << app << ", server:" << server << ", fileName:" << fileName << ", sClientIP:" << sClientIP << std::endl);
         result = "internal error, please try again or contact  administrator";
         return -1;
     }

@@ -2,6 +2,7 @@
 #include "ConfigInfoInterface.h"
 #include "K8SClient.h"
 #include "K8SParams.h"
+#include "servant/RemoteLogger.h"
 #include <rapidjson/pointer.h>
 #include <set>
 
@@ -80,6 +81,8 @@ ConfigInfoInterface::loadAppConfig(const std::string &sServerApp, const std::str
            << ",tars.io/Activated=true"
            << ",!tars.io/Deleting";
 
+    TLOG_DEBUG(stream.str() << endl);
+
     bool existDeactivateMasterConfig{false};
     constexpr int MAX_RETRIES_LOAD_TIMES = 3;
 
@@ -156,6 +159,8 @@ ConfigInfoInterface::loadServerConfig(const std::string &sServerApp, const std::
     } else {
         stream << ",tars.io/PodSeq+in+(m," << podSeq << ")";
     }
+
+    TLOG_DEBUG(stream.str() << endl);
 
     constexpr int MAX_RETRIES_LOAD_TIMES = 3;
     for (int i = 0; i < MAX_RETRIES_LOAD_TIMES; ++i) {
@@ -268,6 +273,8 @@ ConfigInfoInterface::listAppConfig(const std::string &sServerApp, std::vector<st
            << ",tars.io/Activated=true"
            << ",!tars.io/Deleting";
 
+    TLOG_DEBUG(stream.str() << endl);
+
     constexpr int MAX_RETRIES_LOAD_TIMES = 3;
 
     for (int i = 0; i < MAX_RETRIES_LOAD_TIMES; ++i) {
@@ -318,6 +325,8 @@ ConfigInfoInterface::listServerConfig(const std::string &sServerApp, const std::
            << ",tars.io/Activated=true"
            << ",!tars.io/Deleting"
            << ",tars.io/PodSeq=m";
+
+    TLOG_DEBUG(stream.str() << endl);
 
     constexpr int MAX_RETRIES_LOAD_TIMES = 3;
 
