@@ -10,7 +10,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 #intall php tars
 RUN apt update && apt install -y php php-dev php-cli php-gd php-curl php-mysql \
     php-zip php-fileinfo php-redis php-mbstring tzdata git make wget \
-    build-essential libmcrypt-dev php-pear
+    build-essential libmcrypt-dev php-pear  telnet curl wget iputils-ping 
 
 # Clone Tars repo and init php submodule
 RUN cd /root/ && git clone https://gitee.com/TarsCloud/Tars.git \

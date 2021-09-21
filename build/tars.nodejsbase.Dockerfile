@@ -9,7 +9,7 @@ RUN  echo Asia/Shanghai > /etc/timezone
 
 RUN  apt-get clean && apt update
 # Get and install nodejs
-RUN apt install -y nodejs npm \ 
+RUN apt install -y nodejs npm telnet curl wget iputils-ping \ 
     && npm install -g npm pm2
 RUN  apt install ca-certificates -y
 

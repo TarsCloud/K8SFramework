@@ -7,7 +7,7 @@ RUN  ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 RUN  echo Asia/Shanghai > /etc/timezone
 
 RUN  apt update
-RUN  apt install -y openjdk-8-jdk maven
+RUN  apt install -y openjdk-8-jdk maven telnet curl wget iputils-ping 
 RUN  apt install busybox -y
 RUN  busybox --install
 RUN  apt install ca-certificates -y

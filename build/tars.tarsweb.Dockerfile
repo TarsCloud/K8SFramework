@@ -7,7 +7,7 @@ COPY TarsWeb /tars-web
 RUN  ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 RUN  echo Asia/Shanghai > /etc/timezone
 
-RUN apt update && apt install nodejs npm python build-essential -y
+RUN apt update && apt install nodejs npm python build-essential  telnet curl wget iputils-ping -y
 RUN cd /tars-web && rm -f package-lock.json && npm install && npm install pm2 -g
 
 # 清理多余文件
