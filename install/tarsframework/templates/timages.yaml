@@ -61,18 +61,6 @@ imageType: base
 supportedType: [ nodejs ]
 mark: builtin release
 releases:
-  - id: builtin-nodejs6base-{{.Values.helm.build.id}}
+  - id: builtin-nodejsbase-{{.Values.helm.build.id}}
     image:
       {{.Values.helm.dockerhub.registry }}/tars.nodejs6base:{{.Values.helm.build.id}}
-  - id: builtin-nodejs8base-{{.Values.helm.build.id}}
-    image:
-      {{.Values.helm.dockerhub.registry }}/tars.nodejs8base:{{.Values.helm.build.id}}
-  - id: builtin-nodejs10base-{{.Values.helm.build.id}}
-    image:
-      {{.Values.helm.dockerhub.registry }}/tars.nodejs10base:{{.Values.helm.build.id}}
-  - id: builtin-nodejs12base-{{.Values.helm.build.id}}
-    image:
-      {{.Values.helm.dockerhub.registry }}/tars.nodejs12base:{{.Values.helm.build.id}}
-  - id: builtin-nodejs14base-{{.Values.helm.build.id}}
-    image:
-      {{.Values.helm.dockerhub.registry }}/tars.nodejs14base:{{.Values.helm.build.id}}
