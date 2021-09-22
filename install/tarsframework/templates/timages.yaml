@@ -63,4 +63,4 @@ mark: builtin release
 releases:
   - id: builtin-nodejsbase-{{.Values.helm.build.id}}
     image:
-      {{.Values.helm.dockerhub.registry }}/tars.nodejs6base:{{.Values.helm.build.id}}
+      {{.Values.helm.dockerhub.registry }}/tars.nodejsbase:{{.Values.helm.build.id}}
