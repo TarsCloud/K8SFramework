@@ -63,7 +63,7 @@ spec:
 kubectl apply -f debug.yaml
 ```
 
-容器在K8S启动以后, 容器内部的/data目录已经映射到宿主机的 /usr/local/app/tars/host-mount/tars-dev/tars.compiler/data
+容器在K8S启动以后, 容器内部的```/data```目录已经映射到宿主机的 ```/usr/local/app/tars/host-mount/tars-dev/tars.compiler/data```
 
 
 你可以进入容器开发服务了
