@@ -3,9 +3,6 @@
 
 void NotifyMsgQueue::init() {
     extern TC_Config *g_pconf;
-    // TC_DBConf tcDBConf;
-    // tcDBConf.loadFromMap(g_pconf->getDomainMap("/tars/db"));
-    // _mysql.init(tcDBConf);
 
     _protocol = g_pconf->get("/tars/elk<protocol>", "http");
     initElkTupleNodes(*g_pconf);
@@ -14,6 +11,8 @@ void NotifyMsgQueue::init() {
 
     _ast.setTimeout(10000);
     _ast.start();
+
+    TLOG_DEBUG("protocol:" << protocol << ", _indexPre:" << indexPre << endl);
 
     initLimit(g_pconf);
 

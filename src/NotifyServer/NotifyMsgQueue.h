@@ -71,7 +71,7 @@ protected:
     string writeToJson(const NotifyRecord& record);
 
 protected:
-    bool _terminate;
+    bool _terminate = false;
 
     TC_HttpAsync                    _ast;
 
