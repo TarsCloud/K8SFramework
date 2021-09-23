@@ -12,7 +12,7 @@ void NotifyMsgQueue::init() {
     _ast.setTimeout(10000);
     _ast.start();
 
-    TLOG_DEBUG("protocol:" << protocol << ", _indexPre:" << indexPre << endl);
+    TLOG_DEBUG("protocol:" << _protocol << ", indexPre:" << _indexPre << endl);
 
     initLimit(g_pconf);
 
