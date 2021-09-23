@@ -64,3 +64,21 @@ releases:
   - id: builtin-nodejsbase-{{.Values.helm.build.id}}
     image:
       {{.Values.helm.dockerhub.registry }}/tars.nodejsbase:{{.Values.helm.build.id}}
+
+---
+
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
+kind: TImage
+metadata:
+  labels:
+    tars.io/ImageType: base
+    tars.io/Supported.php: ""
+  name: php74base
+  namespace: {{.Release.Namespace}}
+imageType: base
+supportedType: [ php ]
+mark: builtin release
+releases:
+  - id: builtin-php74base-{{.Values.helm.build.id}}
+    image:
+      {{.Values.helm.dockerhub.registry }}/tars.php74base:{{.Values.helm.build.id}}

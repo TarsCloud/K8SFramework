@@ -36,23 +36,28 @@ helm install tarsframework -n tars-dev --set 'dockerRegistry=tarscloud,web=${web
 - tars-dev: 这个是K8S上的名字空间 , 表示Tars部署在这个名字空间内
 - web_host: 访问tars web的地址, 注意集群中必须已经按了ingress, 且web_host指向了ingress的入口!
 
-
 ## 升级说明
 
 如果是升级, 方式类似, 使用 helm upgrade命令即可, 比如:
 
 ```
-helm upgrade tarscontroller tars-k8s/tarscontroller
-helm upgrade tarsframework -n tars-dev --set 'dockerRegistry=tarscloud,web=${web_host}' tars-k8s/tarsframework
+helm upgrade tarscontroller --set 'helm.build.id=v1.0.0-nightly' tars-k8s/tarscontroller
+helm upgrade tarsframework -n tars-dev --set 'dockerRegistry=tarscloud,web=${web_host},helm.build.id=v1.0.0-nightly' tars-k8s/tarsframework
 
 ```
 
-但是注意: 如果是升级, 比如手动执行crd!!!
+注意最好只升级版本, 不要降级版本, 同时注意升级版本需要自己执行CRD(crd如果变可以不管)
+
+
+但是注意: 如果是升级, 最好手动执行crd!!!当然CRD通常不会不随便升级, 但是如果大版本升级, CRD通常会升级.
 ```
 cd install/tarscontroller/crds
 kubectl apply -f ....yaml
 
 ```
+
+说明:
+- helm.build.id: 对应了K8SFramework的tag版本号!
 
 ## 调度
 
