@@ -94,7 +94,7 @@ func (b *Builder) pushBuildRunningState(task *Task) error {
 
 	patchContent := fmt.Sprintf("[{\"op\":\"add\",\"path\":\"/build\",\"value\":%s}]", bs)
 	var err error
-	task.timage, err = b.k8sOption.crdClientInterface.CrdV1alpha1().TImages(b.k8sOption.namespace).Patch(context.TODO(), task.timage.Name, types.JSONPatchType, []byte(patchContent), k8sMetaV1.PatchOptions{})
+	task.timage, err = b.k8sOption.crdClientInterface.CrdV1beta1().TImages(b.k8sOption.namespace).Patch(context.TODO(), task.timage.Name, types.JSONPatchType, []byte(patchContent), k8sMetaV1.PatchOptions{})
 	if err != nil {
 		utilRuntime.HandleError(err)
 	}
@@ -117,7 +117,7 @@ func (b *Builder) onBuildFailed(task *Task, err error) {
 	bs, _ := json.Marshal(buildState)
 
 	patchContent := fmt.Sprintf("[{\"op\":\"add\",\"path\":\"/build\",\"value\":%s}]", bs)
-	task.timage, err = b.k8sOption.crdClientInterface.CrdV1alpha1().TImages(b.k8sOption.namespace).Patch(context.TODO(), task.timage.Name, types.JSONPatchType, []byte(patchContent), k8sMetaV1.PatchOptions{})
+	task.timage, err = b.k8sOption.crdClientInterface.CrdV1beta1().TImages(b.k8sOption.namespace).Patch(context.TODO(), task.timage.Name, types.JSONPatchType, []byte(patchContent), k8sMetaV1.PatchOptions{})
 	if err != nil {
 		utilRuntime.HandleError(err)
 	}
@@ -127,10 +127,10 @@ func (b *Builder) onBuildSuccess(task *Task) {
 	newRelease := &crdV1beta1.TImageRelease{
 		ID:           task.taskBuildRunningState.ID,
 		Image:        task.taskBuildRunningState.Image,
-		Secret:       task.taskBuildRunningState.Secret,
-		CreatePerson: task.taskBuildRunningState.CreatePerson,
+		Secret:       &task.taskBuildRunningState.Secret,
+		CreatePerson: &task.taskBuildRunningState.CreatePerson,
 		CreateTime:   task.taskBuildRunningState.CreateTime,
-		Mark:         task.taskBuildRunningState.Mark,
+		Mark:         &task.taskBuildRunningState.Mark,
 	}
 
 	task.taskBuildRunningState.Phase = BuildPhaseDone
@@ -153,7 +153,7 @@ func (b *Builder) onBuildSuccess(task *Task) {
 	}
 
 	var err error
-	task.timage, err = b.k8sOption.crdClientInterface.CrdV1alpha1().TImages(b.k8sOption.namespace).Patch(context.TODO(), task.timage.Name, types.JSONPatchType, []byte(patchContent), k8sMetaV1.PatchOptions{})
+	task.timage, err = b.k8sOption.crdClientInterface.CrdV1beta1().TImages(b.k8sOption.namespace).Patch(context.TODO(), task.timage.Name, types.JSONPatchType, []byte(patchContent), k8sMetaV1.PatchOptions{})
 	if err != nil {
 		utilRuntime.HandleError(err)
 	}
@@ -316,7 +316,7 @@ func (b *Builder) build(task *Task) {
 }
 
 func (b *Builder) PostTask(id, timageName, serverApp, serverName, serverType, serverFile, baseImage, baseImageSecretName, secretName, createPerson, mark string, options ...TaskOption) (string, error) {
-	timage, err := b.k8sOption.crdClientInterface.CrdV1alpha1().TImages(b.k8sOption.namespace).Get(context.TODO(), timageName, k8sMetaV1.GetOptions{})
+	timage, err := b.k8sOption.crdClientInterface.CrdV1beta1().TImages(b.k8sOption.namespace).Get(context.TODO(), timageName, k8sMetaV1.GetOptions{})
 	if err != nil {
 		return "", fmt.Errorf("get resource %s %s/%s err : %s", "timage", b.k8sOption.namespace, timageName, err.Error())
 	}
