@@ -1,9 +1,44 @@
 # 如何调试
 
-## 基本思路
-当服务部署在K8S集群中以后, 如何快速简单的调试是大的问题!
+当服务部署在K8S集群中以后, 运维管理确实方便很多, 如何快速简单的调试是大的问题, 这里主要面临两个问题:
+- 集群管理都是docker镜像, 如果每次都需要通过CICD流程来发布服务和调试, 也非常麻烦, 时间都消耗在等待编译发布过程中了
+- 集群有自己的地址, 外部无法快速访问, 如果能在集群中开发和调试那肯定会方便很多
 
-最理想的做法, 我们当前开发和运行的服务, 就在K8S内部, 这样可以畅通无阻的访问任何K8S服务, 那调试起来肯定是最简单的!
+那么如果解决上述两个问题?
+
+## 通过tarsweb来快速发布服务
+
+K8S版本的也带了一个Tarsweb, 能够快速访问部署在K8S上的tars服务, 相关操作都可以通过该平台来完成.
+
+你可以类似之前的Tars环境, 直接提交tgz包到web平台, web平台会调用tarsimage来打包生成docker镜像, 这样调试和发布方式可以和非K8S版本类似, 但是需要注意的是:
+- 制作tars镜像, 是需要指定基础镜像的(这个比如tarscloud/tars.cppbase, tarscloud/tars.nodejsbase, tarscloud/tars.javabase等), [请参考](./dockerfile.md)
+- tarsimage编译镜像, 默认会推送到安装Tars时的仓库上, 如果你使用的官方镜像, 你得修改这个地址, 可以参看tars-tarsimage的configmap来修改这个地址!
+
+tars-tarsimage的configmap有两个参数:
+- registry: 仓库地址
+- secret: 仓库密码
+默认这个地址是, 你安装tarsframework时指定的, 可以自己修改, 例如:
+
+```
+kubectl create secret docker-registry od-image-secret -n tars-dev --docker-server=docker.io --docker-username=${docker_user} --docker-password=${docker_pass}  
+
+```
+
+类似之前的tarsweb, 也提供了上传tgz包的api, cpp版本的tars-tools.cmake里面, 也提供了相关的实现, 只需要:
+```
+cmake .. -D 指定以下三个参数:
+TARS_K8S_WEB_HOST:         
+TARS_K8S_BASE_IMAGE:       tarscloud/tars.cppbase
+TARS_K8S_TOKEN:            
+```
+就可以通过:
+```
+make xxxx-k8s-upload
+```
+完成服务的发布.
+## 在集群内部构建编译机器
+
+对于第二点, 我们可以在考虑在集群内部构建编译Pod, 相当于一台虚拟机, 这样因为它就在K8S内部, 可以畅通无阻的访问任何K8S服务, 那调试起来肯定是最简单的!
 
 如何能做到这个效果呢? 思路如下:
 - 在K8S上启动一个Pod
