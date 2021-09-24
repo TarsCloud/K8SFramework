@@ -9,7 +9,7 @@ import (
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	utilRuntime "k8s.io/apimachinery/pkg/util/runtime"
-	crdV1alpha1 "k8s.tars.io/api/crd/v1alpha1"
+	crdV1beta1 "k8s.tars.io/api/crd/v1beta1"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -34,10 +34,10 @@ type Task struct {
 	id                    string
 	image                 string
 	userParams            *TaskUserParams
-	taskBuildRunningState *crdV1alpha1.TImageBuildState
-	taskBuildLastState    *crdV1alpha1.TImageBuildState
+	taskBuildRunningState *crdV1beta1.TImageBuildState
+	taskBuildLastState    *crdV1beta1.TImageBuildState
 	createTime            k8sMetaV1.Time
-	timage                *crdV1alpha1.TImage
+	timage                *crdV1beta1.TImage
 	dockerInterface       *DockerClient
 	waitChan              chan error
 }
@@ -83,7 +83,7 @@ type Builder struct {
 }
 
 func (b *Builder) pushBuildRunningState(task *Task) error {
-	buildState := crdV1alpha1.TImageBuild{
+	buildState := crdV1beta1.TImageBuild{
 		Running: task.taskBuildRunningState,
 	}
 	if task.timage.Build != nil && task.timage.Build.Last != nil {
@@ -110,7 +110,7 @@ func (b *Builder) onBuildFailed(task *Task, err error) {
 	task.taskBuildRunningState.Phase = BuildPhaseFailed
 	task.taskBuildRunningState.Message = err.Error()
 
-	buildState := crdV1alpha1.TImageBuild{
+	buildState := crdV1beta1.TImageBuild{
 		Last: task.taskBuildRunningState,
 	}
 
@@ -124,7 +124,7 @@ func (b *Builder) onBuildFailed(task *Task, err error) {
 }
 
 func (b *Builder) onBuildSuccess(task *Task) {
-	newRelease := &crdV1alpha1.TImageRelease{
+	newRelease := &crdV1beta1.TImageRelease{
 		ID:           task.taskBuildRunningState.ID,
 		Image:        task.taskBuildRunningState.Image,
 		Secret:       task.taskBuildRunningState.Secret,
@@ -138,7 +138,7 @@ func (b *Builder) onBuildSuccess(task *Task) {
 
 	releaseBS, _ := json.Marshal(newRelease)
 
-	buildState := crdV1alpha1.TImageBuild{
+	buildState := crdV1beta1.TImageBuild{
 		Last: task.taskBuildRunningState,
 	}
 	stateBS, _ := json.Marshal(buildState)
@@ -351,7 +351,7 @@ func (b *Builder) PostTask(id, timageName, serverApp, serverName, serverType, se
 		},
 		id:    id,
 		image: targetImage,
-		taskBuildRunningState: &crdV1alpha1.TImageBuildState{
+		taskBuildRunningState: &crdV1beta1.TImageBuildState{
 			ID:              id,
 			BaseImage:       baseImage,
 			BaseImageSecret: baseImageSecretName,

@@ -28,7 +28,7 @@ type RestfulResponse struct {
 	Result  *BuildResult `json:"result,omitempty"`
 }
 
-func v1alpha1Handler(writer http.ResponseWriter, r *http.Request) {
+func v1beta1Handler(writer http.ResponseWriter, r *http.Request) {
 
 	writer.Header().Add("Content-Type", "application/json")
 
@@ -175,10 +175,10 @@ func NewRestfulServer() *RestfulServer {
 
 func (s *RestfulServer) Start(stopCh chan struct{}) {
 	router := mux.NewRouter()
-	router.HandleFunc("/api/v1alpha1/timage/{timage}/building", func(writer http.ResponseWriter, request *http.Request) {
+	router.HandleFunc("/api/v1beta1/timage/{timage}/building", func(writer http.ResponseWriter, request *http.Request) {
 		switch request.Method {
 		case http.MethodPost:
-			v1alpha1Handler(writer, request)
+			v1beta1Handler(writer, request)
 		default:
 			writer.WriteHeader(http.StatusMethodNotAllowed)
 		}
