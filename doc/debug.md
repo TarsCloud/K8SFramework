@@ -24,7 +24,9 @@ kubectl create secret docker-registry od-image-secret -n tars-dev --docker-serve
 
 ```
 
-类似之前的tarsweb, 也提供了上传tgz包的api, cpp版本的tars-tools.cmake里面, 也提供了相关的实现, 只需要:
+类似之前的tarsweb, 也提供了上传tgz包的api.
+
+- 对于cpp版本, tars-tools.cmake里面, 也提供了相关的实现, 只需要:
 ```
 cmake .. -D 指定以下三个参数:
 TARS_K8S_WEB_HOST:         
@@ -35,7 +37,59 @@ TARS_K8S_TOKEN:
 ```
 make xxxx-k8s-upload
 ```
-完成服务的发布.
+完成服务的发布
+
+- 对于nodejs版本, 你可以实现一段脚本即可完成发布, 示例如下:
+```sh
+#!/bin/bash
+
+TARS_K8S_WEB_HOST="http://xxx.xxx.xxx"
+TARS_K8S_TOKEN=""
+TARS_K8S_BASE_IMAGE="tarscloud/tars.nodejsbase"
+
+APP=OD
+
+TARGET=UserServer
+
+TARGET_PATH=tmp/${TARGET}
+
+mkdir -p tmp
+
+echo "mkdir -p ${TARGET_PATH}"
+mkdir -p ${TARGET_PATH}
+
+echo "npm run build"
+npm run build
+
+echo "rm old build & copy new build"
+rm -rf ${TARGET_PATH}/build
+cp -rf build ${TARGET_PATH}/
+echo "copy package.json"
+cp package.json ${TARGET_PATH}/
+
+cd ${TARGET_PATH}
+echo "npm install --production"
+npm install --production
+
+cd ..
+
+tar czf ${TARGET}.tgz ${TARGET}
+
+echo "curl ${TARGET}.tgz to k8s"
+
+curl ${TARS_K8S_WEB_HOST}/pages/k8s/api/upload_and_publish?ticket=${TARS_K8S_TOKEN} -Fsuse=@${TARGET}.tgz -Fapplication=${APP} -Fmodule_name=${TARGET} -Fserver_type=nodejs  -Fbase_image=${TARS_K8S_BASE_IMAGE} -Fcomment=upload
+
+cd ..
+```
+
+说明:
+- 指定tarsweb地址(通过ingress入口), 由于要上传文件, 注意ingress中对包大小的限制
+- TARS_K8S_TOKEN: web的token, 在用户中心中创建一个
+- TARS_K8S_BASE_IMAGE服务基础镜像, nodejs语言是: tarscloud/tars.nodejsbase, 如果你是自己源码编译的, 这个镜像可以使用你自己编译的
+- 后续脚本就是把当前目录的代码, 打包成一个tgz, 最后用curl上传!
+
+**这里和非K8S版本有一个重要区别是, tars-node-agent这里是没有打包的, 它打包在tarscloud/tars.nodejsbase镜像里面了, 而非K8S的版本, tars-node-agent会打包到源码中发布!!**
+
 ## 在集群内部构建编译机器
 
 对于第二点, 我们可以在考虑在集群内部构建编译Pod, 相当于一台虚拟机, 这样因为它就在K8S内部, 可以畅通无阻的访问任何K8S服务, 那调试起来肯定是最简单的!
