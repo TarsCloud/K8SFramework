@@ -24,6 +24,8 @@ jobs:
       - name: env
         run: env
       - uses: actions/checkout@v1
+      - uses: satackey/action-docker-layer-caching@v0.0.11
+        continue-on-error: true
       - name: login docker hub
         run: docker login -u ${{ secrets.name }} -p ${{ secrets.pass }}
       - name: Build docker
