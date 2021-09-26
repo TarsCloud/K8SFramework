@@ -37,7 +37,7 @@ RUN  ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 RUN  echo Asia/Shanghai > /etc/timezone
 
 RUN  apt update
-RUN  apt install ca-certificates -y
+RUN  apt install ca-certificates vim tcpdump net-tools -y
 
 RUN mkdir -p /usr/local/app/tars/
 
