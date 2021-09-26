@@ -16,7 +16,9 @@ on:
       - ".github/workflows/build-compiler-master.yml"
       - "doc/tools/*"
       - "doc/base-compiler.Dockerfile"
-      
+  schedule:
+    - cron: '0 05 * * *'
+
 jobs:
   build:
     runs-on: ubuntu-20.04 

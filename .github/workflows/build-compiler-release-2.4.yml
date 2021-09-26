@@ -16,6 +16,8 @@ on:
       - ".github/workflows/build-compiler-release-2.4.yml"
       - "doc/tools/*"
       - "doc/base-compiler.Dockerfile"
+  schedule:
+    - cron: '0 05 * * *'
       
 jobs:
   build:
