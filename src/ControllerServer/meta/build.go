@@ -242,7 +242,9 @@ func buildPodReadinessGates(tserver *crdV1beta1.TServer) []k8sCoreV1.PodReadines
 
 func buildPodAffinity(tserver *crdV1beta1.TServer) *k8sCoreV1.Affinity {
 	var nodeSelectorTerm []k8sCoreV1.NodeSelectorRequirement
-	copy(nodeSelectorTerm, tserver.Spec.K8S.NodeSelector)
+	for _, selector := range tserver.Spec.K8S.NodeSelector {
+		nodeSelectorTerm = append(nodeSelectorTerm, selector)
+	}
 
 	nodeSelectorTerm = append(nodeSelectorTerm,
 		k8sCoreV1.NodeSelectorRequirement{
