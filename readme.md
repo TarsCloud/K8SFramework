@@ -7,4 +7,4 @@ Tars深度整合K8S中, 主要说明如下:
 - tars框架支持了大量关键特性, 帮助你管理服务的部署, 比如业务服务亲和性设置, localpv等
 - 使用文档也包含了CICD的说明, 你可以使用源码中提供好的helm包, 快速完成服务的部署(当然也可以通过tarsweb来完成)
 
-详细文档[请参见](https://tarscloud.github.io/TarsDocs/) k8s部分
+详细文档[请参见k8s部分](https://tarscloud.github.io/TarsDocs/SUMMARY.html#k8s) 
