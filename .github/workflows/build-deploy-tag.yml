@@ -16,8 +16,8 @@ jobs:
       - name: Get version
         id: get_version
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
-      - uses: satackey/action-docker-layer-caching@v0.0.11
-        continue-on-error: true
+      # - uses: satackey/action-docker-layer-caching@v0.0.11
+      #   continue-on-error: true
       - name: login docker hub
         run: docker login -u ${{ secrets.name }} -p ${{ secrets.pass }}
       - name: Build docker

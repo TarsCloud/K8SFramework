@@ -1,4 +1,4 @@
 
-gen_server(tars tarslog)
+include_directories(rapidjson/include)
 
-target_link_libraries(tarslog )
+gen_server(tars tarslog)

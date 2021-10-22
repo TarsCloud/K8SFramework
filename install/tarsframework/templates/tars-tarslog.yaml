@@ -28,7 +28,7 @@ spec:
   server: tarslog
   subType: tars
   tars:
-    template: tars.cpp
+    template: tars.elk
     profile: |
       <tars>
       	<log>
@@ -39,11 +39,17 @@ spec:
             hour=xx
           </format>
         </log>
+        <elk>
+          log_dir=/usr/local/app/tars/remote_app_log/_tars_/_trace_
+        </elk>
       </tars>
     servants:
       - name: LogObj
         port: 12111
         thread: 5
+      - name: TopologyObj
+        port: 13030
+        thread: 3
   k8s:
     replicas: 1
     env:
