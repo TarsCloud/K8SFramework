@@ -3,8 +3,8 @@ entries:
   tarscontroller:
   - apiVersion: v2
     appVersion: v1beta1
-    created: "2021-10-24T19:09:27.407758+08:00"
-    digest: 89e05ac60a66ef671292a00eedc2344b2bc2321de861f9be5b64e01df565732d
+    created: "2021-10-24T19:20:23.611963+08:00"
+    digest: f8e3a74d31ddb598bed845436a661c975a75b773f461e0c8bf722474505c41e8
     keywords:
     - tars
     - tarscontroller
@@ -16,8 +16,8 @@ entries:
   tarsframework:
   - apiVersion: v2
     appVersion: v1beta1
-    created: "2021-10-24T19:09:27.40964+08:00"
-    digest: ce6c3ea39b921bd337949855523a4d4fdeb79c673e682ae08e16e32ee7fb5648
+    created: "2021-10-24T19:20:23.612943+08:00"
+    digest: 20f313e976e535cea01c9f4b405b8c10c94af098b27eb76b48e9b5986dd940b1
     keywords:
     - tars
     name: tarsframework
@@ -27,7 +27,7 @@ entries:
     version: 1.1.0
   - apiVersion: v2
     appVersion: v1beta1
-    created: "2021-10-24T19:09:27.409072+08:00"
+    created: "2021-10-24T19:20:23.612466+08:00"
     digest: e0169864c07d68c7f0dc529e71c2bc9aac5718dc64b714770d875dbd624e85eb
     keywords:
     - tars
@@ -36,4 +36,4 @@ entries:
     urls:
     - https://tarscloud.github.io/K8SFramework/charts/tarsframework-1.0.0.tgz
     version: 1.0.0
-generated: "2021-10-24T19:09:27.406873+08:00"
+generated: "2021-10-24T19:20:23.611094+08:00"
