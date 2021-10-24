@@ -33,7 +33,7 @@ if [ -z "${ServerType}" ]; then
 fi
 
 case ${ServerType} in
-"cpp" | "nodejs-pkg" | "go")
+"cpp" | "go")
   export LD_LIBRARY_PATH=${ServerBinDir}:${ServerBinDir}/lib
   export ServerLauncherFile="${ServerBinDir}/${ServerName}"
 

@@ -28,7 +28,7 @@ spec:
               type: array
               items:
                 type: string
-                enum: [ cpp,nodejs,nodejs-pkg,java-war,java-jar,go ]
+                enum: [ cpp,nodejs,php,java-war,java-jar,go ]
               minItems: 1
             mark:
               type: string
@@ -87,7 +87,7 @@ spec:
                       maxLength: 253
                     serverType:
                       type: string
-                      enum: [ cpp,nodejs,nodejs-pkg,java-war,java-jar,go ]
+                      enum: [ cpp,nodejs,php,java-war,java-jar,go ]
                     createPerson:
                       type: string
                       maxLength: 800
@@ -126,7 +126,7 @@ spec:
                       maxLength: 253
                     serverType:
                       type: string
-                      enum: [ cpp,nodejs,nodejs-pkg,java-war,java-jar,go ]
+                      enum: [ cpp,nodejs,php,java-war,java-jar,go ]
                     createPerson:
                       type: string
                       maxLength: 800
@@ -156,7 +156,7 @@ spec:
               type: array
               items:
                 type: string
-                enum: [ cpp,nodejs,nodejs-pkg,java-war,java-jar,go ]
+                enum: [ cpp,nodejs,php,java-war,java-jar,go ]
               minItems: 1
             mark:
               type: string
@@ -215,7 +215,7 @@ spec:
                       maxLength: 253
                     serverType:
                       type: string
-                      enum: [ cpp,nodejs,nodejs-pkg,java-war,java-jar,go ]
+                      enum: [ cpp,nodejs,php,java-war,java-jar,go ]
                     createPerson:
                       type: string
                       maxLength: 800
@@ -254,7 +254,7 @@ spec:
                       maxLength: 253
                     serverType:
                       type: string
-                      enum: [ cpp,nodejs,nodejs-pkg,java-war,java-jar,go ]
+                      enum: [ cpp,nodejs,php,java-war,java-jar,go ]
                     createPerson:
                       type: string
                       maxLength: 800
