@@ -37,6 +37,7 @@ void NodeServer::initialize() {
         exit(-1);
     }
 
+    /*
     _timerTaskThread = std::thread(
             []() {
                 TimerTaskQueue::instance().run();
@@ -44,22 +45,15 @@ void NodeServer::initialize() {
                 exit(-1);
             });
     _timerTaskThread.detach();
+    */
 
     const std::string &serverApp = container_detail::imageBindServerApp;
     const std::string &serverName = container_detail::imageBindServerName;
 
+    auto pServerObj = std::make_shared<ServerObject>();
     try {
         auto pRegistryObj = ProxyManger::instance().getRegistryProxy();
         pRegistryObj->updateServerState(container_detail::podName, etos(Active), etos(Activating));
-
-        auto pServerObj = std::make_shared<ServerObject>();
-        if (pServerObj == nullptr) {
-            LOG->error() << "call std::make_shared<ServerObject><" << serverApp << "," << serverName << "> error";
-            cerr << "call std::make_shared<ServerObject><" << serverApp << "," << serverName << "> error";
-            exit(-1);
-        }
-
-        assert(pServerObj != nullptr);
 
         TimerTaskQueue::instance().pushCycleTask(
                 [pServerObj](const size_t &, size_t &) {
@@ -74,13 +68,13 @@ void NodeServer::initialize() {
                 }, 1, 2);
 
         ServerManger::instance().putServer(pServerObj);
-
     } catch (std::exception &ex) {
         LOG->error() << "call NodeServer::initialize() Get Exception : " << ex.what() << endl;
         cerr << "call NodeServer::initialize() Get Exception : " << ex.what() << endl;
         exit(-1);
     }
-
+    
+    TimerTaskQueue::instance().start();
 //    LOG_ERROR << "NodeServer::init ok" << endl;
 }
 

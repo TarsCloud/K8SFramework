@@ -16,6 +16,6 @@ protected:
      */
     void destroyApp() override;
 
-private:
+//private:
     std::thread _timerTaskThread;
 };

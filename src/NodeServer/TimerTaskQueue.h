@@ -6,12 +6,13 @@
 #include <condition_variable>
 #include <mutex>
 #include <utility>
+#include "util/tc_thread.h"
 
 #ifndef TNOW
 #define TNOW time(nullptr)
 #endif
 
-class TimerTaskQueue {
+class TimerTaskQueue : public tars::TC_Thread {
 
 private:
     TimerTaskQueue() = default;
@@ -44,8 +45,13 @@ public:
         pushTimerTask(cycleFun, first);
     }
 
+    void terminate() {
+        _terminate=true;
+	std::lock_guard<std::mutex> lockGuard(_mutex);
+	_condition.notify_one();
+    }
     void run() {
-        while (true) {
+        while (!_terminate) {
             std::unique_lock<std::mutex> uniqueLock(_mutex);
             while (!_map.empty()) {
                 auto iterator = _map.begin();
@@ -82,6 +88,7 @@ private:
     }
 
 private:
+    bool _terminate = false;
     std::atomic<uint32_t> _seq{0};
     std::mutex _mutex;
     std::condition_variable _condition;
