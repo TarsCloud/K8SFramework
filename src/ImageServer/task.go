@@ -10,6 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	utilRuntime "k8s.io/apimachinery/pkg/util/runtime"
 	crdV1beta1 "k8s.tars.io/api/crd/v1beta1"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -117,10 +118,16 @@ func (b *Builder) onBuildFailed(task *Task, err error) {
 	bs, _ := json.Marshal(buildState)
 
 	patchContent := fmt.Sprintf("[{\"op\":\"add\",\"path\":\"/build\",\"value\":%s}]", bs)
-	task.timage, err = b.k8sOption.crdClientInterface.CrdV1beta1().TImages(b.k8sOption.namespace).Patch(context.TODO(), task.timage.Name, types.JSONPatchType, []byte(patchContent), k8sMetaV1.PatchOptions{})
-	if err != nil {
-		utilRuntime.HandleError(err)
+	for i := 1; i < 3; i++ {
+		task.timage, err = b.k8sOption.crdClientInterface.CrdV1beta1().TImages(b.k8sOption.namespace).Patch(context.TODO(), task.timage.Name, types.JSONPatchType, []byte(patchContent), k8sMetaV1.PatchOptions{})
+		if err != nil {
+			utilRuntime.HandleError(err)
+			time.Sleep(time.Millisecond * 3)
+			continue
+		}
+		break
 	}
+	return
 }
 
 func (b *Builder) onBuildSuccess(task *Task) {
@@ -149,15 +156,19 @@ func (b *Builder) onBuildSuccess(task *Task) {
 	if len(task.timage.Releases) < MaxRecordLen {
 		patchContent = fmt.Sprintf("[{\"op\":\"add\",\"path\":\"/releases/0\",\"value\":%s},{\"op\":\"add\",\"path\":\"/build\",\"value\":%s}]", releaseBS, stateBS)
 	} else {
-		patchContent = fmt.Sprintf("[{\"op\":\"add\",\"path\":\"/releases/0\",\"value\":%s},{\"op\":\"remove\",\"path\":\"/releases/-\"}},{\"op\":\"add\",\"path\":\"/build\",\"value\":%s}]", releaseBS, stateBS)
+		patchContent = fmt.Sprintf("[{\"op\":\"add\",\"path\":\"/releases/0\",\"value\":%s},{\"op\":\"remove\",\"path\":\"/releases/-\"},{\"op\":\"add\",\"path\":\"/build\",\"value\":%s}]", releaseBS, stateBS)
 	}
 
 	var err error
-	task.timage, err = b.k8sOption.crdClientInterface.CrdV1beta1().TImages(b.k8sOption.namespace).Patch(context.TODO(), task.timage.Name, types.JSONPatchType, []byte(patchContent), k8sMetaV1.PatchOptions{})
-	if err != nil {
-		utilRuntime.HandleError(err)
+	for i := 1; i < 3; i++ {
+		task.timage, err = b.k8sOption.crdClientInterface.CrdV1beta1().TImages(b.k8sOption.namespace).Patch(context.TODO(), task.timage.Name, types.JSONPatchType, []byte(patchContent), k8sMetaV1.PatchOptions{})
+		if err != nil {
+			utilRuntime.HandleError(err)
+			time.Sleep(time.Millisecond * 3)
+			continue
+		}
+		break
 	}
-
 	if task.waitChan != nil {
 		task.waitChan <- err
 	}
@@ -166,6 +177,9 @@ func (b *Builder) onBuildSuccess(task *Task) {
 }
 
 func (b *Builder) build(task *Task) {
+
+	log.Printf("task|%s: starting...\n", task.image)
+
 	buildDir := fmt.Sprintf("%s/%s.%s-%s", AbsoluteBuildWorkPath, task.userParams.ServerApp, task.userParams.ServerName, task.id)
 	serverBinDir := fmt.Sprintf("%s/%s", buildDir, "root/usr/local/server/bin")
 
@@ -199,18 +213,21 @@ func (b *Builder) build(task *Task) {
 		ext := filepath.Ext(task.userParams.ServerFile)
 		switch ext {
 		case ".tgz":
+			log.Printf("task|%s: decompressing...\n", task.image)
 			if err = handleTarFile(task.userParams.ServerFile, serverBinDir); err != nil {
 				err = fmt.Errorf("decompressing file(%s) err : %s", task.userParams.ServerFile, err.Error())
 				utilRuntime.HandleError(err)
 				break
 			}
 		case ".war":
+			log.Printf("task|%s: decompressing...\n", task.image)
 			if err = handleWarFile(task.userParams.ServerFile, serverBinDir); err != nil {
 				err = fmt.Errorf("decompressing file(%s) err : %s", task.userParams.ServerFile, err.Error())
 				utilRuntime.HandleError(err)
 				break
 			}
 		case ".jar":
+			log.Printf("task|%s: copying...\n", task.image)
 			if err = handleJarFile(task.userParams.ServerFile, serverBinDir); err != nil {
 				err = fmt.Errorf("cp file(%s) err : %s", task.userParams.ServerFile, err.Error())
 				utilRuntime.HandleError(err)
@@ -247,7 +264,8 @@ func (b *Builder) build(task *Task) {
 		var secrets []*k8sCoreV1.Secret
 
 		if task.taskBuildRunningState.Secret != "" {
-			secret, err := b.k8sOption.k8sClientInterface.CoreV1().Secrets(b.k8sOption.namespace).Get(context.TODO(), task.taskBuildRunningState.Secret, k8sMetaV1.GetOptions{})
+			var secret *k8sCoreV1.Secret
+			secret, err = b.k8sOption.k8sClientInterface.CoreV1().Secrets(b.k8sOption.namespace).Get(context.TODO(), task.taskBuildRunningState.Secret, k8sMetaV1.GetOptions{})
 			if err != nil {
 				err = fmt.Errorf("get resource %s %s/%s error :%s", "secret", b.k8sOption.namespace, task.taskBuildRunningState.Secret, err.Error())
 				utilRuntime.HandleError(err)
@@ -259,7 +277,8 @@ func (b *Builder) build(task *Task) {
 		}
 
 		if task.taskBuildRunningState.BaseImageSecret != "" {
-			secret, err := b.k8sOption.k8sClientInterface.CoreV1().Secrets(b.k8sOption.namespace).Get(context.TODO(), task.taskBuildRunningState.BaseImageSecret, k8sMetaV1.GetOptions{})
+			var secret *k8sCoreV1.Secret
+			secret, err = b.k8sOption.k8sClientInterface.CoreV1().Secrets(b.k8sOption.namespace).Get(context.TODO(), task.taskBuildRunningState.BaseImageSecret, k8sMetaV1.GetOptions{})
 			if err != nil {
 				err = fmt.Errorf("get resource %s %s/%s error :%s", "secret", b.k8sOption.namespace, task.taskBuildRunningState.BaseImageSecret, err.Error())
 				utilRuntime.HandleError(err)
@@ -279,6 +298,7 @@ func (b *Builder) build(task *Task) {
 
 		task.taskBuildRunningState.Phase = BuildPhasePullingBaseImage
 		task.taskBuildRunningState.Message = "BuildPhasePullingBaseImage"
+		log.Printf("task|%s: pulling base image|%s\n", task.image, task.userParams.BaseImage)
 		_ = b.pushBuildRunningState(task)
 		if err = task.dockerInterface.pullImage(task.userParams.BaseImage, time.Minute*5, secrets); err != nil {
 			err = fmt.Errorf("pull image %s error :%s", task.userParams.BaseImage, err.Error())
@@ -288,6 +308,7 @@ func (b *Builder) build(task *Task) {
 
 		task.taskBuildRunningState.Phase = BuildPhaseBuilding
 		task.taskBuildRunningState.Message = "BuildPhaseBuilding"
+		log.Printf("task|%s: building\n", task.image)
 		_ = b.pushBuildRunningState(task)
 		if err = task.dockerInterface.buildImage(task.image, buildDir); err != nil {
 			err = fmt.Errorf("build image %s error :%s", task.image, err.Error())
@@ -297,6 +318,7 @@ func (b *Builder) build(task *Task) {
 
 		task.taskBuildRunningState.Phase = BuildPhasePushing
 		task.taskBuildRunningState.Message = "BuildPhasePushing"
+		log.Printf("task|%s: pushing\n", task.image)
 		_ = b.pushBuildRunningState(task)
 
 		if err = task.dockerInterface.pushImage(task.image, time.Second*300, secrets); err != nil {
@@ -309,8 +331,10 @@ func (b *Builder) build(task *Task) {
 	}
 
 	if err == nil {
+		log.Printf("task|%s: success\n", task.image)
 		b.onBuildSuccess(task)
 	} else {
+		log.Printf("task|%s: failed, %s\n", task.image, err.Error())
 		b.onBuildFailed(task, err)
 	}
 }
@@ -332,6 +356,9 @@ func (b *Builder) PostTask(id, timageName, serverApp, serverName, serverType, se
 	defaultRegistry, err := ioutil.ReadFile(RegistryConfigFile)
 	if err != nil {
 		return "", fmt.Errorf("get default registry value error: %s", err.Error())
+	}
+	if len(defaultRegistry) == 0 {
+		return "", fmt.Errorf("get default registry value error: %s", fmt.Errorf("empty value"))
 	}
 
 	targetImage := fmt.Sprintf("%s/%s.%s:%s", defaultRegistry, strings.ToLower(serverApp), strings.ToLower(serverName), id)

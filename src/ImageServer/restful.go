@@ -135,15 +135,15 @@ func v1beta1Handler(writer http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		notifyChan := make(chan error, 1)
-		if image, err = builder.PostTask(idString, timageName, app, name, serverType, serverFile, basImage, basImageSecret, secret, person, mark, withWaitChan(notifyChan)); err != nil {
+		waitChan := make(chan error, 1)
+		if image, err = builder.PostTask(idString, timageName, app, name, serverType, serverFile, basImage, basImageSecret, secret, person, mark, withWaitChan(waitChan)); err != nil {
 			response.Status = http.StatusInternalServerError
 			response.Message = err.Error()
 			break
 		}
 
 		select {
-		case err = <-notifyChan:
+		case err = <-waitChan:
 			if err != nil {
 				response.Status = http.StatusInternalServerError
 				response.Message = err.Error()
@@ -197,7 +197,7 @@ func (s *RestfulServer) Start(stopCh chan struct{}) {
 		// ListenAndServe always returns a non-nil error. After Shutdown or Close,
 		// the returned error is ErrServerClosed.
 		if err != nil {
-			//utilRuntime.HandleError(fmt.Errorf("will exist because : %s \n", err.Error()))
+			utilRuntime.HandleError(fmt.Errorf("will exist because : %s \n", err.Error()))
 			os.Exit(-1)
 		}
 	}()
