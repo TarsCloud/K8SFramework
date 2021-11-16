@@ -111,19 +111,6 @@ case ${ServerType} in
   fi
   export ServerLauncherArgv="java -Dconfig=${ServerConfFile} #{jvmparams} -jar ${ServerBinDir}/${ServerName}.jar"
   ;;
-"php")
-  export ServerLauncherFile=$(command -v php)
-  if [ ! -f "$ServerLauncherFile" ]; then
-    echo "$ServerLauncherFile file not exist"
-    exit 255
-  fi
-
-  if [ ! -x "$ServerLauncherFile" ]; then
-    echo "$ServerLauncherFile had no execution permission"
-    exit 255
-  fi
-  export ServerLauncherArgv="php ${ServerBinDir}/src/index.php --config=${ServerConfFile} "
-  ;;
 esac
 
 exec ${_IMAGE_BIND_TARSNODE_EXECUTION_FILE_} --config=${_IMAGE_BIND_TARSNODE_CONF_FILE_}
