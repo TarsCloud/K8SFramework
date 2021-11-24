@@ -22,13 +22,13 @@ metadata:
     tars.io/ServerApp: tars
     tars.io/ServerName: tarsnotify
     tars.io/SubType: tars
-    tars.io/Template: tars.default
+    tars.io/Template: tars.es
 spec:
   app: tars
   server: tarsnotify
   subType: tars
   tars:
-    template: tars.elk
+    template: tars.es
     profile: |
       <tars>
         <application>
@@ -37,9 +37,6 @@ spec:
             logLevel = DEBUG
           </server>
         </application>
-        <elk>
-          indexPre = notify_{{.Release.Namespace}}
-        </elk>
       </tars>
     servants:
       - name: NotifyObj

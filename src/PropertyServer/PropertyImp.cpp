@@ -15,26 +15,28 @@
  */
 
 #include "PropertyImp.h"
-#include "PropertyServer.h"
 #include "PropertyPushGateway.h"
 
 ///////////////////////////////////////////////////////////
-void PropertyImp::initialize() {
+void PropertyImp::initialize()
+{
 }
 
-int PropertyImp::reportPropMsg(const map<StatPropMsgHead, StatPropMsgBody> &propMsg, tars::CurrentPtr current) {
-    TLOG_INFO("PropertyImp::reportPropMsg size:" << propMsg.size() << ", " << current->getHostName() << endl);
-    for (auto &item: propMsg) {
-        const static std::set<std::string> filterModules = {"tars.tarsnode"};
-        auto &&moduleName = item.first.moduleName;
-        if (filterModules.find(moduleName) != filterModules.end()) {
-            continue;
-        }
-
-        auto head = item.first;
-        head.ip = current->getHostName();
-        PropertyPushGateway::instance().push(head, item.second);
-    }
-    return 0;
+int PropertyImp::reportPropMsg(const map<StatPropMsgHead, StatPropMsgBody>& propMsg, tars::CurrentPtr current)
+{
+	TLOGDEBUG("PropertyImp::reportPropMsg size:" << propMsg.size() << ", " << current->getIp() << endl);
+	for (auto& item: propMsg)
+	{
+		const static std::set<std::string> filterModules = { "tars.tarsnode" };
+		auto&& moduleName = item.first.moduleName;
+		if (filterModules.find(moduleName) != filterModules.end())
+		{
+			continue;
+		}
+		auto head = item.first;
+		head.ip = current->getIp();
+		PropertyPushGateway::instance().push(head, item.second);
+	}
+	return 0;
 }
 

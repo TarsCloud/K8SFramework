@@ -1,208 +1,176 @@
 ﻿#include "ConfigImp.h"
-#include "ConfigServer.h"
-#include "ConfigInfoInterface.h"
-#include "servant/Application.h"
+#include "Storage.h"
+#include "K8SInterface.h"
+#include "servant/NotifyF.h"
+#include "servant/RemoteLogger.h"
+#include "util/tc_config.h"
+#include <rapidjson/pointer.h>
+
 using namespace tars;
 
-void ConfigImp::initialize() {
+void ConfigImp::initialize()
+{
 }
 
-int ConfigImp::ListConfig(const string &app, const string &server, vector<string> &vf, CurrentPtr current) {
-    TLOG_DEBUG(app << "." << server << endl);
-
-    std::string errorInfo;
-    auto loadConfigResult = ConfigInfoInterface::instance().listConfig(app, server, vf, errorInfo);
-
-    if (loadConfigResult == ConfigInfoInterface::ConfigError) {
-        TLOG_DEBUG("error: " << errorInfo << ", app:" << app << ", server:" << server << std::endl);
-        return -1;
-    } else if (loadConfigResult == ConfigInfoInterface::K8SError) {
-        TARS_NOTIFY_ERROR("request k8s api-server error:" + errorInfo);
-        TLOG_ERROR("request k8s api-server error : " << errorInfo << ", app:" << app << ", server:" << server << std::endl);
+int ConfigImp::ListConfig(const string& app, const string& server, vector<string>& vf, CurrentPtr current)
+{
+    TLOGDEBUG("ListConfig|" << app << "." << server << "|" << current->getIp() << std::endl);
+    try
+    {
+        K8SInterface::listConfig(app, server, current->getIp(), vf);
+    }
+    catch (const std::exception& e)
+    {
+        TLOGERROR(e.what() << endl);
         return -1;
     }
     return 0;
 }
 
-int ConfigImp::loadConfigByHost(const std::string &appServerName, const std::string &fileName, const string &host,
-                                string &result, CurrentPtr current) {
+int ConfigImp::loadConfigByHost(const string& appServerName, const string& filename, const string& host, string& config, CurrentPtr current)
+{
+    TLOGDEBUG("loadConfigByHost|" << appServerName << "|" << host << "|" << filename << std::endl);
     auto v = TC_Common::sepstr<string>(appServerName, ".");
 
-    std::string errorInfo;
-    ConfigInfoInterface::GetConfigResult loadConfigResult;
-
-    if (v.size() == 1) {
-        loadConfigResult = ConfigInfoInterface::instance().loadConfig(v[0], "", fileName, host, result, errorInfo);
-    } else if (v.size() == 2) {
-        loadConfigResult = ConfigInfoInterface::instance().loadConfig(v[0], v[1], fileName, host, result, errorInfo);
-    } else {
-        result.append("bad request format : ").append(appServerName);
-        TLOG_ERROR(result << ", fileName:" << fileName << ", host:" << host << endl);
-        return -1;
+    try
+    {
+        if (v.size() == 1)
+        {
+            K8SInterface::loadConfig(v[0], "", filename, host, config);
+        }
+        else if (v.size() == 2)
+        {
+            K8SInterface::loadConfig(v[0], v[1], filename, host, config);
+        }
+        else
+        {
+            TLOGERROR("bad AppSeverName format|" << appServerName << endl);
+            return -1;
+        }
     }
-
-    if (loadConfigResult == ConfigInfoInterface::ConfigError) {
-        TLOG_DEBUG("load config error: " << errorInfo << ", appServerName:" << appServerName << ", fileName:" << fileName << ", host:" << host << std::endl);
-        std::swap(result, errorInfo);
-        return -1;
-    } else if (loadConfigResult == ConfigInfoInterface::K8SError) {
-        TARS_NOTIFY_ERROR("request k8s api-server error:" + errorInfo);
-        TLOG_ERROR("request k8s api-server error : " << errorInfo << ", appServerName:" << appServerName << ", fileName:" << fileName << ", host:" << host << std::endl);
-        result = "internal error, please try again or contact administrator";
+    catch (const std::exception& e)
+    {
+        TLOGERROR(e.what() << endl);
         return -1;
     }
     return 0;
 }
 
-int
-ConfigImp::loadConfig(const std::string &app, const std::string &server, const std::string &fileName, string &result,
-                      CurrentPtr current) {
-    std::string sClientIP = current->getIp();
-
-    std::string errorInfo;
-    auto loadConfigResult = ConfigInfoInterface::instance().loadConfig(app, server, fileName, sClientIP, result,
-                                                                       errorInfo);
-
-    if (loadConfigResult == ConfigInfoInterface::ConfigError) {
-        TLOG_DEBUG( "load config error: " << errorInfo << ", app:" << app << ", server:" << server << ", fileName:" << fileName << ", sClientIP:" << sClientIP << std::endl);
-        std::swap(result, errorInfo);
-        return -1;
-    } else if (loadConfigResult == ConfigInfoInterface::K8SError) {
-        TARS_NOTIFY_ERROR("request k8s api-server error:" + errorInfo);
-        TLOG_ERROR("request k8s api-server error : " << errorInfo << ", app:" << app << ", server:" << server << ", fileName:" << fileName << ", sClientIP:" << sClientIP << std::endl);
-        result = "internal error, please try again or contact  administrator";
+int ConfigImp::loadConfig(const std::string& app, const std::string& server, const std::string& fileName, string& result, CurrentPtr current)
+{
+    TLOGDEBUG("loadConfig|" << app << "." << server << "|" << current->getIp() << "|" << fileName << std::endl);
+    try
+    {
+        K8SInterface::loadConfig(app, server, fileName, current->getIp(), result);
+    }
+    catch (const std::exception& e)
+    {
+        TLOGERROR(e.what() << endl);
         return -1;
     }
     return 0;
 }
 
-int ConfigImp::checkConfig(const std::string &appServerName, const std::string &fileName, const string &host,
-                           string &result, CurrentPtr current) {
-
-    std::string errorInfo;
-    ConfigInfoInterface::GetConfigResult loadConfigResult;
-
-    auto v = TC_Common::sepstr<string>(appServerName, ".");
-    if (v.size() == 1) {
-        loadConfigResult = ConfigInfoInterface::instance().loadConfig(v[0], "", fileName, host, result, errorInfo);
-    } else if (v.size() == 2) {
-        loadConfigResult = ConfigInfoInterface::instance().loadConfig(v[0], v[1], fileName, host, result, errorInfo);
-    } else {
-        result.append("bad request format : ").append(appServerName);
-        TLOG_ERROR(result << ", fileName:" << fileName << ", host:" << host << endl);
+int ConfigImp::checkConfig(const std::string& appServerName, const std::string& fileName, const string& host, string& result, CurrentPtr current)
+{
+    if (loadConfigByHost(appServerName, fileName, host, result, current) != 0)
+    {
         return -1;
     }
-
-    if (loadConfigResult == ConfigInfoInterface::ConfigError) {
-        TLOG_DEBUG( "load config error: " << errorInfo << ", appServerName:" << appServerName << ", fileName:" << fileName << ", host:" << host << std::endl);
-        std::swap(result, errorInfo);
-        return -1;
-    } else if (loadConfigResult == ConfigInfoInterface::K8SError) {
-        TARS_NOTIFY_ERROR("request k8s api-server error:" + errorInfo);
-        TLOG_ERROR("request k8s api-server error : " << errorInfo << ", appServerName:" << appServerName << ", fileName:" << fileName << ", host:" << host << std::endl);
-        result = "internal error, please try again or contact  administrator";
-        return -1;
-    }
-    try {
-        TC_Config conf;
+    try
+    {
+        TC_Config conf{};
         conf.parseString(result);
     }
-    catch (exception &ex) {
-        TLOG_ERROR("error:" << ex.what() << ", appServerName:" << appServerName << ", fileName:" << fileName << ", host:" << host << endl);
+    catch (const std::exception& ex)
+    {
         result = ex.what();
         return -1;
     }
     return 0;
 }
 
-int ConfigImp::ListConfigByInfo(const ConfigInfo &configInfo, vector<string> &vf, CurrentPtr current) {
-    TLOG_DEBUG(configInfo.appname << "|" << configInfo.servername << endl);
-
-    std::string errorInfo;
-    ConfigInfoInterface::GetConfigResult loadConfigResult;
-
-    if (configInfo.bAppOnly) {
-        loadConfigResult = ConfigInfoInterface::instance().listConfig(configInfo.appname, "", vf, errorInfo);
-    } else {
-        loadConfigResult = ConfigInfoInterface::instance().listConfig(configInfo.appname, configInfo.servername, vf,
-                                                                      errorInfo);
+int ConfigImp::ListConfigByInfo(const ConfigInfo& configInfo, vector<string>& vf, CurrentPtr current)
+{
+    TLOGDEBUG("ListConfigByInfo|" << configInfo.appname << "." << configInfo.servername << "|" << configInfo.host << endl);
+    try
+    {
+        if (configInfo.bAppOnly)
+        {
+            K8SInterface::listConfig(configInfo.appname, "", configInfo.host, vf);
+        }
+        else
+        {
+            K8SInterface::listConfig(configInfo.appname, configInfo.servername, configInfo.host, vf);
+        }
     }
-
-    if (loadConfigResult == ConfigInfoInterface::ConfigError) {
-        TLOG_DEBUG( "list config error: " << errorInfo << ", appName:" << configInfo.appname << ", serverName:" << configInfo.servername << std::endl);
-        return -1;
-    } else if (loadConfigResult == ConfigInfoInterface::K8SError) {
-        TARS_NOTIFY_ERROR("request k8s api-server error:" + errorInfo);
-        TLOG_ERROR("request k8s api-server error : " << errorInfo << ", appName:" << configInfo.appname << ", serverName:" << configInfo.servername << std::endl);
+    catch (const std::exception& e)
+    {
+        TLOGERROR(e.what() << endl);
         return -1;
     }
     return 0;
 }
 
-int ConfigImp::loadConfigByInfo(const ConfigInfo &configInfo, string &config, CurrentPtr current) {
-    TLOG_DEBUG( configInfo.appname << "|" << configInfo.servername << "|"
-                 << configInfo.filename << endl);
-
-    std::string errorInfo;
-    ConfigInfoInterface::GetConfigResult loadConfigResult;
-
-    if (configInfo.bAppOnly) {
-        loadConfigResult = ConfigInfoInterface::instance().loadConfig(configInfo.appname, "", configInfo.filename,
-                                                                      configInfo.host, config, errorInfo);
-    } else {
-        loadConfigResult = ConfigInfoInterface::instance().loadConfig(configInfo.appname, configInfo.servername,
-                                                                      configInfo.filename, configInfo.host, config,
-                                                                      errorInfo);
+int ConfigImp::loadConfigByInfo(const ConfigInfo& configInfo, string& config, CurrentPtr current)
+{
+    TLOGDEBUG("loadConfigByInfo|" << configInfo.appname << "|" << configInfo.servername << "|" << configInfo.filename << endl);
+    try
+    {
+        if (configInfo.bAppOnly)
+        {
+            K8SInterface::loadConfig(configInfo.appname, "", configInfo.filename, configInfo.host, config);
+        }
+        else
+        {
+            K8SInterface::loadConfig(configInfo.appname, configInfo.servername, configInfo.filename, configInfo.host, config);
+        }
     }
-
-    if (loadConfigResult == ConfigInfoInterface::ConfigError) {
-        std::swap(config, errorInfo);
-        return -1;
-    } else if (loadConfigResult == ConfigInfoInterface::K8SError) {
-        TARS_NOTIFY_ERROR("request k8s api-server error:" + errorInfo);
-        TLOG_ERROR("request k8s api-server error : " << errorInfo << ", appName:" << configInfo.appname << ", serverName:" << configInfo.servername << ", fileName:"
-                 << configInfo.filename << std::endl);
+    catch (const std::exception& e)
+    {
+        TLOGERROR(e.what() << endl);
         return -1;
     }
     return 0;
 }
 
-Int32 ConfigImp::ListAllConfigByInfo(const GetConfigListInfo &configInfo, vector<std::string> &vf, CurrentPtr current) {
-    TLOG_DEBUG(configInfo.appname << "|" << configInfo.servername << endl);
-    if (configInfo.bAppOnly) {
-        return ListConfig(configInfo.appname, "", vf, current);
+int ConfigImp::ListAllConfigByInfo(const GetConfigListInfo& configInfo, vector<std::string>& vf, CurrentPtr current)
+{
+    TLOGDEBUG("ListAllConfigByInfo|" << configInfo.appname << "." << configInfo.servername << "|" << configInfo.host << endl);
+    try
+    {
+        if (configInfo.bAppOnly)
+        {
+            K8SInterface::listConfig(configInfo.appname, "", configInfo.host, vf);
+        }
+        K8SInterface::listConfig(configInfo.appname, configInfo.servername, configInfo.host, vf);
     }
-    return ListConfig(configInfo.appname, configInfo.servername, vf, current);
+    catch (const std::exception& e)
+    {
+        TLOGERROR(e.what() << endl);
+        return -1;
+    }
+    return 0;
 }
 
-int ConfigImp::checkConfigByInfo(const ConfigInfo &configInfo, string &result, CurrentPtr current) {
-
-    std::string errorInfo;
-
-    auto loadConfigResult = ConfigInfoInterface::instance().loadConfig(configInfo.appname, configInfo.servername,
-                                                                       configInfo.filename,
-                                                                       configInfo.host, result, errorInfo);
-    if (loadConfigResult == ConfigInfoInterface::ConfigError) {
-        TLOG_DEBUG( "load config error: " << errorInfo << ", appName:" << configInfo.appname << ", serverName:" << configInfo.servername << ", fileName:"
-                                                                       << configInfo.filename << ", host:" << configInfo.host << std::endl);
-        std::swap(result, errorInfo);
-        return -1;
-    } else if (loadConfigResult == ConfigInfoInterface::K8SError) {
-        TARS_NOTIFY_ERROR("request k8s api-server error:" + errorInfo);
-        TLOG_ERROR("request k8s api-server error : " << errorInfo << ", appName:" << configInfo.appname << ", serverName:" << configInfo.servername << ", fileName:"
-                                                                       << configInfo.filename << ", host:" << configInfo.host << std::endl);
-        result = "internal error, please try again or contact  administrator";
-        return -1;
-    }
-    try {
-        TC_Config conf;
+int ConfigImp::checkConfigByInfo(const ConfigInfo& configInfo, string& result, CurrentPtr current)
+{
+    try
+    {
+        if (configInfo.bAppOnly)
+        {
+            K8SInterface::loadConfig(configInfo.appname, "", configInfo.filename, configInfo.host, result);
+        }
+        else
+        {
+            K8SInterface::loadConfig(configInfo.appname, configInfo.servername, configInfo.filename, configInfo.host, result);
+        }
+        TC_Config conf{};
         conf.parseString(result);
     }
-    catch (exception &ex) {
-        TLOG_ERROR("error:" << ex.what() << ", appName:" << configInfo.appname << ", serverName:" << configInfo.servername << ", fileName:"
-                                                                       << configInfo.filename << ", host:" << configInfo.host<< endl);
-
-        result = ex.what();
+    catch (const std::exception& e)
+    {
+        result = e.what();
         return -1;
     }
     return 0;

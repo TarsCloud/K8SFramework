@@ -5,5 +5,5 @@ include_directories(../ThirdParty/rapidjson/include)
 
 aux_source_directory(. DIR_SRC)
 
-add_library(elsclient ${DIR_SRC})
+add_library(esclient ${DIR_SRC})
 

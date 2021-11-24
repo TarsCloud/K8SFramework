@@ -22,19 +22,14 @@ metadata:
     tars.io/ServerApp: tars
     tars.io/ServerName: tarsqueryproperty
     tars.io/SubType: tars
-    tars.io/Template: tars.default
+    tars.io/Template: tars.es
 spec:
   app: tars
   server: tarsqueryproperty
   subType: tars
   tars:
-    template: tars.elk
-    profile: |
-      <tars>
-        <elk>
-          indexPre = property_{{.Release.Namespace}}
-        </elk>
-      </tars>
+    template: tars.es
+    profile: ""
     servants:
       - name: QueryObj
         port: 15000

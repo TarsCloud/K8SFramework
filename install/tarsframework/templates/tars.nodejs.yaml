@@ -1,10 +1,12 @@
+{{ $v := lookup  "k8s.tars.io/v1beta1"  "TTemplate" .Release.Namespace "tars.nodejs" -}}
+  {{- if not $v -}}
 apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
 kind: TTemplate
 metadata:
   name: tars.nodejs
   namespace: {{.Release.Namespace}}
   annotations:
-    "helm.sh/hook": pre-install
+    "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-weight": "-9"
 spec:
   content: |
@@ -17,3 +19,4 @@ spec:
       </application>
     </tars>
   parent: tars.default
+  {{- end }}

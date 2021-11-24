@@ -17,72 +17,76 @@
 #include "StatImp.h"
 #include "StatPushGateway.h"
 
+static std::string fixSlaveName(const string& sSlaveName)
+{
+//	string::size_type pos = sSlaveName.find('.');
+//	if (pos != string::npos)
+//	{
+//		pos = sSlaveName.find('.', pos + 1);
+//		if (pos != string::npos)
+//		{
+//			return sSlaveName.substr(0, pos);
+//		}
+//	}
+	return sSlaveName;
+}
 
 ////////////////////////////////////////////////////////
-void StatImp::initialize() {
+void StatImp::initialize()
+{
 }
 
 ///////////////////////////////////////////////////////////
 
-int StatImp::reportMicMsg(const map<tars::StatMicMsgHead, tars::StatMicMsgBody> &statmsg, bool bFromClient,
-                          tars::CurrentPtr current) {
-    TLOGINFO("report---------------------------------access size:" << statmsg.size() << "|bFromClient:" << bFromClient
-                                                                   << endl);
-    for (auto &&item:statmsg) {
+int StatImp::reportMicMsg(const map<tars::StatMicMsgHead, tars::StatMicMsgBody>& statmsg, bool bFromClient, tars::CurrentPtr current)
+{
+	TLOGINFO("report---------------------------------access size:" << statmsg.size() << "|bFromClient:" << bFromClient << endl);
+	for (auto&& item: statmsg)
+	{
+		const static std::set<std::string> filterSlaves = { "tars.tarsnode", "tars.tarsproperty", "tars.tarsstat", "tars.tarsnotify" };
 
-        const static std::set<std::string> filterSlaves = {"tars.tarsnode", "tars.tarsproperty", "tars.tarsstat",
-                                                           "tars.tarsnotify"};
+		auto&& slaveName = item.first.slaveName;
+		if (filterSlaves.find(slaveName) != filterSlaves.end())
+		{
+			continue;
+		}
 
-        auto &&slaveName = item.first.slaveName;
-        if (filterSlaves.find(slaveName) != filterSlaves.end()) {
-            continue;
-        }
+		auto&& body = item.second;
+		//三个数据都为0时不入库
+		if (body.count == 0 && body.execCount == 0 && body.timeoutCount == 0)
+		{
+			continue;
+		}
 
-        auto &&body = item.second;
-        //三个数据都为0时不入库
-        if (body.count == 0 && body.execCount == 0 && body.timeoutCount == 0) {
-            continue;
-        }
+		auto head = item.first;
+		string sMasterName = head.masterName;
+		string::size_type pos = sMasterName.find('@');
+		if (pos != string::npos)
+		{
+			head.masterName = sMasterName.substr(0, pos);
+			const static std::set<std::string> filterMasters = { "tars.tarsnode", "es" };
+			if (filterMasters.find(head.masterName) != filterMasters.end())
+			{
+				continue;
+			}
+			head.tarsVersion = sMasterName.substr(pos + 1);
+		}
 
-        auto head = item.first;
-        string sMasterName = head.masterName;
-        string::size_type pos = sMasterName.find('@');
-        if (pos != string::npos) {
-            head.masterName = sMasterName.substr(0, pos);
-            const static std::set<std::string> filterMasters = {"tars.tarsnode"};
-            if (filterMasters.find(head.masterName) != filterMasters.end()) {
-                continue;
-            }
-            head.tarsVersion = sMasterName.substr(pos + 1);
-        }
-
-        if (bFromClient) {
-            head.masterIp = current->getHostName();  //以前是自己获取主调ip,现在从proxy直接
-            head.slaveName = getSlaveName(head.slaveName);
-        } else {
-            head.slaveIp = current->getHostName();//现在从proxy直接
-        }
-
-//        auto virtualIP = g_app.getVirtualMasterIp().find(getSlaveName(head.slaveName));
-//        if (virtualIP != g_app.getVirtualMasterIp().end()) {
-//            head.masterIp = virtualIP->second; //按 slaveName来匹配，填入假的主调ip，减小入库数据量
-//        }
-        StatPushGateway::instance().push(head, body);
-    }
-    return 0;
+		if (bFromClient)
+		{
+			head.masterIp = current->getIp();  //以前是自己获取主调ip,现在从proxy直接
+			head.slaveName = fixSlaveName(head.slaveName);
+		}
+		else
+		{
+			head.slaveIp = current->getIp();//现在从proxy直接
+		}
+		StatPushGateway::instance().push(head, body);
+	}
+	return 0;
 }
 
-int StatImp::reportSampleMsg(const vector<StatSampleMsg> &msg, tars::CurrentPtr current) {
-    return 0;
-}
-
-string StatImp::getSlaveName(const string &sSlaveName) {
-    string::size_type pos = sSlaveName.find('.');
-    if (pos != string::npos) {
-        pos = sSlaveName.find('.', pos + 1);
-        if (pos != string::npos) {
-            return sSlaveName.substr(0, pos);
-        }
-    }
-    return sSlaveName;
+int StatImp::reportSampleMsg(const vector<StatSampleMsg>& msg, tars::CurrentPtr current)
+{
+	return 0;
 }

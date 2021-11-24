@@ -1,4 +1,4 @@
 
 gen_server(tars tarsnotify)
 
-target_link_libraries(tarsnotify ${LIB_MYSQL} ) 
+target_link_libraries(tarsnotify esclient)

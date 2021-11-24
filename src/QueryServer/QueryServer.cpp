@@ -16,84 +16,37 @@
 
 #include "QueryServer.h"
 #include "QueryImp.h"
+#include "ESHelper.h"
 
-using namespace std;
+void QueryServer::initialize()
+{
+	const auto& config = getConfig();
+	ESHelper::setAddressByTConfig(config);
+	std::string indexPre{};
+	if (ServerConfig::ServerName == "tarsqueryproperty")
+	{
+		indexPre = config.get("/tars/es/indexpre<property>");
+	}
+	else if (ServerConfig::ServerName == "tarsquerystat")
+	{
+		indexPre = config.get("/tars/es/indexpre<stat>");
+	}
+	else
+	{
+		throw std::runtime_error("unexpected tars servername");
+	}
 
-void QueryServer::initialize() {
-    try {
-        const auto &config = Application::getConfig();
-        elkIndexPre = config.get("/tars/elk<indexPre>");
-        vector<string> elkNodes = config.getDomainKey("/tars/elk/nodes");
-        if (elkNodes.empty()) {
-            TLOGERROR("QueryServer::initialize empty elk nodes " << endl);
-            exit(0);
-        }
+	if (indexPre.empty())
+	{
+		TLOGERROR("get empty es index prefix");
+		std::cout << "get empty es index prefix" << std::endl;
+		throw std::runtime_error("get empty es index prefix");
+	}
+	QueryImp::setIndexPre(indexPre);
 
-        for (auto &item : elkNodes) {
-            vector<string> vOneNode = TC_Common::sepstr<string>(item, ":", true);
-            if (vOneNode.size() < 2) {
-                TLOGERROR("QueryServer::initialize wrong elk nodes:" << item << endl);
-                exit(0);
-            }
-            auto port = std::stoi(vOneNode[1]);
-            if (port <= 0 || port >= 65535) {
-                TLOGERROR("QueryServer::initialize wrong elk nodes:" << item << endl);
-                exit(0);
-            }
-
-            TLOG_DEBUG("node:" << vOneNode[0] << ":" << port << endl);
-            elkTupleNodes.emplace_back(vOneNode[0], port);
-        }
-        addServant<QueryImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".QueryObj");
-
-        std::srand(std::time(nullptr));
-    }
-    catch (exception &ex) {
-        TLOGERROR("QueryServer::initialize catch exception:" << ex.what() << endl);
-        exit(0);
-    }
-    catch (...) {
-        TLOGERROR("QueryServer::initialize catch unknown exception  " << endl);
-        exit(0);
-    }
-}
-/////////////////////////////////////////////////////////////////
-
-/////////////////////////////////////////////////////////////////
-void QueryServer::destroyApp() {
+	addServant<QueryImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".QueryObj");
 }
 
-const std::string &QueryServer::getELKIndexPre() const {
-    return elkIndexPre;
+void QueryServer::destroyApp()
+{
 }
-/////////////////////////////////////////////////////////////////
-
-void QueryServer::getELKNodeAddress(string &host, int &port) {
-    std::lock_guard<std::mutex> lockGuard(mutex);
-    if (elkTupleNodes.empty()) {
-        throw std::runtime_error(
-                std::string("fatal error: empty elk node addresses"));
-    }
-    auto tuple = elkTupleNodes[std::rand() % elkTupleNodes.size()];
-    host = std::get<0>(tuple);
-    port = std::get<1>(tuple);
-}
-
-QueryServer g_app;
-
-int
-main(int argc, char *argv[]) {
-    try {
-        g_app.main(argc, argv);
-        RemoteTimeLogger::getInstance()->enableRemote("inout", false);
-        g_app.waitForShutdown();
-    }
-    catch (std::exception &e) {
-        cerr << "std::exception:" << e.what() << std::endl;
-    }
-    catch (...) {
-        cerr << "unknown exception." << std::endl;
-    }
-    return -1;
-}
-/////////////////////////////////////////////////////////////////

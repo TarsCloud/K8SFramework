@@ -1,63 +1,48 @@
 #pragma once
 
-#include <mutex>
-#include <servant/Application.h>
+#include "servant/Application.h"
 #include "servant/StatReport.h"
 #include "StatHashMap.h"
+#include "util/tc_timer.h"
+#include "ESHelper.h"
+#include <mutex>
 
-class StatPushGateway {
+class StatPushGateway
+{
 public:
-    static StatPushGateway &instance() {
-        static StatPushGateway gateway;
-        return gateway;
-    }
+	static StatPushGateway& instance()
+	{
+		static StatPushGateway gateway;
+		return gateway;
+	}
 
-    void init(const tars::TC_Config &config) {
-        indexPre = config.get("/tars/elk<indexPre>", "stat_");
-        initCache(config);
-        cachePtr = cache[0];
-        initElKPushGateway(config);
-    }
+	void init(const tars::TC_Config& config);
 
-    void push(const tars::StatMicMsgHead &head, const tars::StatMicMsgBody &body);
+	void push(const tars::StatMicMsgHead& head, const tars::StatMicMsgBody& body);
 
-    void updateNextSyncFlag();
+	void updateNextSyncFlag();
 
-    inline void start() {
-        thread = std::thread([this] {
-            while (true) {
-                if (isSyncTime()) {
-                    sync();
-                    updateNextSyncFlag();
-                }
-                usleep(7 * 1000 * 1000);
-            }
-        });
-        thread.detach();
-    }
+	void start();
 
 private:
 
-    StatPushGateway() {
-        updateNextSyncFlag();
-    }
+	StatPushGateway() = default;
 
-    void initElKPushGateway(const tars::TC_Config &config);
+	void initCache(const tars::TC_Config& config);
 
-    void initCache(const tars::TC_Config &config);
+	void sync();
 
-    void sync();
-
-    bool isSyncTime() const;
+	bool isSyncTime() const;
 
 private:
-    std::mutex mutex;
-    StatHashMap *cachePtr{};
-    std::array<StatHashMap *, 2> cache{};
-    std::string indexPre{};
-    std::thread thread{};
-    char date[9]{};
-    std::size_t nextSyncTFlag{};
+	std::mutex mutex;
+	StatHashMap* cachePtr{};
+	std::array<StatHashMap*, 2> cache{};
+	std::string indexPre{};
+	std::thread thread{};
+	char date[9]{};
+	std::size_t nextSyncTFlag{};
+	TC_Timer timer_{};
 };
 
 

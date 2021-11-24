@@ -1,47 +1,103 @@
-
 #pragma once
 
+#include <asio/io_context.hpp>
+#include <rapidjson/document.h>
+#include <mutex>
+#include <string>
 #include <thread>
 #include <functional>
-#include <rapidjson/document.h>
-#include <atomic>
-#include <mutex>
 #include <condition_variable>
-#include <asio/io_context.hpp>
 
-enum K8SWatchEvent {
-    K8SWatchEventAdded = 1u,
-    K8SWatchEventDeleted = 2u,
-    K8SWatchEventUpdate = 3u,
-    K8SWatchEventBookmark = 4u,
-    K8SWatchEventError = 5u,
+enum class K8SWatchEventDrive
+{
+    List,
+    Watch
 };
 
-class K8SWatcher {
-public:
-    static K8SWatcher &instance() {
+struct K8SWatcherSetting
+{
+    friend class K8SWatcherSession;
+
+ public:
+    K8SWatcherSetting(const std::string& group, const std::string& version, const std::string& plural, const std::string& _namespace);;
+
+    K8SWatcherSetting(const K8SWatcherSetting&) = default;
+
+    ~K8SWatcherSetting() = default;
+
+    std::function<void()> preList;
+    std::function<void()> postList;
+    std::function<void(const rapidjson::Value&, K8SWatchEventDrive)> onAdded;
+    std::function<void(const rapidjson::Value&)> onDeleted;
+    std::function<void(const rapidjson::Value&)> onModified;
+    std::function<void(const std::error_code&, const std::string&)> onError;;
+
+    std::string watchUri() const;
+
+    std::string listUri() const;
+
+    void setLabelFilter(std::string filter)
+    {
+        labelFilter_ = std::move(filter);
+    }
+
+    void setFiledFilter(std::string filter)
+    {
+        filedFilter_ = std::move(filter);
+    }
+
+    void setLimit(size_t limit)
+    {
+        limit_ = limit;
+    }
+
+ private:
+    size_t limit_ = { 30 };
+    size_t overtime_ = { 60 * 30 };
+    std::string labelFilter_{};
+    std::string filedFilter_{};
+    std::string newestVersion_{ "0" };
+    std::string path_;
+    std::string continue_;
+};
+
+class K8SWatcher
+{
+ public:
+    static K8SWatcher& instance()
+    {
         static K8SWatcher k8SWatcher;
         return k8SWatcher;
     }
 
-    void start() {
-        thread_ = std::thread([this] {
-            asio::io_context::work work(ioContext_);
-            ioContext_.run();
+    void start();
+
+    void stop();
+
+    template<typename Rep, typename Period>
+    bool waitSync(const std::chrono::duration<Rep, Period>& time)
+    {
+        std::unique_lock<std::mutex> uniqueLock(mutex_);
+        return conditionVariable_.wait_for(uniqueLock, time, [this]()
+        {
+            return waitSyncCount_ == 0;
         });
-        thread_.detach();
-        waitForCacheSync();
     }
 
-    void postWatch(const std::string &url, const std::function<void(K8SWatchEvent, const rapidjson::Value &)> &);
+    void addWatch(const K8SWatcherSetting& setting);
 
-private:
-    void waitForCacheSync();
+    ~K8SWatcher()
+    {
+        ioContext_.stop();
+    }
 
-private:
-    std::atomic<int> waitCacheSyncCount_{};
+ private:
+    K8SWatcher() = default;
+
+ private:
+    asio::io_context ioContext_{ 1 };
+    std::atomic_int waitSyncCount_{ 0 };
     std::mutex mutex_;
     std::condition_variable conditionVariable_;
-    asio::io_context ioContext_;
     std::thread thread_;
 };

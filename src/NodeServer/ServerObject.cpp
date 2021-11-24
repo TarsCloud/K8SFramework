@@ -1,548 +1,708 @@
-﻿
-#include "ServerObject.h"
-#include <servant/Application.h>
-#include <RegistryServer/NodeDescriptor.h>
-#include "Fixed.h"
+﻿#include "ServerObject.h"
+#include "Container.h"
 #include "ProxyManger.h"
+#include "Fixed.h"
 #include "Launcher.h"
-#include "ContainerDetail.h"
+#include "RegistryServer/NodeDescriptor.h"
+#include "RegistryServer/RegistryDescriptor.h"
+#include "servant/Application.h"
+#include "servant/RemoteLogger.h"
+#include "util/tc_config.h"
+#include <mutex>
+#include <sys/wait.h>
 
-int ServerObject::MetaData::updateMetaDataFromDescriptor(const ServerDescriptor &descriptor) {
-    return updateConfFromDescriptor(descriptor);
+static void notifyMessage(const std::string& message)
+{
+	std::string appServer = container::serverApp + "." + container::serverName;
+	try
+	{
+		auto notifyFPrx = ProxyManger::instance().getNotifyProxy();
+		if (!notifyFPrx)
+		{
+			TLOGERROR("get null NotifyPrx" << std::endl;);
+			return;
+		}
+		notifyFPrx->reportServer(appServer, "-1", message);
+	}
+	catch (const exception& e)
+	{
+		TLOGERROR("call notifyFPrx->reportServer() catch exception :" << e.what() << std::endl);
+		return;
+	}
 }
 
-int ServerObject::MetaData::updateConfFromDescriptor(const ServerDescriptor &descriptor) {
-
-    _vAdapter.clear();
-    map<string, string> m;
-
-    TC_Config tConf;
-    try {
-        m["node"] = FIXED_NODE_PROXY_NAME;
-        tConf.insertDomainParam("/tars/application/server", m, true);
-
-        for (const auto &pair: descriptor.adapters) {
-            _vAdapter.push_back(pair.first);
-            m.clear();
-            m["endpoint"] = TC_Common::replace(pair.second.endpoint, "${localip}", container_detail::listenAddress);
-            m["allow"] = pair.second.allowIp;
-            m["queuecap"] = TC_Common::tostr(pair.second.queuecap);
-            m["queuetimeout"] = TC_Common::tostr(pair.second.queuetimeout);
-            m["maxconns"] = TC_Common::tostr(pair.second.maxConnections);
-            m["threads"] = TC_Common::tostr(pair.second.threadNum);
-            m["servant"] = TC_Common::tostr(pair.second.servant);
-            m["protocol"] = pair.second.protocol;
-            tConf.insertDomainParam("/tars/application/server/" + pair.first, m, true);
-        }
-        _vAdapter.emplace_back("AdminAdapter");
-
-        m.clear();
-        m["${modulename}"] = _sServerApp + "." + _sServerName;
-        m["${app}"] = _sServerApp;
-        m["${server}"] = _sServerName;
-        m["${basepath}"] = container_detail::imageBindServerBinDir;
-        m["${datapath}"] = container_detail::imageBindServerDataDir;
-        m["${logpath}"] = container_detail::imageBindServerLogDir;
-        m["${localip}"] = container_detail::listenAddress;
-        m["${locator}"] = FIXED_QUERY_PROXY_NAME;
-        m["${local}"] = "tcp -h 127.0.0.1 -p " + std::to_string(_adminPort) + " -t 10000";
-        m["${asyncthread}"] = TC_Common::tostr(descriptor.asyncThreadNum);
-        m["${mainclass}"] = "com.qq." + TC_Common::lower(_sServerApp) + "." + TC_Common::lower(_sServerName) + "." + _sServerName;
-        m["${enableset}"] = "n";
-        m["${setdivision}"] = "NULL";
-
-        string sProfile = descriptor.profile;
-        sProfile = TC_Common::replace(sProfile, m);
-
-        TC_Config tProfileConf;
-        tProfileConf.parseString(sProfile);
-        tConf.joinConfig(tProfileConf, true);
-
-        string sStream = TC_Common::replace(tConf.tostr(), "\\s", " ");
-
-        ofstream configFile(_sServerConfFile.c_str());
-        if (!configFile.good()) {
-            std::cout << "cannot open configuration file: " + _sServerConfFile;
-            return -1;
-        }
-
-        configFile << sStream;
-        configFile.close();
-
-        return loadConf(tConf);
-
-    } catch (TC_Config_Exception &e) {
-        LOG->error() << FILE_FUN << e.what() << endl;
-        return -1;
-    }
+static void uploadStopStat(int stopStat)
+{
+	std::string message{};
+	if (WIFEXITED(stopStat))
+	{
+		int code = WEXITSTATUS(stopStat);
+		message = string("[alarm] server exit with code ") + to_string(code);
+	}
+	else if (WIFSIGNALED(stopStat))
+	{
+		int signal = WTERMSIG(stopStat);
+		message = string("[alarm] server exit with signal ") + to_string(signal);
+	}
+	if (!message.empty())
+	{
+		notifyMessage(message);
+	}
 }
 
-int ServerObject::MetaData::loadConf(TC_Config &tConf) {
-    constexpr char TARS_JAVA[] = "tars_java";
-    try {
-        if (strncmp(_sServerType.c_str(), TARS_JAVA, sizeof(TARS_JAVA) - 1) == 0) {
-            std::string sJvmParams = tConf.get("/tars/application/server<jvmparams>", "");
-            _sServerLauncherArgv = TC_Common::replace(_sServerLauncherArgv, "#{jvmparams}", sJvmParams);
-
-            std::string sMainClass = tConf.get("/tars/application/server<mainclass>", "");
-            _sServerLauncherArgv = TC_Common::replace(_sServerLauncherArgv, "#{mainclass}", sMainClass);
-
-            std::string sClassPath = tConf.get("/tars/application/server<classpath>", "");
-            _sServerLauncherArgv = TC_Common::replace(_sServerLauncherArgv, "#{classpath}", sClassPath);
-        }
-
-        _sServerLauncherEnv = tConf.get("/tars/application/server<env>", "");
-        _iTimeout = TC_Common::strto<int>(tConf.get("/tars/application/server<hearttimeout>", "60"));
-    }
-    catch (const exception &e) {
-        LOG->error() << FILE_FUN << e.what() << endl;
-        return -1;
-    }
-
-    return 0;
+static void updateServerState(tars::ServerState settingState, ServerState presentState)
+{
+	auto registryPrx = ProxyManger::instance().getRegistryProxy();
+	if (!registryPrx)
+	{
+		auto message = std::string("get null RegistryProxy");
+		notifyMessage("[alarm] " + message);
+		TLOGERROR(message << std::endl);
+	}
+	try
+	{
+		registryPrx->updateServerState(container::podName, etos(settingState), etos(presentState));
+	}
+	catch (const std::exception& e)
+	{
+		auto message = std::string("call registryProxy->updateServerState() catch exception: ").append(e.what());
+		notifyMessage("[alarm]" + message);
+		TLOGERROR(message << std::endl);
+	}
 }
 
-ServerObject::ProcessStatus ServerObject::_doStart(std::string &result) {
-    assert(_runtimeData.presentState == Inactive);
-    bool activateOk = false;
-    do {
-        try {
-            _runtimeData.presentState = Activating;
-            updateServerState(_runtimeData.settingState, _runtimeData.presentState);
-
-            auto registryProxy = ProxyManger::instance().getRegistryProxy();
-            if (!registryProxy) {
-                LOG->error() << FILE_FUN << "getRegistryProxy \"" << _metaData._sServerApp << "." << _metaData._sServerName << "\" error " << endl;
-                break;
-            }
-
-            ServerDescriptor descriptor;
-
-            int res = registryProxy->getServerDescriptor(_metaData._sServerApp, _metaData._sServerName, descriptor);
-            LOG->error() << "get getServerDescriptor" << descriptor.writeToJsonString() << std::endl;
-            if (res == -1) {
-                LOG->error() << FILE_FUN << "getServer \"" << _metaData._sServerApp << "." << _metaData._sServerName << "\" error " << endl;
-                break;
-            }
-
-            res = _metaData.updateMetaDataFromDescriptor(descriptor);
-
-            if (res == -1) {
-                LOG->error() << FILE_FUN << "updateMetaDataFromDescriptor \"" << _metaData._sServerApp << "." << _metaData._sServerName << "\" error " << endl;
-                break;
-            }
-
-            vector<string> vArgv = TC_Common::sepstr<string>(_metaData._sServerLauncherArgv, " ");
-            vector<string> vEnvs;
-
-            //todo set vEnvs;
-
-            pid_t pid = Launcher::activate(_metaData._sServerLauncherFile, _metaData._sServerBaseDir, _metaData._sStdout_Stderr, vArgv, vEnvs);
-
-            if (pid > MIN_PID_VALUE) {
-                _runtimeData._pid = pid;
-                _runtimeData._vAdapterKeepTimes.clear();
-                time_t now = TNOW;
-                for (auto &&adapter:_metaData._vAdapter) {
-                    _runtimeData._vAdapterKeepTimes.emplace_back(adapter, now);
-                }
-                _runtimeData._tLastStartTime = TNOW;
-                _runtimeData.presentState = Activating;
-                activateOk = true;
-                break;
-            }
-        } catch (std::exception &e) {
-            LOG->error() << FILE_FUN << "_startServer \"" << _metaData._sServerApp << "." << _metaData._sServerName << "\"" << e.what() << endl;
-            break;
-        }
-        LOG->error() << FILE_FUN << "activate \"" << _metaData._sServerApp << "." << _metaData._sServerName << "\" error " << endl;
-    } while (false);
-
-    if (!activateOk) {
-        _runtimeData.presentState = tars::ServerState::Inactive;
-        updateServerState(_runtimeData.settingState, _runtimeData.presentState);
-        result = "activate server error, " + _metaData._sServerApp + ":" + _metaData._sServerName;
-        return ProcessStatus::Error;
-    }
-    return ProcessStatus::Processing;
+static bool processExist(pid_t pid)
+{
+	if (pid < MIN_PID_VALUE)
+	{
+		return false;
+	}
+	int stat{};
+	auto waitPidRes = ::waitpid(pid, &stat, WNOHANG);
+	if (waitPidRes == pid)
+	{
+		uploadStopStat(stat);
+		return false;
+	}
+	if (waitPidRes < 0)
+	{
+		if (errno == ECHILD)
+		{
+			return false;
+		}
+		TLOGERROR("call ::waitpid get error: " << errno << strerror(errno) << std::endl);
+		return true;
+	}
+	return true;
 }
 
-int ServerObject::_startServer(std::string &result) {
+//we will use addition calculation on the VERY_BIG_TIME_VALUE variable,
+//so it cannot be used INT32_MAX
+constexpr time_t VERY_BIG_TIME_VALUE = { INT32_MAX - 10000 };
 
-    if (_runtimeData.presentState == Active || _runtimeData.presentState == Activating) { ;
-        return 0;
-    }
-
-    if (_runtimeData.presentState == Deactivating) {
-        result = "server is deactivating, can't start now...";
-        return -1;
-    }
-
-    assert(_runtimeData.presentState == Inactive);
-
-    return _doStart(result);
-}
-
-int ServerObject::startServer(std::string &result) {
-    lock_guard<std::mutex> lockGuard(_mutex);
-    _runtimeData.settingState = Active;
-    return _startServer(result);
-}
-
-int ServerObject::_stopServer(std::string &result) {
-
-    if (_runtimeData.presentState == Inactive || _runtimeData.presentState == Deactivating) {
-        return 0;
-    }
-
-    if (_runtimeData.presentState == Activating) {
-        result = "server is activating, can't stop now...";
-        return -1;
-    }
-
-    ProcessStatus status = _doStop(result);
-    if (status == Error) {
-        return -1;
-    }
-
-    if (status == Processing) {
-        _waitingStop();
-    }
-    return 0;
-}
-
-int ServerObject::stopServer(std::string &result) {
-    lock_guard<std::mutex> lockGuard(_mutex);
-    _runtimeData.settingState = Inactive;
-    return _stopServer(result);
-}
-
-
-int ServerObject::restartServer(std::string &result) {
-    lock_guard<std::mutex> lockGuard(_mutex);
-    _runtimeData.settingState = Active;
-    return _stopServer(result);
-}
-
-int ServerObject::notifyServer(const string &sCommand, string &sResult) {
-    string sAdminPrxName = "AdminObj@tcp -h 127.0.0.1 -p " + to_string(_metaData._adminPort) + " -t 30000";
-    try {
-        AdminFPrx pAdminPrx = ProxyManger::createAdminProxy(sAdminPrxName);
-        sResult = pAdminPrx->notify(sCommand);
-    } catch (const exception &e) {
-        sResult = "error" + string(e.what());
-        return -1;
-    }
-    return 0;
-}
-
-//此函数期望被周期性调用
-void ServerObject::checkServerState() {
-
-    lock_guard<std::mutex> lockGuard(_mutex);
-
-    if (_runtimeData.presentState == Activating) {
-        time_t now = TNOW;
-        //启动后的 6 秒内不做检查, 适应启动速度比较慢的情况
-        if (_runtimeData._tLastStartTime + 6 >= now) {
-            return;
-        }
-        bool bTimeout = false;
-        for (const auto &item:_runtimeData._vAdapterKeepTimes) {
-            if (item.second + _metaData._iTimeout < now) {
-                LOG->error() << "call server Timeout ," << item.second << "|" << _metaData._iTimeout << "|" << now << endl;
-                bTimeout = true;
-            }
-        }
-
-        if (bTimeout) {
-            if (_runtimeData.presentState == Activating) {
-                _runtimeData.presentState = Active;
-            }
-            string result;
-            _stopServer(result);
-            return;
-        }
-    }
-
-
-    if (_runtimeData.settingState == Active) {
-        if (_runtimeData.presentState == Deactivating) {
-            // 此种情况表示 正在执行 重启 命令.待_runtimeData.presentState变更为 Inactive后再启动.
-            return;
-        }
-
-        if (_runtimeData.presentState == Activating) {
-        }
-
-        time_t now = TNOW;
-        //启动后的 6 秒内不做检查, 适应启动速度比较慢的情况
-        if (_runtimeData._tLastStartTime + 6 >= now) {
-            return;
-        }
-
-        bool bStopped = _runtimeData.presentState == Inactive || _checkStopped();
-        if (bStopped) {
-            if (_isAutoStart()) {
-                string result;
-                _startServer(result);
-            }
-            return;
-        }
-
-        bool bTimeout = false;
-        for (const auto &item:_runtimeData._vAdapterKeepTimes) {
-            if (item.second + _metaData._iTimeout < now) {
-                LOG->error() << "call server Timeout ," << item.second << "|" << _metaData._iTimeout << "|" << now << endl;
-                bTimeout = true;
-            }
-        }
-
-        if (bTimeout) {
-            if (_runtimeData.presentState == Activating) {
-                _runtimeData.presentState = Active;
-            }
-            string result;
-            _stopServer(result);
-            return;
-        }
-    }
-}
-
-void ServerObject::updateKeepAliveTime(const string &adapter) {
-    lock_guard<std::mutex> lockGuard(_mutex);
-
-    if (_runtimeData.presentState == Activating) {
-        _runtimeData.presentState = Active;
-        updateServerState(_runtimeData.settingState, Active);
-    }
-
-    if (adapter.empty()) {
-        for (auto &item:_runtimeData._vAdapterKeepTimes) {
-            item.second = TNOW;
-        }
-        return;
-    }
-
-    for (auto &item:_runtimeData._vAdapterKeepTimes) {
-        if (item.first == adapter) {
-            item.second = TNOW;
-            return;
-        }
-    }
-
-    LOG->error() << "Not Match adapter " << adapter << "|" << TNOW << endl;
-}
-
-void ServerObject::updateKeepActiving() {
-    lock_guard<std::mutex> lockGuard(_mutex);
-
-    if (_runtimeData.presentState != Activating) {
-        _runtimeData.presentState = Activating;
-        updateServerState(_runtimeData.settingState, Activating);
-    }
-
-    for (auto &item:_runtimeData._vAdapterKeepTimes) {
-        item.second = TNOW;
-    }
+enum class ServerTarget
+{
+	Start,
+	Stop,
+	Restart
 };
 
-bool ServerObject::checkStopped() {
-    lock_guard<std::mutex> lockGuard(_mutex);
-    return _checkStopped();
+struct ServerMetadata
+{
+public:
+	ServerMetadata() :
+			serverApp_(container::serverApp),
+			serverName_(container::serverName),
+			serverType_(container::serverType),
+			serverBaseDir_(container::serverBinDir),
+			serverConfFile_(container::serverConfFile),
+			serverLauncherFile_(container::serverLauncherFile),
+			stdoutStderr_(container::serverLogDir + "/" + serverApp_ + "/" + serverName_ + "/" + "stdout_stderr"),
+			serverLauncherArgv_(container::serverLauncherArgv)
+	{
+	}
+
+	const string& serverApp_;
+	const string& serverName_;
+	const string& serverType_;
+	const string& serverBaseDir_;
+	const string& serverConfFile_;
+	const string& serverLauncherFile_;
+	const string stdoutStderr_;
+
+	string serverLauncherArgv_;
+	string serverLauncherEnv_;       //环境变量字符串
+	int timeout_{ 60 };                 //心跳超时时间
+	vector<string> adapters{};       //adapter
+
+	int updateMetadataFromDescriptor(const ServerDescriptor& descriptor)
+	{
+		adapters.clear();
+		map<string, string> m{};
+
+		TC_Config tConfig{};
+		try
+		{
+			m["node"] = FIXED_NODE_PROXY_NAME;
+			tConfig.insertDomainParam("/tars/application/server", m, true);
+
+			for (const auto& item: descriptor.adapters)
+			{
+				const auto& adapterName = item.first;
+				const auto& adapterDesc = item.second;
+				adapters.push_back(adapterName);
+				m.clear();
+				m["endpoint"] = TC_Common::replace(adapterDesc.endpoint, "${localip}", container::listenAddress);
+				m["allow"] = adapterDesc.allowIp;
+				m["queuecap"] = TC_Common::tostr(adapterDesc.queuecap);
+				m["queuetimeout"] = TC_Common::tostr(adapterDesc.queuetimeout);
+				m["maxconns"] = TC_Common::tostr(adapterDesc.maxConnections);
+				m["threads"] = TC_Common::tostr(adapterDesc.threadNum);
+				m["servant"] = TC_Common::tostr(adapterDesc.servant);
+				m["protocol"] = adapterDesc.protocol;
+				tConfig.insertDomainParam("/tars/application/server/" + item.first, m, true);
+			}
+			adapters.emplace_back("AdminAdapter");
+
+			m.clear();
+			m["${modulename}"] = serverApp_ + "." + serverName_;
+			m["${app}"] = serverApp_;
+			m["${server}"] = serverName_;
+			m["${basepath}"] = container::serverBinDir;
+			m["${datapath}"] = container::serverDataDir;
+			m["${logpath}"] = container::serverLogDir;
+			m["${localip}"] = container::listenAddress;
+			m["${locator}"] = FIXED_QUERY_PROXY_NAME;
+			m["${local}"] = FIXED_LOCAL_ENDPOINT;
+			m["${asyncthread}"] = TC_Common::tostr(descriptor.asyncThreadNum);
+			m["${mainclass}"] = "com.qq." + TC_Common::lower(serverApp_) + "." + TC_Common::lower(serverName_) + "." + serverName_;
+			m["${enableset}"] = "n";
+			m["${setdivision}"] = "NULL";
+
+			string sProfile = descriptor.profile;
+			sProfile = TC_Common::replace(sProfile, m);
+
+			TC_Config profileConfig;
+			profileConfig.parseString(sProfile);
+			tConfig.joinConfig(profileConfig, true);
+
+			string configContent = TC_Common::replace(tConfig.tostr(), "\\s", " ");
+
+			ofstream configFile(serverConfFile_.c_str());
+			if (!configFile.good())
+			{
+				std::string message = "cannot open or write configuration file: " + serverConfFile_;
+				notifyMessage("[alarm] " + message);
+				TLOGERROR(message);
+				std::cout << message << std::endl;
+				return -1;
+			}
+
+			configFile << configContent;
+			configFile.close();
+
+			return loadConf(tConfig);
+		}
+		catch (const std::exception& e)
+		{
+			std::string message = std::string("parser profile catch exception: ").append(e.what());
+			notifyMessage("[alarm] " + message);
+			TLOGERROR(message);
+			std::cout << message << std::endl;
+			return -1;
+		}
+	}
+
+private:
+
+	int loadConf(const TC_Config& config)
+	{
+		constexpr char JAVA_TYPE_PREFIX[] = "java-";
+		constexpr size_t JAVA_TYPE_PREFIX_SIZE = sizeof(JAVA_TYPE_PREFIX) - 1;
+		try
+		{
+			if (serverType_.compare(0, JAVA_TYPE_PREFIX_SIZE, JAVA_TYPE_PREFIX) == 0)
+			{
+				std::string jvmParams = config.get("/tars/application/server<jvmparams>", "");
+				serverLauncherArgv_ = TC_Common::replace(serverLauncherArgv_, "#{jvmparams}", jvmParams);
+
+				std::string mainClass = config.get("/tars/application/server<mainclass>", "");
+				serverLauncherArgv_ = TC_Common::replace(serverLauncherArgv_, "#{mainclass}", mainClass);
+
+				std::string classPath = config.get("/tars/application/server<classpath>", "");
+				serverLauncherArgv_ = TC_Common::replace(serverLauncherArgv_, "#{classpath}", classPath);
+			}
+			serverLauncherEnv_ = config.get("/tars/application/server<env>", "");
+			timeout_ = TC_Common::strto<int>(config.get("/tars/application/server<hearttimeout>", "60"));
+		}
+		catch (const exception& e)
+		{
+			TLOGERROR("call updateMetadataFromDescriptor got exception: " << e.what());
+			return -1;
+		}
+		return 0;
+	}
+};
+
+struct ServerRuntime
+{
+	pid_t pid_{ -1 };
+	time_t lastLaunchTime_{ 0 };
+	time_t lastTermTime_{ VERY_BIG_TIME_VALUE };
+	time_t lastKillTime_{ VERY_BIG_TIME_VALUE };
+	std::map<string, time_t> heatBeatTimes_{};
+
+	void resetWithoutLaunchTime()
+	{
+		pid_ = -1;
+		lastTermTime_ = VERY_BIG_TIME_VALUE;
+		lastKillTime_ = VERY_BIG_TIME_VALUE;
+		heatBeatTimes_.clear();
+	}
+};
+
+struct ServerObjectImp
+{
+public:
+	static ServerObjectImp& instance()
+	{
+		static ServerObjectImp imp;
+		return imp;
+	}
+
+	void startServer()
+	{
+		lock_guard<std::mutex> lockGuard(mutex_);
+		target = ServerTarget::Start;
+		setting_ = tars::Active;
+		runtime_.lastLaunchTime_ = 0;
+	}
+
+	void restartServer()
+	{
+		lock_guard<std::mutex> lockGuard(mutex_);
+		target = ServerTarget::Restart;
+		setting_ = tars::Active;
+		runtime_.lastLaunchTime_ = 0;
+		_doStop();
+	}
+
+	void stopServer()
+	{
+		lock_guard<std::mutex> lockGuard(mutex_);
+		target = ServerTarget::Stop;
+		setting_ = tars::Inactive;
+		_doStop();
+	}
+
+	int addFile(const string& file, std::string result)
+	{
+		lock_guard<std::mutex> lockGuard(mutex_);
+		string fileName = TC_File::extractFileName(file);
+		TarsRemoteConfig remoteConfig{};
+		remoteConfig.setConfigInfo(Application::getCommunicator(), ServerConfig::Config, metadata_.serverApp_, metadata_.serverName_,
+				metadata_.serverBaseDir_, "");
+		return remoteConfig.addConfig(fileName, result);
+	}
+
+	void keepAlive(const ServerInfo& serverInfo)
+	{
+		std::lock_guard<mutex> lockGuard(mutex_);
+		if (target == ServerTarget::Start)
+		{
+			if (present_ == tars::Activating)
+			{
+				updateServerState(setting_, tars::Active);
+			}
+			present_ = tars::Active;
+			auto now = TNOW;
+			if (serverInfo.adapter.empty())
+			{
+				for (auto& item: runtime_.heatBeatTimes_)
+				{
+					item.second = now;
+				}
+			}
+			else
+			{
+				runtime_.heatBeatTimes_[serverInfo.adapter] = now;
+			}
+			return;
+		}
+		_doStop();
+	}
+
+	void keepActiving(const ServerInfo& serverInfo)
+	{
+		std::lock_guard<mutex> lockGuard(mutex_);
+		if (target == ServerTarget::Start)
+		{
+			if (present_ == tars::Active)
+			{
+				updateServerState(setting_, tars::Activating);
+			}
+			present_ = tars::Activating;
+			auto now = TNOW;
+			if (serverInfo.adapter.empty())
+			{
+				for (auto& item: runtime_.heatBeatTimes_)
+				{
+					item.second = now;
+				}
+			}
+			else
+			{
+				runtime_.heatBeatTimes_[serverInfo.adapter] = now;
+			}
+			return;
+		}
+		_doStop();
+	}
+
+	void startPatrol()
+	{
+		thread_ = std::thread([this]
+		{
+			for (size_t i = 0;; ++i)
+			{
+				if (patrolStop_)
+				{
+					return;
+				}
+				std::this_thread::sleep_for(std::chrono::seconds(1));
+				if (i % INACTIVE_CHECK_INTERVAL == 0)
+				{
+					inactivatePatrol();
+				}
+				if (i % ACTIVE_CHECK_INTERVAL == 0)
+				{
+					activatePatrol();
+				}
+
+				if (i % UPDATE_STATE_INTERVAL == 0)
+				{
+					updateServerState(setting_, present_);
+				}
+			}
+		});
+		thread_.detach();
+	}
+
+	~ServerObjectImp()
+	{
+		patrolStop_ = true;
+	}
+
+private:
+	void _doStart()
+	{
+		if (runtime_.lastLaunchTime_ + LAUNCH_SERVER_INTERVAL_TIME > TNOW)
+		{
+			return;
+		}
+		bool activateOk = false;
+		do
+		{
+			assert(setting_ == tars::Active);
+			auto registryProxy = ProxyManger::instance().getRegistryProxy();
+			if (!registryProxy)
+			{
+				auto message = std::string("get null RegistryProxy");
+				notifyMessage("[alarm] " + message);
+				TLOGERROR(message << std::endl);
+				break;
+			}
+
+			ServerDescriptor descriptor;
+			try
+			{
+				int res = registryProxy->getServerDescriptor(metadata_.serverApp_, metadata_.serverName_, descriptor);
+				if (res < 0)
+				{
+					auto message = std::string("call registryProxy->getServerDescriptor() unexpected result: ").append(std::to_string(res));
+					notifyMessage("[alarm] " + message);
+					TLOGERROR(message << std::endl);
+					break;
+				}
+				TLOGDEBUG("get getServerDescriptor" << descriptor.writeToJsonString() << std::endl);
+			}
+			catch (const std::exception& e)
+			{
+				auto message = std::string("call registryProxy->getServerDescriptor() catch exception :").append(e.what());
+				notifyMessage("[alarm] " + message);
+				TLOGERROR(message << std::endl);
+				break;
+			}
+
+			int res = metadata_.updateMetadataFromDescriptor(descriptor);
+			if (res == -1)
+			{
+				break;
+			}
+			vector<string> vArgv = TC_Common::sepstr<string>(metadata_.serverLauncherArgv_, " ");
+			vector<string> vEnvs;
+			//todo set vEnvs;
+
+			time_t now = TNOW;
+			runtime_.lastLaunchTime_ = now;
+			pid_t pid = Launcher::activate(metadata_.serverLauncherFile_, metadata_.serverBaseDir_, metadata_.stdoutStderr_, vArgv, vEnvs);
+			if (pid > MIN_PID_VALUE)
+			{
+				runtime_.resetWithoutLaunchTime();
+				runtime_.pid_ = pid;
+				present_ = Activating;
+				for (auto&& adapter: metadata_.adapters)
+				{
+					runtime_.heatBeatTimes_[adapter] = now;
+				}
+				activateOk = true;
+				break;
+			}
+		} while (false);
+
+		if (!activateOk)
+		{
+			present_ = tars::ServerState::Inactive;
+		}
+		updateServerState(setting_, present_);
+	}
+
+	void _doStop()
+	{
+		if (!processExist(runtime_.pid_))
+		{
+			present_ = tars::Inactive;
+			runtime_.resetWithoutLaunchTime();
+			updateServerState(setting_, present_);
+			return;
+		}
+		present_ = Deactivating;
+		updateServerState(setting_, present_);
+		do
+		{
+			if (metadata_.serverType_ != SERVER_TYPE_NOT_TARS)
+			{
+				AdminFPrx pAdminPrx = ProxyManger::instance().getAdminProxy();
+				if (!pAdminPrx)
+				{
+					TLOGERROR("get null AdminPrx");
+				}
+				else
+				{
+					try
+					{
+						pAdminPrx->async_shutdown(nullptr);
+						break;
+					}
+					catch (...)
+					{
+					}
+				}
+			}
+			//some program need send signal twice;
+			::kill(runtime_.pid_, SIGTERM);
+			::kill(runtime_.pid_, SIGTERM);
+		} while (false);
+		runtime_.lastTermTime_ = TNOW;
+	}
+
+	void inactivatePatrol()
+	{
+		std::lock_guard<mutex> lockGuard(mutex_);
+
+		if (target != ServerTarget::Restart && target != ServerTarget::Stop)
+		{
+			return;
+		}
+
+		do
+		{
+			if (runtime_.pid_ == -1 && present_ == tars::Inactive)
+			{
+				break;
+			}
+
+			if (!processExist(runtime_.pid_))
+			{
+				runtime_.pid_ = -1;
+				present_ = tars::Inactive;
+				runtime_.resetWithoutLaunchTime();
+				updateServerState(setting_, present_);
+				break;
+			}
+
+			auto now = TNOW;
+			if (runtime_.lastKillTime_ + MAX_KILL_TIME <= now)
+			{
+				auto message = std::string("after sending a SIGKILL to the process, the process still exists");
+				notifyMessage("[alarm] " + message);
+				TLOGERROR(message << std::endl;);
+				std::cout << message << std::endl;
+				exit(-1);
+			}
+
+			if (runtime_.lastTermTime_ + MAX_TERM_TIME <= now)
+			{
+				::kill(runtime_.pid_, SIGKILL);
+				runtime_.lastKillTime_ = now;
+				return;
+			}
+			return;
+		} while (false);
+		assert(runtime_.pid_ == -1);
+		assert(present_ == tars::Inactive);
+		if (target == ServerTarget::Restart)
+		{
+			target = ServerTarget::Start;
+		}
+	}
+
+	void activatePatrol()
+	{
+		std::lock_guard<mutex> lockGuard(mutex_);
+		if (target != ServerTarget::Start)
+		{
+			return;
+		}
+		assert(target == ServerTarget::Start);
+		assert(setting_ == tars::Active);
+		time_t now = TNOW;
+		if (present_ == Activating || present_ == Active)
+		{
+			if (!processExist(runtime_.pid_))
+			{
+				present_ = tars::Inactive;
+				runtime_.resetWithoutLaunchTime();
+				_doStart();
+				return;
+			}
+
+			bool timeout = false;
+			for (const auto& item: runtime_.heatBeatTimes_)
+			{
+				if (item.second + metadata_.timeout_ < now)
+				{
+					timeout = true;
+				}
+			}
+			if (timeout)
+			{
+				auto message = std::string("heartbeat overtime, will restart process");
+				notifyMessage("[alarm] " + message);
+				TLOGWARN(message);
+				target = ServerTarget::Restart;
+				_doStop();
+				return;
+			}
+			return;
+		}
+
+		if (present_ == tars::Inactive)
+		{
+			present_ = tars::Inactive;
+			runtime_.resetWithoutLaunchTime();
+			_doStart();
+			return;
+		}
+
+		if (present_ == tars::Deactivating)
+		{
+			TLOGDEBUG("In " << __FUNCTION__ << "__line__: " << __LINE__ << std::endl;);
+			assert(false); //should not reach here;
+			return;
+		}
+	}
+
+private:
+	ServerObjectImp() = default;;
+
+private:
+	std::mutex mutex_;
+	ServerTarget target{ ServerTarget::Start };
+	ServerState setting_{ tars::Active };
+	ServerState present_{ tars::Inactive };
+	ServerRuntime runtime_{};
+	ServerMetadata metadata_{};
+	std::thread thread_;
+	bool patrolStop_{ false };
+};
+
+int ServerObject::startServer(const string& application, const string& serverName, std::string& result)
+{
+	if (application != container::serverApp && serverName != container::serverName)
+	{
+		return -1;
+	}
+	result = "Success";
+	ServerObjectImp::instance().startServer();
+	return 0;
 }
 
-int ServerObject::addFile(string sFile, std::string &result) {
-    lock_guard<std::mutex> lockGuard(_mutex);
-    assert(!sFile.empty());
-
-    if (!TC_File::isAbsolute(sFile)) {
-        sFile = _metaData._sServerBaseDir + "bin" + FILE_SEP + sFile;
-    }
-
-    sFile = TC_File::simplifyDirectory(TC_Common::trim(sFile));
-
-    string sFilePath = TC_File::extractFilePath(sFile);
-
-    string sFileName = TC_File::extractFileName(sFile);
-
-    TarsRemoteConfig tTarsRemoteConfig;
-    tTarsRemoteConfig.setConfigInfo(Application::getCommunicator(), ServerConfig::Config, _metaData._sServerApp, _metaData._sServerName, _metaData._sServerBaseDir, "");
-    return tTarsRemoteConfig.addConfig(sFileName, result);
+int ServerObject::stopServer(const string& application, const string& serverName, std::string& result)
+{
+	if (application != container::serverApp && serverName != container::serverName)
+	{
+		return -1;
+	}
+	result = "Success";
+	ServerObjectImp::instance().stopServer();
+	return 0;
 }
 
-void ServerObject::_kill() {
-    if (_runtimeData._pid >= MIN_PID_VALUE) {
-        ::kill(_runtimeData._pid, SIGKILL);
-        usleep(2 * 1000); // 2ms
-        int stat;
-        ::waitpid(-1, &stat, WNOHANG);
-    }
-    _runtimeData._pid = -1;
-    _runtimeData.presentState = Inactive;
+int ServerObject::restartServer(const string& application, const string& serverName, std::string& result)
+{
+	if (application != container::serverApp && serverName != container::serverName)
+	{
+		return -1;
+	}
+	result = "Success";
+	ServerObjectImp::instance().restartServer();
+	return 0;
 }
 
-void ServerObject::kill() {
-    lock_guard<std::mutex> lockGuard(_mutex);
-    _kill();
+int ServerObject::addFile(const string& application, const string& serverName, const string& file, std::string& result)
+{
+	if (application != container::serverApp && serverName != container::serverName)
+	{
+		return -1;
+	}
+	return ServerObjectImp::instance().addFile(file, result);
 }
 
-void ServerObject::uploadStopStat(int stopStat) {
-
-    std::string appServer = _metaData._sServerApp + "." + _metaData._sServerName;
-    std::string message;
-
-    if (WIFEXITED(stopStat)) {
-        int code = WEXITSTATUS(stopStat);  // 主动调用 return 或 exit 退出
-        message = string("[alarm] server exit with code ") + to_string(code);
-    } else if (WIFSIGNALED(stopStat)) {
-        int signal = WTERMSIG(stopStat);   // 接收到信号退出
-        message = string("[alarm] server exit with signal ") + to_string(signal);
-    }
-
-    if (message.empty()) {
-        return;
-    }
-
-    try {
-        auto notifyFPrx = ProxyManger::instance().getNotifyProxy();
-        if (!notifyFPrx) {
-            LOG->error() << "get NotifyPrx error" << endl;
-            return;
-        }
-        std::map<string, string> context;
-        context.insert(make_pair("SERVER_HOST_NAME", container_detail::podName));
-        notifyFPrx->reportServer(appServer, "-1", message, context);
-    } catch (const exception &e) {
-        LOG->error() << "call notifyFPrx->reportServer() catch exception :" << e.what() << endl;
-        return;
-    }
+int ServerObject::notifyServer(const string& application, const string& serverName, const string& command, std::string& result)
+{
+	try
+	{
+		AdminFPrx pAdminPrx = ProxyManger::instance().getAdminProxy();
+		result = pAdminPrx->notify(command);
+	}
+	catch (const exception& e)
+	{
+		result = "error" + string(e.what());
+		return -1;
+	}
+	return 0;
 }
 
-bool ServerObject::_checkStopped() {
-    if (_runtimeData._pid < MIN_PID_VALUE) {
-        _runtimeData.presentState = Inactive;
-        return true;
-    }
-
-    int iStat;
-    pid_t ret = waitpid(_runtimeData._pid, &iStat, WNOHANG);
-    if (ret > MIN_PID_VALUE) {
-        LOG->debug() << "wait pid return  " << ret << " " << _runtimeData._pid << endl;
-        uploadStopStat(iStat);
-        _runtimeData._pid = -1;
-        _runtimeData.presentState = Inactive;
-        return true;
-    }
-
-    if (ret < 0) {
-        LOG->debug() << "wait pid return " << ret << " " << _runtimeData._pid << endl;
-        _runtimeData._pid = -1;
-        _runtimeData.presentState = Inactive;
-        return true;
-    }
-
-    return false;
+void ServerObject::keepActiving(const ServerInfo& serverInfo)
+{
+	if (serverInfo.application != container::serverApp && serverInfo.serverName != container::serverName)
+	{
+		return;
+	}
+	ServerObjectImp::instance().keepActiving(serverInfo);
 }
 
-bool ServerObject::_isAutoStart() {
-    time_t now = TNOW;
-    assert(now >= _runtimeData._tLastStartTime);
-    return (_runtimeData._tLastStartTime + START_SERVER_INTERVAL_TIME <= now);
+void ServerObject::keepAlive(const ServerInfo& serverInfo)
+{
+	if (serverInfo.application != container::serverApp && serverInfo.serverName != container::serverName)
+	{
+		return;
+	}
+	ServerObjectImp::instance().keepAlive(serverInfo);
 }
 
-void ServerObject::updateServerState() {
-    try {
-        auto ptr = ProxyManger::instance().getRegistryProxy();
-        if (!ptr) {
-            LOG->debug() << "get RegistryProxy error" << endl;
-            return;
-        }
-        std::string appServer = _metaData._sServerApp + "-" + _metaData._sServerName;
-        ServerStateInfo info;
-        info.settingState = _runtimeData.settingState;
-        info.presentState = _runtimeData.presentState;
-        LOG->debug() << "Update State " << info.settingState << "|" << info.presentState << endl;
-        ptr->updateServerState(container_detail::podName, etos(_runtimeData.settingState), etos(_runtimeData.presentState));
-    } catch (const exception &e) {
-        LOG->debug() << "updateServerState exception : " << e.what() << endl;
-    }
+void ServerObject::startPatrol()
+{
+	ServerObjectImp::instance().startPatrol();
 }
-
-void ServerObject::updateServerState(ServerState settingState, tars::ServerState presentState) {
-    TimerTaskQueue::instance().pushTimerTask([settingState, presentState] {
-        try {
-            auto ptr = ProxyManger::instance().getRegistryProxy();
-            if (!ptr) {
-                LOG->debug() << "get RegistryProxy error" << endl;
-                return;
-            }
-            std::string appServer = container_detail::imageBindServerApp + "-" + container_detail::imageBindServerName;
-            ServerStateInfo info;
-            info.settingState = settingState;
-            info.presentState = presentState;
-            LOG->debug() << "Update State " << info.settingState << "|" << info.presentState << endl;
-            ptr->updateServerState(container_detail::podName, etos(settingState), etos(presentState));
-        } catch (const exception &e) {
-            LOG->debug() << "updateServerState exception : " << e.what() << endl;
-        }
-    }, 0);
-}
-
-
-ServerObject::ProcessStatus ServerObject::_doStop(std::string &result) {
-    bool bStopped = _checkStopped();
-    if (bStopped) {
-        _runtimeData.presentState = Inactive;
-        updateServerState(_runtimeData.settingState, _runtimeData.presentState);
-        return ServerObject::Done;
-    }
-
-    _runtimeData.presentState = Deactivating;
-    updateServerState(_runtimeData.settingState, _runtimeData.presentState);
-
-    do {
-        if (_metaData._sServerType != SERVERTYPE_NOT_TARS) {
-            string sAdminPrx = "AdminObj@tcp -h 127.0.0.1 -p " + to_string(_metaData._adminPort) + " -t 3000";
-            try {
-                AdminFPrx pAdminPrx = ProxyManger::createAdminProxy(sAdminPrx);
-                LOG->debug() << FILE_FUN << _metaData._sServerApp << "." << _metaData._sServerName << " call " << sAdminPrx << endl;
-                pAdminPrx->async_shutdown(nullptr);
-                break;
-            } catch (...) {
-                LOG->debug() << FILE_FUN << _metaData._sServerApp << "." << _metaData._sServerName << " by async_shutdown fail:|" << "|will use kill -9" << endl;
-            }
-        }
-        //todo 先用 SIGTERM ,等待若干秒后，再看是否需要  用  SIGKILL
-        _kill();
-        _runtimeData.presentState = Inactive;
-        updateServerState(_runtimeData.settingState, _runtimeData.presentState);
-        return ServerObject::Done;
-    } while (false);
-
-    return ServerObject::Processing;
-}
-
-void ServerObject::_waitingStop() {
-
-    assert(_runtimeData.presentState == Deactivating);
-
-    auto selfPtr = shared_from_this();
-    TimerTaskQueue::instance().pushCycleTask(
-            [selfPtr](const size_t &callTimes, size_t &callCycle) {
-                if (selfPtr->checkStopped()) {
-                    selfPtr->updateServerState();
-                    callCycle = 0;
-                    return;
-                }
-                if (callTimes * callCycle >= MAX_DEACTIVATING_TIME) {
-                    selfPtr->kill();
-                    selfPtr->updateServerState();
-                    callCycle = 0;
-                    return;
-                }
-            }, STOPPED_CHECK_INTERVAL, STOPPED_CHECK_INTERVAL);
-}
-
-
-

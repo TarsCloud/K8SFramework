@@ -16,32 +16,35 @@
 
 #include "PropertyServer.h"
 #include "PropertyImp.h"
-#include "servant/AppCache.h"
 #include "PropertyPushGateway.h"
 
-void PropertyServer::initialize() {
+void PropertyServer::initialize()
+{
+	try
+	{
+		//关闭远程日志
+		RemoteTimeLogger::getInstance()->enableRemote("", false);
+		RemoteTimeLogger::getInstance()->enableRemote("PropertyPool", true);
+		//增加对象
+		addServant<PropertyImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".PropertyObj");
 
-    try {
-        //关闭远程日志
-        RemoteTimeLogger::getInstance()->enableRemote("", false);
-        RemoteTimeLogger::getInstance()->enableRemote("PropertyPool", true);
-        //增加对象
-        addServant<PropertyImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".PropertyObj");
-
-        const auto &config = Application::getConfig();
-        PropertyPushGateway::instance().init(config);
-        PropertyPushGateway::instance().start();
-    }
-    catch (exception &ex) {
-        TLOGERROR("StatServer::initialize catch exception:" << ex.what() << endl);
-        exit(0);
-    }
-    catch (...) {
-        TLOGERROR("StatServer::initialize catch unknown exception  " << endl);
-        exit(0);
-    }
+		const auto& config = Application::getConfig();
+		PropertyPushGateway::instance().init(config);
+		PropertyPushGateway::instance().start();
+	}
+	catch (const std::exception& ex)
+	{
+		TLOGERROR("StatServer::initialize catch exception:" << ex.what() << endl);
+		exit(-1);
+	}
+	catch (...)
+	{
+		TLOGERROR("StatServer::initialize catch unknown exception  " << endl);
+		exit(-1);
+	}
 }
 
-void PropertyServer::destroyApp() {
-    TLOGDEBUG("PropertyServer::destroyApp ok" << endl);
+void PropertyServer::destroyApp()
+{
+	TLOGDEBUG("PropertyServer::destroyApp ok" << endl);
 }

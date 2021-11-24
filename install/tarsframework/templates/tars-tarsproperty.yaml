@@ -22,18 +22,15 @@ metadata:
     tars.io/ServerApp: tars
     tars.io/ServerName: tarsproperty
     tars.io/SubType: tars
-    tars.io/Template: tars.default
+    tars.io/Template: tars.es
 spec:
   app: tars
   server: tarsproperty
   subType: tars
   tars:
-    template: tars.elk
+    template: tars.es
     profile: |
       <tars>
-        <elk>
-          indexPre = property_{{.Release.Namespace}}
-        </elk>
         <hashmap>
           factor=1.5
           file=hashmap.txt

@@ -952,7 +952,7 @@ spec:
                                   optional:
                                     type: boolean
                                     default: true
-                                required: [ name ]
+                                required: [ secretName ]
                               emptyDir:
                                 type: object
                                 properties:

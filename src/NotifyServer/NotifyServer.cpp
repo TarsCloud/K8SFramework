@@ -2,11 +2,13 @@
 #include "NotifyImp.h"
 #include "NotifyMsgQueue.h"
 
-void NotifyServer::initialize() {
+void NotifyServer::initialize()
+{
     addServant<NotifyImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".NotifyObj");
-    NotifyMsgQueue::getInstance()->init();
+    const auto& config = getConfig();
+    NotifyMsgQueue::getInstance()->init(config);
 }
 
-void NotifyServer::destroyApp() {
-    // cout << "NotifyServer::destroyApp ok" << endl;
+void NotifyServer::destroyApp()
+{
 }

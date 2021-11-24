@@ -22,7 +22,7 @@ function LOG_DEBUG() {
   msg="${msg} $*"
   echo -e "\033[40;37m $msg \033[0m"
 }
-###### LOG 
+###### LOG
 
 if (($# < 4)); then
   LOG_INFO "Usage: $0  <DOCKER_REPOSITORY>  <DOCKER_REGISTRY_USER> <DOCKER_REGISTRY_PASSWORD> <id> <DOCKER_REGISTRY> "
@@ -45,11 +45,10 @@ echo "BUILD_ID:               "$_BUILD_ID_
 echo "DOCKER_REGISTRY:        "$_DOCKER_REGISTRY_
 
 #
-# export DOCKER_CLI_EXPERIMENTAL=enabled 
+# export DOCKER_CLI_EXPERIMENTAL=enabled
 # docker buildx create --use --name tars-builder-k8s-framework
 # docker buildx inspect tars-builder-k8s-framework --bootstrap
 # docker run --rm --privileged docker/binfmt:a7996909642ee92942dcd6cff44b9b95f08dad64
-
 
 #### 构建基础镜像
 declare -a BaseImages=(
@@ -58,7 +57,6 @@ declare -a BaseImages=(
   tars.nodejsbase
   tars.php74base
   tars.tarsnode
-  helm.wait
 )
 
 for KEY in "${BaseImages[@]}"; do
@@ -97,6 +95,7 @@ declare -a ServerImages=(
   tarsproperty
   tarsquerystat
   tarsqueryproperty
+  tarskevent
 )
 
 # #--------------------------------------------------------------------------------------------
@@ -113,8 +112,7 @@ for KEY in "${ServerImages[@]}"; do
   echo "FROM ${_DOCKER_REPOSITORY_}/tars.cppbase
 ENV ServerType=cpp
 COPY /root /
-" > Dockerfile.tars."${KEY}"
-
+" >Dockerfile.tars."${KEY}"
 
   # if ! docker buildx build --platform=linux/amd64,linux/arm64 -o type=docker -t tars."${KEY}" build/files/template/tars."${KEY}"; then
   if ! docker build -t ${_DOCKER_REPOSITORY_}/tars."${KEY}" -f Dockerfile.tars."${KEY}" build/files/template/tars."${KEY}"; then
@@ -147,7 +145,7 @@ declare -a LocalImages=(
   tars.tarsquerystat
   tars.tarsproperty
   tars.tarsqueryproperty
-  helm.wait
+  tars.tarskevent
 )
 
 # 登陆
@@ -159,7 +157,7 @@ fi
 for KEY in "${LocalImages[@]}"; do
 
   # Specified BuildID Tag
-  if [ "${_DOCKER_REGISTRY_}" != "" ]; then 
+  if [ "${_DOCKER_REGISTRY_}" != "" ]; then
     RemoteImagesTag="${_DOCKER_REGISTRY_}/${_DOCKER_REPOSITORY_}/${KEY}:${_BUILD_ID_}"
   else
     RemoteImagesTag="${_DOCKER_REPOSITORY_}/${KEY}:${_BUILD_ID_}"

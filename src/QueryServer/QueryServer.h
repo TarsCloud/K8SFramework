@@ -17,41 +17,26 @@
 #ifndef _QueryServer_H_
 #define _QueryServer_H_
 
-#include <iostream>
-#include <set>
 #include "servant/Application.h"
 
-using namespace std;
-using namespace tars;
-
 /////////////////////////////////////////////////////////////////////
-class QueryServer : public Application {
+class QueryServer : public Application
+{
 public:
-    /**
-     *
-     **/
-    ~QueryServer() override = default;;
+	/**
+	 *
+	 **/
+	~QueryServer() override = default;;
 
-    /**
-     *
-     **/
-    void initialize() override;
+	/**
+	 *
+	 **/
+	void initialize() override;
 
-    /**
-     *
-     **/
-    void destroyApp() override;
-
-    const std::string &getELKIndexPre() const;
-
-    void getELKNodeAddress(std::string &host, int &port);
-
-private:
-    std::mutex mutex;
-    std::string elkIndexPre{};
-    std::vector<std::tuple<std::string, int>> elkTupleNodes{};
+	/**
+	 *
+	 **/
+	void destroyApp() override;;
 };
 
-extern QueryServer g_app;
-////////////////////////////////////////////
 #endif

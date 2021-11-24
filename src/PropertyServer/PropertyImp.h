@@ -17,46 +17,43 @@
 #ifndef __PROPERTY_IMP_H_
 #define __PROPERTY_IMP_H_
 
-#include <functional>
-#include "util/tc_common.h"
-#include "util/tc_thread.h"
-#include "util/tc_option.h"
-#include "util/tc_hash_fun.h"
-#include "jmem/jmem_hashmap.h"
 #include "servant/PropertyF.h"
 
 using namespace tars;
 
-class PropertyImp : public PropertyF, public TC_ThreadLock {
+class PropertyImp : public PropertyF, public TC_ThreadLock
+{
 public:
-    /**
-     *
-     */
-    PropertyImp() = default;
+	/**
+	 *
+	 */
+	PropertyImp() = default;
 
-    /**
-     * 析构函数
-     */
-    ~PropertyImp() override = default;
+	/**
+	 * 析构函数
+	 */
+	~PropertyImp() override = default;
 
-    /**
-     * 初始化
-     *
-     * @return int
-     */
-    void initialize() override;
+	/**
+	 * 初始化
+	 *
+	 * @return int
+	 */
+	void initialize() override;
 
-    /**
-     * 退出
-     */
-    void destroy() override {}
+	/**
+	 * 退出
+	 */
+	void destroy() override
+	{
+	}
 
-    /**
-    * 上报性属信息
-    * @param statmsg, 上报信息
-    * @return int, 返回0表示成功
-    */
-    int reportPropMsg(const map<StatPropMsgHead, StatPropMsgBody> &propMsg, tars::CurrentPtr current) override;
+	/**
+	* 上报性属信息
+	* @param statmsg, 上报信息
+	* @return int, 返回0表示成功
+	*/
+	int reportPropMsg(const map<StatPropMsgHead, StatPropMsgBody>& propMsg, tars::CurrentPtr current) override;
 };
 
 #endif

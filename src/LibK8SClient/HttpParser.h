@@ -88,9 +88,9 @@ typedef struct http_parser_settings http_parser_settings;
  * many times for each string. E.G. you might get 10 callbacks for "on_url"
  * each providing just a few characters more data.
  */
-typedef int (*http_data_cb)(http_parser *, const char *at, size_t length);
+typedef int (* http_data_cb)(http_parser*, const char* at, size_t length);
 
-typedef int (*http_cb)(http_parser *);
+typedef int (* http_cb)(http_parser*);
 
 
 /* Status Codes */
@@ -155,7 +155,8 @@ typedef int (*http_cb)(http_parser *);
   XX(510, NOT_EXTENDED,                    Not Extended)                    \
   XX(511, NETWORK_AUTHENTICATION_REQUIRED, Network Authentication Required) \
 
-enum http_status {
+enum http_status
+{
 #define XX(num, name, string) HTTP_STATUS_##name = num,
     HTTP_STATUS_MAP(XX)
 #undef XX
@@ -207,20 +208,22 @@ enum http_status {
   /* icecast */                     \
   XX(33, SOURCE,      SOURCE)       \
 
-enum http_method {
+enum http_method
+{
 #define XX(num, name, string) HTTP_##name = num,
     HTTP_METHOD_MAP(XX)
 #undef XX
 };
 
-
-enum http_parser_type {
+enum http_parser_type
+{
     HTTP_REQUEST, HTTP_RESPONSE, HTTP_BOTH
 };
 
 
 /* Flag values for http_parser.flags field */
-enum flags {
+enum flags
+{
     F_CHUNKED = 1 << 0,
     F_CONNECTION_KEEP_ALIVE = 1 << 1,
     F_CONNECTION_CLOSE = 1 << 2,
@@ -287,7 +290,8 @@ enum flags {
 
 /* Define HPE_* values for each errno value above */
 #define HTTP_ERRNO_GEN(n, s) HPE_##n,
-enum http_errno {
+enum http_errno
+{
     HTTP_ERRNO_MAP(HTTP_ERRNO_GEN)
 };
 #undef HTTP_ERRNO_GEN
@@ -296,8 +300,8 @@ enum http_errno {
 /* Get an http_errno value from an http_parser */
 #define HTTP_PARSER_ERRNO(p)            ((enum http_errno) (p)->http_errno)
 
-
-struct http_parser {
+struct http_parser
+{
     /** PRIVATE **/
     unsigned int type: 2;         /* enum http_parser_type */
     unsigned int flags: 8;       /* F_* values from 'flags' enum; semi-public */
@@ -325,11 +329,11 @@ struct http_parser {
     unsigned int upgrade: 1;
 
     /** PUBLIC **/
-    void *data; /* A pointer to get hook to the "connection" or "socket" object */
+    void* data; /* A pointer to get hook to the "connection" or "socket" object */
 };
 
-
-struct http_parser_settings {
+struct http_parser_settings
+{
     http_cb on_message_begin;
     http_data_cb on_url;
     http_data_cb on_status;
@@ -345,8 +349,8 @@ struct http_parser_settings {
     http_cb on_chunk_complete;
 };
 
-
-enum http_parser_url_fields {
+enum http_parser_url_fields
+{
     UF_SCHEMA = 0, UF_HOST = 1, UF_PORT = 2, UF_PATH = 3, UF_QUERY = 4, UF_FRAGMENT = 5, UF_USERINFO = 6, UF_MAX = 7
 };
 
@@ -358,11 +362,13 @@ enum http_parser_url_fields {
  * because we probably have padding left over), we convert any port to
  * a uint16_t.
  */
-struct http_parser_url {
+struct http_parser_url
+{
     uint16_t field_set;           /* Bitmask of (1 << UF_*) values */
     uint16_t port;                /* Converted UF_PORT string */
 
-    struct {
+    struct
+    {
         uint16_t off;               /* Offset into buffer in which field starts */
         uint16_t len;               /* Length of run in buffer */
     } field_data[UF_MAX];
@@ -381,21 +387,18 @@ struct http_parser_url {
  */
 unsigned long http_parser_version(void);
 
-void http_parser_init(http_parser *parser, enum http_parser_type type);
-
+void http_parser_init(http_parser* parser, enum http_parser_type type);
 
 /* Initialize http_parser_settings members to 0
  */
-void http_parser_settings_init(http_parser_settings *settings);
-
+void http_parser_settings_init(http_parser_settings* settings);
 
 /* Executes the parser. Returns number of parsed bytes. Sets
  * `parser->http_errno` on error. */
-size_t http_parser_execute(http_parser *parser,
-                           const http_parser_settings *settings,
-                           const char *data,
-                           size_t len);
-
+size_t http_parser_execute(http_parser* parser,
+    const http_parser_settings* settings,
+    const char* data,
+    size_t len);
 
 /* If http_should_keep_alive() in the on_headers_complete or
  * on_message_complete callback returns 0, then this should be
@@ -403,33 +406,33 @@ size_t http_parser_execute(http_parser *parser,
  * If you are the server, respond with the "Connection: close" header.
  * If you are the client, close the connection.
  */
-int http_should_keep_alive(const http_parser *parser);
+int http_should_keep_alive(const http_parser* parser);
 
 /* Returns a string version of the HTTP method. */
-const char *http_method_str(enum http_method m);
+const char* http_method_str(enum http_method m);
 
 /* Returns a string version of the HTTP status code. */
-const char *http_status_str(enum http_status s);
+const char* http_status_str(enum http_status s);
 
 /* Return a string name of the given error */
-const char *http_errno_name(enum http_errno err);
+const char* http_errno_name(enum http_errno err);
 
 /* Return a string description of the given error */
-const char *http_errno_description(enum http_errno err);
+const char* http_errno_description(enum http_errno err);
 
 /* Initialize all http_parser_url members to 0 */
-void http_parser_url_init(struct http_parser_url *u);
+void http_parser_url_init(struct http_parser_url* u);
 
 /* Parse a URL; return nonzero on failure */
-int http_parser_parse_url(const char *buf, size_t buflen,
-                          int is_connect,
-                          struct http_parser_url *u);
+int http_parser_parse_url(const char* buf, size_t buflen,
+    int is_connect,
+    struct http_parser_url* u);
 
 /* Pause or un-pause the parser; a nonzero value pauses */
-void http_parser_pause(http_parser *parser, int paused);
+void http_parser_pause(http_parser* parser, int paused);
 
 /* Checks if this is the final chunk of the body. */
-int http_body_is_final(const http_parser *parser);
+int http_body_is_final(const http_parser* parser);
 
 /* Change the maximum header size provided at compile time. */
 void http_parser_set_max_header_size(uint32_t size);

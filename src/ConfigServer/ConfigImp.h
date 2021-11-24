@@ -1,37 +1,36 @@
 ﻿#ifndef _CONFIG_IMP_H_
 #define _CONFIG_IMP_H_
 
-#include "util/tc_common.h"
-#include "util/tc_config.h"
-#include "util/tc_mysql.h"
-#include "servant/RemoteLogger.h"
 #include "servant/ConfigF.h"
 
 using namespace tars;
 
-class ConfigImp final : public Config {
-public:
+class ConfigImp : public Config
+{
+ public:
     /**
      *
      */
-    ConfigImp() = default;;
+    ConfigImp() = default;
 
     /**
      *
      */
-    ~ConfigImp() final = default;;
+    ~ConfigImp() override = default;
 
     /**
      * 初始化
      *
      * @return int
      */
-    void initialize() final;
+    void initialize() override;
 
     /**
      * 退出
      */
-    void destroy() final {};
+    void destroy() override
+    {
+    };
 
     /**
     * 获取配置文件列表
@@ -41,7 +40,7 @@ public:
     *
     * return  : 配置文件内容
     */
-    int ListConfig(const string &app, const string &server, vector <string> &vf, CurrentPtr current) final;
+    int ListConfig(const string& app, const string& server, vector<string>& vf, CurrentPtr current) override;
 
     /**
      * 加载配置文件
@@ -51,8 +50,7 @@ public:
      *
      * return  : 配置文件内容
      */
-    int loadConfig(const std::string &app, const std::string &server, const std::string &filename, string &config,
-                   CurrentPtr current) final;
+    int loadConfig(const std::string& app, const std::string& server, const std::string& filename, string& config, CurrentPtr current) override;
 
     /**
      * 根据ip获取配置
@@ -63,8 +61,7 @@ public:
      *
      * @return int
      */
-    int loadConfigByHost(const string &appServerName, const string &filename, const string &host, string &config,
-                         CurrentPtr current) final;
+    int loadConfigByHost(const string& appServerName, const string& filename, const string& host, string& config, CurrentPtr current) override;
 
     /**
      *
@@ -75,8 +72,7 @@ public:
      *
      * @return int
      */
-    int checkConfig(const string &appServerName, const string &filename, const string &host, string &result,
-                    CurrentPtr current) final;
+    int checkConfig(const string& appServerName, const string& filename, const string& host, string& result, CurrentPtr current) override;
 
     /**
     * 获取配置文件列表
@@ -85,7 +81,7 @@ public:
     *
     * return  : 配置文件内容
     */
-    int ListConfigByInfo(const ConfigInfo &configInfo, vector <string> &vf, CurrentPtr current) final;
+    int ListConfigByInfo(const ConfigInfo& configInfo, vector<string>& vf, CurrentPtr current) override;
 
     /**
      * 加载配置文件
@@ -95,7 +91,7 @@ public:
      * return  :
      */
 
-    int loadConfigByInfo(const ConfigInfo &configInfo, string &config, CurrentPtr current) final;
+    int loadConfigByInfo(const ConfigInfo& configInfo, string& config, CurrentPtr current) override;
 
     /**
      *
@@ -104,7 +100,7 @@ public:
      * @return int
      */
 
-    int checkConfigByInfo(const ConfigInfo &configInfo, string &result, CurrentPtr current) final;
+    int checkConfigByInfo(const ConfigInfo& configInfo, string& result, CurrentPtr current) override;
 
     /**
     * 获取服务的所有配置文件列表，
@@ -112,8 +108,7 @@ public:
     * @param[out] vf  获取到的文件名称列表
     * @return int 0: 成功, -1:失败
     **/
-    Int32 ListAllConfigByInfo(const GetConfigListInfo &configInfo, vector <std::string> &vf,
-                                   CurrentPtr current) final;
+    Int32 ListAllConfigByInfo(const GetConfigListInfo& configInfo, vector<std::string>& vf, CurrentPtr current) override;
 };
 
 #endif

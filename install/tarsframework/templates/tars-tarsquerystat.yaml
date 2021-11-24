@@ -28,13 +28,8 @@ spec:
   server: tarsquerystat
   subType: tars
   tars:
-    template: tars.elk
-    profile: |
-      <tars>
-        <elk>
-          indexPre = stat_{{.Release.Namespace}}
-        </elk>
-      </tars>
+    template: tars.es
+    profile: ""
     servants:
       - name: QueryObj
         port: 16000

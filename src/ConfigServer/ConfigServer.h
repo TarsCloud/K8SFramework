@@ -5,8 +5,9 @@
 
 using namespace tars;
 
-class ConfigServer : public Application {
-protected:
+class ConfigServer : public Application
+{
+ protected:
     /**
      * ooo 初始化, 只会进程调用一次
      */

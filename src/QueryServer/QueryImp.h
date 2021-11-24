@@ -17,36 +17,37 @@
 #ifndef _QueryImp_H_
 #define _QueryImp_H_
 
-#include "servant/Application.h"
-#include "util/tc_common.h"
-#include "util/tc_config.h"
 #include "MonitorQuery.h"
+#include <string>
 
 /**
  *
  *
  */
-class QueryImp : public tars::MonitorQuery {
+class QueryImp : public tars::MonitorQuery
+{
 public:
-    /**
-     *
-     */
-    ~QueryImp() override = default;
+	static void setIndexPre(const std::string& indexPre);
 
-    /**
-     *
-     */
-    void initialize() override;
+	/**
+	 *
+	 */
+	~QueryImp() override = default;
 
-    /**
-     *
-     */
-    void destroy() override;
+	/**
+	 *
+	 */
+	void initialize() override;;
 
-    /**
-     *
-     */
-    int query(const tars::MonitorQueryReq &req, tars::MonitorQueryRsp &rsp, tars::TarsCurrentPtr current) override;
+	/**
+	 *`
+	 */
+	void destroy() override;;
+
+	/**
+	 *
+	 */
+	int query(const tars::MonitorQueryReq& req, tars::MonitorQueryRsp& rsp, tars::TarsCurrentPtr current) override;
 };
 /////////////////////////////////////////////////////
 #endif

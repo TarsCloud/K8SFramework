@@ -8,77 +8,102 @@
 #include <utility>
 #include <functional>
 
-class TimerTaskQueue {
+class TimerTaskQueue
+{
 
-private:
+ private:
     TimerTaskQueue() = default;
 
-public:
-    static TimerTaskQueue &instance() {
+ public:
+    static TimerTaskQueue& instance()
+    {
         static TimerTaskQueue timerTaskQueue;
         return timerTaskQueue;
     }
 
-    void pushTask(std::function<void()> t) {
+    ~TimerTaskQueue()
+    {
+        terminate_ = true;
+        std::lock_guard<std::mutex> lockGuard(mutex_);
+        condition_.notify_all();
+    }
+
+    void pushTask(std::function<void()> t)
+    {
         pushTimerTask(std::move(t), 0);
     }
 
-    void pushTimerTask(std::function<void()> t, size_t seconds) {
+    void pushTimerTask(std::function<void()> t, size_t seconds)
+    {
         uint64_t key = time(nullptr) + seconds;
         key <<= 32u;
-        key += _seq++;
-        std::lock_guard<std::mutex> lockGuard(_mutex);
-        _map[key] = std::move(t);
-        _condition.notify_one();
+        key += seq_++;
+        std::lock_guard<std::mutex> lockGuard(mutex_);
+        map_[key] = std::move(t);
+        condition_.notify_one();
     }
 
-    void pushCycleTask(const std::function<void(const size_t &callTimes, size_t &nextTimer)> &t, size_t first, size_t cycle) {
+    void pushCycleTask(const std::function<void(const size_t& callTimes, size_t& nextTimer)>& t, size_t first, size_t cycle)
+    {
         size_t callTimes = 0;
-        auto cycleFun = [callTimes, t, cycle, this]() {
+        auto cycleFun = [callTimes, t, cycle, this]()
+        {
             _runCycleTask(t, callTimes, cycle);
         };
         pushTimerTask(cycleFun, first);
     }
 
-    [[noreturn]] void run() {
-        while (true) {
-            std::unique_lock<std::mutex> uniqueLock(_mutex);
-            while (!_map.empty()) {
-                auto iterator = _map.begin();
+    void run()
+    {
+        while (!terminate_)
+        {
+            std::unique_lock<std::mutex> uniqueLock(mutex_);
+            while (!map_.empty())
+            {
+                auto iterator = map_.begin();
                 uint64_t key = iterator->first;
                 uint32_t runTimer = (key >> 32u);
                 time_t nowTimer = time(nullptr);
-                if (nowTimer >= runTimer) {
+                if (nowTimer >= runTimer)
+                {
                     auto fun = std::move(iterator->second);
-                    _map.erase(iterator);
+                    map_.erase(iterator);
                     uniqueLock.unlock();
                     fun();
                     uniqueLock.lock();
-                } else {
-                    size_t mapSize = _map.size();
-                    _condition.wait_for(uniqueLock, std::chrono::seconds(runTimer - nowTimer), [mapSize, this]() {
-                        return mapSize != _map.size();
+                }
+                else
+                {
+                    size_t mapSize = map_.size();
+                    condition_.wait_for(uniqueLock, std::chrono::seconds(runTimer - nowTimer), [mapSize, this]()
+                    {
+                        return mapSize != map_.size() || terminate_;
                     });
                 }
             }
-            _condition.wait(uniqueLock, [this]() { return !_map.empty(); });
+            condition_.wait(uniqueLock, [this]()
+            { return !map_.empty() || terminate_; });
         }
     }
 
-private:
-    void _runCycleTask(const std::function<void(const size_t &callTimes, size_t &nextTimer)> &t, size_t callTimes, size_t cycle) {
+ private:
+    void _runCycleTask(const std::function<void(const size_t& callTimes, size_t& nextTimer)>& t, size_t callTimes, size_t cycle)
+    {
         t(callTimes, cycle);
-        if (cycle != 0) {
+        if (cycle != 0)
+        {
             callTimes += 1;
-            pushTimerTask([callTimes, cycle, t, this]() {
+            pushTimerTask([callTimes, cycle, t, this]()
+            {
                 _runCycleTask(t, callTimes, cycle);
             }, cycle);
         }
     }
 
-private:
-    std::atomic<uint32_t> _seq{0};
-    std::mutex _mutex;
-    std::condition_variable _condition;
-    std::map<uint64_t, std::function<void()>> _map;
+ private:
+    std::atomic<uint32_t> seq_{ 0 };
+    bool terminate_{ false };
+    std::mutex mutex_;
+    std::condition_variable condition_;
+    std::map<uint64_t, std::function<void()>> map_;
 };

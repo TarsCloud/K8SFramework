@@ -17,62 +17,49 @@
 #ifndef __STAT_IMP_H_
 #define __STAT_IMP_H_
 
-#include <functional>
-#include "util/tc_common.h"
-#include "util/tc_thread.h"
-#include "util/tc_option.h"
-#include "util/tc_file.h"
-#include "util/tc_mysql.h"
-#include "util/tc_config.h"
-#include "util/tc_hash_fun.h"
-#include "servant/RemoteLogger.h"
-#include "jmem/jmem_hashmap.h"
-#include "servant/StatF.h"
 
+#include "servant/StatF.h"
 
 using namespace tars;
 
-class StatImp : public StatF {
+class StatImp : public StatF
+{
 public:
-    /**
-     *
-     */
-    StatImp()=default;
+	/**
+	 *
+	 */
+	StatImp() = default;
 
-    ~StatImp() override = default;
+	~StatImp() override = default;
 
-    /**
-     * 初始化
-     *
-     * @return int
-     */
-    void initialize() override;
+	/**
+	 * 初始化
+	 *
+	 * @return int
+	 */
+	void initialize() override;
 
-    /**
-     * 退出
-     */
-    void destroy() override {
-    };
+	/**
+	 * 退出
+	 */
+	void destroy() override
+	{
+	};
 
-    /**
-     * 上报模块间调用信息
-     * @param statmsg, 上报信息
-     * @return int, 返回0表示成功
-     */
-    int reportMicMsg(const map<tars::StatMicMsgHead, tars::StatMicMsgBody> &statmsg, bool bFromClient,
-                             tars::CurrentPtr current) override;
+	/**
+	 * 上报模块间调用信息
+	 * @param statmsg, 上报信息
+	 * @return int, 返回0表示成功
+	 */
+	int reportMicMsg(const map<tars::StatMicMsgHead, tars::StatMicMsgBody>& statmsg, bool bFromClient, tars::CurrentPtr current) override;
 
-    /**
-     * 上报模块间调用采样信息
-     * @param sample, 上报信息
-     * @return int, 返回0表示成功
-     */
-    int reportSampleMsg(const vector<StatSampleMsg> &msg, tars::CurrentPtr current) override;
+	/**
+	 * 上报模块间调用采样信息
+	 * @param sample, 上报信息
+	 * @return int, 返回0表示成功
+	 */
+	int reportSampleMsg(const vector<StatSampleMsg>& msg, tars::CurrentPtr current) override;
 
-private:
-    string getSlaveName(const string &sSlaveName);
 };
 
 #endif
-
-

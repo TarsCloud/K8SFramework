@@ -2,16 +2,21 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: tars-tarsregistry
+  namespace: {{.Release.Namespace}}
 ---
 
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: tars-tarsregistry
+  namespace: {{.Release.Namespace}}
 rules:
   - apiGroups: [ "" ]
     resources: [ pods/status ]
     verbs: [ patch ]
+  - apiGroups: [ "" ]
+    resources: [ configmaps ]
+    verbs: [ get,list,watch ]
   - apiGroups: [ k8s.tars.io ]
     resources: [ ttemplates,tendpoints ]
     verbs: [ get ,list, watch ]
@@ -21,6 +26,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: tars-tarsregistry
+  namespace: {{.Release.Namespace}}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -30,11 +36,13 @@ subjects:
     name: tars-tarsregistry
 
 ---
-
+  {{ $v := lookup "v1"  "ConfigMap" .Release.Namespace "tars-tarsregistry" -}}
+  {{- if not $v -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: tars-tarsregistry
+  namespace: {{.Release.Namespace}}
 data:
   upchain.conf: |
     <upchain>
@@ -47,6 +55,9 @@ data:
             #tcp -h 110.110.30.35 -p 3325 -t 60000
         </tars.tarsalarm.AlarmObj>
     </upchain>
+    {{- else}}
+    {{ $v | toYaml }}
+  {{- end }}
 ---
 
 apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
@@ -72,6 +83,7 @@ metadata:
   labels:
     tars.io/ServerApp: tars
     tars.io/ServerName: tarsregistry
+    tars.io/SubType: normal
 spec:
   app: tars
   server: tarsregistry
@@ -79,9 +91,9 @@ spec:
   normal:
     ports:
       - name: registryobj
-        port: 17890
-      - name: queryobj
         port: 17891
+      - name: queryobj
+        port: 17890
   k8s:
     replicas: 2
     serviceAccount: tars-tarsregistry
@@ -107,11 +119,6 @@ spec:
             type: DirectoryOrCreate
         mountPath: /usr/local/app/tars/app_log
         subPathExpr: $(Namespace)/$(PodName)
-      - name: upchain
-        source:
-          configMap:
-            name: tars-tarsregistry
-        mountPath: /etc/upchain
   release:
     source: tars-tarsregistry
     id: {{.Values.helm.build.id | quote }}

@@ -21,6 +21,7 @@ cp bin/tarsstat /tars-k8s-binary/tarsstat || exit 255
 cp bin/tarsproperty /tars-k8s-binary/tarsproperty || exit 255
 cp bin/tarsqueryserver /tars-k8s-binary/tarsquerystat || exit 255
 cp bin/tarsqueryserver /tars-k8s-binary/tarsqueryproperty || exit 255
+cp bin/tarskevent /tars-k8s-binary/tarskevent || exit 255
 
 cd ..
 

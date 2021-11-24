@@ -22,13 +22,13 @@ metadata:
     tars.io/ServerApp: tars
     tars.io/ServerName: tarslog
     tars.io/SubType: tars
-    tars.io/Template: tars.default
+    tars.io/Template: tars.es
 spec:
   app: tars
   server: tarslog
   subType: tars
   tars:
-    template: tars.elk
+    template: tars.es
     profile: |
       <tars>
       	<log>
@@ -39,9 +39,9 @@ spec:
             hour=xx
           </format>
         </log>
-        <elk>
+        <trace>
           log_dir=/usr/local/app/tars/remote_app_log/_tars_/_trace_
-        </elk>
+        </trace>
       </tars>
     servants:
       - name: LogObj

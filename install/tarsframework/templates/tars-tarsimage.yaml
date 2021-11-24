@@ -34,6 +34,8 @@ subjects:
     namespace: {{.Release.Namespace}}
 ---
 
+  {{ $v := lookup "v1"  "ConfigMap" .Release.Namespace "tars-tarsimage" -}}
+  {{- if not $v -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -42,6 +44,9 @@ metadata:
 data:
   registry: {{.Values.dockerRegistry}}
   secret: {{.Values.dockerSecret}}
+  {{- else}}
+  {{ $v | toYaml }}
+  {{- end }}
 ---
 
 apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}

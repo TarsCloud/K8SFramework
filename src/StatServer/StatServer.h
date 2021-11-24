@@ -22,23 +22,18 @@
 
 using namespace tars;
 
-class StatServer : public Application {
+class StatServer : public Application
+{
 protected:
-    /**
-     * 初始化, 只会进程调用一次
-     */
-    void initialize() override;
+	/**
+	 * 初始化, 只会进程调用一次
+	 */
+	void initialize() override;
 
-    /**
-     * 析构, 每个进程都会调用一次
-     */
-    void destroyApp() override;
-
-public:
-    map<string, string> &getVirtualMasterIp();
-
-private:
-    map<string, string> _mVirtualMasterIp;
+	/**
+	 * 析构, 每个进程都会调用一次
+	 */
+	void destroyApp() override;
 };
 
 #endif

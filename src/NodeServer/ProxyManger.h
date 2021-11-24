@@ -1,56 +1,51 @@
 
 #pragma once
 
-#include <servant/QueryF.h>
-#include <servant/NotifyF.h>
+#include "servant/QueryF.h"
+#include "servant/NotifyF.h"
+#include "servant/AdminF.h"
+#include "RegistryServer/Registry.h"
+#include "servant/Application.h"
+#include "Fixed.h"
 
-class ProxyManger {
+class ProxyManger
+{
 public:
-    static ProxyManger &instance() {
-        static ProxyManger manger;
-        return manger;
-    }
+	static ProxyManger& instance()
+	{
+		static ProxyManger manger;
+		return manger;
+	}
 
-    static AdminFPrx createAdminProxy(const std::string &sAdminProxyName) {
-        AdminFPrx pAdminPrx = Application::getCommunicator()->stringToProxy<AdminFPrx>(sAdminProxyName);
-        return pAdminPrx;
-    }
+	~ProxyManger() = default;
 
-    RegistryPrx getRegistryProxy() {
-        RegistryPrx pRegistryPrx;
-        Application::getCommunicator()->stringToProxy(_sRegistryProxyName, pRegistryPrx);
-        return pRegistryPrx;
-    }
+	AdminFPrx getAdminProxy()
+	{
+		AdminFPrx pAdminPrx;
+		Application::getCommunicator()->stringToProxy(FIXED_LOCAL_PROXY_NAME, pAdminPrx);
+		return pAdminPrx;
+	}
 
-    QueryFPrx getQueryProxy() {
-        QueryFPrx pQueryPrx;
-        Application::getCommunicator()->stringToProxy(_sQueryProxyName, pQueryPrx);
-        return pQueryPrx;
-    }
+	RegistryPrx getRegistryProxy()
+	{
+		RegistryPrx pRegistryPrx;
+		Application::getCommunicator()->stringToProxy(FIXED_REGISTRY_PROXY_NAME, pRegistryPrx);
+		return pRegistryPrx;
+	}
 
-    NotifyPrx getNotifyProxy() {
-        NotifyPrx pNotifyPrx;
-        Application::getCommunicator()->stringToProxy(_sNotifyProxyName, pNotifyPrx);
-        return pNotifyPrx;
-    }
+	QueryFPrx getQueryProxy()
+	{
+		QueryFPrx pQueryPrx;
+		Application::getCommunicator()->stringToProxy(FIXED_QUERY_PROXY_NAME, pQueryPrx);
+		return pQueryPrx;
+	}
 
-    inline void setRegistryObjName(const string &sRegistryProxyName) {
-        _sRegistryProxyName = sRegistryProxyName;
-    }
+	NotifyPrx getNotifyProxy()
+	{
+		NotifyPrx pNotifyPrx;
+		Application::getCommunicator()->stringToProxy(FIXED_NOTIFY_PROXY_NAME, pNotifyPrx);
+		return pNotifyPrx;
+	}
 
-    inline void setQueryObjName(const string &sQueryObjProxyName) {
-        _sQueryProxyName = sQueryObjProxyName;
-    }
-
-    inline void setNotifyObjName(const string &sNotifyObjProxyName) {
-        _sNotifyProxyName = sNotifyObjProxyName;
-    }
-
-private:
-    std::mutex _mutex;
-    string _sRegistryProxyName;
-    string _sQueryProxyName;
-    string _sNotifyProxyName;
-
-    ProxyManger() = default;
+	ProxyManger() = default;
 };

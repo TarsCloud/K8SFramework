@@ -59,7 +59,7 @@ const (
 	// TNodeSupportLabel is the label which represents the support for local pv
 	TNodeSupportLabel = "tars.io/SupportLocalVolume"
 	// TStorageClassName is the tars storage class of local pv
-	TStorageClassName = "t-storage-class"
+	TStorageClassName = "tars-storage-class"
 	// TLocalVolumeHostDir is the tars mount dir of local pv
 	TLocalVolumeHostDir = "/usr/local/app/tars/host-mount"
 	// TLocalVolumeMode is the tars volume mode of local pv

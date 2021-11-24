@@ -26,10 +26,10 @@ link_directories(/usr/local/tars/cpp/thirdparty/lib)
 include_directories(/usr/local/tars/cpp/include/servant/)
 
 add_subdirectory(LibK8SClient)
-add_subdirectory(LibELSClient)
+add_subdirectory(LibESClient)
 
 include_directories(./LibK8SClient/)
-include_directories(./LibELSClient/)
+include_directories(./LibESClient/)
 add_subdirectory(ConfigServer)
 add_subdirectory(NodeServer)
 add_subdirectory(NotifyServer)
@@ -38,6 +38,7 @@ add_subdirectory(PropertyServer)
 add_subdirectory(StatServer)
 add_subdirectory(QueryServer)
 add_subdirectory(LogServer)
+add_subdirectory(KEventServer)
 #add_subdirectory(test)
 
 ############################################################################

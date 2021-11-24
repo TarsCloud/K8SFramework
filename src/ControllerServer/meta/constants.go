@@ -89,7 +89,7 @@ const TControllerServiceAccount = "tars-controller"
 
 const TTreeResourceName = "tars-tree"
 
-const TStorageClassName = "t-storage-class"
+const TStorageClassName = "tars-storage-class"
 const THostBindPlaceholder = "delay-bind"
 
 const HelmFinalizerAccount = "tars-framework-finalizer"

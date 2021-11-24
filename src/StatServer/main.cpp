@@ -19,17 +19,20 @@
 
 using namespace tars;
 
-int main(int argc, char *argv[]) {
-    try {
-        StatServer app;
-        app.main(argc, argv);
-        app.waitForShutdown();
-    }
-    catch (exception &ex) {
-        cerr << ex.what() << endl;
-    }
+int main(int argc, char* argv[])
+{
+	try
+	{
+		StatServer app;
+		app.main(argc, argv);
+		app.waitForShutdown();
+	}
+	catch (exception& ex)
+	{
+		cerr << ex.what() << endl;
+	}
 
-    return 0;
+	return 0;
 }
 
 
