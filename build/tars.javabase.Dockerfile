@@ -1,25 +1,18 @@
-FROM ubuntu:20.04
+FROM openjdk:8-bullseye
+
+RUN apt update                                                                         \
+    && apt install                                                                     \
+    ca-certificates openssl telnet curl wget default-mysql-client                      \
+    iputils-ping vim tcpdump net-tools binutils procps tree                            \
+    libssl-dev zlib1g-dev libprotobuf-dev libprotobuf-c-dev                            \
+    busybox -y && busybox --install
+
+RUN apt purge -y                                                                       \
+    && apt clean all                                                                   \
+    && rm -rf /var/lib/apt/lists/*                                                     \
+    && rm -rf /var/cache/*.dat-old                                                     \
+    && rm -rf /var/log/*.log /var/log/*/*.log
+
 COPY files/entrypoint.sh /bin/entrypoint.sh
-RUN  chmod +x /bin/entrypoint.sh
-
-# 设置时区
-RUN  ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
-RUN  echo Asia/Shanghai > /etc/timezone
-
-RUN  apt update
-RUN  apt install -y openjdk-8-jdk maven telnet curl wget iputils-ping vim tcpdump net-tools
-RUN  apt install busybox -y
-RUN  busybox --install
-RUN  apt install ca-certificates -y
-
-# 设置别名，兼容使用习惯
-RUN echo alias ll=\'ls -l\' >> /etc/bashrc
-
-# 清理多余文件
-RUN  apt purge -y
-RUN  apt clean all
-RUN  rm -rf /var/lib/apt/lists/*
-RUN  rm -rf /var/cache/*.dat-old
-RUN  rm -rf /var/log/*.log /var/log/*/*.log
-
+RUN chmod +x /bin/entrypoint.sh
 CMD ["/bin/entrypoint.sh"]

@@ -50,4 +50,6 @@ if ! openssl verify -CAfile $CA_CRT_FILE $TLS_CRT_FILE; then
 fi
 
 TARSCONTROLLER_EXECUTION_FILE="/usr/local/app/tars/tarscontroller/bin/tarscontroller"
+
+chmod +x ${TARSCONTROLLER_EXECUTION_FILE}
 exec ${TARSCONTROLLER_EXECUTION_FILE}

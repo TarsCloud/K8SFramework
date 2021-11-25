@@ -36,7 +36,6 @@ for KEY in "${ReplaceKeyList[@]}"; do
   done
 done
 
-ldconfig
-
+chmod +x ${REGISTRY_EXECUTION_FILE}
 exec ${REGISTRY_EXECUTION_FILE} --config=${REGISTRY_CONFIG_FILE}
 # exec /bin/guard

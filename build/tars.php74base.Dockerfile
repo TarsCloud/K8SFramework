@@ -1,54 +1,39 @@
-FROM ubuntu:20.04
+FROM php:7.4.26-apache-bullseye As First
+
+RUN yes ''| pecl install igbinary zstd redis swoole                                    \
+    && echo "extension=igbinary.so" > /usr/local/etc/php/conf.d/igbinary.ini           \
+    && echo "extension=zstd.so" > /usr/local/etc/php/conf.d/zstd.ini                   \
+    && echo "extension=redis.so" > /usr/local/etc/php/conf.d/redis.ini                 \
+    && echo "extension=swoole.so" > /usr/local/etc/php/conf.d/swoole.ini
+
+RUN apt update                                                                         \
+    && apt install git libssl-dev zlib1g-dev -y                                        \
+    && cd /root                                                                        \
+    && git clone https://github.com/TarsPHP/tars-extension.git                         \
+    && cd /root/tars-extension                                                         \
+    && phpize                                                                          \
+    && ./configure --enable-phptars                                                    \
+    && make                                                                            \
+    && make install                                                                    \
+    && echo "extension=phptars.so" > /usr/local/etc/php/conf.d/phptars.ini
+
+
+FROM php:7.4.26-apache-bullseye
+
+RUN apt update                                                                         \
+    && apt install                                                                     \
+    ca-certificates openssl telnet curl wget default-mysql-client                      \
+    iputils-ping vim tcpdump net-tools binutils procps tree                            \
+    libssl-dev zlib1g-dev libprotobuf-dev libprotobuf-c-dev                            \
+    busybox -y && busybox --install
+
+RUN apt purge -y                                                                       \
+    && apt clean all                                                                   \
+    && rm -rf /var/lib/apt/lists/*                                                     \
+    && rm -rf /var/cache/*.dat-old                                                     \
+    && rm -rf /var/log/*.log /var/log/*/*.log
+
+COPY --from=First /usr/local /usr/local
 COPY files/entrypoint.sh /bin/entrypoint.sh
-RUN  chmod +x /bin/entrypoint.sh
-
-# -- env settings
-ENV SWOOLE_VERSION=v4.4.16 
-
-ENV DEBIAN_FRONTEND=noninteractive
-
-#intall php tars
-RUN apt update && apt install -y php php-dev php-cli php-gd php-curl php-mysql \
-    php-zip php-fileinfo php-redis php-mbstring tzdata git make wget \
-    build-essential libmcrypt-dev php-pear  telnet curl wget iputils-ping 
-
-# Clone Tars repo and init php submodule
-RUN cd /root/ && git clone https://gitee.com/TarsCloud/Tars.git \
-    && cd /root/Tars/ \
-    && git submodule update --init --recursive php \
-    #intall PHP Tars module
-    && cd /root/Tars/php/tars-extension/ && phpize \
-    && ./configure --enable-phptars && make && make install \
-    && echo "extension=phptars.so" > /etc/php/7.4/cli/conf.d/10-phptars.ini \
-    # Install PHP swoole module
-    && cd /root && git clone https://github.com/swoole/swoole \
-    && cd /root/swoole && git checkout $SWOOLE_VERSION \
-    && cd /root/swoole \
-    && phpize && ./configure --with-php-config=/usr/bin/php-config \
-    && make \
-    && make install \
-    && echo "extension=swoole.so" > /etc/php/7.4/cli/conf.d/20-swoole.ini \
-    # Do somethine clean
-    && cd /root && rm -rf swoole \
-    && mkdir -p /root/phptars && cp -f /root/Tars/php/tars2php/src/tars2php.php /root/phptars 
-
-# 设置时区
-RUN  ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
-RUN  echo Asia/Shanghai > /etc/timezone
-
-RUN  apt update
-RUN  apt install ca-certificates vim tcpdump net-tools -y
-
-RUN mkdir -p /usr/local/app/tars/
-
-# 设置别名，兼容使用习惯
-RUN echo alias ll=\'ls -l\' >> /etc/bashrc
-
-# 清理多余文件
-RUN  apt purge -y
-RUN  apt clean all
-RUN  rm -rf /var/lib/apt/lists/*
-RUN  rm -rf /var/cache/*.dat-old
-RUN  rm -rf /var/log/*.log /var/log/*/*.log
-
+RUN chmod +x /bin/entrypoint.sh
 CMD ["/bin/entrypoint.sh"]

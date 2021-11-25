@@ -1,38 +1,40 @@
-FROM ubuntu:20.04
-ENV DEBIAN_FRONTEND=noninteractive
-ENV GOPATH=/usr/local/go
+FROM golang:1.16-bullseye
 
-# Install
-RUN apt update 
+RUN apt update                                                                         \
+    && apt install                                                                     \
+    make cmake flex bison                                                              \
+    ca-certificates openssl telnet curl wget default-mysql-client                      \
+    iputils-ping vim tcpdump net-tools binutils procps tree                            \
+    libssl-dev zlib1g-dev libprotobuf-dev libprotobuf-c-dev                            \
+    busybox -y && busybox --install
 
-RUN apt install -y mysql-client git build-essential unzip make golang cmake flex bison \
-    && apt install -y libprotobuf-dev libprotobuf-c-dev zlib1g-dev libssl-dev \
-    && apt install -y curl wget net-tools iproute2 \
-    && apt clean \
-    && rm -rf /var/cache/apt
+RUN apt purge -y                                                                       \
+    && apt clean all                                                                   \
+    && rm -rf /var/lib/apt/lists/*                                                     \
+    && rm -rf /var/cache/*.dat-old                                                     \
+    && rm -rf /var/log/*.log /var/log/*/*.log
 
-# Clone Tars repo 
-RUN cd /root/ && git clone https://github.com/TarsCloud/Tars.git 
-
-# Install tars go
-RUN go get github.com/TarsCloud/TarsGo/tars \
-    && cd $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go \
-    && go build .  \
-    && mkdir -p /usr/local/go/bin \
-    && chmod a+x /usr/local/go/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go/tars2go \
-    && ln -s /usr/local/go/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go/tars2go /usr/local/go/bin/tars2go 
-
-RUN cd /root/Tars/ \
-    && git submodule update --init --recursive cpp \ 
-    && cd /root/Tars/cpp \
-    && mkdir -p build \
-    && cd build \
-    && cmake .. \
-    && make -j4 \
+RUN cd /root                                                                           \
+    && git clone https://github.com/TarsCloud/Tars.git                                 \
+    && cd /root/Tars                                                                   \
+    && git submodule update --init --recursive cpp                                     \
+    && cd /root/Tars/cpp                                                               \
+    && mkdir -p build                                                                  \
+    && cd build                                                                        \
+    && cmake ..                                                                        \
+    && make -j4                                                                        \
     && make install
+#    && rm -rf /root/Tars
+
+## Install tars go
+#RUN go env -w GOPROXY=https://goproxy.io,direct
+#RUN go get github.com/TarsCloud/TarsGo/tars \
+#    && cd $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go \
+#    && go build .  \
+#    && mkdir -p /usr/local/go/bin \
+#    && chmod a+x /usr/local/go/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go/tars2go \
+#    && ln -s /usr/local/go/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go/tars2go /usr/local/go/bin/tars2go
 
 COPY files/template/tarsbuilder/root/bin/entrypoint.sh /bin/
-
-# RUN go env -w GOPROXY=https://goproxy.io,direct
-
+RUN chmod +x /bin/entrypoint.sh
 CMD ["/bin/entrypoint.sh"]

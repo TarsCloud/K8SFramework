@@ -51,16 +51,14 @@ case ${ServerType} in
   export ServerLauncherArgv="${ServerName} --config=${ServerConfFile}"
   ;;
 "nodejs")
-
-
-  export ServerLauncherFile=$(command -v node) 
+  export ServerLauncherFile=$(command -v node)
 
   if [ ! -f "$ServerLauncherFile" ]; then
     echo "$ServerLauncherFile file not exist"
     exit 255
   fi
 
-  chmod +x ${ServerLauncherFile}
+  chmod +x "${ServerLauncherFile}"
 
   if [ ! -x "$ServerLauncherFile" ]; then
     echo "$ServerLauncherFile had no execution permission"

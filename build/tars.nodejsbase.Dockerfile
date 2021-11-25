@@ -1,33 +1,25 @@
-FROM ubuntu:20.04
-COPY files/entrypoint.sh /bin/entrypoint.sh
+FROM node:lts-bullseye
 
-RUN  chmod +x /bin/entrypoint.sh
+RUN apt update                                                                         \
+    && apt install                                                                     \
+    ca-certificates openssl telnet curl wget default-mysql-client                      \
+    iputils-ping vim tcpdump net-tools binutils procps tree                            \
+    libssl-dev zlib1g-dev libprotobuf-dev libprotobuf-c-dev                            \
+    busybox -y && busybox --install
 
-# 设置时区
-RUN  ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
-RUN  echo Asia/Shanghai > /etc/timezone
+RUN apt purge -y                                                                       \
+    && apt clean all                                                                   \
+    && rm -rf /var/lib/apt/lists/*                                                     \
+    && rm -rf /var/cache/*.dat-old                                                     \
+    && rm -rf /var/log/*.log /var/log/*/*.log
 
-RUN  apt-get clean && apt update
-# Get and install nodejs
-RUN apt install -y nodejs npm telnet curl wget iputils-ping vim tcpdump net-tools \ 
-    && npm install -g npm pm2
-RUN  apt install ca-certificates -y
-
-# 设置别名，兼容使用习惯
-RUN echo alias ll=\'ls -l\' >> /etc/bashrc
-
-# 清理多余文件
-RUN  apt purge -y
-RUN  apt clean all
-RUN  rm -rf /var/lib/apt/lists/*
-RUN  rm -rf /var/cache/*.dat-old
-RUN  rm -rf /var/log/*.log /var/log/*/*.log
-
-RUN mkdir -p /usr/local/app/tars/
-
-RUN npm install -g @tars/node-agent \
-    && mv /usr/local/lib/node_modules/@tars/node-agent /usr/local/app/tars/ \
-    && cd /usr/local/app/tars/node-agent && npm install
+RUN mkdir -p /usr/local/app/tars                                                       \
+    && npm install -g @tars/node-agent                                                 \
+    && mv /usr/local/lib/node_modules/@tars/node-agent /usr/local/app/tars/            \
+    && cd /usr/local/app/tars/node-agent                                               \
+    && npm install
 
 ENV NODE_AGENT_BIN=/usr/local/app/tars/node-agent/bin/node-agent
+COPY files/entrypoint.sh /bin/entrypoint.sh
+RUN chmod +x /bin/entrypoint.sh
 CMD ["/bin/entrypoint.sh"]
