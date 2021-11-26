@@ -439,7 +439,7 @@ class K8SWatcherSession : public std::enable_shared_from_this<K8SWatcherSession>
             {
                 if (callback_.preList)
                 {
-                    callback_.postList();
+                    callback_.preList();
                 }
                 doListRequest();
                 return true;
