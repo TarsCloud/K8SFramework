@@ -12,7 +12,7 @@ RUN rm -rf /bin/ls
 RUN apt update                                                                         \
     && apt install -y curl gnupg gnupg2 gnupg1 git                                     \
     ca-certificates openssl telnet curl wget                                           \
-    iputils-ping vim tcpdump net-tools binutils procps tree python                     \
+    iputils-ping vim tcpdump net-tools binutils procps tree python python3                \
     busybox && busybox --install
 
 RUN apt purge -y                                                                       \
