@@ -61,6 +61,8 @@ FROM bitnami/kubectl:1.20 AS ikubectl
 RUN mv $(command -v  kubectl) /tmp/kubectl
 
 FROM php:7.4.26-apache-bullseye
+ENV DEBIAN_FRONTEND=noninteractive
+
 COPY --from=itars /usr/local /usr/local
 COPY --from=igolong /usr/local /usr/local
 COPY --from=iphp /usr/local /usr/local
@@ -79,8 +81,11 @@ RUN apt update                                                                  
     && apt install -y git cmake make maven gdb                                         \
     ca-certificates openssl telnet curl wget default-mysql-client                      \
     iputils-ping vim tcpdump net-tools binutils procps tree python python3             \
-    libssl-dev zlib1g-dev libzip-dev                                                   \
+    libssl-dev zlib1g-dev libzip-dev  tzdata localepurge                               \
     busybox && busybox --install
+
+RUN locale-gen en_US.utf8
+ENV LANG en_US.utf8
 
 RUN apt purge -y                                                                       \
     && apt clean all                                                                   \
@@ -110,9 +115,9 @@ RUN chmod a+x /usr/bin/exec-helm.sh
 COPY test-base-compiler.sh /root/
 RUN chmod a+x /root/test-base-compiler.sh
 
-RUN cd /root && git clone https://github.com/TarsCloud/TarsDemo
-RUN /root/test-base-compiler.sh
-RUN rm -rf /root/TarsDemo
+RUN cd /root && git clone https://github.com/TarsCloud/TarsDemo \
+    && /root/test-base-compiler.sh \
+    && rm -rf /root/TarsDemo
 
 RUN echo "#!/bin/bash" > /bin/start.sh && echo "while true; do sleep 10; done" >> /bin/start.sh && chmod a+x /bin/start.sh
 
