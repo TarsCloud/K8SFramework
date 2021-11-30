@@ -41,6 +41,7 @@ echo "APP:                  "$APP
 echo "SERVER:               "$SERVER
 echo "REPO_ID:              "$REPO_ID
 echo "IMAGE:                "$IMAGE
+echo "K8SSERVER:            "$K8SSERVER
 echo "----------------------Build docker--------------------------------"
 
 cp /root/helm-template/Chart.yaml /tmp/Chart.yaml.backup
@@ -53,7 +54,6 @@ function build_helm()
 
     # 修改charts里面的参数
     node /root/yaml-tools/index -f /root/helm-template/Chart.yaml -s name -v $K8SSERVER -u
-    # node /root/yaml-tools/index -f /root/helm-template/Chart.yaml -s appVersion -v "$TAG" -u
 
     # 更新values
     node /root/yaml-tools/values -f /root/helm-template/values.yaml -d $REPO_ID -i $IMAGE -u

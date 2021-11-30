@@ -27,7 +27,7 @@ FROM php:7.4.26-apache-bullseye AS iphp
 RUN rm -rf /bin/ls
 
 RUN apt update                                                                         \
-    && apt install git libssl-dev zlib1g-dev busybox -y                                \
+    && apt install git libssl-dev zlib1g-dev busybox  libzip-dev  -y                   \
     && busybox --install
 
 RUN yes ''| pecl install igbinary zstd redis swoole                                    \
@@ -35,6 +35,8 @@ RUN yes ''| pecl install igbinary zstd redis swoole                             
     && echo "extension=zstd.so" > /usr/local/etc/php/conf.d/zstd.ini                   \
     && echo "extension=redis.so" > /usr/local/etc/php/conf.d/redis.ini                 \
     && echo "extension=swoole.so" > /usr/local/etc/php/conf.d/swoole.ini
+
+RUN docker-php-ext-configure zip && docker-php-ext-install zip
 
 RUN cd /root                                                                           \
     && git clone https://github.com/TarsPHP/tars-extension.git                         \
@@ -74,10 +76,10 @@ ENV PATH=/usr/local/openjdk-8/bin:/usr/local/go/bin:/usr/local/sbin:/usr/local/b
 RUN rm -rf /bin/ls
 
 RUN apt update                                                                         \
-    && apt install -y git cmake make maven                                             \
+    && apt install -y git cmake make maven gdb                                         \
     ca-certificates openssl telnet curl wget default-mysql-client                      \
     iputils-ping vim tcpdump net-tools binutils procps tree                            \
-    libssl-dev zlib1g-dev                                                              \
+    libssl-dev zlib1g-dev libzip-dev                                                   \
     busybox && busybox --install
 
 RUN apt purge -y                                                                       \
@@ -85,6 +87,10 @@ RUN apt purge -y                                                                
     && rm -rf /var/lib/apt/lists/*                                                     \
     && rm -rf /var/cache/*.dat-old                                                     \
     && rm -rf /var/log/*.log /var/log/*/*.log
+
+RUN curl -sS https://getcomposer.org/installer | php \
+    && mv composer.phar /usr/local/bin/composer \
+    && chmod +x /usr/local/bin/composer
 
 RUN npm install -g @tars/deploy
 
@@ -101,6 +107,12 @@ RUN chmod a+x /usr/bin/exec-deploy.sh
 RUN chmod a+x /usr/bin/exec-build.sh
 RUN chmod a+x /usr/bin/exec-helm.sh
 
+COPY test-base-compiler.sh /root/
+RUN chmod a+x /root/test-base-compiler.sh
+
+RUN cd /root && git clone https://github.com/TarsCloud/TarsDemo
+RUN /root/test-base-compiler.sh
+
 RUN echo "#!/bin/bash" > /bin/start.sh && echo "while true; do sleep 10; done" >> /bin/start.sh && chmod a+x /bin/start.sh
 
-ENTRYPOINT ["/bin/start.sh"]
+CMD ["/bin/start.sh"]
