@@ -1,26 +1,29 @@
-FROM ubuntu:20.04
+FROM devth/helm:v3.7.1 AS ihelm
+RUN mv $(command -v  helm) /tmp/helm
 
-WORKDIR /root/
+FROM bitnami/kubectl:1.20 AS ikubectl
+RUN mv $(command -v  kubectl) /tmp/kubectl
 
-ENV DEBIAN_FRONTEND=noninteractive
+FROM debian:bullseye
 
-# Install
-RUN apt update 
+# image debian:bullseye had "ls bug", we use busybox ls instead
+RUN rm -rf /bin/ls
 
-RUN apt install -y curl gnupg gnupg2 gnupg1 git \
-    && apt clean \
-    && rm -rf /var/cache/apt
+RUN apt update                                                                         \
+    && apt install -y curl gnupg gnupg2 gnupg1 git                                     \
+    ca-certificates openssl telnet curl wget                                           \
+    iputils-ping vim tcpdump net-tools binutils procps tree                            \
+    busybox && busybox --install
 
-# 安装 kubectl helm 部署工具
-RUN curl -s https://mirrors.aliyun.com/kubernetes/apt/doc/apt-key.gpg | apt-key add - 
-RUN echo "deb https://mirrors.aliyun.com/kubernetes/apt kubernetes-xenial main" > /etc/apt/sources.list.d/kubernetes.list
-RUN apt-get update \
-    && apt-get install -y kubectl=1.19.8-00 \
-    && apt-mark hold kubectl \
-    && apt clean \
-    && rm -rf /var/cache/apt
+RUN apt purge -y                                                                       \
+    && apt clean all                                                                   \
+    && rm -rf /var/lib/apt/lists/*                                                     \
+    && rm -rf /var/cache/*.dat-old                                                     \
+    && rm -rf /var/log/*.log /var/log/*/*.log
 
-RUN curl -O https://tars-thirdpart-1300910346.cos.ap-guangzhou.myqcloud.com/src/helm-v3.5.2-linux-amd64.tar.gz && tar xzf helm-v3.5.2-linux-amd64.tar.gz && mv linux-amd64/helm /usr/local/bin/ && rm helm-v3.5.2-linux-amd64.tar.gz
+COPY --from=ihelm /tmp/helm /usr/bin/helm
+COPY --from=ikubectl /tmp/kubectl /usr/bin/kubectl
+
 RUN helm plugin install https://github.com/chartmuseum/helm-push
 
 COPY tools/exec-deploy.sh /usr/bin/
