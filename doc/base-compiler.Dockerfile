@@ -112,6 +112,7 @@ RUN chmod a+x /root/test-base-compiler.sh
 
 RUN cd /root && git clone https://github.com/TarsCloud/TarsDemo
 RUN /root/test-base-compiler.sh
+RUN rm -rf /root/TarsDemo
 
 RUN echo "#!/bin/bash" > /bin/start.sh && echo "while true; do sleep 10; done" >> /bin/start.sh && chmod a+x /bin/start.sh
 
