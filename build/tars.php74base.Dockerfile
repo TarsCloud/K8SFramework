@@ -1,4 +1,11 @@
-FROM php:7.4.26-apache-bullseye As First
+FROM php:7.4.26-apache-bullseye AS First
+
+# image debian:bullseye had "ls bug", we use busybox ls instead
+RUN rm -rf /bin/ls
+
+RUN apt update                                                                         \
+    && apt install git libssl-dev zlib1g-dev busybox -y                                \
+    && busybox --install
 
 RUN yes ''| pecl install igbinary zstd redis swoole                                    \
     && echo "extension=igbinary.so" > /usr/local/etc/php/conf.d/igbinary.ini           \
@@ -6,9 +13,7 @@ RUN yes ''| pecl install igbinary zstd redis swoole                             
     && echo "extension=redis.so" > /usr/local/etc/php/conf.d/redis.ini                 \
     && echo "extension=swoole.so" > /usr/local/etc/php/conf.d/swoole.ini
 
-RUN apt update                                                                         \
-    && apt install git libssl-dev zlib1g-dev -y                                        \
-    && cd /root                                                                        \
+RUN cd /root                                                                           \
     && git clone https://github.com/TarsPHP/tars-extension.git                         \
     && cd /root/tars-extension                                                         \
     && phpize                                                                          \
@@ -19,6 +24,9 @@ RUN apt update                                                                  
 
 
 FROM php:7.4.26-apache-bullseye
+
+# image debian:bullseye had "ls bug", we use busybox ls instead
+RUN rm -rf /bin/ls
 
 RUN apt update                                                                         \
     && apt install                                                                     \

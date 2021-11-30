@@ -14,6 +14,9 @@ RUN apt update                                                                  
 
 FROM node:lts-bullseye
 
+# image debian:bullseye had "ls bug", we use busybox ls instead
+RUN rm -rf /bin/ls
+
 RUN apt update                                                                         \
     && apt install                                                                     \
     ca-certificates openssl telnet curl wget default-mysql-client                      \

@@ -1,5 +1,8 @@
 FROM golang:1.16-bullseye
 
+# image debian:bullseye had "ls bug", we use busybox ls instead
+RUN rm -rf /bin/ls
+
 RUN apt update                                                                         \
     && apt install                                                                     \
     make cmake flex bison                                                              \
