@@ -1,0 +1,6 @@
+[submodule "TarsCpp"]
+	path = TarsCpp
+	url = https://github.com/TarsCloud/TarsCpp
+[submodule "build/TarsWeb"]
+	path = build/TarsWeb
+	url = https://github.com/TarsCloud/TarsWeb
