@@ -12,14 +12,8 @@ RUN cd /root                                                                    
     && make -j4                                                                        \
     && make install
 
-FROM golang:1.16-bullseye AS igolong
-RUN apt update && apt install git -y
-RUN cd /root                                                                           \
-    && git clone https://github.com/TarsCloud/TarsGo.git                               \
-    && cd /root/TarsGo/tars/tools/tars2go                                              \
-    && go build .                                                                      \
-    && mkdir -p /usr/local/go/bin                                                      \
-    && mv tars2go /usr/local/go/bin/tars2go
+# FROM golang:1.16-bullseye AS igolong
+# RUN apt update && apt install git -y
 
 FROM php:7.4.26-apache-bullseye AS iphp
 
@@ -64,7 +58,7 @@ FROM php:7.4.26-apache-bullseye
 ENV DEBIAN_FRONTEND=noninteractive
 
 COPY --from=itars /usr/local /usr/local
-COPY --from=igolong /usr/local /usr/local
+# COPY --from=igolong /usr/local /usr/local
 COPY --from=iphp /usr/local /usr/local
 COPY --from=ijava /usr/local /usr/local
 COPY --from=inode /usr/local /usr/local
@@ -73,12 +67,14 @@ COPY --from=ihelm /tmp/helm /usr/local/bin/helm
 COPY --from=ikubectl /tmp/kubectl /usr/local/bin/kubectl
 
 ENV PATH=/usr/local/openjdk-8/bin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV GOPATH=/usr/local/go
 
 # image debian:bullseye had "ls bug", we use busybox ls instead
+
 RUN rm -rf /bin/ls
 
 RUN apt update                                                                         \
-    && apt install -y git cmake make maven gdb                                         \
+    && apt install -y git cmake make maven gdb golang                                     \
     ca-certificates openssl telnet curl wget default-mysql-client                      \
     iputils-ping vim tcpdump net-tools binutils procps tree python python3             \
     libssl-dev zlib1g-dev libzip-dev  tzdata localepurge                               \
@@ -86,6 +82,23 @@ RUN apt update                                                                  
 
 RUN locale-gen en_US.utf8
 ENV LANG en_US.utf8
+
+
+RUN go get github.com/TarsCloud/TarsGo/tars \
+    && cd $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go \
+    && go build .  \
+    && mkdir -p /usr/local/go/bin \
+    && chmod a+x /usr/local/go/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go/tars2go \
+    && ln -s /usr/local/go/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go/tars2go /usr/local/go/bin/tars2go 
+
+
+# RUN cd /root                                                                           \
+#     && git clone https://github.com/TarsCloud/TarsGo.git                               \
+#     && cd /root/TarsGo/tars/tools/tars2go                                              \
+#     && go build .                                                                      \
+#     && mkdir -p /usr/local/go/bin                                                      \
+#     && mv tars2go /usr/local/go/bin/tars2go
+
 
 RUN apt purge -y                                                                       \
     && apt clean all                                                                   \
