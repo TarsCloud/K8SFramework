@@ -168,9 +168,9 @@ public:
 			m["${modulename}"] = serverApp_ + "." + serverName_;
 			m["${app}"] = serverApp_;
 			m["${server}"] = serverName_;
-			m["${basepath}"] = container::serverBinDir;
-			m["${datapath}"] = container::serverDataDir;
-			m["${logpath}"] = container::serverLogDir;
+			m["${basepath}"] = container::serverBinDir + "/";
+			m["${datapath}"] = container::serverDataDir + "/";
+			m["${logpath}"] = container::serverLogDir + "/";
 			m["${localip}"] = container::listenAddress;
 			m["${locator}"] = FIXED_QUERY_PROXY_NAME;
 			m["${local}"] = FIXED_LOCAL_ENDPOINT;

@@ -36,24 +36,24 @@ _IMAGE_BIND_TARSNODE_EXECUTION_FILE_="/tarsnode/bin/tarsnode"
 _IMAGE_BIND_TARSNODE_CONF_FILE_="/tarsnode/conf/tarsnode.conf"
 _IMAGE_BIND_UTIL_ENTRYPOINT_FILE_="/tarsnode/util/start.sh"
 
-_TARSNODE_BASE_DIR_="/usr/local/app/tars/tarsnode/"
+_TARSNODE_BASE_DIR_="/usr/local/app/tars/tarsnode"
 
-_TARSNODE_BIN_DIR_="${_TARSNODE_BASE_DIR_}bin/"
+_TARSNODE_BIN_DIR_="${_TARSNODE_BASE_DIR_}/bin"
 
-_TARSNODE_EXECUTION_FILE_="${_TARSNODE_BIN_DIR_}tarsnode"
+_TARSNODE_EXECUTION_FILE_="${_TARSNODE_BIN_DIR_}/tarsnode"
 
-_TARSNODE_CONF_DIR_="${_TARSNODE_BASE_DIR_}conf/"
+_TARSNODE_CONF_DIR_="${_TARSNODE_BASE_DIR_}/conf"
 
-_TARSNODE_CONF_FILE_="${_TARSNODE_CONF_DIR_}tarsnode.conf"
+_TARSNODE_CONF_FILE_="${_TARSNODE_CONF_DIR_}/tarsnode.conf"
 
-_TARSNODE_DATA_DIR_="${_TARSNODE_BASE_DIR_}data/"
+_TARSNODE_DATA_DIR_="${_TARSNODE_BASE_DIR_}/data"
 
-_TARSNODE_LOG_DIR_="/usr/local/app/tars/app_log/"
+_TARSNODE_LOG_DIR_="/usr/local/app/tars/app_log"
 
-_TARSNODE_UTIL_DIR_="${_TARSNODE_BASE_DIR_}util/"
-_TARSNODE_UTIL_ENTRYPOINT_="${_TARSNODE_UTIL_DIR_}start.sh"
+_TARSNODE_UTIL_DIR_="${_TARSNODE_BASE_DIR_}/util"
+_TARSNODE_UTIL_ENTRYPOINT_="${_TARSNODE_UTIL_DIR_}/start.sh"
 
-_TARSNODE_ENVIRONMENT_="${_TARSNODE_BASE_DIR_}util/environment"
+_TARSNODE_ENVIRONMENT_="${_TARSNODE_BASE_DIR_}/util/environment"
 
 if ! mkdir -p ${_TARSNODE_BIN_DIR_}; then
   echo "mkdir -p ${_TARSNODE_BIN_DIR_} error"
@@ -104,11 +104,11 @@ for KEY in "${ReplaceKeyList[@]}"; do
   done
 done
 
-export ServerBaseDir=${_TARSNODE_DATA_DIR_}"${_TARS_SERVER_APP_}"."${_TARS_SERVER_NAME_}"/
-export ServerBinDir=${ServerBaseDir}"bin/"
-export ServerDataDir=${ServerBaseDir}"data/"
-export ServerConfDir=${ServerBaseDir}"conf/"
-export ServerConfFile=${ServerConfDir}${_TARS_SERVER_APP_}"."${_TARS_SERVER_NAME_}.config.conf
+export ServerBaseDir=${_TARSNODE_DATA_DIR_}/"${_TARS_SERVER_APP_}"."${_TARS_SERVER_NAME_}"
+export ServerBinDir=${ServerBaseDir}/bin
+export ServerDataDir=${ServerBaseDir}/data
+export ServerConfDir=${ServerBaseDir}/conf
+export ServerConfFile=${ServerConfDir}/${_TARS_SERVER_APP_}"."${_TARS_SERVER_NAME_}.config.conf
 export ServerLogDir=${_TARSNODE_LOG_DIR_}
 
 ListenAddress=${_LISTEN_ADDRESS_}
