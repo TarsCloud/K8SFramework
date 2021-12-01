@@ -14,6 +14,8 @@ RUN apt update                                                                  
 
 FROM node:lts-bullseye
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 # image debian:bullseye had "ls bug", we use busybox ls instead
 RUN rm -rf /bin/ls
 
@@ -22,7 +24,10 @@ RUN apt update                                                                  
     ca-certificates openssl telnet curl wget default-mysql-client                      \
     iputils-ping vim tcpdump net-tools binutils procps tree                            \
     libssl-dev zlib1g-dev libprotobuf-dev libprotobuf-c-dev                            \
+    tzdata localepurge                                                                 \
     busybox -y && busybox --install
+RUN locale-gen en_US.utf8
+ENV LANG en_US.utf8
 
 RUN apt purge -y                                                                       \
     && apt clean all                                                                   \
