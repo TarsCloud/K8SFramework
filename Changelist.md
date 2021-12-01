@@ -1,4 +1,4 @@
-## v1.1.1 20211130
+## v1.1.1 20211201
 
 ### en
 
@@ -10,6 +10,7 @@
 - Fixed php template
 - Update charts of tarsconroller & tarsframework 的
 - Tarscpp & tarsweb dependency changed to submodule mode
+- Utf8 character set is used inside the image
 
 ### cn
 
@@ -21,6 +22,7 @@
 - 修复了 php 的模板
 - 更新了 tarsconroller & tarsframework 的 charts
 - tarscpp & tarsweb 依赖改成了 submodule 模式
+- 镜像内部都采用 utf8 字符集
 
 ## v1.1.0 20211024
 
