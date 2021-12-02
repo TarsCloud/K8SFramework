@@ -15,7 +15,7 @@ void TraceService::initialize(const TC_Config& config)
         throw std::runtime_error("bad config: " + message);
     }
 
-    logDir_ = config.get("/tars/trace<log_dir>", "/usr/local/app/tars/remote_app_log/_tars_/_trace_");
+    logDir_ = config.get("/tars/elk<log_dir>", "/usr/local/app/tars/remote_app_log/_tars_/_trace_");
     SnapshotDraftsman::setSavePath(ServerConfig::DataPath);
 
     ESHelper::setAddressByTConfig(config);
@@ -42,11 +42,11 @@ void TraceService::initialize(const TC_Config& config)
 
 bool TraceService::loadTimerValue(const TC_Config& config, string& message)
 {
-    snapshotTimer_ = TC_Common::strto<int>(config.get("/tars/trace<SnapshotTimer>", "300"));
-    firstCheckTimer_ = TC_Common::strto<int>(config.get("/tars/trace<FirstCheckTimer>", "3"));
-    checkCycleTimer_ = TC_Common::strto<int>(config.get("/tars/trace<CheckCycleTimer>", "3"));
-    closureOvertime_ = TC_Common::strto<int>(config.get("/tars/trace<OvertimeWhenClosure>", "3"));
-    maxOvertime_ = TC_Common::strto<int>(config.get("/tars/trace<Overtime>", "100"));
+    snapshotTimer_ = TC_Common::strto<int>(config.get("/tars/elk<SnapshotTimer>", "300"));
+    firstCheckTimer_ = TC_Common::strto<int>(config.get("/tars/elk<FirstCheckTimer>", "3"));
+    checkCycleTimer_ = TC_Common::strto<int>(config.get("/tars/elk<CheckCycleTimer>", "3"));
+    closureOvertime_ = TC_Common::strto<int>(config.get("/tars/elk<OvertimeWhenClosure>", "3"));
+    maxOvertime_ = TC_Common::strto<int>(config.get("/tars/elk<Overtime>", "100"));
 
     if (snapshotTimer_ < 60 || snapshotTimer_ > 10000)
     {

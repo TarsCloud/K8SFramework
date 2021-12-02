@@ -29,12 +29,12 @@ public:
 		{
 			if (context->times <= maxRetry)
 			{
-				TLOGERROR("do es request error: " << response << ", this is " << context->times << "th" << " retry" << endl);
+				TLOGERROR("do elk request error: " << response << ", this is " << context->times << "th" << " retry" << endl);
 				nexTimer = context->times * context->times + 1u;
 			}
 			else
 			{
-				TLOGERROR("do es request error: " << response << ", this is " << context->times << "th" << " retry, request will discard" << endl);
+				TLOGERROR("do elk request error: " << response << ", this is " << context->times << "th" << " retry, request will discard" << endl);
 				return;
 			}
 		}
@@ -51,12 +51,12 @@ public:
 
 	static void setAddressByTConfig(const TC_Config& config)
 	{
-		vector<string> nodes = config.getDomainKey("/tars/es/nodes");
+		vector<string> nodes = config.getDomainKey("/tars/elk/nodes");
 		if (nodes.empty())
 		{
-			TLOGERROR("empty es nodes" << std::endl);
-			std::cout << "empty es nodes" << std::endl;
-			throw std::runtime_error("empty es nodes");
+			TLOGERROR("empty elk nodes" << std::endl);
+			std::cout << "empty elk nodes" << std::endl;
+			throw std::runtime_error("empty elk nodes");
 		}
 		std::vector<std::tuple<std::string, int>> esNodes;
 		for (auto& item: nodes)
@@ -64,19 +64,19 @@ public:
 			vector<string> v = TC_Common::sepstr<string>(item, ":", true);
 			if (v.size() < 2)
 			{
-				TLOGERROR("wrong es node: " << item << endl);
+				TLOGERROR("wrong elk node: " << item << endl);
 				continue;
 			}
 			esNodes.emplace_back(v[0], std::stoi(v[1]));
 		}
 		if (esNodes.empty())
 		{
-			TLOGERROR("empty es nodes" << std::endl);
-			std::cout << "empty es nodes" << std::endl;
-			throw std::runtime_error("empty es nodes");
+			TLOGERROR("empty elk nodes" << std::endl);
+			std::cout << "empty elk nodes" << std::endl;
+			throw std::runtime_error("empty elk nodes");
 		}
 
-		string proto = config.get("/tars/es<protocol>", "http");
+		string proto = config.get("/tars/elk<protocol>", "http");
 		ESClient::instance().setAddresses(esNodes, proto);
 	}
 
@@ -104,7 +104,7 @@ public:
 		int res = ESClient::instance().doRequest(ESClientRequestMethod::Put, url, body, response);
 		if (res != 200)
 		{
-			auto& message = std::string("create es policy error, ").append(response);
+			auto& message = std::string("create elk policy error, ").append(response);
 			TLOGERROR(message << std::endl);
 			throw std::runtime_error(message);
 		}
@@ -131,7 +131,7 @@ public:
 		int res = ESClient::instance().doRequest(ESClientRequestMethod::Put, url, body, response);
 		if (res != 200)
 		{
-			auto message = std::string("create es index template error, ").append(response);
+			auto message = std::string("create elk index template error, ").append(response);
 			TLOGERROR(message << std::endl);
 			throw std::runtime_error(message);
 		}
@@ -159,7 +159,7 @@ public:
 		int res = ESClient::instance().doRequest(ESClientRequestMethod::Put, url, body, response);
 		if (res != 200)
 		{
-			auto message = std::string("create es index template error, ").append(response);
+			auto message = std::string("create elk index template error, ").append(response);
 			TLOGERROR(message << std::endl);
 			throw std::runtime_error(message);
 		}

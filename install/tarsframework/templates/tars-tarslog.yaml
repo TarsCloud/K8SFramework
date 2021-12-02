@@ -39,9 +39,15 @@ spec:
             hour=xx
           </format>
         </log>
-        <trace>
+        <elk>
+          # protocol connect to es
+          protocol=http
+          <nodes>
+            # es node address
+            tars-elasticsearch:9200
+          </nodes>
           log_dir=/usr/local/app/tars/remote_app_log/_tars_/_trace_
-        </trace>
+        </elk>
       </tars>
     servants:
       - name: LogObj
