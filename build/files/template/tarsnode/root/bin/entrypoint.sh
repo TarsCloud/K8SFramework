@@ -35,6 +35,7 @@ declare -l _LISTEN_ADDRESS_=${_K8S_POD_NAME_}.${_TARS_SERVER_APP_}-${_TARS_SERVE
 _IMAGE_BIND_TARSNODE_EXECUTION_FILE_="/tarsnode/bin/tarsnode"
 _IMAGE_BIND_TARSNODE_CONF_FILE_="/tarsnode/conf/tarsnode.conf"
 _IMAGE_BIND_UTIL_ENTRYPOINT_FILE_="/tarsnode/util/start.sh"
+_IMAGE_BIND_UTIL_TIMEZONE_FILE_="/tarsnode/util/timezone.sh"
 
 _TARSNODE_BASE_DIR_="/usr/local/app/tars/tarsnode"
 
@@ -52,6 +53,7 @@ _TARSNODE_LOG_DIR_="/usr/local/app/tars/app_log"
 
 _TARSNODE_UTIL_DIR_="${_TARSNODE_BASE_DIR_}/util"
 _TARSNODE_UTIL_ENTRYPOINT_="${_TARSNODE_UTIL_DIR_}/start.sh"
+_TARSNODE_UTIL_TIMEZONE_="${_TARSNODE_UTIL_DIR_}/timezone.sh"
 
 _TARSNODE_ENVIRONMENT_="${_TARSNODE_BASE_DIR_}/util/environment"
 
@@ -82,6 +84,11 @@ fi
 
 if ! cp -r ${_IMAGE_BIND_UTIL_ENTRYPOINT_FILE_} ${_TARSNODE_UTIL_ENTRYPOINT_}; then
   echo "cp -r ${_IMAGE_BIND_UTIL_ENTRYPOINT_FILE_} ${_TARSNODE_UTIL_ENTRYPOINT_} error"
+  exit 255
+fi
+
+if ! cp -r ${_IMAGE_BIND_UTIL_TIMEZONE_FILE_} ${_TARSNODE_UTIL_TIMEZONE_}; then
+  echo "cp -r ${_IMAGE_BIND_UTIL_TIMEZONE_FILE_} ${_TARSNODE_UTIL_TIMEZONE_} error"
   exit 255
 fi
 
