@@ -3,6 +3,7 @@
 if cd /usr/share/zoneinfo; then
 
   _LOCALTIME_FILE_="/etc/localtime"
+  _TIMEZONE_FILE_="/etc/timezone"
 
   if [ -f "${_LOCALTIME_FILE_}" ]; then
 
@@ -17,7 +18,7 @@ if cd /usr/share/zoneinfo; then
         echo "Will Update TimeZone To" "${ZONEFILE}"
         rm -rf "${_LOCALTIME_FILE_}"
         ln -sf /usr/share/zoneinfo/"${ZONEFILE}" /etc/localtime
-        echo "${ZONEFILE}" >"${_LOCALTIME_FILE_}"
+        echo "${ZONEFILE}" >"${_TIMEZONE_FILE_}"
         export TZ=${ZONEFILE}
         break
       fi
