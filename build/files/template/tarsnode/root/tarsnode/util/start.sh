@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 
+_IMAGE_BIND_TIMEZONE_EXECUTION_FILE_="/usr/local/app/tars/tarsnode/util/timezone.sh"
 _IMAGE_BIND_TARSNODE_EXECUTION_FILE_="/usr/local/app/tars/tarsnode/bin/tarsnode"
 _IMAGE_BIND_TARSNODE_CONF_FILE_="/usr/local/app/tars/tarsnode/conf/tarsnode.conf"
 _TARSNODE_ENVIRONMENT_FILE_="/usr/local/app/tars/tarsnode/util/environment"
 
 _IMAGE_BIND_SERVER_DIR_="/usr/local/server/bin"
 
+source ${_IMAGE_BIND_TIMEZONE_EXECUTION_FILE_}
 source $_TARSNODE_ENVIRONMENT_FILE_
 
 mkdir -p "${ServerBaseDir}"

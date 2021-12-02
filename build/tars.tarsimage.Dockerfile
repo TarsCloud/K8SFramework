@@ -4,6 +4,8 @@ FROM debian:bullseye
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+# /etc/localtime as a solt link will block container mount /etc/localtime from host
+RUN rm -rf /etc/localtime
 
 # image debian:bullseye had "ls bug", we use busybox ls instead
 RUN rm -rf /bin/ls

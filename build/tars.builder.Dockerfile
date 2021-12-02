@@ -3,6 +3,9 @@ FROM golang:1.16-bullseye
 # image debian:bullseye had "ls bug", we use busybox ls instead
 RUN rm -rf /bin/ls
 
+# /etc/localtime as a solt link will block container mount /etc/localtime from host
+RUN rm -rf /etc/localtime
+
 RUN apt update                                                                         \
     && apt install                                                                     \
     make cmake flex bison                                                              \

@@ -5,6 +5,9 @@ FROM php:7.4.26-apache-bullseye AS First
 # image debian:bullseye had "ls bug", we use busybox ls instead
 RUN rm -rf /bin/ls
 
+# /etc/localtime as a solt link will block container mount /etc/localtime from host
+RUN rm -rf /etc/localtime
+
 RUN apt update                                                                         \
     && apt install git libssl-dev zlib1g-dev busybox -y                                \
     && busybox --install

@@ -5,6 +5,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 # image debian:bullseye had "ls bug", we use busybox ls instead
 RUN rm -rf /bin/ls
 
+# /etc/localtime as a solt link will block container mount /etc/localtime from host
+RUN rm -rf /etc/localtime
+
 RUN apt update                                                                         \
     && apt install                                                                     \
     ca-certificates openssl telnet curl wget default-mysql-client                      \
