@@ -54,14 +54,14 @@ void ESWriter::postRawLog(const std::string& file, const std::vector<std::shared
 	{
 		if (triedTimes <= 10)
 		{
-			TLOGERROR("do es request error: " << response << ", this is " << triedTimes << "th" << " retry" << endl;);
+			TLOGERROR("do elk request error: " << response << ", this is " << triedTimes << "th" << " retry" << endl;);
 			TimerTaskQueue::instance().pushTimerTask([file, rawLogs, triedTimes]
 			{
 				ESWriter::postRawLog(file, rawLogs, triedTimes + 1);
 			}, (triedTimes - 1) * 5 + 1);
 			return;
 		}
-		TLOGERROR("do es request error: " << response << ", this is " << triedTimes << "th" << " retry, request will discard" << endl);
+		TLOGERROR("do elk request error: " << response << ", this is " << triedTimes << "th" << " retry, request will discard" << endl);
 	}
 }
 
@@ -81,14 +81,14 @@ void ESWriter::postTrace(const string& file, const std::string& traceName, const
 	{
 		if (triedTimes <= 10)
 		{
-			TLOGERROR("do es request error: " << response << ", this is " << triedTimes << "th" << " retry" << endl;);
+			TLOGERROR("do elk request error: " << response << ", this is " << triedTimes << "th" << " retry" << endl;);
 			TimerTaskQueue::instance().pushTimerTask([file, traceName, tracePtr, shash, fhash, triedTimes]
 			{
 				ESWriter::postTrace(file, traceName, tracePtr, shash, fhash, triedTimes + 1);
 			}, (triedTimes - 1) * 5 + 1);
 			return;
 		}
-		TLOGERROR("do es request error: " << response << ", this is " << triedTimes << "th" << " retry, request will discard" << endl);
+		TLOGERROR("do elk request error: " << response << ", this is " << triedTimes << "th" << " retry, request will discard" << endl);
 	}
 }
 
@@ -104,7 +104,7 @@ void ESWriter::postGraph(const string& file, uint64_t linkId, const shared_ptr<I
 	int res = ESClient::instance().doRequest(ESClientRequestMethod::Post, url, body, response);
 	if (res != 200)
 	{
-		TLOGERROR("do es request error\n, \tRequest: " << body.substr(0, 2048) << "\n, \t" << response);
+		TLOGERROR("do elk request error\n, \tRequest: " << body.substr(0, 2048) << "\n, \t" << response);
 		return;
 	}
 }

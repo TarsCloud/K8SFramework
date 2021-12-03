@@ -64,7 +64,7 @@ int StatImp::reportMicMsg(const map<tars::StatMicMsgHead, tars::StatMicMsgBody>&
 		if (pos != string::npos)
 		{
 			head.masterName = sMasterName.substr(0, pos);
-			const static std::set<std::string> filterMasters = { "tars.tarsnode", "es" };
+			const static std::set<std::string> filterMasters = { "tars.tarsnode", "elk" };
 			if (filterMasters.find(head.masterName) != filterMasters.end())
 			{
 				continue;

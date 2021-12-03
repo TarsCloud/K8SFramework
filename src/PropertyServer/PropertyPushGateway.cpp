@@ -57,7 +57,7 @@ void PropertyPushGateway::push(const tars::StatPropMsgHead& head, const tars::St
 void PropertyPushGateway::init(const TC_Config& config)
 {
 
-	_indexPre = config.get("/tars/es/indexpre<property>");
+	_indexPre = config.get("/tars/elk/indexpre<property>");
 	if (_indexPre.empty())
 	{
 		auto message = std::string("get empty index value");
@@ -66,7 +66,7 @@ void PropertyPushGateway::init(const TC_Config& config)
 	}
 
 
-	auto age = config.get("/tars/es/age<property>", "15d");
+	auto age = config.get("/tars/elk/age<property>", "15d");
 
 	auto pattern = _indexPre + '*';
 	auto policy = _indexPre;

@@ -25,11 +25,11 @@ void QueryServer::initialize()
 	std::string indexPre{};
 	if (ServerConfig::ServerName == "tarsqueryproperty")
 	{
-		indexPre = config.get("/tars/es/indexpre<property>");
+		indexPre = config.get("/tars/elk/indexpre<property>");
 	}
 	else if (ServerConfig::ServerName == "tarsquerystat")
 	{
-		indexPre = config.get("/tars/es/indexpre<stat>");
+		indexPre = config.get("/tars/elk/indexpre<stat>");
 	}
 	else
 	{
@@ -38,9 +38,9 @@ void QueryServer::initialize()
 
 	if (indexPre.empty())
 	{
-		TLOGERROR("get empty es index prefix");
-		std::cout << "get empty es index prefix" << std::endl;
-		throw std::runtime_error("get empty es index prefix");
+		TLOGERROR("get empty elk index prefix");
+		std::cout << "get empty elk index prefix" << std::endl;
+		throw std::runtime_error("get empty elk index prefix");
 	}
 	QueryImp::setIndexPre(indexPre);
 

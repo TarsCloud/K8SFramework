@@ -84,7 +84,7 @@ int ESReader::listTrace(const string& date, int64_t beginTime, int64_t endTime, 
     int res = ESClient::instance().doRequest(ESClientRequestMethod::Get, url, body, response);
     if (res != 200)
     {
-        TLOGERROR("do es request error\n, \tRequest: " << body.substr(0, 2048) << "\n, \t" << response << endl);
+        TLOGERROR("do elk request error\n, \tRequest: " << body.substr(0, 2048) << "\n, \t" << response << endl);
         return -1;
     }
     if (readESResponse(response, [&ts, &serverName](const TC_AutoPtr<JsonValueObj>& ptr)mutable -> int
@@ -144,7 +144,7 @@ int ESReader::listFunction(const string& date, const string& serverName, set<str
     int res = ESClient::instance().doRequest(ESClientRequestMethod::Get, url, body, response);
     if (res != 200)
     {
-        TLOGERROR("do es request error\n, \tRequest: " << body.substr(0, 2048) << "\n, \t" << response << endl);
+        TLOGERROR("do elk request error\n, \tRequest: " << body.substr(0, 2048) << "\n, \t" << response << endl);
         return -1;
     }
     if (readESResponse(response, [&fs, &serverName](const TC_AutoPtr<JsonValueObj>& ptr)mutable -> int
@@ -205,7 +205,7 @@ int ESReader::listTraceSummary(const string& date, int64_t beginTime, int64_t en
     int res = ESClient::instance().doRequest(ESClientRequestMethod::Get, url, body, response);
     if (res != 200)
     {
-        TLOGERROR("do es request error\n, \tRequest: " << body.substr(0, 2048) << "\n, \t" << response << endl);
+        TLOGERROR("do elk request error\n, \tRequest: " << body.substr(0, 2048) << "\n, \t" << response << endl);
         return -1;
     }
     if (readESResponse(response, [&ss, &serverName](const TC_AutoPtr<JsonValueObj>& ptr)mutable -> int
@@ -260,7 +260,7 @@ int ESReader::getServerGraph(const string& date, const string& serverName, vecto
     int res = ESClient::instance().doRequest(ESClientRequestMethod::Get, url, body, response);
     if (res != 200)
     {
-        TLOGERROR("do es request error\n, \tRequest: " << body.substr(0, 2048) << "\n, \t" << response << endl);
+        TLOGERROR("do elk request error\n, \tRequest: " << body.substr(0, 2048) << "\n, \t" << response << endl);
         return -1;
     }
     if (readESResponse(response, [&graphs](const TC_AutoPtr<JsonValueObj>& ptr)mutable -> int
@@ -301,7 +301,7 @@ int ESReader::getFunctionGraph(const string& date, const string& functionName, v
     int res = ESClient::instance().doRequest(ESClientRequestMethod::Get, url, body, response);
     if (res != 200)
     {
-        TLOGERROR("do es request error\n, \tRequest: " << body.substr(0, 2048) << "\n, \t" << response << endl);
+        TLOGERROR("do elk request error\n, \tRequest: " << body.substr(0, 2048) << "\n, \t" << response << endl);
         return -1;
     }
     if (readESResponse(response, [&graphs](const TC_AutoPtr<JsonValueObj>& ptr)mutable -> int
@@ -340,7 +340,7 @@ int ESReader::getTrace(const string& date, const string& traceName, ITrace& trac
     int res = ESClient::instance().doRequest(ESClientRequestMethod::Get, url, body, response);
     if (res != 200)
     {
-        TLOGERROR("do es request error\n, \tRequest: " << body.substr(0, 2048) << "\n, \t" << response << endl);
+        TLOGERROR("do elk request error\n, \tRequest: " << body.substr(0, 2048) << "\n, \t" << response << endl);
         return -1;
     }
     if (readESResponse(response, [&trace](const TC_AutoPtr<JsonValue>& ptr)mutable -> int

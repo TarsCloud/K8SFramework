@@ -42,7 +42,7 @@ void KEventServer::initialize()
 
     const auto& config = getConfig();
 
-    auto index = config.get("/tars/es/index<kevent>");
+    auto index = config.get("/tars/elk/index<kevent>");
     if (index.empty())
     {
         auto message = std::string("get empty index value");
@@ -52,7 +52,7 @@ void KEventServer::initialize()
 
     K8SWatchCallback::setESIndex(index);
 
-    auto age = config.get("/tars/es/age<kevent>", "3d");
+    auto age = config.get("/tars/elk/age<kevent>", "3d");
 
     const auto& pattern = index;
     const auto& policy = index;

@@ -228,7 +228,7 @@ int QueryImp::query(const tars::MonitorQueryReq& req, tars::MonitorQueryRsp& rsp
         int res = ESClient::instance().doRequest(ESClientRequestMethod::Get, params->queryUrl, params->queryBody, response);
         if (res != 200)
         {
-            TLOGERROR("do es request error: " << response << std::endl);
+            TLOGERROR("do elk request error: " << response << std::endl);
             rsp.ret = -1;
             rsp.msg = response;
             return -1;

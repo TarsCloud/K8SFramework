@@ -71,7 +71,7 @@ void StatPushGateway::start()
 void StatPushGateway::init(const TC_Config& config)
 {
 
-	indexPre = config.get("/tars/es/indexpre<stat>");
+	indexPre = config.get("/tars/elk/indexpre<stat>");
 	if (indexPre.empty())
 	{
 		auto message = std::string("get empty index value");
@@ -79,7 +79,7 @@ void StatPushGateway::init(const TC_Config& config)
 		throw std::runtime_error(message);
 	}
 
-	auto age = config.get("/tars/es/age<stat>", "15d");
+	auto age = config.get("/tars/elk/age<stat>", "15d");
 
 	auto pattern = indexPre + '*';
 	auto policy = indexPre;

@@ -26,7 +26,7 @@ void NotifyMsgQueue::init(const TC_Config& config)
 
 	initLimit(config);
 
-	_index = config.get("/tars/es/index<notify>");
+	_index = config.get("/tars/elk/index<notify>");
 	if (_index.empty())
 	{
 		auto message = std::string("get empty index value");
@@ -34,7 +34,7 @@ void NotifyMsgQueue::init(const TC_Config& config)
 		throw std::runtime_error(message);
 	}
 
-	auto age = config.get("/tars/es/age<notify>", "3d");
+	auto age = config.get("/tars/elk/age<notify>", "3d");
 	const auto& pattern = _index;
 	const auto& policy = _index;
 

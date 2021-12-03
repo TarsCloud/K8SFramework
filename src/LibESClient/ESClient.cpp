@@ -5,7 +5,7 @@
 void ESClient::setAddresses(const vector<std::tuple<std::string, int>>& addresses, const std::string& protocol)
 {
     std::ostringstream os;
-    os << "es@";
+    os << "elk@";
     for (size_t i = 0; i < addresses.size(); ++i)
     {
         if (i != 0)
@@ -22,9 +22,9 @@ void ESClient::setAddresses(const vector<std::tuple<std::string, int>>& addresse
         }
         else
         {
-            TLOGERROR("bad es protocol: " << protocol << endl);
-            std::cout << "bad es protocol: " << protocol << std::endl;
-            throw std::runtime_error("bad es protocol");
+            TLOGERROR("bad elk protocol: " << protocol << endl);
+            std::cout << "bad elk protocol: " << protocol << std::endl;
+            throw std::runtime_error("bad elk protocol");
         }
     }
     _esPrx = Application::getCommunicator()->stringToProxy<ServantPrx>(os.str());
@@ -60,7 +60,7 @@ int ESClient::doRequest(ESClientRequestMethod method, const std::string& url, co
     auto pResponse = std::make_shared<TC_HttpResponse>();
     try
     {
-        _esPrx->http_call("es", request, pResponse);
+        _esPrx->http_call("elk", request, pResponse);
     }
     catch (const std::exception& e)
     {

@@ -12,7 +12,7 @@ spec:
   content: |
     <tars>
        protocol = http
-      <es>
+      <elk>
         <nodes>
           tars-elasticsearch:9200
         </nodes>
@@ -30,7 +30,7 @@ spec:
           stat = 15d
           property = 15d
         </age>
-      </es>
+      </elk>
     </tars>
   parent: tars.default
   {{- end}}
