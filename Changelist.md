@@ -1,4 +1,4 @@
-## v1.1.1 20211202
+## v1.1.1 20211203
 
 ### en
 
@@ -12,6 +12,7 @@
 - Tarscpp & tarsweb dependency changed to submodule mode
 - Utf8 character set is used inside the image
 - The time and time zone in the mirror are the same as that of the host
+- es -> elk, Maintain consistency with tarsframework
 
 ### cn
 
@@ -25,6 +26,7 @@
 - tarscpp & tarsweb 依赖改成了 submodule 模式
 - 镜像内部都采用 utf8 字符集
 - 镜像内时间和时区和宿主机相同
+- 配置路径 es -> elk, 保持和 tarsframework 的一致性
 
 ## v1.1.0 20211024
 
