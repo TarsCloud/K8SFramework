@@ -257,7 +257,9 @@ void K8SWatchCallback::onEndpointAdded(const rapidjson::Value& pDocument, K8SWat
 			if (presentState == "Active" && settingState == "Active")
 			{
 				pTEndpoint->activatedPods.insert(JP2S(pPodName));
-			}
+			}else {
+                pTEndpoint->inActivatedPods.insert(JP2S(pPodName));
+            }
 		}
 	}
 
