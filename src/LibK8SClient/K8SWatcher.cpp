@@ -10,14 +10,11 @@
 #include <rapidjson/document.h>
 #include <iostream>
 
-enum class K8SWatchEvent
-{
-    K8SWatchEventAdded = 1u,
-    K8SWatchEventDeleted = 2u,
-    K8SWatchEventModified = 3u,
-    K8SWatchEventBookmark = 4u,
-    K8SWatchEventError = 5u,
-};
+constexpr char ADDEDTypeValue[] = "ADDED";
+constexpr char DELETETypeValue[] = "DELETED";
+constexpr char UPDATETypeValue[] = "MODIFIED";
+constexpr char BOOKMARKTypeValue[] = "BOOKMARK";
+constexpr char ERRORTypeValue[] = "ERROR";
 
 std::string K8SWatcherSetting::listUri() const
 {
@@ -141,7 +138,7 @@ class K8SWatcherSession : public std::enable_shared_from_this<K8SWatcherSession>
         const auto& apiServerIP = K8SParams::APIServerHost();
         if (apiServerIP.empty())
         {
-            std::string msg = "fatal error: empty apiServerHost value";
+            std::string msg = "empty apiServerHost value";
             return afterError(K8SWatcherError::BadParams, msg);
         }
 
@@ -376,10 +373,28 @@ class K8SWatcherSession : public std::enable_shared_from_this<K8SWatcherSession>
                 }
                 stream.Take();
                 lastTell = stream.Tell();
-                if (!dispatchEvent(document))
+
+                auto pType = rapidjson::GetValueByPointer(document, "/type")->GetString();
+                assert(pType != nullptr);
+
+                if (strcmp(ERRORTypeValue, pType) == 0)
                 {
-                    return;
+                    auto pErrorCode = rapidjson::GetValueByPointer(document, "/object/code");
+                    unsigned int errorCode = pErrorCode->GetUint();
+                    constexpr unsigned int HTTP_GONE = 410;
+
+                    if (errorCode != HTTP_GONE)
+                    {
+                        return afterError(K8SWatcherError::UnexpectedResponse, responseParserState_.bodyBuffer_);
+                    }
+
+                    if (responseParserState_.messageComplete_)
+                    {
+                        return doListRequest();
+                    }
+                    return waitMessageCompleteThenDoListRequest();
                 }
+                dispatchEvent(pType, document);
             }
             assert(lastTell <= bodyDataLength);
             size_t remainingLength = bodyDataLength - lastTell;
@@ -390,88 +405,55 @@ class K8SWatcherSession : public std::enable_shared_from_this<K8SWatcherSession>
         responseParserState_.messageComplete_ ? doWatchRequest() : doReadWatchResponse();
     }
 
-    bool dispatchEvent(const rapidjson::Document& document)
+    void dispatchEvent(const char* type, const rapidjson::Document& document)
     {
         assert(!document.HasParseError());
-
-        auto pType = rapidjson::GetValueByPointer(document, "/type")->GetString();
-        assert(pType != nullptr);
-
-        constexpr char ADDEDTypeValue[] = "ADDED";
-        constexpr char DELETETypeValue[] = "DELETED";
-        constexpr char UPDATETypeValue[] = "MODIFIED";
-        constexpr char BOOKMARKTypeValue[] = "BOOKMARK";
-        constexpr char ERRORTypeValue[] = "ERROR";
-
-        K8SWatchEvent what;
-
-        if (strcmp(ADDEDTypeValue, pType) == 0)
-        {
-            what = K8SWatchEvent::K8SWatchEventAdded;
-        }
-        else if (strcmp(UPDATETypeValue, pType) == 0)
-        {
-            what = K8SWatchEvent::K8SWatchEventModified;
-        }
-        else if (strcmp(DELETETypeValue, pType) == 0)
-        {
-            what = K8SWatchEvent::K8SWatchEventDeleted;
-        }
-        else if (strcmp(BOOKMARKTypeValue, pType) == 0)
-        {
-            what = K8SWatchEvent::K8SWatchEventBookmark;
-        }
-        else if (strcmp(ERRORTypeValue, pType) == 0)
-        {
-            what = K8SWatchEvent::K8SWatchEventError;
-        }
-        else
-        {
-            return true;
-        }
-
-        if (what == K8SWatchEvent::K8SWatchEventError)
-        {
-            auto pErrorCode = rapidjson::GetValueByPointer(document, "/object/code");
-            unsigned int errorCode = pErrorCode->GetUint();
-            constexpr unsigned int HTTP_GONE = 410;
-            if (errorCode == HTTP_GONE)
-            {
-                if (callback_.preList)
-                {
-                    callback_.preList();
-                }
-                doListRequest();
-                return false;
-            }
-            afterError(K8SWatcherError::UnexpectedResponse, responseParserState_.bodyBuffer_);
-            return false;
-        }
 
         auto pResourceVersion = rapidjson::GetValueByPointer(document, "/object/metadata/resourceVersion");
         assert(pResourceVersion != nullptr && pResourceVersion->IsString());
         callback_.newestVersion_ = std::string(pResourceVersion->GetString(), pResourceVersion->GetStringLength());
 
-        if (what == K8SWatchEvent::K8SWatchEventBookmark)
+        if (strcmp(BOOKMARKTypeValue, type) == 0)
         {
-            return true;
+            return;
         }
         const auto& object = document["object"];
-        switch (what)
+
+        if (strcmp(ADDEDTypeValue, type) == 0)
         {
-        case K8SWatchEvent::K8SWatchEventAdded:
             callback_.onAdded(object, K8SWatchEventDrive::Watch);
-            return true;
-        case K8SWatchEvent::K8SWatchEventDeleted:
-            callback_.onDeleted(object);
-            return true;
-        case K8SWatchEvent::K8SWatchEventModified:
-            callback_.onModified(object);
-            return true;
-        default:
-            return true;
+            return;
         }
-        return true;
+        if (strcmp(UPDATETypeValue, type) == 0)
+        {
+            callback_.onModified(object);
+            return;
+        }
+        if (strcmp(DELETETypeValue, type) == 0)
+        {
+            callback_.onDeleted(object);
+            return;
+        }
+    }
+
+    void waitMessageCompleteThenDoListRequest()
+    {
+        auto self = shared_from_this();
+        stream_.async_read_some(responseBuffer_.prepare(1024 * 1024 * 2),
+            [self](std::error_code ec, size_t transferred)
+            {
+                self->responseBuffer_.commit(transferred);
+                const char* responseData = asio::buffer_cast<const char*>(self->responseBuffer_.data());
+                size_t parserSize = http_parser_execute(&self->responseParser_, &self->responseParserSetting_,
+                    responseData, self->responseBuffer_.size());
+                self->responseBuffer_.consume(parserSize);
+                if (self->responseParserState_.messageComplete_)
+                {
+                    self->doListRequest();
+                    return;
+                }
+                self->waitMessageCompleteThenDoListRequest();
+            });
     }
 
  private:
