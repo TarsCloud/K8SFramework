@@ -442,7 +442,7 @@ class K8SWatcherSession : public std::enable_shared_from_this<K8SWatcherSession>
                     callback_.preList();
                 }
                 doListRequest();
-                return true;
+                return false;
             }
             afterError(K8SWatcherError::UnexpectedResponse, responseParserState_.bodyBuffer_);
             return false;
