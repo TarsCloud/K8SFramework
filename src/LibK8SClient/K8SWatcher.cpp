@@ -332,7 +332,6 @@ class K8SWatcherSession : public std::enable_shared_from_this<K8SWatcherSession>
         responseBuffer_.commit(transferred);
         const char* responseData = asio::buffer_cast<const char*>(responseBuffer_.data());
         size_t parserSize = http_parser_execute(&responseParser_, &responseParserSetting_, responseData, responseBuffer_.size());
-
         responseBuffer_.consume(parserSize);
 
         if (!responseParserState_.headComplete_)
@@ -390,6 +389,10 @@ class K8SWatcherSession : public std::enable_shared_from_this<K8SWatcherSession>
 
                     if (responseParserState_.messageComplete_)
                     {
+                        if (callback_.preList)
+                        {
+                            callback_.preList();
+                        }
                         return doListRequest();
                     }
                     return waitMessageCompleteThenDoListRequest();
@@ -449,6 +452,10 @@ class K8SWatcherSession : public std::enable_shared_from_this<K8SWatcherSession>
                 self->responseBuffer_.consume(parserSize);
                 if (self->responseParserState_.messageComplete_)
                 {
+                    if (self->callback_.preList)
+                    {
+                        self->callback_.preList();
+                    }
                     self->doListRequest();
                     return;
                 }
