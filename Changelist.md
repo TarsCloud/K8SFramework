@@ -1,4 +1,4 @@
-## v1.1.1 20211203
+## v1.1.1 20211205
 
 ### en
 
@@ -13,6 +13,7 @@
 - Utf8 character set is used inside the image
 - The time and time zone in the mirror are the same as that of the host
 - es -> elk, Maintain consistency with tarsframework
+- Fix tarsevent crash bug
 
 ### cn
 
@@ -27,6 +28,7 @@
 - 镜像内部都采用 utf8 字符集
 - 镜像内时间和时区和宿主机相同
 - 配置路径 es -> elk, 保持和 tarsframework 的一致性
+- 修复 tarsevent 总是 crash 的 bug
 
 ## v1.1.0 20211024
 
