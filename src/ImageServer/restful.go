@@ -189,7 +189,7 @@ func (s *RestfulServer) Start(stopCh chan struct{}) {
 		Handler:           router,
 		ReadTimeout:       400 * time.Second,
 		ReadHeaderTimeout: 60 * time.Second,
-		WriteTimeout:      10 * time.Second,
+		WriteTimeout:      300 * time.Second,
 		IdleTimeout:       300 * time.Second,
 	}
 	go func() {
