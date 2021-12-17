@@ -1,3 +1,5 @@
+#docker build . -f base-deploy.Dockerfile -t tarscloud/base-deploy
+
 FROM devth/helm:v3.7.1 AS ihelm
 RUN mv $(command -v  helm) /tmp/helm
 

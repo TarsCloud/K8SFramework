@@ -15,9 +15,14 @@ try {
     let data = yaml.load(contents);
 
     if (yargs.argv.g) {
-        eval(`console.log(data.${yargs.argv.g}.toLowerCase())`)
+        let value = data[yargs.argv.g];
+        if (Array.isArray(value)) {
+            console.log(value.join(" "));
+        } else {
+            console.log(data[yargs.argv.g].toLowerCase())
+        }
     } else if (yargs.argv.s) {
-        eval(`data.${yargs.argv.s} = yargs.argv.v`);
+        data[yargs.argv.s] = yargs.argv.v;
         if (yargs.argv.u) {
             fs.writeFileSync(yargs.argv.f, yaml.dump(data));
         }
