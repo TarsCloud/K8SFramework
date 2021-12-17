@@ -19,7 +19,7 @@ try {
         if (Array.isArray(value)) {
             console.log(value.join(" "));
         } else {
-            eval(`console.log(data.${yargs.argv.g}.toLowerCase()`);
+            eval(`console.log(data.${yargs.argv.g}.toLowerCase())`);
         }
     } else if (yargs.argv.s) {
         eval(`data.${yargs.argv.s} = yargs.argv.v`);
