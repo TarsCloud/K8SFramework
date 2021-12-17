@@ -8,6 +8,7 @@ on:
     paths:
       - ".github/workflows/build-compiler-master.yml"
       - "doc/tools/*"
+      - "doc/tools/yaml-tools/*"
       - "doc/base-compiler.Dockerfile"
   pull_request:
     branches:

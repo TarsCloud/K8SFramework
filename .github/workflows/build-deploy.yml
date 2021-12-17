@@ -8,6 +8,7 @@ on:
     paths:
       - ".github/workflows/build-deploy.yml"
       - "doc/tools/*"
+      - "doc/tools/yaml-tools/*"
       - "doc/base-deploy.Dockerfile"
   pull_request:
     branches:
