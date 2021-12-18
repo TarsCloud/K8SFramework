@@ -4,7 +4,6 @@ FROM ${BaseImage}
 
 ARG BIN
 ARG ServerType
-ARG Tars
 
 ENV ServerType=${ServerType}
 
@@ -13,7 +12,6 @@ COPY $BIN /usr/local/server/bin/
 
 RUN mkdir -p /usr/local/market
 
-COPY $Tars /usr/local/market/
 COPY market.yaml /usr/local/market/
 COPY yaml /usr/local/market/
 COPY README.md /usr/local/market/

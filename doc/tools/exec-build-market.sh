@@ -74,8 +74,18 @@ echo "IMAGE:                "$IMAGE
 echo "TARS:                 "$TARS
 echo "----------------------Build docker--------------------------------"
 
-echo "docker build . -f ${Dockerfile} -t $IMAGE --build-arg BIN=$BIN --build-arg BaseImage=$BASEIMAGE --build-arg ServerType=$SERVERTYPE"
-docker build . -f ${Dockerfile} -t $IMAGE --build-arg BIN=$BIN --build-arg BaseImage=$BASEIMAGE --build-arg ServerType=$SERVERTYPE --build-arg Tars="$TARS"
+NewDockerfile=${Dockerfiile}.new
+
+cp -rf ${Dockerfile} ${NewDockerfile}
+
+for KEY in ${TARS}; do
+    echo "COPY $KEY /usr/local/market" >> ${NewDockerfile}
+done
+
+echo "docker build . -f ${NewDockerfile} -t $IMAGE --build-arg BIN=$BIN --build-arg BaseImage=$BASEIMAGE --build-arg ServerType=$SERVERTYPE"
+docker build . -f ${NewDockerfile} -t $IMAGE --build-arg BIN=$BIN --build-arg BaseImage=$BASEIMAGE --build-arg ServerType=$SERVERTYPE
+
+rm -rf ${NewDockerfile}
 
 if [ "${PUSH}" == "true" ]; then
     docker push $IMAGE
