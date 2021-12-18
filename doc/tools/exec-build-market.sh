@@ -52,6 +52,9 @@ SERVER=`node /root/yaml-tools/index -f $VALUES -g server`
 IMAGE=`node /root/yaml-tools/index -f $VALUES -g repo.image`
 
 TARS="`node /root/yaml-tools/index -f market.yaml -g tars`"
+README="`node /root/yaml-tools/index -f market.yaml -g readme`"
+DEPLOY="`node /root/yaml-tools/index -f market.yaml -g deploy`"
+ASSETS="`node /root/yaml-tools/index -f market.yaml -g assets`"
 
 if [ -z $IMAGE ]; then
     echo "repo.image in ${VALUES} must not be empty"
@@ -72,6 +75,9 @@ echo "SERVER:               "$SERVER
 echo "PUSH:                 "$PUSH
 echo "IMAGE:                "$IMAGE
 echo "TARS:                 "$TARS
+echo "README:               "$README
+echo "DEPLOY:               "$DEPLOY
+echo "ASSETS:               "$ASSETS
 echo "----------------------Build docker--------------------------------"
 
 NewDockerfile=${Dockerfiile}.new
@@ -79,6 +85,18 @@ NewDockerfile=${Dockerfiile}.new
 cp -rf ${Dockerfile} ${NewDockerfile}
 
 for KEY in ${TARS}; do
+    echo "COPY $KEY /usr/local/market" >> ${NewDockerfile}
+done
+
+if [ "$README" != "" ]; fi
+    echo "COPY $README /usr/local/market" >> ${NewDockerfile}
+fi
+
+if [ "$DEPLOY" != "" ]; fi
+    echo "COPY $DEPLOY /usr/local/market" >> ${NewDockerfile}
+fi
+
+for KEY in ${ASSETS}; do
     echo "COPY $KEY /usr/local/market" >> ${NewDockerfile}
 done
 
