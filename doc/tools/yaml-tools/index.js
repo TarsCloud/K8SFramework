@@ -21,7 +21,7 @@ try {
         if (Array.isArray(value)) {
             console.log(value.join(" "));
         } else if (!value) {
-            console.log(`${yargs.argv.g} not exists`);
+            console.log(``);
         } else {
             if (yargs.argv.n) {
                 console.log(value);

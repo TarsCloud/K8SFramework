@@ -57,10 +57,9 @@ fi
 
 GROUP="`node /root/yaml-tools/index -f $VALUES -g cloud.group`"
 NAME="`node /root/yaml-tools/index -f $VALUES -g cloud.name`"
-
-TARS="`node /root/yaml-tools/index -f $VALUES -n -g tars`"
-README="`node /root/yaml-tools/index -f $VALUES -n -g readme`"
-ASSETS="`node /root/yaml-tools/index -f $VALUES -n -g assets`"
+TARS="`node /root/yaml-tools/index -f $VALUES -n -g cloud.tars`"
+README="`node /root/yaml-tools/index -f $VALUES -n -g cloud.readme`"
+ASSETS="`node /root/yaml-tools/index -f $VALUES -n -g cloud.assets`"
 
 if [ -z $GROUP ]; then
     echo "group in ${MARKET} must not be empty"
@@ -100,20 +99,20 @@ NewDockerfile=${Dockerfiile}.new
 cp -rf ${Dockerfile} ${NewDockerfile}
 
 echo $VALUES > cloud.yaml
-echo "COPY cloud.yaml /usr/local/" >> ${NewDockerfile}
+echo "COPY cloud.yaml /usr/local/cloud/" >> ${NewDockerfile}
 
-echo "COPY $VALUES /usr/local/cloud/$VALUES" >> ${NewDockerfile}
+echo "COPY $VALUES /usr/local/cloud/data/$VALUES" >> ${NewDockerfile}
 
 for KEY in ${TARS}; do
-    echo "COPY $KEY /usr/local/cloud$/KEY" >> ${NewDockerfile}
+    echo "COPY $KEY /usr/local/cloud/data/$KEY" >> ${NewDockerfile}
 done
 
 if [ "$README" != "" ]; then
-    echo "COPY $README /usr/local/cloud/$README" >> ${NewDockerfile}
+    echo "COPY $README /usr/local/cloud/data/$README" >> ${NewDockerfile}
 fi
 
 for KEY in ${ASSETS}; do
-    echo "COPY $KEY /usr/local/cloud/$KEY" >> ${NewDockerfile}
+    echo "COPY $KEY /usr/local/cloud/data/$KEY" >> ${NewDockerfile}
 done
 
 echo "docker build . -f ${NewDockerfile} -t $IMAGE --build-arg BIN=$BIN --build-arg BaseImage=$BASEIMAGE --build-arg ServerType=$SERVERTYPE"
