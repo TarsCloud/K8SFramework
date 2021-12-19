@@ -99,18 +99,21 @@ NewDockerfile=${Dockerfiile}.new
 
 cp -rf ${Dockerfile} ${NewDockerfile}
 
-echo "COPY $VALUES /usr/local/cloud" >> ${NewDockerfile}
+echo $VALUES > cloud.yaml
+echo "COPY cloud.yaml /usr/local/" >> ${NewDockerfile}
+
+echo "COPY $VALUES /usr/local/cloud/$VALUES" >> ${NewDockerfile}
 
 for KEY in ${TARS}; do
-    echo "COPY $KEY /usr/local/cloud" >> ${NewDockerfile}
+    echo "COPY $KEY /usr/local/cloud$/KEY" >> ${NewDockerfile}
 done
 
 if [ "$README" != "" ]; then
-    echo "COPY $README /usr/local/cloud" >> ${NewDockerfile}
+    echo "COPY $README /usr/local/cloud/$README" >> ${NewDockerfile}
 fi
 
 for KEY in ${ASSETS}; do
-    echo "COPY $KEY /usr/local/cloud" >> ${NewDockerfile}
+    echo "COPY $KEY /usr/local/cloud/$KEY" >> ${NewDockerfile}
 done
 
 echo "docker build . -f ${NewDockerfile} -t $IMAGE --build-arg BIN=$BIN --build-arg BaseImage=$BASEIMAGE --build-arg ServerType=$SERVERTYPE"
