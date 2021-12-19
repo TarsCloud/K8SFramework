@@ -3,8 +3,10 @@ const fs = require('fs');
 const yargs = require('yargs');
 const yaml = require('js-yaml');
 
-//获取或者修复yaml文件中某个值
+//获取或者修复yaml文件中某个值, 获取app, 并转换成小写
 //node index.js -f values.yaml -g app
+//获取readme属性, 且保持大小写不变
+//node index.js -f values.yaml -n -g readme
 //node index.js -f values.yaml -s app -v base 
 //node index.js -f values.yaml -s app -v base  -u
 
@@ -18,8 +20,15 @@ try {
         let value = eval(`data.${yargs.argv.g}`);
         if (Array.isArray(value)) {
             console.log(value.join(" "));
+        } else if (!value) {
+            console.log(`${yargs.argv.g} not exists`);
         } else {
-            eval(`console.log(data.${yargs.argv.g}.toLowerCase())`);
+            if (yargs.argv.n) {
+                console.log(value);
+            } else {
+                console.log(value.toLowerCase());
+            }
+
         }
     } else if (yargs.argv.s) {
         eval(`data.${yargs.argv.s} = yargs.argv.v`);

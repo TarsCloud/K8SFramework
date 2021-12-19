@@ -51,10 +51,10 @@ APP=`node /root/yaml-tools/index -f $VALUES -g app`
 SERVER=`node /root/yaml-tools/index -f $VALUES -g server`
 IMAGE=`node /root/yaml-tools/index -f $VALUES -g repo.image`
 
-TARS="`node /root/yaml-tools/index -f market.yaml -g tars`"
-README="`node /root/yaml-tools/index -f market.yaml -g readme`"
-DEPLOY="`node /root/yaml-tools/index -f market.yaml -g deploy`"
-ASSETS="`node /root/yaml-tools/index -f market.yaml -g assets`"
+TARS="`node /root/yaml-tools/index -f market.yaml -n -g tars`"
+README="`node /root/yaml-tools/index -f market.yaml -n -g readme`"
+DEPLOY="`node /root/yaml-tools/index -f market.yaml -n -g deploy`"
+ASSETS="`node /root/yaml-tools/index -f market.yaml -n -g assets`"
 
 if [ -z $IMAGE ]; then
     echo "repo.image in ${VALUES} must not be empty"
@@ -88,11 +88,11 @@ for KEY in ${TARS}; do
     echo "COPY $KEY /usr/local/market" >> ${NewDockerfile}
 done
 
-if [ "$README" != "" ]; fi
+if [ "$README" != "" ]; then
     echo "COPY $README /usr/local/market" >> ${NewDockerfile}
 fi
 
-if [ "$DEPLOY" != "" ]; fi
+if [ "$DEPLOY" != "" ]; then
     echo "COPY $DEPLOY /usr/local/market" >> ${NewDockerfile}
 fi
 
