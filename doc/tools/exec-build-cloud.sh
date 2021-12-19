@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# 生成上到云端应用市场的镜像, 根据value.yaml, 
+# 自动生成版本号
+# 自动生成镜像地址
+
+# Generate an image to the cloud application market according to value yaml,
+# Automatically generate version number
+# Automatically generate image address
+
 if [ $# -lt 6 ]; then
     echo "Usage: $0 BaseImage SERVERTYPE(cpp/nodejs/java-war/java-jar/go/php) Files YamlFile Tag Push Dockerfile"
     echo "for example, $0 tarscloud/tars.cppbase:v1.0.0 nodejs . yaml/values.yaml latest true Dockerfile"
@@ -25,7 +33,7 @@ if [ "${PUSH}" == "" ]; then
 fi
 
 if [ "${Dockerfile}" == "" ]; then
-    Dockerfile=/root/Dockerfile/Dockerfile.market
+    Dockerfile=/root/Dockerfile/Dockerfile
 else
     echo "use ${Dockerfile}"
 fi
@@ -47,21 +55,29 @@ if [ -z $TAG ]; then
     exit -1
 fi
 
-APP=`node /root/yaml-tools/index -f $VALUES -g app`
-SERVER=`node /root/yaml-tools/index -f $VALUES -g server`
-IMAGE=`node /root/yaml-tools/index -f $VALUES -g repo.image`
+GROUP="`node /root/yaml-tools/index -f $VALUES -g cloud.group`"
+NAME="`node /root/yaml-tools/index -f $VALUES -g cloud.name`"
 
-TARS="`node /root/yaml-tools/index -f market.yaml -n -g tars`"
-README="`node /root/yaml-tools/index -f market.yaml -n -g readme`"
-DEPLOY="`node /root/yaml-tools/index -f market.yaml -n -g deploy`"
-ASSETS="`node /root/yaml-tools/index -f market.yaml -n -g assets`"
+TARS="`node /root/yaml-tools/index -f $VALUES -n -g tars`"
+README="`node /root/yaml-tools/index -f $VALUES -n -g readme`"
+ASSETS="`node /root/yaml-tools/index -f $VALUES -n -g assets`"
 
-if [ -z $IMAGE ]; then
-    echo "repo.image in ${VALUES} must not be empty"
+if [ -z $GROUP ]; then
+    echo "group in ${MARKET} must not be empty"
     exit -1
 fi
 
-IMAGE="$IMAGE:$TAG"
+if [ -z $NAME ]; then
+    echo "name in ${MARKET} must not be empty"
+    exit -1
+fi
+
+IMAGE="docker.tarsyun.com/${GROUP}/${NAME}:${TAG}"
+
+# update values image
+node /root/yaml-tools/index -f $VALUES -s repo.image -v $IMAGE -u
+node /root/yaml-tools/index -f $VALUES -s cloud.version -v $TAG -u
+node /root/yaml-tools/index -f $VALUES -s cloud.deploy -v $VALUES -u
 
 echo "---------------------Environment---------------------------------"
 echo "BIN:                  "$BIN
@@ -70,13 +86,12 @@ echo "BASEIMAGE:            "$BASEIMAGE
 echo "SERVERTYPE:           "$SERVERTYPE
 echo "REGISTRY:             "$REGISTRY
 echo "TAG:                  "$TAG
-echo "APP:                  "$APP
-echo "SERVER:               "$SERVER
+echo "GROUP:                "$GROUP
+echo "NAME:                 "$NAME
 echo "PUSH:                 "$PUSH
 echo "IMAGE:                "$IMAGE
 echo "TARS:                 "$TARS
 echo "README:               "$README
-echo "DEPLOY:               "$DEPLOY
 echo "ASSETS:               "$ASSETS
 echo "----------------------Build docker--------------------------------"
 
@@ -84,20 +99,18 @@ NewDockerfile=${Dockerfiile}.new
 
 cp -rf ${Dockerfile} ${NewDockerfile}
 
+echo "COPY $VALUES /usr/local/cloud" >> ${NewDockerfile}
+
 for KEY in ${TARS}; do
-    echo "COPY $KEY /usr/local/market" >> ${NewDockerfile}
+    echo "COPY $KEY /usr/local/cloud" >> ${NewDockerfile}
 done
 
 if [ "$README" != "" ]; then
-    echo "COPY $README /usr/local/market" >> ${NewDockerfile}
-fi
-
-if [ "$DEPLOY" != "" ]; then
-    echo "COPY $DEPLOY /usr/local/market" >> ${NewDockerfile}
+    echo "COPY $README /usr/local/cloud" >> ${NewDockerfile}
 fi
 
 for KEY in ${ASSETS}; do
-    echo "COPY $KEY /usr/local/market" >> ${NewDockerfile}
+    echo "COPY $KEY /usr/local/cloud" >> ${NewDockerfile}
 done
 
 echo "docker build . -f ${NewDockerfile} -t $IMAGE --build-arg BIN=$BIN --build-arg BaseImage=$BASEIMAGE --build-arg ServerType=$SERVERTYPE"

@@ -56,7 +56,12 @@ function build_helm()
     node /root/yaml-tools/index -f /root/helm-template/Chart.yaml -s name -v $K8SSERVER -u
 
     # 更新values
-    node /root/yaml-tools/values -f /root/helm-template/values.yaml -d $REPO_ID -i $IMAGE -u
+    node /root/yaml-tools/index -f /root/helm-template/values.yaml -s repo.id $REPO_ID -u
+    node /root/yaml-tools/index -f /root/helm-template/values.yaml -s repo.image $IMAGE -u
+    # node /root/yaml-tools/index -f /root/helm-template/values.yaml -s user $IMAGE -u
+    # node /root/yaml-tools/index -f /root/helm-template/values.yaml -s reason $IMAGE -u
+
+    #node /root/yaml-tools/values -f /root/helm-template/values.yaml -d $REPO_ID -i $IMAGE -u
 
     helm dependency update /root/helm-template
 

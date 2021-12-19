@@ -119,14 +119,14 @@ COPY tools/helm-template /root/helm-template
 COPY tools/Dockerfile /root/Dockerfile
 
 COPY tools/exec-build.sh /usr/bin/
-COPY tools/exec-build-market.sh /usr/bin/
+COPY tools/exec-build-cloud.sh /usr/bin/
 COPY tools/exec-deploy.sh /usr/bin/
 COPY tools/exec-helm.sh /usr/bin/
 
 RUN cd /root/yaml-tools && npm install 
 RUN chmod a+x /usr/bin/exec-deploy.sh
 RUN chmod a+x /usr/bin/exec-build.sh
-RUN chmod a+x /usr/bin/exec-build-market.sh
+RUN chmod a+x /usr/bin/exec-build-cloud.sh
 RUN chmod a+x /usr/bin/exec-helm.sh
 
 COPY test-base-compiler.sh /root/
