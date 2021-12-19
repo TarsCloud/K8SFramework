@@ -40,7 +40,7 @@ fi
 
 #-------------------------------------------------------------------------------------------
 
-if [ ! -f $VALUES ] && [ ! -d $BIN ] ; then
+if [ ! -f $VALUES ] ; then
     echo "yaml file($VALUES) not exists, exit."
     exit -1
 fi
@@ -98,10 +98,7 @@ NewDockerfile=${Dockerfiile}.new
 
 cp -rf ${Dockerfile} ${NewDockerfile}
 
-echo $VALUES > cloud.yaml
-echo "COPY cloud.yaml /usr/local/cloud/" >> ${NewDockerfile}
-
-echo "COPY $VALUES /usr/local/cloud/data/$VALUES" >> ${NewDockerfile}
+echo "COPY $VALUES /usr/local/cloud/cloud.yaml" >> ${NewDockerfile}
 
 for KEY in ${TARS}; do
     echo "COPY $KEY /usr/local/cloud/data/$KEY" >> ${NewDockerfile}
