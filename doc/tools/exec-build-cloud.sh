@@ -57,6 +57,7 @@ fi
 
 GROUP="`node /root/yaml-tools/index -f $VALUES -g cloud.group`"
 NAME="`node /root/yaml-tools/index -f $VALUES -g cloud.name`"
+LOGO="`node /root/yaml-tools/index -f $VALUES -g cloud.logo`"
 TARS="`node /root/yaml-tools/index -f $VALUES -n -g cloud.tars`"
 README="`node /root/yaml-tools/index -f $VALUES -n -g cloud.readme`"
 ASSETS="`node /root/yaml-tools/index -f $VALUES -n -g cloud.assets`"
@@ -84,10 +85,11 @@ echo "VALUES:               "$VALUES
 echo "BASEIMAGE:            "$BASEIMAGE
 echo "SERVERTYPE:           "$SERVERTYPE
 echo "REGISTRY:             "$REGISTRY
+echo "PUSH:                 "$PUSH
 echo "TAG:                  "$TAG
 echo "GROUP:                "$GROUP
 echo "NAME:                 "$NAME
-echo "PUSH:                 "$PUSH
+echo "LOGO:                 "$LOGO
 echo "IMAGE:                "$IMAGE
 echo "TARS:                 "$TARS
 echo "README:               "$README
@@ -106,6 +108,10 @@ done
 
 if [ "$README" != "" ]; then
     echo "COPY $README /usr/local/cloud/data/$README" >> ${NewDockerfile}
+fi
+
+if [ "$LOGO" != "" ]; then
+    echo "COPY $LOGO /usr/local/cloud/data/$LOGO" >> ${NewDockerfile}
 fi
 
 for KEY in ${ASSETS}; do
