@@ -58,17 +58,27 @@ fi
 GROUP="`node /root/yaml-tools/index -f $VALUES -g cloud.group`"
 NAME="`node /root/yaml-tools/index -f $VALUES -g cloud.name`"
 LOGO="`node /root/yaml-tools/index -f $VALUES -g cloud.logo`"
-TARS="`node /root/yaml-tools/index -f $VALUES -n -g cloud.tars`"
+TARS="`node /root/yaml-tools/index -f $VALUES -n -g cloud.protocols`"
 README="`node /root/yaml-tools/index -f $VALUES -n -g cloud.readme`"
 ASSETS="`node /root/yaml-tools/index -f $VALUES -n -g cloud.assets`"
 
 if [ -z $GROUP ]; then
-    echo "group in ${MARKET} must not be empty"
+    echo "group in ${VALUES} must not be empty"
     exit -1
 fi
 
 if [ -z $NAME ]; then
-    echo "name in ${MARKET} must not be empty"
+    echo "name in ${VALUES} must not be empty"
+    exit -1
+fi
+
+if [ -z $LOGO ]; then
+    echo "logo in ${VALUES} must not be empty"
+    exit -1
+fi
+
+if [ ! -f $LOGO ] ; then
+    echo "logo file($LOGO) not exists, exit."
     exit -1
 fi
 
