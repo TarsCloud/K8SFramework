@@ -58,6 +58,7 @@ fi
 GROUP="`node /root/yaml-tools/index -f $VALUES -g cloud.group`"
 NAME="`node /root/yaml-tools/index -f $VALUES -g cloud.name`"
 LOGO="`node /root/yaml-tools/index -f $VALUES -g cloud.logo`"
+CHANGELIST="`node /root/yaml-tools/index -f $VALUES -g cloud.changelist`"
 TARS="`node /root/yaml-tools/index -f $VALUES -n -g cloud.protocols`"
 README="`node /root/yaml-tools/index -f $VALUES -n -g cloud.readme`"
 ASSETS="`node /root/yaml-tools/index -f $VALUES -n -g cloud.assets`"
@@ -104,6 +105,7 @@ echo "IMAGE:                "$IMAGE
 echo "TARS:                 "$TARS
 echo "README:               "$README
 echo "ASSETS:               "$ASSETS
+echo "CHANGELIST:           "$CHANGELIST
 echo "----------------------Build docker--------------------------------"
 
 NewDockerfile=${Dockerfiile}.new
@@ -122,6 +124,10 @@ fi
 
 if [ "$LOGO" != "" ]; then
     echo "COPY $LOGO /usr/local/cloud/data/$LOGO" >> ${NewDockerfile}
+fi
+
+if [ "$CHANGELIST" != "" ]; then
+    echo "COPY $CHANGELIST /usr/local/cloud/data/$CHANGELIST" >> ${NewDockerfile}
 fi
 
 for KEY in ${ASSETS}; do
