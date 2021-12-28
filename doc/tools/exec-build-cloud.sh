@@ -119,14 +119,29 @@ for KEY in ${TARS}; do
 done
 
 if [ "$README" != "" ]; then
+    if [ ! -f $README ] ; then
+        echo "readme file($README) not exists, exit."
+        exit -1
+    fi
+
     echo "COPY $README /usr/local/cloud/data/$README" >> ${NewDockerfile}
 fi
 
 if [ "$LOGO" != "" ]; then
+    if [ ! -f $LOGO ] ; then
+        echo "logo file($LOGO) not exists, exit."
+        exit -1
+    fi
+
     echo "COPY $LOGO /usr/local/cloud/data/$LOGO" >> ${NewDockerfile}
 fi
 
 if [ "$CHANGELIST" != "" ]; then
+    if [ ! -f $CHANGELIST ] ; then
+        echo "changelist file($CHANGELIST) not exists, exit."
+        exit -1
+    fi
+
     echo "COPY $CHANGELIST /usr/local/cloud/data/$CHANGELIST" >> ${NewDockerfile}
 fi
 
