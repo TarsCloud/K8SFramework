@@ -57,8 +57,8 @@ fi
 
 GROUP="`node /root/yaml-tools/index -f $VALUES -g cloud.group`"
 NAME="`node /root/yaml-tools/index -f $VALUES -g cloud.name`"
-LOGO="`node /root/yaml-tools/index -f $VALUES -g cloud.logo`"
-CHANGELIST="`node /root/yaml-tools/index -f $VALUES -g cloud.changelist`"
+LOGO="`node /root/yaml-tools/index -f $VALUES -n -g cloud.logo`"
+CHANGELIST="`node /root/yaml-tools/index -f $VALUES -n -g cloud.changelist`"
 TARS="`node /root/yaml-tools/index -f $VALUES -n -g cloud.protocols`"
 README="`node /root/yaml-tools/index -f $VALUES -n -g cloud.readme`"
 ASSETS="`node /root/yaml-tools/index -f $VALUES -n -g cloud.assets`"
