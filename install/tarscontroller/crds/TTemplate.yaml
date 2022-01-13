@@ -14,7 +14,7 @@ spec:
     singular: ttemplate
   scope: Namespaced
   versions:
-    - name: v1alpha1
+    - name: v1beta1
       served: true
       storage: false
       schema:
@@ -32,7 +32,7 @@ spec:
                   pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                   maxLength: 253
               required: [ content,parent ]
-    - name: v1beta1
+    - name: v1beta2
       served: true
       storage: true
       schema:

@@ -24,7 +24,7 @@ spec:
     singular: tserver
   scope: Namespaced
   versions:
-    - name: v1alpha1
+    - name: v1beta1
       served: true
       storage: false
       schema:
@@ -95,6 +95,7 @@ spec:
                             maximum: 6000000
                             default: 60000
                         required: [ name,port ]
+                      default: [ ]
                     ports:
                       type: array
                       items:
@@ -146,6 +147,13 @@ spec:
                 k8s:
                   type: object
                   properties:
+                    abilityAffinity:
+                      type: string
+                      enum: [ AppRequired,ServerRequired, AppOrServerPreferred,None ]
+                      default: AppOrServerPreferred
+                    daemonSet:
+                      type: boolean
+                      default: false
                     env:
                       type: array
                       items:
@@ -448,6 +456,21 @@ spec:
                                                     maxLength: 63
                                     required: [ accessModes,resources ]
                                 required: [ spec ]
+                              tLocalVolume:
+                                type: object
+                                properties:
+                                  uid:
+                                    type: string
+                                    pattern: ^(0|[1-9][0-9]{0,5})$
+                                    default: "0"
+                                  gid:
+                                    type: string
+                                    pattern: ^(0|[1-9][0-9]{0,5})$
+                                    default: "0"
+                                  mode:
+                                    type: string
+                                    parrern: ^0?[1-7]{3,3}$
+                                    default: "755"
                             oneOf:
                               - required: [ configMap ]
                               - required: [ secret ]
@@ -455,6 +478,7 @@ spec:
                               - required: [ persistentVolumeClaimTemplate ]
                               - required: [ hostPath ]
                               - required: [ emptyDir ]
+                              - required: [ tLocalVolume ]
                           readOnly:
                             type: boolean
                             default: false
@@ -469,68 +493,25 @@ spec:
                             type: string
                         require: [ name,source,mountPath ]
                     nodeSelector:
-                      type: object
-                      properties:
-                        abilityPool:
-                          type: object
-                          properties:
-                            values:
-                              type: array
-                              items:
-                                type: string
-                              maxItems: 0
-                        nodeBind:
-                          type: object
-                          properties:
-                            values:
-                              type: array
-                              items:
-                                type: string
-                              minItems: 1
-                          required: [ values ]
-                        publicPool:
-                          type: object
-                          properties:
-                            values:
-                              type: array
-                              items:
-                                type: string
-                              maxItems: 0
-                        labelMatch:
-                          type: array
-                          items:
-                            type: object
-                            properties:
-                              key:
-                                type: string
-                                pattern: ^([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9](/([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]){0,1}$
-                                maxLength: 63
-                              operator:
-                                type: string
-                                enum: [ In,NotIn,Exists,DoesNotExist,Gt,Lt ]
-                              values:
-                                type: array
-                                items:
-                                  type: string
-                                  pattern: ^([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]?$
-                                  maxLength: 63
-                            require: [ key,operator,values ]
-                        daemonSet:
-                          type: object
-                          properties:
-                            values:
-                              type: array
-                              items:
-                                type: string
-                              maxItems: 0
-                      oneOf:
-                        - required: [ nodeBind ]
-                        - required: [ publicPool ]
-                        - required: [ abilityPool ]
-                        - required: [ daemonSet ]
-                        - required: [ labelMatch ]
-                      default:
-                        labelMatch: [ ]
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          key:
+                            type: string
+                            pattern: ^([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9](/([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]){0,1}$
+                            maxLength: 63
+                          operator:
+                            type: string
+                            enum: [ In,NotIn,Exists,DoesNotExist,Gt,Lt ]
+                          values:
+                            type: array
+                            items:
+                              type: string
+                              pattern: ^([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]?$
+                              maxLength: 63
+                        require: [ key,operator,values ]
+                      default: [ ]
                     notStacked:
                       type: boolean
                       default: false
@@ -574,14 +555,13 @@ spec:
                   properties:
                     source:
                       type: string
-                      #                      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                       maxLength: 253
                     id:
                       type: string
                       pattern: ^([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]$
                       maxLength: 63
                     image:
-                      type: string
+                      type: string #fixme should set pattern
                     secret:
                       type: string
                       pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*){0,1}$
@@ -629,7 +609,7 @@ spec:
         - name: Ready
           type: integer
           jsonPath: .status.readyReplicas
-    - name: v1beta1
+    - name: v1beta2
       served: true
       storage: true
       schema:
@@ -700,6 +680,7 @@ spec:
                             maximum: 6000000
                             default: 60000
                         required: [ name,port ]
+                      default: [ ]
                     ports:
                       type: array
                       items:
@@ -747,6 +728,7 @@ spec:
                             type: boolean
                             default: true
                         required: [ name,port ]
+                      default: [ ]
                   required: [ ports ]
                 k8s:
                   type: object
@@ -1151,28 +1133,56 @@ spec:
                             cpu:
                               type: string
                               pattern: ^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
+                      default: { }
                     serviceAccount:
                       type: string
                       pattern: ^[a-zA-Z][a-zA-Z0-9-]{1,47}$
+                    imagePullPolicy:
+                      type: string
+                      enum: [ Always,Never,IfNotPresent ]
+                      default: Always
+                    launcherType:
+                      type: string
+                      enum: [ foreground,background ]
+                      default: background
+                    updateStrategy:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                          enum: [ RollingUpdate, OnDelete ]
+                          default: RollingUpdate
+                        rollingUpdate:
+                          type: object
+                          properties:
+                            partition:
+                              type: integer
+                              default: 0
+                          default: { }
+                      default: { }
                 release:
                   type: object
                   properties:
-                    source:
-                      type: string
-                      maxLength: 253
                     id:
                       type: string
                       pattern: ^([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]$
                       maxLength: 63
                     image:
-                      type: string
+                      type: string #fixme should set pattern
                     secret:
                       type: string
                       pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*){0,1}$
                       maxLength: 253
+                      default: ""
                     time:
                       type: string
                       format: date-time
+                    nodeImage:
+                      type: string #fixme should set pattern
+                    nodeSecret:
+                      type: string
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*){0,1}$
+                      maxLength: 253
                   required: [ id,image ]
               required: [ app ,server,subType ]
               oneOf:

@@ -1,5 +1,5 @@
-{{ $v := lookup  "k8s.tars.io/v1beta1"  "TTemplate" .Release.Namespace "tars.php" -}}
-  {{- if not $v -}}
+{{ $tt := lookup  "k8s.tars.io/v1beta1"  "TTemplate" .Release.Namespace "tars.php" -}}
+{{- if not $tt -}}
 apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
 kind: TTemplate
 metadata:
@@ -25,4 +25,4 @@ spec:
       </application>
     </tars>
   parent: tars.default
-  {{- end }}
+{{- end }}

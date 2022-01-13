@@ -6,26 +6,23 @@ import (
 	k8sAdmissionV1 "k8s.io/api/admission/v1"
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net/http"
-	"tarscontroller/meta"
+	"tarscontroller/controller"
 	appsV1 "tarscontroller/webhook/validating/apps/v1"
 	coreV1 "tarscontroller/webhook/validating/core/v1"
-	crdV1alpha1 "tarscontroller/webhook/validating/k8s.tars.io/v1alpha1"
-	crdV1beta1 "tarscontroller/webhook/validating/k8s.tars.io/v1beta1"
+	crdV1beta2 "tarscontroller/webhook/validating/k8s.tars.io/v1beta2"
 )
 
 type Validating struct {
-	crdV1alpha1Handler *crdV1alpha1.Handler
-	crdV2alpha1Handler *crdV1beta1.Handler
-	coreV1Handler      *coreV1.Handler
-	appsV1Handler      *appsV1.Handler
+	crdV1beta2Handler *crdV1beta2.Handler
+	coreV1Handler     *coreV1.Handler
+	appsV1Handler     *appsV1.Handler
 }
 
-func New(clients *meta.Clients, informers *meta.Informers) *Validating {
+func New(clients *controller.Clients, informers *controller.Informers) *Validating {
 	v := &Validating{
-		crdV1alpha1Handler: crdV1alpha1.New(clients, informers),
-		crdV2alpha1Handler: crdV1beta1.New(clients, informers),
-		coreV1Handler:      coreV1.New(clients, informers),
-		appsV1Handler:      appsV1.New(clients, informers),
+		crdV1beta2Handler: crdV1beta2.New(clients, informers),
+		coreV1Handler:     coreV1.New(clients, informers),
+		appsV1Handler:     appsV1.New(clients, informers),
 	}
 	return v
 }
@@ -40,10 +37,8 @@ func (v *Validating) Handle(w http.ResponseWriter, r *http.Request) {
 
 	gv := fmt.Sprintf("%s/%s", requestView.Request.Kind.Group, requestView.Request.Kind.Version)
 	switch gv {
-	case "k8s.tars.io/v1alpha1":
-		err = v.crdV1alpha1Handler.Handle(requestView)
-	case "k8s.tars.io/v1beta1":
-		err = v.crdV2alpha1Handler.Handle(requestView)
+	case "k8s.tars.io/v1beta2":
+		err = v.crdV1beta2Handler.Handle(requestView)
 	case "apps/v1":
 		err = v.appsV1Handler.Handle(requestView)
 	case "/v1", "core/v1":

@@ -31,7 +31,5 @@ spec:
     podManagementPolicy: Parallel
     replicas: 1
   release:
-    source: tars-elasticsearch
     id: {{.Values.helm.build.id | quote }}
-    image:
-      {{.Values.helm.dockerhub.registry }}/tars.elasticsearch:{{.Values.helm.build.id}}
+    image: "{{.Values.helm.dockerhub.registry }}/tars.elasticsearch:{{.Values.helm.build.id}}"

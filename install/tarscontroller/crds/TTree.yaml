@@ -13,7 +13,7 @@ spec:
     singular: ttree
   scope: Namespaced
   versions:
-    - name: v1alpha1
+    - name: v1beta1
       served: true
       storage: false
       schema:
@@ -70,7 +70,7 @@ spec:
                     maxLength: 1600
                 required: [ name,show,weight ]
           required: [ apps,businesses ]
-    - name: v1beta1
+    - name: v1beta2
       served: true
       storage: true
       schema:

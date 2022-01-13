@@ -1,0 +1,96 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: tframeworkconfigs.k8s.tars.io
+spec:
+  conversion:
+    strategy: None
+  group: k8s.tars.io
+  names:
+    kind: TFrameworkConfig
+    listKind: TFrameworkConfigList
+    plural: tframeworkconfigs
+    singular: tframeworkconfig
+    shortNames: [ tfc ]
+  scope: Namespaced
+  versions:
+    - name: v1beta2
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            imageBuild:
+              type: object
+              properties:
+                maxBuildTime: #seconds
+                  type: integer
+                  minimum: 180
+                  maximum: 900
+                  default: 300
+                idFormat:
+                  type: string
+                  default: ""
+              default: { }
+            imageRegistry:
+              type: object
+              properties:
+                registry:
+                  type: string
+                secret:
+                  type: string
+                  default: ""
+              required: [ registry ]
+            recordLimit:
+              type: object
+              properties:
+                texitedPod:
+                  type: integer
+                  minimum: 10
+                  maximum: 100
+                  default: 48
+                tconfigHistory:
+                  type: integer
+                  minimum: 10
+                  maximum: 100
+                  default: 48
+                timageRelease:
+                  type: integer
+                  minimum: 10
+                  maximum: 100
+                  default: 48
+              default: { }
+            nodeImage:
+              type: object
+              properties:
+                image:
+                  type: string
+                secret:
+                  type: string
+                  default: ""
+              required: [ image ]
+            upChain:
+              type: object
+              additionalProperties:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    host:
+                      type: string
+                    port:
+                      type: integer
+                      minimum: 1
+                      maximum: 65535
+                    timeout:
+                      type: integer
+                      default: 6000
+                required: [ host,port ]
+              default: { }
+            expand:
+              type: object
+              additionalProperties:
+                type: string
+              default: { }
+          required: [ imageRegistry,nodeImage ]

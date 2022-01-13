@@ -121,7 +121,7 @@ func (c *DockerClient) pushImage(image string, deadline time.Duration, secrets [
 	var err error
 
 	for true {
-		if secrets == nil {
+		if secrets == nil || len(secrets) == 0 {
 			break
 		}
 		dockerKeyRing, err := credentialprovider.MakeDockerKeyring(secrets...)

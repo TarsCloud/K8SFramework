@@ -1,6 +1,11 @@
+{{ $namespace := lookup "v1"  "Namespace" "" "tars-system" -}}
+{{- if not $namespace -}}
 apiVersion: v1
 kind: Namespace
 metadata:
   name: tars-system
   labels:
     name: tars-system
+{{- else }}
+{{ $namespace |toYaml }}
+{{- end}}

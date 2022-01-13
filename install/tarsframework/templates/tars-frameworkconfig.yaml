@@ -1,0 +1,50 @@
+{{- $tfc:= (lookup (printf "k8s.tars.io/%s" .Chart.AppVersion) "TFrameworkConfig" .Release.Namespace "tars-framework")}}
+{{- if not $tfc }}
+apiVersion: k8s.tars.io/v1beta2
+kind: TFrameworkConfig
+metadata:
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-9"
+  name: tars-framework
+  namespace: {{.Release.Namespace }}
+imageRegistry:
+  {{ $timage_configmap := (lookup "v1" "ConfigMap" .Release.Namespace "tars-tarsimage").data}}
+  {{- if $timage_configmap -}}
+  registry: {{ $timage_configmap.registry }}
+  secret: {{ $timage_configmap.secret }}
+  {{- else -}}
+  registry: {{.Values.dockerRegistry}}
+  secret: {{.Values.dockerSecret }}
+  {{- end }}
+upChain:
+  { } {{/*Fixme: Difficult To Merge UPChain Form ConfigMap ,We Tried, We Give Up  */}}
+imageBuild:
+  maxBuildTime: 600
+  idFormat: ""
+nodeImage:
+  image: "{{.Values.helm.dockerhub.registry }}/tars.tarsnode:{{.Values.helm.build.id}}"
+  secret: ""
+recordLimit:
+  timageRelease: 60
+  texitedPod: 32
+  tconfigHistory: 32
+expand:
+  {{ $web_configmap := (lookup "v1" "ConfigMap" .Release.Namespace "tars-tarsweb").data}}
+  {{- if $web_configmap -}}
+  {{ range $k,$v :=$web_configmap}}
+  {{- if eq $k "config.json" -}}
+  "nativeDBConfig": |
+    {{- $v | nindent 4 -}}
+  {{- end -}}
+  {{- if eq $k "tars.conf"}}
+  "nativeTarsConfig": |
+    {{- $v | nindent 4 -}}
+  {{- end -}}
+  {{- end }}
+  {{- else -}}
+  { }
+  {{- end -}}
+{{- else }}
+{{ $tfc | toYaml }}
+{{- end -}}

@@ -5,6 +5,9 @@
 
 class NodeServer : public Application
 {
+public:
+    std::string target {};
+    std::string outfile {};
 protected:
 	/**
 	 * 初始化, 只会进程调用一次

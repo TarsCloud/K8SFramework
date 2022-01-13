@@ -5,12 +5,15 @@ import (
 	utilRuntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"net/http"
-	"tarscontroller/meta"
+	"tarscontroller/controller"
 	"tarscontroller/webhook/conversion"
 	"tarscontroller/webhook/mutating"
 	"tarscontroller/webhook/validating"
 	"time"
 )
+
+const CertFile = "/etc/tarscontroller-cert/tls.crt"
+const CertKey = "/etc/tarscontroller-cert/tls.key"
 
 type Webhook struct {
 	mutating   *mutating.Mutating
@@ -18,7 +21,7 @@ type Webhook struct {
 	conversion *conversion.Conversion
 }
 
-func New(clients *meta.Clients, informers *meta.Informers) *Webhook {
+func New(clients *controller.Clients, informers *controller.Informers) *Webhook {
 	webhook := &Webhook{
 		conversion: conversion.New(),
 		mutating:   mutating.New(clients, informers),
@@ -61,7 +64,7 @@ func (h *Webhook) Start(stopCh chan struct{}) {
 		}
 		// ListenAndServe always returns a non-nil error. After Shutdown or Close,
 		// the returned error is ErrServerClosed.
-		err := srv.ListenAndServeTLS(meta.WebhookCertFile, meta.WebhookCertKey)
+		err := srv.ListenAndServeTLS(CertFile, CertKey)
 		if err != nil {
 			utilRuntime.HandleError(fmt.Errorf("will exist because : %s \n", err.Error()))
 			close(stopCh)

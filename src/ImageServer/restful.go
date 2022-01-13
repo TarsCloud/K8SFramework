@@ -28,7 +28,7 @@ type RestfulResponse struct {
 	Result  *BuildResult `json:"result,omitempty"`
 }
 
-func v1beta1Handler(writer http.ResponseWriter, r *http.Request) {
+func Handler(writer http.ResponseWriter, r *http.Request) {
 
 	writer.Header().Add("Content-Type", "application/json")
 
@@ -62,7 +62,7 @@ func v1beta1Handler(writer http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		if err = r.ParseMultipartForm(1 * 1024 * 1024 * 120); err != nil {
+		if err = r.ParseMultipartForm(1 * 1024 * 1024 * 150); err != nil {
 			err = fmt.Errorf("parse form error: %s", err.Error())
 			response.Status = http.StatusBadRequest
 			response.Message = err.Error()
@@ -73,12 +73,15 @@ func v1beta1Handler(writer http.ResponseWriter, r *http.Request) {
 		name := r.FormValue(ServerNameFormKey)
 		secret := r.FormValue(ServerSecretFormKey)
 		serverType := r.FormValue(ServerTypeFormKey)
+		serverTag := r.FormValue(ServerTagFormKey)
 
 		basImage := r.FormValue(BaseImageFormKey)
 		basImageSecret := r.FormValue(BaseImageSecretFormKey)
 
 		person := r.FormValue(CreatePersonFormKey)
 		mark := r.FormValue(MarkFormKey)
+
+		//fixme  should valid values from client;
 
 		var multipartServerFile multipart.File
 		var multipartFileHandler *multipart.FileHeader
@@ -119,7 +122,7 @@ func v1beta1Handler(writer http.ResponseWriter, r *http.Request) {
 		var image string
 
 		if wait != "1" && wait != "true" {
-			if image, err = builder.PostTask(idString, timageName, app, name, serverType, serverFile, basImage, basImageSecret, secret, person, mark); err != nil {
+			if image, err = builder.PostTask(idString, timageName, app, name, serverType, serverTag, serverFile, basImage, basImageSecret, secret, person, mark); err != nil {
 				response.Status = http.StatusInternalServerError
 				response.Message = err.Error()
 				break
@@ -136,7 +139,7 @@ func v1beta1Handler(writer http.ResponseWriter, r *http.Request) {
 		}
 
 		waitChan := make(chan error, 1)
-		if image, err = builder.PostTask(idString, timageName, app, name, serverType, serverFile, basImage, basImageSecret, secret, person, mark, withWaitChan(waitChan)); err != nil {
+		if image, err = builder.PostTask(idString, timageName, app, name, serverType, serverTag, serverFile, basImage, basImageSecret, secret, person, mark, withWaitChan(waitChan)); err != nil {
 			response.Status = http.StatusInternalServerError
 			response.Message = err.Error()
 			break
@@ -175,10 +178,10 @@ func NewRestfulServer() *RestfulServer {
 
 func (s *RestfulServer) Start(stopCh chan struct{}) {
 	router := mux.NewRouter()
-	router.HandleFunc("/api/v1beta1/timage/{timage}/building", func(writer http.ResponseWriter, request *http.Request) {
+	router.HandleFunc("/api/{version}/timage/{timage}/building", func(writer http.ResponseWriter, request *http.Request) {
 		switch request.Method {
 		case http.MethodPost:
-			v1beta1Handler(writer, request)
+			Handler(writer, request)
 		default:
 			writer.WriteHeader(http.StatusMethodNotAllowed)
 		}
@@ -187,10 +190,10 @@ func (s *RestfulServer) Start(stopCh chan struct{}) {
 	srv := &http.Server{
 		Addr:              ":80",
 		Handler:           router,
-		ReadTimeout:       400 * time.Second,
+		ReadTimeout:       300 * time.Second,
 		ReadHeaderTimeout: 60 * time.Second,
-		WriteTimeout:      300 * time.Second,
-		IdleTimeout:       300 * time.Second,
+		WriteTimeout:      600 * time.Second,
+		IdleTimeout:       900 * time.Second,
 	}
 	go func() {
 		err := srv.ListenAndServe()

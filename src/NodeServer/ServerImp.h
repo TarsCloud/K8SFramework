@@ -42,11 +42,11 @@ public:
 	* 退出
 	*/
 
-	int keepActiving(const tars::ServerInfo& serverInfo, tars::TarsCurrentPtr current) override;
+	int keepActiving(const tars::ServerInfo& serverInfo, TarsCurrentPtr current) override;
 
-	int keepAlive(const tars::ServerInfo& serverInfo, tars::TarsCurrentPtr current) override;
+	int keepAlive(const tars::ServerInfo& serverInfo, TarsCurrentPtr current) override;
 
-	int reportVersion(const string& app, const string& serverName, const string& version, tars::TarsCurrentPtr current) override;
+	int reportVersion(const std::string& app, const std::string& serverName, const std::string& version, TarsCurrentPtr current) override;
 
-	uint32_t getLatestKeepAliveTime(tars::CurrentPtr current) override;
+	tars::UInt32 getLatestKeepAliveTime(tars::CurrentPtr current) override;
 };

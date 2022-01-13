@@ -52,7 +52,7 @@ static std::shared_ptr<K8SClientRequest> doK8SRequest(const std::string& head)
 void K8SInterface::listConfig(const std::string& app, const std::string& server, const std::string& host, std::vector<std::string>& vf)
 {
     std::ostringstream stream;
-    stream << "/apis/k8s.tars.io/v1beta1/namespaces/" << K8SParams::Namespace()
+    stream << "/apis/k8s.tars.io/v1beta2/namespaces/" << K8SParams::Namespace()
            << "/tconfigs?labelSelector=tars.io/ServerApp=" << app
            << ",tars.io/ServerName=" << server
            << ",tars.io/Activated=true"
@@ -84,7 +84,7 @@ K8SInterface::loadConfig(const std::string& app, const std::string& server, cons
 {
     int podSeq = getHostSeq(host);
     std::ostringstream stream;
-    stream << "/apis/k8s.tars.io/v1beta1/namespaces/" << K8SParams::Namespace()
+    stream << "/apis/k8s.tars.io/v1beta2/namespaces/" << K8SParams::Namespace()
            << "/tconfigs?labelSelector="
            << "tars.io/ServerApp=" << app
            << ",tars.io/ServerName=" << server

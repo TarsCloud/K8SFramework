@@ -1,6 +1,6 @@
-{{ $v := lookup  "k8s.tars.io/v1beta1"  "TTree" .Release.Namespace "tars-tree" -}}
-  {{- if not $v -}}
-apiVersion: k8s.tars.io/{{.Chart.AppVersion }}
+{{ $tr := lookup (printf "k8s.tars.io/%s" $.Chart.AppVersion) "TTree" .Release.Namespace "tars-tree" -}}
+{{- if not $tr -}}
+apiVersion: k8s.tars.io/v1beta2
 kind: TTree
 metadata:
   name: tars-tree
@@ -17,4 +17,6 @@ businesses:
   - name: TarsFramework
     show: tars框架服务
     weight: 5
-  {{- end }}
+{{- else }}
+{{ $tr | toYaml }}
+{{- end -}}

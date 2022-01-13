@@ -84,8 +84,7 @@ spec:
                     values: [ ]
       serviceAccountName: tars-agent
       containers:
-        - image:
-            {{.Values.helm.dockerhub.registry }}/tarsagent:{{.Values.helm.build.id}}
+        - image: "{{.Values.helm.dockerhub.registry }}/tarsagent:{{.Values.helm.build.id}}"
           imagePullPolicy: "Always"
           name: tars-agent
           #command: ["/bin/bash"]

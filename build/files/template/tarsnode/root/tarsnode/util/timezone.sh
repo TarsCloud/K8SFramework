@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
+CURRENT_PWD=${PWD}
 if cd /usr/share/zoneinfo; then
-
   _LOCALTIME_FILE_="/etc/localtime"
   _TIMEZONE_FILE_="/etc/timezone"
 
@@ -17,7 +17,7 @@ if cd /usr/share/zoneinfo; then
       if [ "$_MD5_" = "$_LOCALTIME_ZONE_MD5_" ]; then
         echo "Will Update TimeZone To" "${ZONEFILE}"
         rm -rf "${_LOCALTIME_FILE_}"
-        ln -sf /usr/share/zoneinfo/"${ZONEFILE}" /etc/localtime
+        ln -sf /usr/share/zoneinfo/"${ZONEFILE}" "${_LOCALTIME_FILE_}"
         echo "${ZONEFILE}" >"${_TIMEZONE_FILE_}"
         export TZ=${ZONEFILE}
         break
@@ -25,3 +25,4 @@ if cd /usr/share/zoneinfo; then
     done
   fi
 fi
+cd "${CURRENT_PWD}" || exit

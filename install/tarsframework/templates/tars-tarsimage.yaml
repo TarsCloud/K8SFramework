@@ -17,6 +17,9 @@ rules:
   - apiGroups: [ k8s.tars.io ]
     resources: [ timages ]
     verbs: [ get ,update, patch ]
+  - apiGroups: [ k8s.tars.io ]
+    resources: [ tframeworkconfigs ]
+    verbs: [ get ,list, watch ]
 ---
 
 apiVersion: rbac.authorization.k8s.io/v1
@@ -34,21 +37,6 @@ subjects:
     namespace: {{.Release.Namespace}}
 ---
 
-  {{ $v := lookup "v1"  "ConfigMap" .Release.Namespace "tars-tarsimage" -}}
-  {{- if not $v -}}
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: tars-tarsimage
-  namespace: {{.Release.Namespace}}
-data:
-  registry: {{.Values.dockerRegistry}}
-  secret: {{.Values.dockerSecret}}
-  {{- else}}
-  {{ $v | toYaml }}
-  {{- end }}
----
-
 apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
 kind: TImage
 metadata:
@@ -60,8 +48,9 @@ metadata:
 imageType: server
 releases:
   - id: {{.Values.helm.build.id | quote }}
-    image:
-      {{.Values.helm.dockerhub.registry }}/tars.tarsimage:{{.Values.helm.build.id}}
+    image: "{{.Values.helm.dockerhub.registry }}/tars.tarsimage:{{.Values.helm.build.id}}"
+{{- include "TImageMerger" (dict "version" .Chart.AppVersion "namespace" .Release.Namespace  "name" "tars-tarsimage" ) | nindent 2 -}}
+{{"\n"}}
 ---
 
 apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
@@ -73,7 +62,6 @@ metadata:
     tars.io/ServerApp: tars
     tars.io/ServerName: tarsimage
     tars.io/SubType: normal
-    tars.io/Template: tars.default
 spec:
   app: tars
   server: tarsimage
@@ -98,7 +86,5 @@ spec:
         mountPath: /etc/registry-env
     serviceAccount: tars-tarsimage
   release:
-    source: tars-tarsimage
     id: {{.Values.helm.build.id | quote }}
-    image:
-      {{.Values.helm.dockerhub.registry }}/tars.tarsimage:{{.Values.helm.build.id}}
+    image: "{{.Values.helm.dockerhub.registry }}/tars.tarsimage:{{.Values.helm.build.id}}"

@@ -52,7 +52,7 @@ rules:
     resources: [ statefulsets,daemonsets ]
     verbs: [ create, get, list, delete, watch, patch, update , deletecollection ]
   - apiGroups: [ k8s.tars.io ]
-    resources: [ ttrees, ttemplates, treleases, tdeploys, timages ]
+    resources: [ ttrees, ttemplates, tdeploys, timages, tframeworkconfigs ]
     verbs: [ get, list, watch ,patch, update ]
   - apiGroups: [ k8s.tars.io ]
     resources: [ taccounts,tconfigs,tservers,tservers/status,texitedrecords,tgateways,tendpoints,tendpoints/status ]
@@ -86,7 +86,7 @@ spec:
       targetPort: 443
   selector:
     tars.io/Controller: "true"
-  sessionAffinity: None
+  sessionAffinity: ClientIP
   type: ClusterIP
 
 ---
@@ -108,8 +108,7 @@ spec:
         tars.io/Controller: "true"
     spec:
       containers:
-        - image:
-            {{ .Values.helm.dockerhub.registry }}/tarscontroller:{{ .Values.helm.build.id}}
+        - image: "{{ .Values.helm.dockerhub.registry }}/tarscontroller:{{ .Values.helm.build.id}}"
           imagePullPolicy: Always
           name: tars-controller
       enableServiceLinks: false

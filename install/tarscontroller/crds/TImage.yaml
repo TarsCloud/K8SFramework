@@ -14,7 +14,7 @@ spec:
     shortNames: [ ti ]
   scope: Namespaced
   versions:
-    - name: v1alpha1
+    - name: v1beta1
       served: true
       storage: false
       schema:
@@ -28,7 +28,7 @@ spec:
               type: array
               items:
                 type: string
-                enum: [ cpp,nodejs,php,java-war,java-jar,go ]
+                enum: [ cpp,nodejs,nodejs-pkg,java-war,java-jar,go,php ]
               minItems: 1
             mark:
               type: string
@@ -43,7 +43,7 @@ spec:
                     pattern: ^([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]$
                     maxLength: 63
                   image:
-                    type: string
+                    type: string   #fixme should set pattern
                     maxLength: 500
                   secret:
                     type: string
@@ -51,7 +51,7 @@ spec:
                     maxLength: 253
                   createPerson:
                     type: string
-                    maxLength: 800
+                    maxLength: 100
                   createTime:
                     type: string
                     format: date-time
@@ -85,9 +85,10 @@ spec:
                       type: string
                       pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*)?$
                       maxLength: 253
+                      default: ""
                     serverType:
                       type: string
-                      enum: [ cpp,nodejs,php,java-war,java-jar,go ]
+                      enum: [ cpp,nodejs,nodejs-pkg,java-war,java-jar,go,php ]
                     createPerson:
                       type: string
                       maxLength: 800
@@ -126,7 +127,7 @@ spec:
                       maxLength: 253
                     serverType:
                       type: string
-                      enum: [ cpp,nodejs,php,java-war,java-jar,go ]
+                      enum: [ cpp,nodejs,nodejs-pkg,java-war,java-jar,go,php ]
                     createPerson:
                       type: string
                       maxLength: 800
@@ -142,7 +143,7 @@ spec:
                       type: string
                       maxLength: 1600
                   required: [ id,baseImage,image ]
-    - name: v1beta1
+    - name: v1beta2
       served: true
       storage: true
       schema:
@@ -156,7 +157,7 @@ spec:
               type: array
               items:
                 type: string
-                enum: [ cpp,nodejs,php,java-war,java-jar,go ]
+                enum: [ cpp,nodejs,nodejs-pkg,java-war,java-jar,go,php ]
               minItems: 1
             mark:
               type: string
@@ -215,7 +216,7 @@ spec:
                       maxLength: 253
                     serverType:
                       type: string
-                      enum: [ cpp,nodejs,php,java-war,java-jar,go ]
+                      enum: [ cpp,nodejs,nodejs-pkg,java-war,java-jar,go,php ]
                     createPerson:
                       type: string
                       maxLength: 800
@@ -254,7 +255,7 @@ spec:
                       maxLength: 253
                     serverType:
                       type: string
-                      enum: [ cpp,nodejs,php,java-war,java-jar,go ]
+                      enum: [ cpp,nodejs,nodejs-pkg,java-war,java-jar,go,php ]
                     createPerson:
                       type: string
                       maxLength: 800

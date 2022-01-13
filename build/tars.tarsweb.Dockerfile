@@ -25,7 +25,7 @@ RUN rm -rf /etc/localtime
 RUN apt update                                                                         \
     && apt install                                                                     \
     ca-certificates openssl telnet curl wget default-mysql-client                      \
-    iputils-ping vim tcpdump net-tools binutils procps tree                            \
+    iputils-ping vim tcpdump net-tools binutils procps tree jq                         \
     libssl-dev zlib1g-dev libprotobuf-dev libprotobuf-c-dev                            \
     tzdata localepurge                                                                 \
     busybox -y && busybox --install

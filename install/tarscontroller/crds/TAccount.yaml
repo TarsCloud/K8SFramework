@@ -14,7 +14,7 @@ spec:
     shortNames: [ ta ]
   scope: Namespaced
   versions:
-    - name: v1alpha1
+    - name: v1beta1
       served: true
       storage: false
       schema:
@@ -91,7 +91,7 @@ spec:
                         format: date-time
                   required: [ role,flag ]
               required: [ username,authentication,authorization ]
-    - name: v1beta1
+    - name: v1beta2
       served: true
       storage: true
       schema:

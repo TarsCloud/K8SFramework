@@ -1,5 +1,5 @@
-{{ $v := lookup  "k8s.tars.io/v1beta1"  "TTemplate" .Release.Namespace "tars.es" -}}
-  {{- if not $v -}}
+{{ $tt := lookup  (printf "k8s.tars.io/%s" $.Chart.AppVersion) "TTemplate" .Release.Namespace "tars.es" -}}
+{{- if not $tt -}}
 apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
 kind: TTemplate
 metadata:
@@ -14,7 +14,11 @@ spec:
        protocol = http
       <elk>
         <nodes>
-          tars-elasticsearch:9200
+          {{- if .Values.elk.nodes }}
+          {{- range $line :=.Values.elk.nodes -}}
+          {{ $line | nindent 10 }}
+          {{- end }}
+          {{- end }}
         </nodes>
         <index>
           notify= {{.Release.Namespace}}_notify_
@@ -33,4 +37,4 @@ spec:
       </elk>
     </tars>
   parent: tars.default
-  {{- end}}
+{{- end }}

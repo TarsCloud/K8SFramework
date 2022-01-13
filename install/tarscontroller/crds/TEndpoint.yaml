@@ -15,7 +15,7 @@ spec:
     singular: tendpoint
   scope: Namespaced
   versions:
-    - name: v1alpha1
+    - name: v1beta1
       served: true
       storage: false
       schema:
@@ -105,7 +105,11 @@ spec:
                       type: string
                     secret:
                       type: string
-                    source:
+                    time:
+                      type: string
+                    nodeImage:
+                      type: string
+                    nodeSecret:
                       type: string
             status:
               properties:
@@ -213,7 +217,8 @@ spec:
                         type: string
                       uid:
                         type: string
-                        format: uuid
+                      pid:
+                        type: string
                     type: object
                   type: array
               required:
@@ -222,7 +227,7 @@ spec:
           type: object
       subresources:
         status: { }
-    - name: v1beta1
+    - name: v1beta2
       served: true
       storage: true
       schema:
@@ -312,9 +317,11 @@ spec:
                       type: string
                     secret:
                       type: string
-                    source:
-                      type: string
                     time:
+                      type: string
+                    nodeImage:
+                      type: string
+                    nodeSecret:
                       type: string
             status:
               properties:
@@ -422,7 +429,8 @@ spec:
                         type: string
                       uid:
                         type: string
-                        format: uuid
+                      pid:
+                        type: string
                     type: object
                   type: array
               required:

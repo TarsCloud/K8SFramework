@@ -2,15 +2,16 @@ package conversion
 
 import (
 	"encoding/json"
-	k8sCoreV1 "k8s.io/api/core/v1"
+	"fmt"
 	k8sExtensionsV1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	crdV1alpha1 "k8s.tars.io/api/crd/v1alpha1"
+	utilRuntime "k8s.io/apimachinery/pkg/util/runtime"
 	crdV1beta1 "k8s.tars.io/api/crd/v1beta1"
+	crdV1beta2 "k8s.tars.io/api/crd/v1beta2"
+	crdMeta "k8s.tars.io/api/meta"
 	"net/http"
-	"tarscontroller/meta"
-	"unsafe"
+	"tarscontroller/controller"
 )
 
 type Conversion struct {
@@ -56,295 +57,195 @@ func extractAPIVersion(in runtime.RawExtension) (*k8sMetaV1.TypeMeta, error) {
 	return typeMeta, nil
 }
 
-func _convertTServerV1beta1ToV1alpha1(src *crdV1beta1.TServer) (dst *crdV1alpha1.TServer) {
-	dst = &crdV1alpha1.TServer{
+// map[Kind]map[FromGV]map[ToGV]func([]runtime.RawExtension) []runtime.RawExtension
+var conversionFunctions map[string]map[string]map[string]func([]runtime.RawExtension) []runtime.RawExtension
+
+func _cvTServer1a2To1b2(src *crdV1beta1.TServer) (dst *crdV1beta2.TServer) {
+	dst = &crdV1beta2.TServer{
 		TypeMeta: k8sMetaV1.TypeMeta{
-			APIVersion: "k8s.tars.io/v1alpha1",
-			Kind:       meta.TServerKind,
+			APIVersion: "k8s.tars.io/v1beta2",
+			Kind:       crdMeta.TServerKind,
 		},
 		ObjectMeta: src.ObjectMeta,
-		Spec: crdV1alpha1.TServerSpec{
-			App:       src.Spec.App,
-			Server:    src.Spec.Server,
-			SubType:   crdV1alpha1.TServerSubType(src.Spec.SubType),
-			Important: src.Spec.Important,
-			Tars:       (*crdV1alpha1.TServerTars)(unsafe.Pointer(src.Spec.Tars)),
-			Normal:    (*crdV1alpha1.TServerNormal)(unsafe.Pointer(src.Spec.Normal)),
-			K8S: crdV1alpha1.TServerK8S{
-				ServiceAccount:      src.Spec.K8S.ServiceAccount,
-				Env:                 src.Spec.K8S.Env,
-				EnvFrom:             src.Spec.K8S.EnvFrom,
-				HostIPC:             src.Spec.K8S.HostIPC,
-				HostNetwork:         src.Spec.K8S.HostNetwork,
-				HostPorts:           nil,
-				Mounts:              nil,
-				NodeSelector:        crdV1alpha1.TK8SNodeSelector{},
-				NotStacked:          src.Spec.K8S.NotStacked,
-				PodManagementPolicy: src.Spec.K8S.PodManagementPolicy,
-				Replicas:            src.Spec.K8S.Replicas,
-				ReadinessGate:       src.Spec.K8S.ReadinessGate,
-				Resources:           src.Spec.K8S.Resources,
-			},
-			Release: (*crdV1alpha1.TServerRelease)(src.Spec.Release),
-		},
-		Status: crdV1alpha1.TServerStatus{
-			Replicas:        src.Status.Replicas,
-			ReadyReplicas:   src.Status.ReadyReplicas,
-			CurrentReplicas: src.Status.CurrentReplicas,
-			Selector:        src.Status.Selector,
-		},
 	}
 
-	if src.Spec.K8S.HostPorts != nil {
-		bs, _ := json.Marshal(src.Spec.K8S.HostPorts)
-		_ = json.Unmarshal(bs, &dst.Spec.K8S.HostPorts)
+	bs, _ := json.Marshal(src.Spec)
+	_ = json.Unmarshal(bs, &dst.Spec)
+
+	dst.Status = crdV1beta2.TServerStatus(src.Status)
+
+	var conversionAnnotation string
+	if src.ObjectMeta.Annotations != nil {
+		conversionAnnotation, _ = src.ObjectMeta.Annotations[crdMeta.TConversionAnnotationPrefix+"."+"1a21b2"]
 	}
 
-	if src.Spec.K8S.DaemonSet {
-		dst.Spec.K8S.NodeSelector.DaemonSet = &crdV1alpha1.TK8SNodeSelectorKind{
-			Values: []string{},
-		}
-	} else if len(src.Spec.K8S.NodeSelector) > 0 {
-		if len(src.Spec.K8S.NodeSelector) == 1 &&
-			src.Spec.K8S.NodeSelector[0].Key == meta.K8SHostNameLabel &&
-			src.Spec.K8S.NodeSelector[0].Operator == k8sCoreV1.NodeSelectorOpIn {
-			dst.Spec.K8S.NodeSelector.NodeBind = &crdV1alpha1.TK8SNodeSelectorKind{
-				Values: src.Spec.K8S.NodeSelector[0].Values,
+	if conversionAnnotation != "" {
+		var diff = crdMeta.TServerConversion1a21b2{}
+		err := json.Unmarshal([]byte(conversionAnnotation), &diff)
+		if err == nil {
+			dst.Spec.K8S.UpdateStrategy = diff.Append.UpdateStrategy
+			dst.Spec.K8S.ImagePullPolicy = diff.Append.ImagePullPolicy
+			dst.Spec.K8S.LauncherType = diff.Append.LauncherType
+			if diff.Append.TServerReleaseNode != nil {
+				dst.Spec.Release.TServerReleaseNode = diff.Append.TServerReleaseNode
 			}
-		} else {
-			dst.Spec.K8S.NodeSelector.LabelMatch = src.Spec.K8S.NodeSelector
+			return dst
 		}
-	} else {
-		dst.Spec.K8S.NodeSelector.AbilityPool = &crdV1alpha1.TK8SNodeSelectorKind{
-			Values: []string{},
-		}
+		utilRuntime.HandleError(fmt.Errorf("read conversion annotation error: %s", err.Error()))
 	}
 
-	if src.Spec.K8S.Mounts != nil {
-		for _, srcMount := range src.Spec.K8S.Mounts {
-			dstMount := &crdV1alpha1.TK8SMount{
-				Name:             srcMount.Name,
-				ReadOnly:         srcMount.ReadOnly,
-				MountPath:        srcMount.MountPath,
-				SubPath:          srcMount.SubPath,
-				MountPropagation: srcMount.MountPropagation,
-				SubPathExpr:      srcMount.SubPathExpr,
-				Source: crdV1alpha1.TK8SMountSource{
-					HostPath:                      srcMount.Source.HostPath,
-					EmptyDir:                      srcMount.Source.EmptyDir,
-					Secret:                        srcMount.Source.Secret,
-					PersistentVolumeClaim:         srcMount.Source.PersistentVolumeClaim,
-					DownwardAPI:                   srcMount.Source.DownwardAPI,
-					ConfigMap:                     srcMount.Source.ConfigMap,
-					PersistentVolumeClaimTemplate: srcMount.Source.PersistentVolumeClaimTemplate,
-					//TLocalVolume:                  nil,
-				},
-			}
-			if srcMount.Source.TLocalVolume != nil {
-				dstMount.Source.PersistentVolumeClaimTemplate = meta.BuildTVolumeClainTemplates(src, srcMount.Name)
-				dstMount.Source.PersistentVolumeClaimTemplate.Annotations = map[string]string{
-					"tars.io/ConversionFromTLV": "",
-					meta.TLocalVolumeUIDLabel:  srcMount.Source.TLocalVolume.UID,
-					meta.TLocalVolumeGIDLabel:  srcMount.Source.TLocalVolume.GID,
-					meta.TLocalVolumeModeLabel: srcMount.Source.TLocalVolume.Mode,
-				}
-			}
-			dst.Spec.K8S.Mounts = append(dst.Spec.K8S.Mounts, *dstMount)
+	dst.Spec.K8S.UpdateStrategy = crdMeta.DefaultStatefulsetUpdateStrategy
+	dst.Spec.K8S.ImagePullPolicy = crdMeta.DefaultImagePullPolicy
+	dst.Spec.K8S.LauncherType = crdMeta.DefaultLauncherType
+	if dst.Spec.Tars != nil && dst.Spec.Release != nil {
+		image, secret := controller.GetDefaultNodeImage(src.Namespace)
+		dst.Spec.Release.TServerReleaseNode = &crdV1beta2.TServerReleaseNode{
+			Image:  image,
+			Secret: secret,
 		}
 	}
 	return dst
 }
 
-func _convertTServerV1alpha1ToV1beta1(src *crdV1alpha1.TServer) (dst *crdV1beta1.TServer) {
+func cvTServer1a2To1b2(s []runtime.RawExtension) []runtime.RawExtension {
+	d := make([]runtime.RawExtension, len(s), len(s))
+	for i := range s {
+		var src = &crdV1beta1.TServer{}
+		_ = json.Unmarshal(s[i].Raw, src)
+		dst := _cvTServer1a2To1b2(src)
+		d[i].Raw, _ = json.Marshal(dst)
+	}
+	return d
+}
+
+func _cvTServer1b2To1a2(src *crdV1beta2.TServer) (dst *crdV1beta1.TServer) {
 	dst = &crdV1beta1.TServer{
 		TypeMeta: k8sMetaV1.TypeMeta{
 			APIVersion: "k8s.tars.io/v1beta1",
-			Kind:       meta.TServerKind,
+			Kind:       crdMeta.TServerKind,
 		},
 		ObjectMeta: src.ObjectMeta,
-		Spec: crdV1beta1.TServerSpec{
-			App:       src.Spec.App,
-			Server:    src.Spec.Server,
-			SubType:   crdV1beta1.TServerSubType(src.Spec.SubType),
-			Important: src.Spec.Important,
-			Tars:       (*crdV1beta1.TServerTars)(unsafe.Pointer(src.Spec.Tars)),
-			Normal:    (*crdV1beta1.TServerNormal)(unsafe.Pointer(src.Spec.Normal)),
-			K8S: crdV1beta1.TServerK8S{
-				ServiceAccount:      src.Spec.K8S.ServiceAccount,
-				Env:                 src.Spec.K8S.Env,
-				EnvFrom:             src.Spec.K8S.EnvFrom,
-				HostIPC:             src.Spec.K8S.HostIPC,
-				HostNetwork:         src.Spec.K8S.HostNetwork,
-				HostPorts:           nil,
-				Mounts:              nil,
-				DaemonSet:           false,
-				NodeSelector:        []k8sCoreV1.NodeSelectorRequirement{},
-				AbilityAffinity:     crdV1beta1.AppOrServerPreferred,
-				NotStacked:          src.Spec.K8S.NotStacked,
-				PodManagementPolicy: src.Spec.K8S.PodManagementPolicy,
-				Replicas:            src.Spec.K8S.Replicas,
-				ReadinessGate:       src.Spec.K8S.ReadinessGate,
-				Resources:           src.Spec.K8S.Resources,
-			},
-			Release: (*crdV1beta1.TServerRelease)(src.Spec.Release),
-		},
-		Status: crdV1beta1.TServerStatus{
-			Replicas:        src.Status.Replicas,
-			ReadyReplicas:   src.Status.ReadyReplicas,
-			CurrentReplicas: src.Status.CurrentReplicas,
-			Selector:        src.Status.Selector,
+	}
+
+	bs, _ := json.Marshal(src.Spec)
+	_ = json.Unmarshal(bs, &dst.Spec)
+
+	dst.Status = crdV1beta1.TServerStatus(src.Status)
+
+	diff := crdMeta.TServerConversion1a21b2{
+		Append: crdMeta.TServerAppend1a21b2{
+			UpdateStrategy:  src.Spec.K8S.UpdateStrategy,
+			ImagePullPolicy: src.Spec.K8S.ImagePullPolicy,
+			LauncherType:    src.Spec.K8S.LauncherType,
 		},
 	}
-
-	if src.Spec.K8S.HostPorts != nil {
-		bs, _ := json.Marshal(src.Spec.K8S.HostPorts)
-		_ = json.Unmarshal(bs, &dst.Spec.K8S.HostPorts)
+	if dst.Spec.Tars != nil && dst.Spec.Release != nil {
+		diff.Append.TServerReleaseNode = src.Spec.Release.TServerReleaseNode
 	}
 
-	if src.Spec.K8S.NodeSelector.DaemonSet != nil {
-		dst.Spec.K8S.DaemonSet = true
-	} else if src.Spec.K8S.NodeSelector.NodeBind != nil {
-		dst.Spec.K8S.NodeSelector = []k8sCoreV1.NodeSelectorRequirement{
-			{
-				Key:      meta.K8SHostNameLabel,
-				Operator: k8sCoreV1.NodeSelectorOpIn,
-				Values:   src.Spec.K8S.NodeSelector.NodeBind.Values,
-			},
+	dbs, _ := json.Marshal(diff)
+	if dst.Annotations == nil {
+		dst.Annotations = map[string]string{
+			crdMeta.TConversionAnnotationPrefix + "." + "1a21b2": string(dbs),
 		}
-	} else if src.Spec.K8S.NodeSelector.LabelMatch != nil {
-		dst.Spec.K8S.NodeSelector = src.Spec.K8S.NodeSelector.LabelMatch
-	}
-
-	if src.Spec.K8S.Mounts != nil {
-		for _, mount := range src.Spec.K8S.Mounts {
-			newMount := &crdV1beta1.TK8SMount{
-				Name:             mount.Name,
-				ReadOnly:         mount.ReadOnly,
-				MountPath:        mount.MountPath,
-				SubPath:          mount.SubPath,
-				MountPropagation: mount.MountPropagation,
-				SubPathExpr:      mount.SubPathExpr,
-				Source: crdV1beta1.TK8SMountSource{
-					HostPath:              mount.Source.HostPath,
-					EmptyDir:              mount.Source.EmptyDir,
-					Secret:                mount.Source.Secret,
-					PersistentVolumeClaim: mount.Source.PersistentVolumeClaim,
-					DownwardAPI:           mount.Source.DownwardAPI,
-					ConfigMap:             mount.Source.ConfigMap,
-					//PersistentVolumeClaimTemplate: nil,
-					//TLocalVolume:                  nil,
-				},
-			}
-			if mount.Source.PersistentVolumeClaimTemplate != nil {
-				if mount.Source.PersistentVolumeClaimTemplate.Annotations == nil {
-					newMount.Source.PersistentVolumeClaimTemplate = mount.Source.PersistentVolumeClaimTemplate
-				} else {
-					_, ok := mount.Source.PersistentVolumeClaimTemplate.Annotations["tars.io/ConversionFromTLV"]
-					if !ok {
-						newMount.Source.PersistentVolumeClaimTemplate = mount.Source.PersistentVolumeClaimTemplate
-					} else {
-						uid, _ := mount.Source.PersistentVolumeClaimTemplate.Annotations[meta.TLocalVolumeUIDLabel]
-						gid, _ := mount.Source.PersistentVolumeClaimTemplate.Annotations[meta.TLocalVolumeGIDLabel]
-						mode, _ := mount.Source.PersistentVolumeClaimTemplate.Annotations[meta.TLocalVolumeModeLabel]
-						newMount.Source.TLocalVolume = &crdV1beta1.TLocalVolume{
-							UID:  uid,
-							GID:  gid,
-							Mode: mode,
-						}
-					}
-				}
-			}
-			dst.Spec.K8S.Mounts = append(dst.Spec.K8S.Mounts, *newMount)
-		}
+	} else {
+		dst.Annotations[crdMeta.TConversionAnnotationPrefix+"."+"1a21b2"] = string(dbs)
 	}
 	return dst
 }
 
-func convertTServerV1beta1ToV1alpha1(s []runtime.RawExtension) []runtime.RawExtension {
+func cvTServer1b2To1a2(s []runtime.RawExtension) []runtime.RawExtension {
 	d := make([]runtime.RawExtension, len(s), len(s))
-	for i, _ := range s {
-		var src = &crdV1beta1.TServer{}
+	for i := range s {
+		var src = &crdV1beta2.TServer{}
 		_ = json.Unmarshal(s[i].Raw, src)
-		dst := _convertTServerV1beta1ToV1alpha1(src)
+		dst := _cvTServer1b2To1a2(src)
 		d[i].Raw, _ = json.Marshal(dst)
 	}
 	return d
 }
 
-func convertTServerV1alpha1ToV1beta1(s []runtime.RawExtension) []runtime.RawExtension {
-	d := make([]runtime.RawExtension, len(s), len(s))
-	for i, _ := range s {
-		var src = &crdV1alpha1.TServer{}
-		_ = json.Unmarshal(s[i].Raw, src)
-		dst := _convertTServerV1alpha1ToV1beta1(src)
-		d[i].Raw, _ = json.Marshal(dst)
-	}
-	return d
-}
-
-func convertTDeployV1beta1ToV1alpha1(s []runtime.RawExtension) []runtime.RawExtension {
+func cvTDeploy1a2To1b2(s []runtime.RawExtension) []runtime.RawExtension {
 	d := make([]runtime.RawExtension, len(s), len(s))
 
-	for i, _ := range s {
+	for i := range s {
 		var src = &crdV1beta1.TDeploy{}
 		_ = json.Unmarshal(s[i].Raw, src)
 
 		fakeTserver := &crdV1beta1.TServer{
+			ObjectMeta: k8sMetaV1.ObjectMeta{
+				Annotations: map[string]string{},
+			},
 			Spec: src.Apply,
 		}
-
-		var dst = &crdV1alpha1.TDeploy{
+		tserver := _cvTServer1a2To1b2(fakeTserver)
+		var dst = &crdV1beta2.TDeploy{
 			TypeMeta: k8sMetaV1.TypeMeta{
-				APIVersion: "k8s.tars.io/v1alpha1",
+				APIVersion: "k8s.tars.io/v1beta2",
 				Kind:       "TDeploy",
 			},
 			ObjectMeta: src.ObjectMeta,
-			Apply:      _convertTServerV1beta1ToV1alpha1(fakeTserver).Spec,
-			Approve:    (*crdV1alpha1.TDeployApprove)(src.Approve),
+			Apply:      tserver.Spec,
+			Approve:    (*crdV1beta2.TDeployApprove)(src.Approve),
 			Deployed:   src.Deployed,
+		}
+		if dst.ObjectMeta.Annotations == nil {
+			dst.ObjectMeta.Annotations = tserver.Annotations
+		} else {
+			for k, v := range tserver.ObjectMeta.Annotations {
+				dst.ObjectMeta.Annotations[k] = v
+			}
 		}
 		d[i].Raw, _ = json.Marshal(dst)
 	}
 	return d
 }
 
-func convertTDeployV1alpha1ToV1beta1(s []runtime.RawExtension) []runtime.RawExtension {
+func cvTDeploy1b2To1a2(s []runtime.RawExtension) []runtime.RawExtension {
 	d := make([]runtime.RawExtension, len(s), len(s))
-	for i, _ := range s {
-		var src = &crdV1alpha1.TDeploy{}
+
+	for i := range s {
+		var src = &crdV1beta2.TDeploy{}
 		_ = json.Unmarshal(s[i].Raw, src)
 
-		fakeTserver := &crdV1alpha1.TServer{
+		fakeTserver := &crdV1beta2.TServer{
+			ObjectMeta: k8sMetaV1.ObjectMeta{
+				Annotations: map[string]string{},
+			},
 			Spec: src.Apply,
 		}
-
+		tserver := _cvTServer1b2To1a2(fakeTserver)
 		var dst = &crdV1beta1.TDeploy{
 			TypeMeta: k8sMetaV1.TypeMeta{
 				APIVersion: "k8s.tars.io/v1beta1",
 				Kind:       "TDeploy",
 			},
 			ObjectMeta: src.ObjectMeta,
-			Apply:      _convertTServerV1alpha1ToV1beta1(fakeTserver).Spec,
+			Apply:      tserver.Spec,
 			Approve:    (*crdV1beta1.TDeployApprove)(src.Approve),
 			Deployed:   src.Deployed,
+		}
+		if dst.ObjectMeta.Annotations == nil {
+			dst.ObjectMeta.Annotations = tserver.Annotations
+		} else {
+			for k, v := range tserver.ObjectMeta.Annotations {
+				dst.ObjectMeta.Annotations[k] = v
+			}
 		}
 		d[i].Raw, _ = json.Marshal(dst)
 	}
 	return d
 }
 
-// map[Kind]map[FromGV]map[ToGV]func([]runtime.RawExtension) []runtime.RawExtension
-var conversionFunctions map[string]map[string]map[string]func([]runtime.RawExtension) []runtime.RawExtension
-
 func init() {
 	conversionFunctions = map[string]map[string]map[string]func([]runtime.RawExtension) []runtime.RawExtension{
 		"TServer": {
-			"k8s.tars.io/v1beta1": {"k8s.tars.io/v1alpha1": convertTServerV1beta1ToV1alpha1},
-			"k8s.tars.io/v1alpha1": {"k8s.tars.io/v1beta1": convertTServerV1alpha1ToV1beta1},
+			"k8s.tars.io/v1beta1": {"k8s.tars.io/v1beta2": cvTServer1a2To1b2},
+			"k8s.tars.io/v1beta2":  {"k8s.tars.io/v1beta1": cvTServer1b2To1a2},
 		},
 		"TDeploy": {
-			"k8s.tars.io/v1beta1": {"k8s.tars.io/v1alpha1": convertTDeployV1beta1ToV1alpha1},
-			"k8s.tars.io/v1alpha1": {"k8s.tars.io/v1beta1": convertTDeployV1alpha1ToV1beta1},
+			"k8s.tars.io/v1beta1": {"k8s.tars.io/v1beta2": cvTDeploy1a2To1b2},
+			"k8s.tars.io/v1beta2":  {"k8s.tars.io/v1beta1": cvTDeploy1b2To1a2},
 		},
 	}
 }

@@ -9,8 +9,9 @@ metadata:
 imageType: server
 releases:
   - id: {{.Values.helm.build.id | quote }}
-    image:
-      {{.Values.helm.dockerhub.registry }}/tars.tarsstat:{{.Values.helm.build.id}}
+    image: "{{.Values.helm.dockerhub.registry }}/tars.tarsstat:{{.Values.helm.build.id}}"
+{{- include "TImageMerger" (dict "version" .Chart.AppVersion "namespace" .Release.Namespace  "name" "tars-tarsstat" ) | nindent 2 -}}
+{{"\n"}}
 ---
 
 apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
@@ -64,7 +65,6 @@ spec:
         subPathExpr: $(Namespace)/$(PodName)
     readinessGate: tars.io/active
   release:
-    source: tars-tarsstat
     id: {{.Values.helm.build.id | quote }}
-    image:
-      {{.Values.helm.dockerhub.registry }}/tars.tarsstat:{{.Values.helm.build.id}}
+    image: "{{.Values.helm.dockerhub.registry }}/tars.tarsstat:{{.Values.helm.build.id}}"
+    nodeImage: "{{.Values.helm.dockerhub.registry }}/tars.tarsnode:{{.Values.helm.build.id}}"

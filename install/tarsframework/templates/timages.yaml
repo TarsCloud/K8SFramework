@@ -6,10 +6,11 @@ metadata:
 imageType: node
 mark: builtin release
 releases:
-  - id: default-builtin-node-{{.Values.helm.build.id}}
-    image:
-      {{.Values.helm.dockerhub.registry }}/tars.tarsnode:{{.Values.helm.build.id}}
+  - id: builtin-node-{{.Values.helm.build.id}}
+    image: "{{.Values.helm.dockerhub.registry }}/tars.tarsnode:{{.Values.helm.build.id}}"
     mark: builtin release for tarsnode
+{{- include "TImageMerger" (dict "version" .Chart.AppVersion "namespace" .Release.Namespace  "name" "node" ) | nindent 2 -}}
+{{"\n"}}
 ---
 
 apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
@@ -26,9 +27,10 @@ supportedType: [ cpp,go ]
 mark: builtin release
 releases:
   - id: builtin-cppbase-{{.Values.helm.build.id}}
-    image:
-      {{.Values.helm.dockerhub.registry }}/tars.cppbase:{{.Values.helm.build.id}}
+    image: "{{.Values.helm.dockerhub.registry }}/tars.cppbase:{{.Values.helm.build.id}}"
     mark: builtin for [cpp,go] server
+{{- include "TImageMerger" (dict "version" .Chart.AppVersion "namespace" .Release.Namespace  "name" "cppbase" ) | nindent 2 -}}
+{{"\n"}}
 ---
 
 apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
@@ -45,8 +47,9 @@ supportedType: [ java-jar,java-war ]
 mark: builtin release
 releases:
   - id: builtin-java8base-{{.Values.helm.build.id}}
-    image:
-      {{.Values.helm.dockerhub.registry }}/tars.javabase:{{.Values.helm.build.id}}
+    image: "{{.Values.helm.dockerhub.registry }}/tars.javabase:{{.Values.helm.build.id}}"
+{{- include "TImageMerger" (dict "version" .Chart.AppVersion "namespace" .Release.Namespace  "name" "javabase" ) | nindent 2 -}}
+{{"\n"}}
 ---
 
 apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
@@ -61,10 +64,16 @@ imageType: base
 supportedType: [ nodejs ]
 mark: builtin release
 releases:
-  - id: builtin-nodejsbase-{{.Values.helm.build.id}}
-    image:
-      {{.Values.helm.dockerhub.registry }}/tars.nodejsbase:{{.Values.helm.build.id}}
-
+  - id: builtin-nodejs10base-{{.Values.helm.build.id}}
+    image: "{{.Values.helm.dockerhub.registry }}/tars.nodejs10base:{{.Values.helm.build.id}}"
+  - id: builtin-nodejs12base-{{.Values.helm.build.id}}
+    image: "{{.Values.helm.dockerhub.registry }}/tars.nodejs12base:{{.Values.helm.build.id}}"
+  - id: builtin-nodejs14base-{{.Values.helm.build.id}}
+    image: "{{.Values.helm.dockerhub.registry }}/tars.nodejs14base:{{.Values.helm.build.id}}"
+  - id: builtin-nodejs16base-{{.Values.helm.build.id}}
+    image: "{{.Values.helm.dockerhub.registry }}/tars.nodejs16base:{{.Values.helm.build.id}}"
+{{- include "TImageMerger" (dict "version" .Chart.AppVersion "namespace" .Release.Namespace  "name" "nodejsbase" ) | nindent 2 -}}
+{{"\n"}}
 ---
 
 apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
@@ -80,5 +89,6 @@ supportedType: [ php ]
 mark: builtin release
 releases:
   - id: builtin-php74base-{{.Values.helm.build.id}}
-    image:
-      {{.Values.helm.dockerhub.registry }}/tars.php74base:{{.Values.helm.build.id}}
+    image: "{{.Values.helm.dockerhub.registry }}/tars.php74base:{{.Values.helm.build.id}}"
+{{- include "TImageMerger" (dict "version" .Chart.AppVersion "namespace" .Release.Namespace  "name" "php74base" ) | nindent 2 -}}
+{{"\n"}}

@@ -4,8 +4,6 @@ import "time"
 
 const AbsoluteServerFileSaveDir = "/uploadDir"
 const AbsoluteBuildWorkPath = "/buildDir"
-const RegistryConfigFile = "/etc/registry-env/registry"
-const RegistrySecretFile = "/etc/registry-env/secret"
 
 const AutoDeleteServerFileDuration = time.Minute * 60
 const AutoDeleteServerBuildDirDuration = time.Minute * 30
@@ -15,6 +13,7 @@ const (
 	ServerAppFormKey    = "ServerApp"
 	ServerNameFormKey   = "ServerName"
 	ServerTypeFormKey   = "ServerType"
+	ServerTagFormKey    = "ServerTag"
 	ServerFileFormKey   = "ServerFile"
 	ServerSecretFormKey = "Secret"
 

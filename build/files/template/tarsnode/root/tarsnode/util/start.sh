@@ -1,14 +1,47 @@
 #!/usr/bin/env bash
 
-_IMAGE_BIND_TIMEZONE_EXECUTION_FILE_="/usr/local/app/tars/tarsnode/util/timezone.sh"
-_IMAGE_BIND_TARSNODE_EXECUTION_FILE_="/usr/local/app/tars/tarsnode/bin/tarsnode"
-_IMAGE_BIND_TARSNODE_CONF_FILE_="/usr/local/app/tars/tarsnode/conf/tarsnode.conf"
-_TARSNODE_ENVIRONMENT_FILE_="/usr/local/app/tars/tarsnode/util/environment"
-
 _IMAGE_BIND_SERVER_DIR_="/usr/local/server/bin"
+_IMAGE_BIND_ENVIRONMENT_FILE_="/usr/local/app/tars/tarsnode/util/environment"
 
-source ${_IMAGE_BIND_TIMEZONE_EXECUTION_FILE_}
-source $_TARSNODE_ENVIRONMENT_FILE_
+if [ ! -f "${_IMAGE_BIND_ENVIRONMENT_FILE_}" ]; then
+  echo "${_IMAGE_BIND_ENVIRONMENT_FILE_} not exist"
+  exit 255
+fi
+
+source "${_IMAGE_BIND_ENVIRONMENT_FILE_}"
+
+declare -a ExpectENVKeyList=(
+  PodName
+  PodIP
+
+  ListenAddress
+
+  ServerApp
+  ServerName
+  ServerBaseDir
+  ServerBinDir
+  ServerConfDir
+  ServerDataDir
+  ServerLogDir
+  ServerConfFile
+  ServerLauncherType
+  TafnodeLauncherFile
+  TafnodeConfFile
+
+  TimezoneLauncherFile
+)
+
+for KEY in "${ExpectENVKeyList[@]}"; do
+  if [ -z "${!KEY}" ]; then
+    echo "got empty [${KEY}] env value"
+    exit 255
+  fi
+done
+
+source "${TimezoneLauncherFile}"
+
+echo "${PodIP}" "${PodName}" >>/etc/hosts
+echo "${PodIP}" "${ListenAddress}" >>/etc/hosts
 
 mkdir -p "${ServerBaseDir}"
 mkdir -p "${ServerConfDir}"
@@ -16,26 +49,8 @@ mkdir -p "${ServerDataDir}"
 
 ln -s "${_IMAGE_BIND_SERVER_DIR_}" "${ServerBinDir}"
 
-if [ -z "${PodIP}" ]; then
-  echo "got empty [PodIP] env value"
-  exit 255
-fi
-
-if [ -z "${PodName}" ]; then
-  echo "got empty [PodName] env value"
-  exit 255
-fi
-
-echo "${PodIP}" "${PodName}" >>/etc/hosts
-echo "${PodIP}" "${ListenAddress}" >>/etc/hosts
-
-if [ -z "${ServerType}" ]; then
-  echo "got empty [ServerType] env value"
-  exit 255
-fi
-
 case ${ServerType} in
-"cpp" | "go")
+"cpp" | "nodejs-pkg" | "go")
   export LD_LIBRARY_PATH=${ServerBinDir}:${ServerBinDir}/lib
   export ServerLauncherFile="${ServerBinDir}/${ServerName}"
 
@@ -53,7 +68,8 @@ case ${ServerType} in
   export ServerLauncherArgv="${ServerName} --config=${ServerConfFile}"
   ;;
 "nodejs")
-  export ServerLauncherFile=$(command -v node)
+  ServerLauncherFile=$(command -v node)
+  export ServerLauncherFile
 
   if [ ! -f "$ServerLauncherFile" ]; then
     echo "$ServerLauncherFile file not exist"
@@ -72,15 +88,18 @@ case ${ServerType} in
     exit 255
   fi
 
-  if [ ! -x "$NODE_AGENT_BIN" ]; then
+  chmod +x "${NODE_AGENT_BIN}"
+
+  if [ ! -x "${NODE_AGENT_BIN}" ]; then
     echo "$NODE_AGENT_BIN had no execution permission"
     exit 255
   fi
 
-  export ServerLauncherArgv="node $NODE_AGENT_BIN ${ServerBinDir}/ -c ${ServerConfFile}"
+  export ServerLauncherArgv="node ${NODE_AGENT_BIN} ${ServerBinDir}/ -c ${ServerConfFile}"
   ;;
 "java-war")
-  export ServerLauncherFile=$JAVA_HOME/bin/java
+  ServerLauncherFile=$(command -v java)
+  export ServerLauncherFile
 
   if [ ! -f "$ServerLauncherFile" ]; then
     echo "$ServerLauncherFile file not exist"
@@ -96,7 +115,8 @@ case ${ServerType} in
   export ServerLauncherArgv="java -Dconfig=${ServerConfFile} #{jvmparams} -cp #{classpath} #{mainclass}"
   ;;
 "java-jar")
-  export ServerLauncherFile=$JAVA_HOME/bin/java
+  ServerLauncherFile=$(command -v java)
+  export ServerLauncherFile
 
   if [ ! -f "$ServerLauncherFile" ]; then
     echo "$ServerLauncherFile file not exist"
@@ -111,19 +131,26 @@ case ${ServerType} in
   fi
   export ServerLauncherArgv="java -Dconfig=${ServerConfFile} #{jvmparams} -jar ${ServerBinDir}/${ServerName}.jar"
   ;;
-"php")
-  export ServerLauncherFile=$(command -v php)
-  if [ ! -f "$ServerLauncherFile" ]; then
-    echo "$ServerLauncherFile file not exist"
-    exit 255
-  fi
-
-  if [ ! -x "$ServerLauncherFile" ]; then
-    echo "$ServerLauncherFile had no execution permission"
-    exit 255
-  fi
-  export ServerLauncherArgv="php ${ServerBinDir}/src/index.php --config=${ServerConfFile} "
-  ;;
 esac
 
-exec ${_IMAGE_BIND_TARSNODE_EXECUTION_FILE_} --config=${_IMAGE_BIND_TARSNODE_CONF_FILE_}
+chmod +x "${TafnodeLauncherFile}"
+case ${ServerLauncherType} in
+foreground)
+  OUTFILE=/tmp/argvs
+  if ! "${TafnodeLauncherFile}" --config="${TafnodeConfFile}" --target=config --outfile="${OUTFILE}"; then
+    echo "generate server template config file error"
+    exit 255
+  fi
+
+  argv=$(cat ${OUTFILE})
+
+  eval "${TafnodeLauncherFile} --config=${TafnodeConfFile} --target=daemon&"
+  eval "exec ${ServerLauncherFile} ${argv}"
+  ;;
+background)
+  eval "exec ${TafnodeLauncherFile} --config=${TafnodeConfFile}"
+  ;;
+*)
+  eval "exec ${TafnodeLauncherFile} --config=${TafnodeConfFile}"
+  ;;
+esac

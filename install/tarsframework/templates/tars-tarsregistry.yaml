@@ -18,7 +18,7 @@ rules:
     resources: [ configmaps ]
     verbs: [ get,list,watch ]
   - apiGroups: [ k8s.tars.io ]
-    resources: [ ttemplates,tendpoints ]
+    resources: [ ttemplates,tendpoints,tframeworkconfigs ]
     verbs: [ get ,list, watch ]
 ---
 
@@ -36,29 +36,6 @@ subjects:
     name: tars-tarsregistry
 
 ---
-  {{ $v := lookup "v1"  "ConfigMap" .Release.Namespace "tars-tarsregistry" -}}
-  {{- if not $v -}}
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: tars-tarsregistry
-  namespace: {{.Release.Namespace}}
-data:
-  upchain.conf: |
-    <upchain>
-        <default>
-            #tcp -h 110.110.30.31 -p 8888 -t 60000
-            #tcp -h 110.110.30.32 -p 8888 -t 60000
-        </default>
-        <tars.tarsalarm.AlarmObj>
-            #tcp -h 110.110.30.34 -p 3327 -t 60000
-            #tcp -h 110.110.30.35 -p 3325 -t 60000
-        </tars.tarsalarm.AlarmObj>
-    </upchain>
-    {{- else}}
-    {{ $v | toYaml }}
-  {{- end }}
----
 
 apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
 kind: TImage
@@ -71,8 +48,9 @@ metadata:
 imageType: server
 releases:
   - id: {{.Values.helm.build.id | quote }}
-    image:
-      {{.Values.helm.dockerhub.registry }}/tars.tarsregistry:{{.Values.helm.build.id}}
+    image: "{{.Values.helm.dockerhub.registry }}/tars.tarsregistry:{{.Values.helm.build.id}}"
+{{- include "TImageMerger" (dict "version" .Chart.AppVersion "namespace" .Release.Namespace  "name" "tars-tarsstat" ) | nindent 2 -}}
+{{"\n"}}
 ---
 
 apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
@@ -80,6 +58,8 @@ kind: TServer
 metadata:
   name: tars-tarsregistry
   namespace: {{.Release.Namespace}}
+  annotations:
+    tars.io/MinReplicas: "2"
   labels:
     tars.io/ServerApp: tars
     tars.io/ServerName: tarsregistry
@@ -90,10 +70,10 @@ spec:
   subType: normal
   normal:
     ports:
-      - name: registryobj
-        port: 17891
       - name: queryobj
         port: 17890
+      - name: registryobj
+        port: 17891
   k8s:
     replicas: 2
     serviceAccount: tars-tarsregistry
@@ -120,7 +100,5 @@ spec:
         mountPath: /usr/local/app/tars/app_log
         subPathExpr: $(Namespace)/$(PodName)
   release:
-    source: tars-tarsregistry
     id: {{.Values.helm.build.id | quote }}
-    image:
-      {{.Values.helm.dockerhub.registry }}/tars.tarsregistry:{{.Values.helm.build.id}}
+    image: "{{.Values.helm.dockerhub.registry }}/tars.tarsregistry:{{.Values.helm.build.id}}"

@@ -5,29 +5,29 @@
 
 struct K8SWatchCallback
 {
-	static void prePodList();
+    static void preTEList();
 
-	static void postEndpointList();
+    static void postTEList();
 
-	static void onEndpointAdded(const rapidjson::Value& pDocument, K8SWatchEventDrive driver);
+    static void onTEAdded(const rapidjson::Value& pDocument, K8SWatchEventDrive driver);
 
-	static void onEndpointModified(const rapidjson::Value& pDocument);
+    static void onTEModified(const rapidjson::Value& pDocument);
 
-	static void onEndpointDeleted(const rapidjson::Value& pDocument);
+    static void onTEDeleted(const rapidjson::Value& pDocument);
 
-	static void preTemplateList();
+    static void preTTList();
 
-	static void postTemplateList();
+    static void postTTList();
 
-	static void onTemplateAdded(const rapidjson::Value& pDocument, K8SWatchEventDrive driver);
+    static void onTTAdded(const rapidjson::Value& pDocument, K8SWatchEventDrive driver);
 
-	static void onTemplateModified(const rapidjson::Value& pDocument);
+    static void onTTModified(const rapidjson::Value& pDocument);
 
-	static void onTemplateDeleted(const rapidjson::Value& pDocument);
+    static void onTTDeleted(const rapidjson::Value& pDocument);
 
-	static void onConfigAdded(const rapidjson::Value& pDocument, K8SWatchEventDrive driver);
+    static void onTFCAdded(const rapidjson::Value& pDocument, K8SWatchEventDrive driver);
 
-	static void onConfigModified(const rapidjson::Value& pDocument);
+    static void onTFCModified(const rapidjson::Value& pDocument);
 
-	static void onConfigDeleted(const rapidjson::Value& pDocument);
+    static void onTFCDeleted(const rapidjson::Value& pDocument);
 };

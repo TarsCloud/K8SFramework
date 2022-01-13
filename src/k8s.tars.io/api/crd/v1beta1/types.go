@@ -157,7 +157,7 @@ type TServerK8S struct {
 
 	PodManagementPolicy k8sAppsV1.PodManagementPolicyType `json:"podManagementPolicy,omitempty"`
 
-	Replicas *int32 `json:"replicas"`
+	Replicas int32 `json:"replicas"`
 
 	//LivenessProbe  *k8sCoreV1.Probe `json:"livenessProbe,omitempty"`
 	//ReadinessProbe *k8sCoreV1.Probe `json:"readinessProbe,omitempty"`

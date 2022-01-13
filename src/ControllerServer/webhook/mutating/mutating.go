@@ -6,20 +6,17 @@ import (
 	k8sAdmissionV1 "k8s.io/api/admission/v1"
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net/http"
-	"tarscontroller/meta"
-	crdV1alpha1 "tarscontroller/webhook/mutating/k8s.tars.io/v1alpha1"
-	crdV1beta1 "tarscontroller/webhook/mutating/k8s.tars.io/v1beta1"
+	"tarscontroller/controller"
+	crdV1beta2 "tarscontroller/webhook/mutating/k8s.tars.io/v1beta2"
 )
 
 type Mutating struct {
-	crdV1alpha1Handler *crdV1alpha1.Handler
-	crdV1beta1Handler *crdV1beta1.Handler
+	crdV1beta2Handler *crdV1beta2.Handler
 }
 
-func New(clients *meta.Clients, informers *meta.Informers) *Mutating {
+func New(clients *controller.Clients, informers *controller.Informers) *Mutating {
 	v := &Mutating{
-		crdV1alpha1Handler: crdV1alpha1.New(clients, informers),
-		crdV1beta1Handler: crdV1beta1.New(clients, informers),
+		crdV1beta2Handler: crdV1beta2.New(clients, informers),
 	}
 	return v
 }
@@ -45,10 +42,8 @@ func (v Mutating) Handle(w http.ResponseWriter, r *http.Request) {
 	var patchContent []byte
 	gv := fmt.Sprintf("%s/%s", requestView.Request.Kind.Group, requestView.Request.Kind.Version)
 	switch gv {
-	case "k8s.tars.io/v1alpha1":
-		patchContent, err = v.crdV1alpha1Handler.Handle(requestView)
-	case "k8s.tars.io/v1beta1":
-		patchContent, err = v.crdV1beta1Handler.Handle(requestView)
+	case "k8s.tars.io/v1beta2":
+		patchContent, err = v.crdV1beta2Handler.Handle(requestView)
 	default:
 		err = fmt.Errorf("unsupported mutating %s.%s", gv, requestView.Request.Kind.Kind)
 	}

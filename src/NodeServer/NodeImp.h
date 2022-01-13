@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "Node.h"
+#include <string>
 
 using namespace tars;
 using namespace std;
@@ -39,7 +40,7 @@ public:
 	* @param out result  失败说明
 	* @return  int 0成功  非0失败
 	*/
-	int addFile(const string& application, const string& serverName, const string& file, string& result, TarsCurrentPtr current) override;
+	int addFile(const std::string& application, const std::string& serverName, const std::string& file, string& result, TarsCurrentPtr current) override;
 
 	/**
 	* 启动指定服务
@@ -47,7 +48,7 @@ public:
 	* @param serverName  服务名
 	* @return  int
 	*/
-	int startServer(const string& application, const string& serverName, string& result, TarsCurrentPtr current) override;
+	int startServer(const std::string& application, const std::string& serverName, string& result, TarsCurrentPtr current) override;
 
 	/**
 	* 停止指定服务
@@ -55,7 +56,7 @@ public:
 	* @param serverName  服务名
 	* @return  int
 	*/
-	int stopServer(const string& application, const string& serverName, string& result, TarsCurrentPtr current) override;
+	int stopServer(const std::string& application, const std::string& serverName, string& result, TarsCurrentPtr current) override;
 
 	/**
 	* 重启指定服务
@@ -64,7 +65,7 @@ public:
 	* @param seconds  重启等待时间
 	* @return  int
 	*/
-	int restartServer(const std::string& application, const std::string& serverName, std::string& result, tars::TarsCurrentPtr current) override;
+	int restartServer(const std::string& application, const std::string& serverName, std::string& result, TarsCurrentPtr current) override;
 
 	/**
 	 * 通知服务
@@ -75,7 +76,7 @@ public:
 	 *
 	 * @return int
 	 */
-	int notifyServer(const string& application, const string& serverName, const string& command, string& result, TarsCurrentPtr current) override;
+	int notifyServer(const std::string& application, const std::string& serverName, const std::string& command, string& result, TarsCurrentPtr current) override;
 
 };
 

@@ -15,29 +15,9 @@ spec:
       - tg
   scope: Namespaced
   versions:
-    - name: v1alpha1
-      schema:
-        openAPIV3Schema:
-          type: object
-          properties:
-            spec:
-              type: object
-              properties:
-                obj:
-                  type: string
-                update_person:
-                  type: string
-                update_time:
-                  type: string
-                  format: date-time
-                extra:
-                  type: array
-                  items:
-                    type: string
-                    maxLength: 1024
+    - name: v1beta1
       served: true
       storage: false
-    - name: v1beta1
       schema:
         openAPIV3Schema:
           type: object
@@ -57,5 +37,25 @@ spec:
                   items:
                     type: string
                     maxLength: 1024
+    - name: v1beta2
       served: true
       storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                obj:
+                  type: string
+                update_person:
+                  type: string
+                update_time:
+                  type: string
+                  format: date-time
+                extra:
+                  type: array
+                  items:
+                    type: string
+                    maxLength: 1024

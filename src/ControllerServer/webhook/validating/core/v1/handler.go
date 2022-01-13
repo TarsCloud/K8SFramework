@@ -5,13 +5,15 @@ import (
 	"fmt"
 	k8sAdmissionV1 "k8s.io/api/admission/v1"
 	k8sCoreV1 "k8s.io/api/core/v1"
-	"tarscontroller/meta"
+	crdMeta "k8s.tars.io/api/meta"
+	"tarscontroller/controller"
+	"tarscontroller/reconcile/v1beta2"
 )
 
-var functions = map[string]func(*meta.Clients, *meta.Informers, *k8sAdmissionV1.AdmissionReview) error{}
+var functions = map[string]func(*controller.Clients, *controller.Informers, *k8sAdmissionV1.AdmissionReview) error{}
 
 func init() {
-	functions = map[string]func(*meta.Clients, *meta.Informers, *k8sAdmissionV1.AdmissionReview) error{
+	functions = map[string]func(*controller.Clients, *controller.Informers, *k8sAdmissionV1.AdmissionReview) error{
 		"CREATE/Service": validCreateService,
 		"UPDATE/Service": validUpdateService,
 		"DELETE/Service": validDeleteService,
@@ -19,11 +21,11 @@ func init() {
 }
 
 type Handler struct {
-	clients  *meta.Clients
-	informer *meta.Informers
+	clients  *controller.Clients
+	informer *controller.Informers
 }
 
-func New(clients *meta.Clients, informers *meta.Informers) *Handler {
+func New(clients *controller.Clients, informers *controller.Informers) *Handler {
 	return &Handler{clients: clients, informer: informers}
 }
 
@@ -35,29 +37,31 @@ func (v *Handler) Handle(view *k8sAdmissionV1.AdmissionReview) error {
 	return fmt.Errorf("unsupported validating %s %s.%s", view.Request.Operation, view.Request.Kind.Version, view.Request.Kind.Kind)
 }
 
-func validService(newService *k8sCoreV1.Service, oldService *k8sCoreV1.Service, clients *meta.Clients, informer *meta.Informers) error {
+func validService(newService *k8sCoreV1.Service, oldService *k8sCoreV1.Service, clients *controller.Clients, informer *controller.Informers) error {
 	namespace := newService.Namespace
 	tserver, err := informer.TServerInformer.Lister().TServers(namespace).Get(newService.Name)
 	if err != nil {
-		return fmt.Errorf(meta.ResourceGetError, "tserver", namespace, newService.Name, err.Error())
+		return fmt.Errorf(crdMeta.ResourceGetError, "tserver", namespace, newService.Name, err.Error())
 	}
 
-	if !meta.EqualTServerAndService(tserver, newService) {
+	if !v1beta2.EqualTServerAndService(tserver, newService) {
 		return fmt.Errorf("resource should be modified through tserver")
 	}
 
 	return nil
 }
 
-func validCreateService(clients *meta.Clients, informer *meta.Informers, view *k8sAdmissionV1.AdmissionReview) error {
-	if view.Request.UserInfo.Username == meta.GetControllerUsername() {
+func validCreateService(clients *controller.Clients, informer *controller.Informers, view *k8sAdmissionV1.AdmissionReview) error {
+	controllerUserName := controller.GetControllerUsername()
+	if controllerUserName == view.Request.UserInfo.Username || controllerUserName == crdMeta.DefaultUnlawfulAndOnlyForDebugUserName {
 		return nil
 	}
 	return fmt.Errorf("only use authorized account can create service")
 }
 
-func validUpdateService(clients *meta.Clients, informer *meta.Informers, view *k8sAdmissionV1.AdmissionReview) error {
-	if view.Request.UserInfo.Username == meta.GetControllerUsername() {
+func validUpdateService(clients *controller.Clients, informer *controller.Informers, view *k8sAdmissionV1.AdmissionReview) error {
+	controllerUserName := controller.GetControllerUsername()
+	if controllerUserName == view.Request.UserInfo.Username || controllerUserName == crdMeta.DefaultUnlawfulAndOnlyForDebugUserName {
 		return nil
 	}
 	newService := &k8sCoreV1.Service{}
@@ -65,6 +69,6 @@ func validUpdateService(clients *meta.Clients, informer *meta.Informers, view *k
 	return validService(newService, nil, clients, informer)
 }
 
-func validDeleteService(clients *meta.Clients, informer *meta.Informers, view *k8sAdmissionV1.AdmissionReview) error {
+func validDeleteService(clients *controller.Clients, informer *controller.Informers, view *k8sAdmissionV1.AdmissionReview) error {
 	return nil
 }

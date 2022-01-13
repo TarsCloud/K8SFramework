@@ -1,51 +1,74 @@
-{{ $v1 := lookup "v1"  "ConfigMap" .Release.Namespace "tars-tarsweb" -}}
-  {{- if not $v1 -}}
 apiVersion: v1
-kind: ConfigMap
+kind: ServiceAccount
 metadata:
   name: tars-tarsweb
   namespace: {{.Release.Namespace}}
-data:
-  config.json: |
-    {
-      "show": true,
-      "enable": false,
-      "dbConf": {
-        "host": "db.tars.com",
-        "port": "3306",      
-        "user": "tars",      
-        "password": "tars2015", 
-        "charset": "utf8", 
-        "pool": {
-            "max": 10,
-            "min": 0, 
-            "idle": 10000 
-          }
-      }
-    }
-  tars.conf: |
-    <tars>
-      <application>
-        #proxy需要的配置
-        <client>
-          #地址
-          locator = tars.tarsregistry.QueryObj@tcp -h registry.tars.com -t 60000 -p 17890 -t 3000
-          sync-invoke-timeout = 20000
-          #最大超时时间(毫秒)
-          max-invoke-timeout = 60000
-          #刷新端口时间间隔(毫秒)
-          refresh-endpoint-interval = 300000
-          #模块间调用[可选]
-          stat = tars.tarsstat.StatObj
-          #网络异步回调线程个数
-          asyncthread = 3
-          modulename = tars.system
-        </client>
-      </application>
-    </tars>
-    {{- else}}
-    {{ $v1 | toYaml }}
-  {{- end }}
+---
+
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: tars-tarsweb
+  namespace: {{.Release.Namespace}}
+rules:
+  - apiGroups: [ "" ]
+    resources: [ pods ]
+    verbs: [ get,list,delete ]
+  - apiGroups: [ "" ]
+    resources: [ pods/exec ]
+    verbs: [ create, get ]
+  - apiGroups: [ autoscaling ]
+    resources: [ horizontalpodautoscalers ]
+    verbs: [ create,get,list,watch,patch,update,delete ]
+  - apiGroups: [ k8s.tars.io ]
+    resources: [ ttrees,tframeworkconfigs ]
+    verbs: [ get ,list,watch,patch,update ]
+  - apiGroups: [ k8s.tars.io ]
+    resources: [ tdeploys, tservers, ttemplates, treleases,tconfigs,taccounts, tgateways, timages ]
+    verbs: [ create, get ,list,delete,watch ,patch, update ]
+  - apiGroups: [ k8s.tars.io ]
+    resources: [ tendpoints,tendpoints/status,texitedrecords ]
+    verbs: [ get ,list, watch ]
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tars-tarsweb
+  namespace: {{.Release.Namespace}}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: tars-tarsweb
+subjects:
+  - kind: ServiceAccount
+    name: tars-tarsweb
+    namespace: {{.Release.Namespace}}
+---
+
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{.Release.Namespace}}:tars-tarsweb
+rules:
+  - apiGroups: [ "" ]
+    resources: [ nodes ]
+    verbs: [ get,list, watch,update,patch ]
+---
+
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{.Release.Namespace}}:tars-tarsweb
+roleRef:
+  kind: ClusterRole
+  name: {{.Release.Namespace}}:tars-tarsweb
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+  - kind: ServiceAccount
+    name: tars-tarsweb
+    namespace: {{.Release.Namespace}}
+
 ---
 
 apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
@@ -60,8 +83,10 @@ metadata:
 imageType: server
 releases:
   - id: {{.Values.helm.build.id | quote }}
-    image:
-      {{.Values.helm.dockerhub.registry }}/tars.tarsweb:{{.Values.helm.build.id}}
+    image: "{{.Values.helm.dockerhub.registry }}/tars.tarsweb:{{.Values.helm.build.id}}"
+{{- include "TImageMerger" (dict "version" .Chart.AppVersion "namespace" .Release.Namespace  "name" "tars-tarsweb" ) | nindent 2 -}}
+{{"\n"}}
+
 ---
 
 apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
@@ -69,6 +94,9 @@ kind: TServer
 metadata:
   name: tars-tarsweb
   namespace: {{.Release.Namespace}}
+  annotations:
+    tars.io/MinReplicas: "1"
+    tars.io/MaxReplicas: "2"
   labels:
     tars.io/ServerApp: tars
     tars.io/ServerName: tarsweb
@@ -108,88 +136,13 @@ spec:
           configMap:
             name: tars-tarsweb
         mountPath: /mnt/config
-
   release:
     id: {{.Values.helm.build.id | quote }}
-    source: tars-tarsweb
-    image:
-      {{.Values.helm.dockerhub.registry }}/tars.tarsweb:{{.Values.helm.build.id}}
----
-
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: tars-tarsweb
-  namespace: {{.Release.Namespace}}
----
-
-kind: Role
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: tars-tarsweb
-  namespace: {{.Release.Namespace}}
-rules:
-  - apiGroups: [ "" ]
-    resources: [ pods ]
-    verbs: [ get,list,delete ]
-  - apiGroups: [ "" ]
-    resources: [ pods/exec ]
-    verbs: [ create, get ]
-  - apiGroups: [ autoscaling ]
-    resources: [ horizontalpodautoscalers ]
-    verbs: [ create,get,update,patch,delete ]
-  - apiGroups: [ k8s.tars.io ]
-    resources: [ ttrees ]
-    verbs: [ get ,list,watch,patch,update ]
-  - apiGroups: [ k8s.tars.io ]
-    resources: [ tdeploys, tservers, ttemplates, treleases,tconfigs,taccounts, tgateways, timages ]
-    verbs: [ create, get ,list,delete,watch ,patch, update ]
-  - apiGroups: [ k8s.tars.io ]
-    resources: [ tendpoints,tendpoints/status,texitedrecords ]
-    verbs: [ get ,list, watch ]
----
-
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: tars-tarsweb
-  namespace: {{.Release.Namespace}}
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: tars-tarsweb
-subjects:
-  - kind: ServiceAccount
-    name: tars-tarsweb
-    namespace: {{.Release.Namespace}}
----
-
-kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: {{.Release.Namespace}}:tars-tarsweb
-rules:
-  - apiGroups: [ "" ]
-    resources: [ nodes ]
-    verbs: [ get,list, watch,update,patch ]
----
-
-kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: {{.Release.Namespace}}:tars-tarsweb
-subjects:
-  - kind: ServiceAccount
-    name: tars-tarsweb
-    namespace: {{.Release.Namespace}}
-roleRef:
-  kind: ClusterRole
-  name: {{.Release.Namespace}}:tars-tarsweb
-  apiGroup: rbac.authorization.k8s.io
+    image: "{{.Values.helm.dockerhub.registry }}/tars.tarsweb:{{.Values.helm.build.id}}"
 
 ---
-  {{ $v2 := lookup "networking.k8s.io/v1beta1"  "Ingress" .Release.Namespace "tars-web" -}}
-  {{- if not $v2 -}}
+{{ $ingress := lookup "networking.k8s.io/v1beta1"  "Ingress" .Release.Namespace "tars-web" -}}
+{{- if not $ingress -}}
 kind: Ingress
 apiVersion: networking.k8s.io/v1beta1
 metadata:
@@ -207,6 +160,6 @@ spec:
           - backend:
               serviceName: tars-tarsweb
               servicePort: 3000
-  {{- else}}
-  {{ $v2 | toYaml }}
-  {{- end }}
+{{- else}}
+  { $ingress | toYaml } }
+{{- end }}

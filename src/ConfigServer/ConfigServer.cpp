@@ -7,7 +7,7 @@
 
 static void onError(const std::error_code& ec, const std::string& msg)
 {
-    TLOG_ERROR(ec.message() << ": " << msg << std::endl);
+    TLOGERROR(ec.message() << ": " << msg << std::endl);
     std::cout << ec.message() << ": " << msg << std::endl;
     exit(-1);
 }

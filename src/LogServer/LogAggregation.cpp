@@ -164,6 +164,22 @@ void updateITrace(const IRawLog* rawLog, ITrace* trace)
 	{
 		ASSIGN_IF_EMPTY(trace->trace, rawLog->trace);
 
+        if (rawLog->parent == rawLog->span) {
+            if (rawLog->type == "cs") {
+                trace->tsTime = rawLog->time;
+                ASSIGN_IF_EMPTY(trace->tSpan, rawLog->span)
+                ASSIGN_IF_EMPTY(trace->tMaster, rawLog->master)
+                break;
+            }
+
+            if (rawLog->type == "cr") {
+                trace->teTime = rawLog->time;
+                ASSIGN_IF_EMPTY(trace->tSpan, rawLog->span)
+                ASSIGN_IF_EMPTY(trace->tMaster, rawLog->master)
+                break;
+            }
+        }
+
 		if (rawLog->type == "ts")
 		{
 			trace->tsTime = rawLog->time;
