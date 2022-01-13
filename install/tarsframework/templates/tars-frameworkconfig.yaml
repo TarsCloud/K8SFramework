@@ -38,7 +38,7 @@ expand:
     {{- $v | nindent 4 -}}
   {{- end -}}
   {{- if eq $k "tars.conf"}}
-  "nativeTarsConfig": |
+  "nativeFrameworkConfig": |
     {{- $v | nindent 4 -}}
   {{- end -}}
   {{- end }}
