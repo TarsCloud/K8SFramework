@@ -50,12 +50,19 @@ spec:
     hostPorts:
 {{- include "tserver.host-ports" . | indent 6 }}
 {{- end}}
-{{- if .Values.labelMatch}}      
+{{- if .Values.nodeSelector}}      
     nodeSelector:
-{{ toYaml .Values.labelMatch | indent 6}}
+{{ toYaml .Values.nodeSelector | indent 6}}
 {{- else}}
     nodeSelector: []
 {{- end}}      
+    abilityAffinity: {{ .Values.abilityAffinity | default "AppOrServerPreferred" }}
+    notStacked: {{ .Values.notStacked | default false }}
+    daemonSet: {{ .Values.daemonSet | default false }}
+    imagePullPolicy: {{ .Values.imagePullPolicy | default "Always" }}
+    launcherType: {{ .Values.launcherType | default "background" }}
+    updateStrategy: {{ .Values.updateStrategy | default "RollingUpdate" }}
+    podManagementPolicy: {{ .Values.podManagementPolicy | default "Parallel" }}
     env:
 {{ include "tserver.env-vars" . | indent 6 }}
     mounts:
