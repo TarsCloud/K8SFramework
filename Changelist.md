@@ -1,3 +1,57 @@
+## v1.2.0 20220114
+
+### en
+
+- upgrade crd, use v1beta2 as store version, change list:
+
+  - TServer:
+    - add tserver.k8s.imagePullPolicy
+    - add tserver.k8s.updateStrategy
+    - add tserver.k8s.launcherType
+    - add tserver.k8s.release.nodeImage
+    - add tserver.k8s.release.nodeSecret
+  - TEndpoint:
+    - add tendpoint.release.nodeImage
+    - add tendpoint.release.nodeSecret
+    - add tendpoint.status.pods.pid
+    - backport tendpoint.status.pods.pid to v1beta1
+  - TDeploy
+    - add tdeploy.apply.k8s.imagePullPolicy
+    - add tdeploy.apply.k8s.updateStrategy
+    - add tdeploy.apply.k8s.launcherType
+
+- add TFrameworkConfig crd for framework config manage
+- fix server start error in daemonset
+- adjust timage.releases.id duplicate policy, same id then overwite the old one
+- tarsweb add pid show
+- tarsweb add node image manage and framework config manage
+
+### cn
+
+- 所有 crd 新增并将 v1beta2 作为存储版本, 相比 v1beta1 变动如下:
+
+  - TServer:
+    - 新增 tserver.k8s.imagePullPolicy 字段
+    - 新增 tserver.k8s.updateStrategy 字段
+    - 新增 tserver.k8s.launcherType 字段
+    - 新增 tserver.k8s.release.nodeImage 字段
+    - 新增 tserver.k8s.release.nodeSecret 字段
+  - TEndpoint:
+    - 新增 tendpoint.release.nodeImage 字段
+    - 新增 tendpoint.release.nodeSecret 字段
+    - 新增 tendpoint.status.pods.pid 字段
+    - backport tendpoint.status.pods.pid 到 v1beta1
+  - TDeploy
+    - 新增 tdeploy.apply.k8s.imagePullPolicy 字段
+    - 新增 tdeploy.apply.k8s.updateStrategy 字段
+    - 新增 tdeploy.apply.k8s.launcherType 字段
+
+- 新增 TFrameworkConfig crd,用于集群框架相关的配置
+- 修复了 daemonset 模式下 启动失败的问题
+- 调整了 timage.releases.id 重复的时的策略. 现在如果有相同的 id,会自动删除后者
+- 新增 tarsweb 新增了 pid 显示
+- 新增 tarsweb 新增了 node 镜像管理和 集群配置管理
+
 ## v1.1.1 20211205
 
 ### en
