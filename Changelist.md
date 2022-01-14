@@ -2,6 +2,7 @@
 
 ### en
 
+- removed the v1alpha1 version of all crds
 - upgrade crd, use v1beta2 as store version, change list:
 
   - TServer:
@@ -30,6 +31,7 @@
 
 ### cn
 
+- 所有 crd 移除了 v1alpha1 版本 
 - 所有 crd 新增并将 v1beta2 作为存储版本, 相比 v1beta1 变动如下:
 
   - TServer:
@@ -55,53 +57,6 @@
 - 调整了 timage.releases.id 重复的时的策略. 现在如果有相同的 id,会自动删除后者
 - tarsweb 新增了 pid 显示
 - tarsweb 新增了 node 镜像管理和 集群配置管理
-
-## v1.2.0 20220114
-
-en
-
-cn
-
-- 所有 crd 删除了 v1alpha1 版本
-- 所有 crd 新增并将v1beta2 作为存储版本, 相比 v1beta1 变动如下:
-    * TServer:
-        + 新增 tserver.k8s.imagePullPolicy 字段
-        + 新增 tserver.k8s.updateStrategy 字段
-        + 新增 tserver.k8s.launcherType 字段
-        + 新增 tserver.k8s.release.nodeImage 字段
-        + 新增 tserver.k8s.release.nodeSecret 字段
-        + 新增 tars.io/MinReplicas 注解
-        + 新增 tars.io/MaxReplicas 注解
-    * TEndpoint:
-        + 新增 tendpoint.release.nodeImage 字段
-        + 新增 tendpoint.release.nodeSecret 字段
-        + 新增 tendpoint.status.pods.pid 字段
-        + backport tendpoint.status.pods.pid 到 v1beta1
-    * TDeploy
-        + 新增 tdeploy.apply.k8s.imagePullPolicy 字段
-        + 新增 tdeploy.apply.k8s.updateStrategy 字段
-        + 新增 tdeploy.apply.k8s.launcherType 字段
-    * TConfig:
-        + 无变化
-    * TAccount:
-        + 无变化
-    * TExitedRecord:
-        + 无变化
-    * TGateway:
-        + 无变化
-    * TImage:
-        + 无变化
-    * TTemplate:
-        + 无变化
-    * TTree:
-        + 无变化
-
-- 新增 TFrameworkConfig crd,用于集群框架相关的配置
-- 修复了 daemonset 模式下 启动失败的问题
-- 调整了 timage.releases.id 重复的时的策略. 现在如果有相同的id,会自动删除后者
-- tarsweb 新增了 pid 显示
-- tarsweb 新增了 node 镜像管理和集群配置管理
-- 优化了 golang 代码的包管理策略,开发者可以引入 k8s.tars.io/api/crd 和 k8s.tars.io/api/meta 开发自定义工具 
 
 ## v1.1.1 20211205
 
