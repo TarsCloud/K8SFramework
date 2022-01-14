@@ -241,11 +241,11 @@ func init() {
 	conversionFunctions = map[string]map[string]map[string]func([]runtime.RawExtension) []runtime.RawExtension{
 		"TServer": {
 			"k8s.tars.io/v1beta1": {"k8s.tars.io/v1beta2": cvTServer1a2To1b2},
-			"k8s.tars.io/v1beta2":  {"k8s.tars.io/v1beta1": cvTServer1b2To1a2},
+			"k8s.tars.io/v1beta2": {"k8s.tars.io/v1beta1": cvTServer1b2To1a2},
 		},
 		"TDeploy": {
 			"k8s.tars.io/v1beta1": {"k8s.tars.io/v1beta2": cvTDeploy1a2To1b2},
-			"k8s.tars.io/v1beta2":  {"k8s.tars.io/v1beta1": cvTDeploy1b2To1a2},
+			"k8s.tars.io/v1beta2": {"k8s.tars.io/v1beta1": cvTDeploy1b2To1a2},
 		},
 	}
 }

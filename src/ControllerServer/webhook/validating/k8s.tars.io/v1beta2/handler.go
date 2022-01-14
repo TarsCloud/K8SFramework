@@ -733,10 +733,10 @@ func validDeleteTTree(clients *controller.Clients, informers *controller.Informe
 		return nil
 	}
 
-	newTTree := &crdV1beta2.TTree{}
-	_ = json.Unmarshal(view.Request.Object.Raw, newTTree)
+	ttree := &crdV1beta2.TTree{}
+	_ = json.Unmarshal(view.Request.OldObject.Raw, ttree)
 
-	if newTTree.Name == crdMeta.FixedTTreeResourceName {
+	if ttree.Name == crdMeta.FixedTTreeResourceName {
 		return fmt.Errorf("delete ttree operation is defined")
 	}
 	return nil
@@ -821,10 +821,10 @@ func validDeleteTFrameworkConfig(clients *controller.Clients, informers *control
 		return nil
 	}
 
-	newTFC := &crdV1beta2.TFrameworkConfig{}
-	_ = json.Unmarshal(view.Request.Object.Raw, newTFC)
+	tfc := &crdV1beta2.TFrameworkConfig{}
+	_ = json.Unmarshal(view.Request.OldObject.Raw, tfc)
 
-	if newTFC.Name == crdMeta.FixedTFrameworkConfigResourceName {
+	if tfc.Name == crdMeta.FixedTFrameworkConfigResourceName {
 		return fmt.Errorf("delete tframeworkconfig operation is defined")
 	}
 	return nil

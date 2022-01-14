@@ -12,6 +12,7 @@ import (
 	crdV1beta2 "k8s.tars.io/api/crd/v1beta2"
 	crdMeta "k8s.tars.io/api/meta"
 	"strings"
+	"tarscontroller/controller"
 )
 
 func buildPodVolumes(tserver *crdV1beta2.TServer) []k8sCoreV1.Volume {
@@ -99,9 +100,12 @@ func buildPodInitContainers(tserver *crdV1beta2.TServer) []k8sCoreV1.Container {
 		image = tserver.Spec.Release.TServerReleaseNode.Image
 	}
 
-	if image == "" {
+	if image == "" || image == crdMeta.ServiceImagePlaceholder {
+		image, _ = controller.GetDefaultNodeImage(tserver.Namespace)
+	}
+
+	if image == crdMeta.ServiceImagePlaceholder {
 		utilRuntime.HandleError(fmt.Errorf(crdMeta.ShouldNotHappenError, "no node image set"))
-		image = crdMeta.ServiceImagePlaceholder
 	}
 
 	containers := []k8sCoreV1.Container{
@@ -650,7 +654,7 @@ func buildTEndpoint(tserver *crdV1beta2.TServer) *crdV1beta2.TEndpoint {
 			Server:    tserver.Spec.Server,
 			SubType:   tserver.Spec.SubType,
 			Important: tserver.Spec.Important,
-			Tars:       tserver.Spec.Tars,
+			Tars:      tserver.Spec.Tars,
 			Normal:    tserver.Spec.Normal,
 			HostPorts: tserver.Spec.K8S.HostPorts,
 			Release:   tserver.Spec.Release,

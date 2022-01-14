@@ -222,7 +222,7 @@ func (r *TExitedRecordReconciler) reconcileBasePod(namespace string, tExitedPodS
 	if recordedPodsLen >= recordsLimit {
 		jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
 			OP:   crdMeta.JsonPatchRemove,
-			Path: "/pods/-",
+			Path: fmt.Sprintf("/pods/%d", recordedPodsLen),
 		})
 	}
 
