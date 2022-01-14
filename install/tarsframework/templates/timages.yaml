@@ -64,14 +64,8 @@ imageType: base
 supportedType: [ nodejs ]
 mark: builtin release
 releases:
-  - id: builtin-nodejs10base-{{.Values.helm.build.id}}
-    image: "{{.Values.helm.dockerhub.registry }}/tars.nodejs10base:{{.Values.helm.build.id}}"
-  - id: builtin-nodejs12base-{{.Values.helm.build.id}}
-    image: "{{.Values.helm.dockerhub.registry }}/tars.nodejs12base:{{.Values.helm.build.id}}"
-  - id: builtin-nodejs14base-{{.Values.helm.build.id}}
-    image: "{{.Values.helm.dockerhub.registry }}/tars.nodejs14base:{{.Values.helm.build.id}}"
-  - id: builtin-nodejs16base-{{.Values.helm.build.id}}
-    image: "{{.Values.helm.dockerhub.registry }}/tars.nodejs16base:{{.Values.helm.build.id}}"
+  - id: builtin-nodejsbase-{{.Values.helm.build.id}}
+    image: "{{.Values.helm.dockerhub.registry }}/tars.nodejsbase:{{.Values.helm.build.id}}"
 {{- include "TImageMerger" (dict "version" .Chart.AppVersion "namespace" .Release.Namespace  "name" "nodejsbase" ) | nindent 2 -}}
 {{"\n"}}
 ---
