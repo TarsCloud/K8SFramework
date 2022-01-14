@@ -131,11 +131,6 @@ spec:
             type: DirectoryOrCreate
         mountPath: /tars-web/log
         subPathExpr: $(Namespace)/$(PodName)
-      - name: etc
-        source:
-          configMap:
-            name: tars-tarsweb
-        mountPath: /mnt/config
   release:
     id: {{.Values.helm.build.id | quote }}
     image: "{{.Values.helm.dockerhub.registry }}/tars.tarsweb:{{.Values.helm.build.id}}"

@@ -27,8 +27,8 @@ CURL_COMMAND="curl -sk -XGET  -H \"Accept: application/json;\" -H \"Authorizatio
 
 CONTENT=$(eval "$CURL_COMMAND")
 
-echo "${CONTENT}" | jq -r .expand.nativeFrameworkConfig >/mnt/tars.conf
-echo "${CONTENT}" | jq -r .expand.nativeDBConfig >/mnt/db.conf
+echo "${CONTENT}" | jq -r .expand.nativeFrameworkConfig >/mnt/config/nativeFramework.conf
+echo "${CONTENT}" | jq -r .expand.nativeDBConfig >/mnt/config/nativeDB.conf
 
 cd /tars-web || exit
 
