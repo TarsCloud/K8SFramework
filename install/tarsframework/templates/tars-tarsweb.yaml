@@ -156,5 +156,5 @@ spec:
               serviceName: tars-tarsweb
               servicePort: 3000
 {{- else}}
-  { $ingress | toYaml } }
+  {{ $ingress | toYaml }}
 {{- end }}
