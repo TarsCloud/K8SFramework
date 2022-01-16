@@ -3,8 +3,8 @@ entries:
   tarscontroller:
   - apiVersion: v2
     appVersion: v1beta2
-    created: "2022-01-15T18:01:45.232505+08:00"
-    digest: 96a31f211addc192c4698e3f5b790cfae3a5d66626534c35e1dacb0f8106cf46
+    created: "2022-01-16T15:46:07.53529+08:00"
+    digest: 30f45aded38ca37f50750e8611d8031e1b7fe58ba226fb0422eeaf36e6809581
     keywords:
     - tars
     - tarscontroller
@@ -15,7 +15,7 @@ entries:
     version: 1.2.0
   - apiVersion: v2
     appVersion: v1beta2
-    created: "2022-01-15T18:01:45.231644+08:00"
+    created: "2022-01-16T15:46:07.534481+08:00"
     digest: b5e0da7ec8cb5ca4b1ea31f665bd9f4b44757a1b6ac67babdef1d74c0ac879e3
     keywords:
     - tars
@@ -27,7 +27,7 @@ entries:
     version: 1.1.0
   - apiVersion: v2
     appVersion: v1beta1
-    created: "2022-01-15T18:01:45.230274+08:00"
+    created: "2022-01-16T15:46:07.532824+08:00"
     digest: e83c042e190f730471942d3c2f4d62bd0ea165321c28ed180c205ebb152de506
     keywords:
     - tars
@@ -40,8 +40,8 @@ entries:
   tarsframework:
   - apiVersion: v2
     appVersion: v1beta2
-    created: "2022-01-15T18:01:45.23825+08:00"
-    digest: 9e1a95767725161e315bc24cbaa83616f27f1653420d9c3b1b0ebe02485ad8aa
+    created: "2022-01-16T15:46:07.540072+08:00"
+    digest: 5444e653ad245693484a94b1c96eaafdaa4b09b5ccbab7396bb6503d7385d713
     keywords:
     - tars
     name: tarsframework
@@ -51,7 +51,7 @@ entries:
     version: 1.3.0
   - apiVersion: v2
     appVersion: v1beta2
-    created: "2022-01-15T18:01:45.237327+08:00"
+    created: "2022-01-16T15:46:07.538725+08:00"
     digest: 67bce194c7a4ba1efc388adda10d9a83eabfe3ed1069d16e24298b99ecafcb43
     keywords:
     - tars
@@ -62,7 +62,7 @@ entries:
     version: 1.2.0
   - apiVersion: v2
     appVersion: v1beta1
-    created: "2022-01-15T18:01:45.235354+08:00"
+    created: "2022-01-16T15:46:07.53764+08:00"
     digest: 99d01cb720301639afc95a71654d27ee3b7adec19786bc9bf377e492147aa1ec
     keywords:
     - tars
@@ -73,7 +73,7 @@ entries:
     version: 1.1.0
   - apiVersion: v2
     appVersion: v1beta1
-    created: "2022-01-15T18:01:45.23373+08:00"
+    created: "2022-01-16T15:46:07.536521+08:00"
     digest: e0169864c07d68c7f0dc529e71c2bc9aac5718dc64b714770d875dbd624e85eb
     keywords:
     - tars
@@ -82,4 +82,4 @@ entries:
     urls:
     - https://tarscloud.github.io/K8SFramework/charts/tarsframework-1.0.0.tgz
     version: 1.0.0
-generated: "2022-01-15T18:01:45.228778+08:00"
+generated: "2022-01-16T15:46:07.530419+08:00"
