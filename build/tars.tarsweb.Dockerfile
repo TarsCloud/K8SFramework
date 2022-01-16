@@ -9,7 +9,7 @@ RUN apt update                                                                  
     && cd /root                                                                        \
     && git clone https://github.com/TarsCloud/TarsWeb                                  \
     && cd /root/TarsWeb                                                                \
-    && rm -f package-lock.json && npm install && npm install pm2                       \
+    && rm -f package-lock.json && npm install                 \
     && mv /root/TarsWeb /root/tars-web
 
 FROM node:lts-bullseye
@@ -31,7 +31,6 @@ RUN apt update                                                                  
     busybox -y && busybox --install
 RUN locale-gen en_US.utf8
 ENV LANG en_US.utf8
-
 RUN apt purge -y                                                                       \
     && apt clean all                                                                   \
     && rm -rf /var/lib/apt/lists/*                                                     \
@@ -39,5 +38,6 @@ RUN apt purge -y                                                                
     && rm -rf /var/log/*.log /var/log/*/*.log
 
 COPY --from=First /root /
+RUN npm install -g pm2       
 RUN chmod +x /bin/entrypoint.sh
 CMD ["/bin/entrypoint.sh"]
