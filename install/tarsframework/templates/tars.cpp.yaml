@@ -1,4 +1,4 @@
-{{ $tt := lookup  (printf "k8s.tars.io/%s" $.Chart.AppVersion) "TTemplate" $.Release.Namespace "tars.cpp" -}}
+{{ $tt := lookup  (printf "k8s.tars.io/%s" .Chart.AppVersion) "TTemplate" $.Release.Namespace "tars.cpp" -}}
 {{- if not $tt -}}
 apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
 kind: TTemplate
