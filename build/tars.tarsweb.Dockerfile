@@ -9,7 +9,7 @@ RUN apt update                                                                  
     && cd /root                                                                        \
     && git clone https://github.com/TarsCloud/TarsWeb                                  \
     && cd /root/TarsWeb                                                                \
-    && rm -f package-lock.json && npm install && npm install pm2 -g                    \
+    && rm -f package-lock.json && npm install && npm install pm2                       \
     && mv /root/TarsWeb /root/tars-web
 
 FROM node:lts-bullseye
