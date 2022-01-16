@@ -17,6 +17,4 @@ businesses:
   - name: TarsFramework
     show: tars框架服务
     weight: 5
-{{- else }}
-{{ $tr | toYaml }}
 {{- end -}}

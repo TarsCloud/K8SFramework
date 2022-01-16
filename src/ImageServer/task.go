@@ -291,7 +291,7 @@ func (b *Builder) build(task *Task) {
 		task.taskBuildRunningState.Message = "BuildPhasePullingBaseImage"
 		log.Printf("task|%s: pulling base image|%s\n", task.image, task.userParams.BaseImage)
 		_ = b.pushBuildRunningState(task)
-		if err = task.dockerInterface.pullImage(task.userParams.BaseImage, time.Minute*3, secrets); err != nil {
+		if err = task.dockerInterface.pullImage(task.userParams.BaseImage, time.Minute*5, secrets); err != nil {
 			err = fmt.Errorf("pull image %s error :%s", task.userParams.BaseImage, err.Error())
 			utilRuntime.HandleError(err)
 			break
@@ -312,7 +312,7 @@ func (b *Builder) build(task *Task) {
 		log.Printf("task|%s: pushing\n", task.image)
 		_ = b.pushBuildRunningState(task)
 
-		if err = task.dockerInterface.pushImage(task.image, time.Minute*2, secrets); err != nil {
+		if err = task.dockerInterface.pushImage(task.image, time.Minute*5, secrets); err != nil {
 			err = fmt.Errorf("push image %s error :%s", task.image, err.Error())
 			utilRuntime.HandleError(err)
 			break
