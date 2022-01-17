@@ -50,6 +50,7 @@ fi
 APP=`node /root/yaml-tools/index -f $VALUES -g app`
 SERVER=`node /root/yaml-tools/index -f $VALUES -g server`
 IMAGE=`node /root/yaml-tools/index -f $VALUES -g repo.image`
+HELM_VERSION=`node /root/yaml-tools/index -f /root/helm-template/Chart.yaml -g version`
 
 if [ -z $IMAGE ]; then
     echo "repo.image in ${VALUES} must not be empty"
@@ -69,6 +70,7 @@ echo "APP:                  "$APP
 echo "SERVER:               "$SERVER
 echo "PUSH:                 "$PUSH
 echo "IMAGE:                "$IMAGE
+echo "HELM_VERSION:         "$HELM_VERSION
 echo "----------------------Build docker--------------------------------"
 
 echo "docker build . -f ${Dockerfile} -t $IMAGE --build-arg BIN=$BIN --build-arg BaseImage=$BASEIMAGE --build-arg ServerType=$SERVERTYPE"

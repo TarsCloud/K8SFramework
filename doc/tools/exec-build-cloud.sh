@@ -62,6 +62,7 @@ CHANGELIST="`node /root/yaml-tools/index -f $VALUES -n -g cloud.changelist`"
 TARS="`node /root/yaml-tools/index -f $VALUES -n -g cloud.protocols`"
 README="`node /root/yaml-tools/index -f $VALUES -n -g cloud.readme`"
 ASSETS="`node /root/yaml-tools/index -f $VALUES -n -g cloud.assets`"
+HELM_VERSION=`node /root/yaml-tools/index -f /root/helm-template/Chart.yaml -g version`
 
 if [ -z $GROUP ]; then
     echo "group in ${VALUES} must not be empty"
@@ -106,6 +107,7 @@ echo "TARS:                 "$TARS
 echo "README:               "$README
 echo "ASSETS:               "$ASSETS
 echo "CHANGELIST:           "$CHANGELIST
+echo "HELM_VERSION:         "$HELM_VERSION
 echo "----------------------Build docker--------------------------------"
 
 NewDockerfile=${Dockerfiile}.new

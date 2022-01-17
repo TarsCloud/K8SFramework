@@ -24,6 +24,7 @@ fi
 APP=`node /root/yaml-tools/index -f $VALUES -g app`
 SERVER=`node /root/yaml-tools/index -f $VALUES -g server`
 IMAGE=`node /root/yaml-tools/index -f $VALUES -g repo.image`
+HELM_VERSION=`node /root/yaml-tools/index -f /root/helm-template/Chart.yaml -g version`
 
 IMAGE="$IMAGE:$TAG"
 
@@ -42,6 +43,7 @@ echo "SERVER:               "$SERVER
 echo "REPO_ID:              "$REPO_ID
 echo "IMAGE:                "$IMAGE
 echo "K8SSERVER:            "$K8SSERVER
+echo "HELM_VERSION:         "$HELM_VERSION
 echo "----------------------Build docker--------------------------------"
 
 cp /root/helm-template/Chart.yaml /tmp/Chart.yaml.backup
@@ -58,10 +60,6 @@ function build_helm()
     # 更新values
     node /root/yaml-tools/index -f /root/helm-template/values.yaml -s repo.id -v $REPO_ID -u
     node /root/yaml-tools/index -f /root/helm-template/values.yaml -s repo.image -v $IMAGE -u
-    # node /root/yaml-tools/index -f /root/helm-template/values.yaml -s user $IMAGE -u
-    # node /root/yaml-tools/index -f /root/helm-template/values.yaml -s reason $IMAGE -u
-
-    #node /root/yaml-tools/values -f /root/helm-template/values.yaml -d $REPO_ID -i $IMAGE -u
 
     helm dependency update /root/helm-template
 
