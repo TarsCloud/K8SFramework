@@ -32,17 +32,20 @@ K8SSERVER="${APP}-${SERVER}"
 
 echo "------------------------deploy------------------------------"
 
-HELM_SERVER=`helm list -f ^${K8SSERVER}$ -n ${NAMESPACE} -q`
-echo "helm list -f ^${K8SSERVER}$ -n ${NAMESPACE} -q"
+echo "helm upgrade ${K8SSERVER} -n ${NAMESPACE} --install --set repo.id=${REPO_ID} ${HELMPACKAGE}"
+helm upgrade ${K8SSERVER} -n ${NAMESPACE} --install --set repo.id=${REPO_ID} ${HELMPACKAGE}
 
-echo "HELM_SERVER:$HELM_SERVER, K8SSERVER:$K8SSERVER"
+# HELM_SERVER=`helm list -f ^${K8SSERVER}$ -n ${NAMESPACE} -q`
+# echo "helm list -f ^${K8SSERVER}$ -n ${NAMESPACE} -q"
 
-if [ "${HELM_SERVER}" = "${K8SSERVER}" ]; then
-    echo "helm upgrade ${K8SSERVER} -n ${NAMESPACE} --set repo.id=${REPO_ID} ${HELMPACKAGE}"
-    helm upgrade ${K8SSERVER} -n ${NAMESPACE} --set repo.id=${REPO_ID} ${HELMPACKAGE}
+# echo "HELM_SERVER:$HELM_SERVER, K8SSERVER:$K8SSERVER"
 
-else
-    echo "helm install ${K8SSERVER} -n ${NAMESPACE} --replace --set repo.id=${REPO_ID} ${HELMPACKAGE}"
-    helm install ${K8SSERVER} -n ${NAMESPACE} --set repo.id=${REPO_ID} ${HELMPACKAGE}
-fi
+# if [ "${HELM_SERVER}" = "${K8SSERVER}" ]; then
+#     echo "helm upgrade ${K8SSERVER} -n ${NAMESPACE} --install --set repo.id=${REPO_ID} ${HELMPACKAGE}"
+#     helm upgrade ${K8SSERVER} -n ${NAMESPACE} --install --set repo.id=${REPO_ID} ${HELMPACKAGE}
+
+# else
+#     echo "helm install ${K8SSERVER} -n ${NAMESPACE} --replace --set repo.id=${REPO_ID} ${HELMPACKAGE}"
+#     helm install ${K8SSERVER} -n ${NAMESPACE} --set repo.id=${REPO_ID} ${HELMPACKAGE}
+# fi
 
