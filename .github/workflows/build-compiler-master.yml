@@ -9,6 +9,8 @@ on:
       - ".github/workflows/build-compiler-master.yml"
       - "doc/tools/*"
       - "doc/tools/yaml-tools/*"
+      - "doc/tools/helm-template/*"
+      - "doc/tools/helm-lib/*"
       - "doc/base-compiler.Dockerfile"
   pull_request:
     branches:
@@ -16,6 +18,8 @@ on:
     paths:
       - ".github/workflows/build-compiler-master.yml"
       - "doc/tools/*"
+      - "doc/tools/helm-template/*"
+      - "doc/tools/helm-lib/*"
       - "doc/base-compiler.Dockerfile"
   schedule:
     - cron: '0 05 * * *'
@@ -26,8 +30,6 @@ jobs:
     steps:
       - name: env
         run: env
-      # - uses: satackey/action-docker-layer-caching@v0.0.11
-      #   continue-on-error: true
       - uses: actions/checkout@v1
       - name: login docker hub
         run: docker login -u ${{ secrets.name }} -p ${{ secrets.pass }}
