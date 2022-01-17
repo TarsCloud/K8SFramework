@@ -9,6 +9,8 @@ on:
       - ".github/workflows/build-compiler-release-2.4.yml"
       - "doc/tools/*"
       - "doc/tools/yaml-tools/*"
+      - "doc/tools/helm-template/*"
+      - "doc/tools/helm-lib/*"
       - "doc/base-compiler.Dockerfile"
   pull_request:
     branches:
@@ -16,6 +18,8 @@ on:
     paths:
       - ".github/workflows/build-compiler-release-2.4.yml"
       - "doc/tools/*"
+      - "doc/tools/helm-template/*"
+      - "doc/tools/helm-lib/*"
       - "doc/base-compiler.Dockerfile"
   schedule:
     - cron: '0 05 * * *'
