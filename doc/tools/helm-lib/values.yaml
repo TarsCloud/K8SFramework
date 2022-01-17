@@ -31,7 +31,10 @@ notStacked: false
 daemonSet: false
 imagePullPolicy: Always
 launcherType: "background"
-updateStrategy: "RollingUpdate"
+updateStrategy: 
+  rollingUpdate:
+    partition: 0
+  type: RollingUpdate
 podManagementPolicy: "Parallel"
 hostPorts: []
 appConfig:

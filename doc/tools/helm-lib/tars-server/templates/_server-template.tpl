@@ -61,7 +61,14 @@ spec:
     daemonSet: {{ .Values.daemonSet | default false }}
     imagePullPolicy: {{ .Values.imagePullPolicy | default "Always" }}
     launcherType: {{ .Values.launcherType | default "background" }}
-    updateStrategy: {{ .Values.updateStrategy | default "RollingUpdate" }}
+{{- if .Values.updateStrategy}}      
+{{ toYaml .Values.updateStrategy | indent 6}}
+{{- else}}
+    updateStrategy: 
+      rollingUpdate:
+        partition: 0
+      type: RollingUpdate
+ {{- end}}       
     podManagementPolicy: {{ .Values.podManagementPolicy | default "Parallel" }}
     env:
 {{ include "tserver.env-vars" . | indent 6 }}
@@ -77,7 +84,6 @@ spec:
 {{ toYaml .Values.mounts | indent 4}}
 {{- end}}
   release:
-    source: {{ .Values.app | lower }}-{{ .Values.server | lower }}
     id: {{ .Values.repo.id | quote }}
     image: {{ .Values.repo.image }}
     secret: {{ .Values.repo.secret }}
@@ -85,7 +91,7 @@ spec:
 ---
 
 {{ range .Values.config }}
-apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
+apiVersion: k8s.tars.io/{{ $.Chart.AppVersion }}
 kind: TConfig
 metadata:
   name: {{ $id }}-{{ .name | lower | replace "." "-" }}-{{ now | unixEpoch }}
@@ -104,7 +110,7 @@ activated: true
 {{- end}}
 
 {{ range .Values.nodeConfig }}
-apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
+apiVersion: k8s.tars.io/{{ $.Chart.AppVersion }}
 kind: TConfig
 metadata:
   name: {{ $id }}-{{ .name | lower | replace "." "-" }}-{{ .podSeq }}-{{ now | unixEpoch }}
@@ -125,7 +131,7 @@ activated: true
 
 {{- if .Values.appConfig }}
 {{ range .Values.appConfig }}
-apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
+apiVersion: k8s.tars.io/{{ $.Chart.AppVersion }}
 kind: TConfig
 metadata:
   name: {{ $id }}-{{ .name | lower | replace "." "-" }}-{{ now | unixEpoch }}
@@ -144,7 +150,7 @@ activated: true
 {{ end }}
 {{- end }}
 
-apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
+apiVersion: k8s.tars.io/{{ $.Chart.AppVersion }}
 kind: TImage
 metadata:
   name: {{ $id }}
