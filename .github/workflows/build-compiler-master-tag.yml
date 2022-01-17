@@ -1,0 +1,23 @@
+name: build-base-compiler-master-tag
+
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04 
+    steps:
+      - name: env
+        run: env
+      - uses: actions/checkout@v1
+      - name: login docker hub
+        run: docker login -u ${{ secrets.name }} -p ${{ secrets.pass }}
+      - name: Build docker
+        run: cd doc && docker build . -f base-compiler.Dockerfile -t tarscloud/base-compiler:master --build-arg master
+      - name: push master docker
+        run: docker push tarscloud/base-compiler:master
+      - name: push latest docker
+        run: docker tag tarscloud/base-compiler:master tarscloud/base-compiler:latest && docker push tarscloud/base-compiler:latest
+

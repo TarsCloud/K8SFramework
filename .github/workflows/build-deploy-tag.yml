@@ -3,7 +3,7 @@ name: build-base-deploy-tag
 
 on:
   push:
-    branches:
+    tags:
       - v*
       
 jobs:
