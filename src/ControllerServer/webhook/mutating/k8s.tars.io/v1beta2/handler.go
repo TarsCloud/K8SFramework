@@ -343,7 +343,7 @@ func mutatingCreateTConfig(requestAdmissionView *k8sAdmissionV1.AdmissionReview)
 	jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
 		OP:    crdMeta.JsonPatchAdd,
 		Path:  "/metadata/labels/tars.io~1Activated",
-		Value: tconfig.Activated,
+		Value: fmt.Sprintf("%t", tconfig.Activated),
 	})
 
 	versionString := fmt.Sprintf("%s-%x", time.Now().Format("20060102030405"), crc32.ChecksumIEEE([]byte(tconfig.Name)))
@@ -407,7 +407,7 @@ func mutatingUpdateTConfig(requestAdmissionView *k8sAdmissionV1.AdmissionReview)
 	jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
 		OP:    crdMeta.JsonPatchAdd,
 		Path:  "/metadata/labels/tars.io~1Activated",
-		Value: tconfig.Activated,
+		Value: fmt.Sprintf("%t", tconfig.Activated),
 	})
 
 	jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{

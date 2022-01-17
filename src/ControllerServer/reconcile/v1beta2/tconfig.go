@@ -203,7 +203,7 @@ func (r *TConfigReconciler) reconcile(key string) reconcile.Result {
 			{
 				OP:    crdMeta.JsonPatchReplace,
 				Path:  "/activated",
-				Value: "true",
+				Value: false,
 			},
 		}
 		patchContent, _ := json.Marshal(jsonPatch)
