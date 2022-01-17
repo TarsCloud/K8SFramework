@@ -3,7 +3,7 @@
 {{- $lower_server := lower .Values.server -}}
 {{- $id := (printf "%s-%s" $lower_app $lower_server) -}}
 
-apiVersion: k8s.tars.io/v1beta1
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
 kind: TServer
 metadata:
   name: {{ $id }}
@@ -40,7 +40,7 @@ spec:
 {{- end }}
   k8s:
 {{- if .Release.IsUpgrade }}  
-    replicas: {{ (lookup "k8s.tars.io/v1beta1" "TServer" $.Release.Namespace $id ).spec.k8s.replicas }}
+    replicas: {{ (lookup (printf "k8s.tars.io/%s" $.Chart.AppVersion) "TServer" $.Release.Namespace $id ).spec.k8s.replicas }}
 {{- else }}    
     replicas: {{ .Values.replicas | default 1 }}
 {{- end }}    
@@ -85,7 +85,7 @@ spec:
 ---
 
 {{ range .Values.config }}
-apiVersion: k8s.tars.io/v1beta1
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
 kind: TConfig
 metadata:
   name: {{ $id }}-{{ .name | lower | replace "." "-" }}-{{ now | unixEpoch }}
@@ -104,7 +104,7 @@ activated: true
 {{- end}}
 
 {{ range .Values.nodeConfig }}
-apiVersion: k8s.tars.io/v1beta1
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
 kind: TConfig
 metadata:
   name: {{ $id }}-{{ .name | lower | replace "." "-" }}-{{ .podSeq }}-{{ now | unixEpoch }}
@@ -125,7 +125,7 @@ activated: true
 
 {{- if .Values.appConfig }}
 {{ range .Values.appConfig }}
-apiVersion: k8s.tars.io/v1beta1
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
 kind: TConfig
 metadata:
   name: {{ $id }}-{{ .name | lower | replace "." "-" }}-{{ now | unixEpoch }}
@@ -144,7 +144,7 @@ activated: true
 {{ end }}
 {{- end }}
 
-apiVersion: k8s.tars.io/v1beta1
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
 kind: TImage
 metadata:
   name: {{ $id }}
@@ -159,7 +159,7 @@ releases:
   id: {{ .Values.repo.id }}
   createPerson: {{ $.Values.user | default "helm" | quote }}
   mark: {{ $.Values.reason | default "helm install" | quote }}
-{{- range $index, $service := (lookup "k8s.tars.io/v1beta1" "TImage" $.Release.Namespace $id ).releases }}  
+{{- range $index, $service := (lookup (printf "k8s.tars.io/%s" $.Chart.AppVersion) "TImage" $.Release.Namespace $id ).releases }}  
 - image: {{ $service.image }}
   secret: {{ $service.secret }}
   id: {{ $service.id }}
