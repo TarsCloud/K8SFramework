@@ -9,12 +9,16 @@ on:
       - ".github/workflows/build-deploy.yml"
       - "doc/tools/*"
       - "doc/tools/yaml-tools/*"
+      - "doc/tools/helm-template/*"
+      - "doc/tools/helm-lib/*"
       - "doc/base-deploy.Dockerfile"
   pull_request:
     branches:
       - master
     paths:
       - ".github/workflows/build-deploy.yml"
+      - "doc/tools/helm-template/*"
+      - "doc/tools/helm-lib/*"
       - "doc/tools/*"
       - "doc/base-deploy.Dockerfile"
       
