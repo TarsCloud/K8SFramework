@@ -1,4 +1,4 @@
-## v1.2.0 20220114
+## v1.2.0 20220118
 
 ### en
 
@@ -28,10 +28,11 @@
 - adjust timage.releases.id duplicate policy, same id then overwrite the old one
 - tarsweb add pid show
 - tarsweb add node image manage and framework config manage
+- tarsweb use v2.4.23
 
 ### cn
 
-- 所有 crd 移除了 v1alpha1 版本 
+- 所有 crd 移除了 v1alpha1 版本
 - 所有 crd 新增并将 v1beta2 作为存储版本, 相比 v1beta1 变动如下:
 
   - TServer:
@@ -57,6 +58,7 @@
 - 调整了 timage.releases.id 重复的时的策略. 现在如果有相同的 id,会自动删除后者
 - tarsweb 新增了 pid 显示
 - tarsweb 新增了 node 镜像管理和 集群配置管理
+- tarsweb 使用了 v2.4.23
 
 ## v1.1.1 20211205
 
