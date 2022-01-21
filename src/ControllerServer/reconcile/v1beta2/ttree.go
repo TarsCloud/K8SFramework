@@ -137,13 +137,11 @@ func (r *TTreeReconciler) reconcile(key string) reconcile.Result {
 		CreateTime:   k8sMetaV1.Now(),
 		Mark:         "AddByController",
 	}
-
-	bs, _ := json.Marshal(newTressApp)
 	jsonPatch := crdMeta.JsonPatch{
 		{
 			OP:    crdMeta.JsonPatchAdd,
 			Path:  "/apps/-",
-			Value: string(bs),
+			Value: newTressApp,
 		},
 	}
 

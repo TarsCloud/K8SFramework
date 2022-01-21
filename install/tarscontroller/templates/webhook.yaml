@@ -72,7 +72,7 @@ webhooks:
       - apiGroups: [ k8s.tars.io ]
         apiVersions: [ v1beta2 ]
         operations: [ CREATE,UPDATE ]
-        resources: [ tdeploys,tservers,tconfigs,ttrees,taccounts,timages ]
+        resources: [ tdeploys,tservers,tconfigs,ttrees,taccounts,timages,templates ]
     sideEffects: None
     timeoutSeconds: 15
     failurePolicy: Fail

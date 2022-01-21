@@ -29,7 +29,7 @@ type TServerServant struct {
 	Connection int32  `json:"connection"`
 	Capacity   int32  `json:"capacity"`
 	Timeout    int32  `json:"timeout"`
-	IsTars      bool   `json:"isTars"`
+	IsTars     bool   `json:"isTars"`
 	IsTcp      bool   `json:"isTcp"`
 }
 
@@ -221,7 +221,7 @@ type TServerNormal struct {
 type TServerSubType string
 
 const (
-	TARS    TServerSubType = "tars"
+	TARS   TServerSubType = "tars"
 	Normal TServerSubType = "normal"
 )
 
@@ -230,7 +230,7 @@ type TServerSpec struct {
 	Server    string          `json:"server"`
 	SubType   TServerSubType  `json:"subType"`
 	Important int32           `json:"important"`
-	Tars       *TServerTars     `json:"tars,omitempty"`
+	Tars      *TServerTars    `json:"tars,omitempty"`
 	Normal    *TServerNormal  `json:"normal,omitempty"`
 	K8S       TServerK8S      `json:"k8s"`
 	Release   *TServerRelease `json:"release,omitempty"`
@@ -264,7 +264,7 @@ type TEndpointSpec struct {
 	Server    string          `json:"server"`
 	SubType   TServerSubType  `json:"subType"`
 	Important int32           `json:"important"`
-	Tars       *TServerTars     `json:"tars,omitempty"`
+	Tars      *TServerTars    `json:"tars,omitempty"`
 	Normal    *TServerNormal  `json:"normal,omitempty"`
 	HostPorts []*TK8SHostPort `json:"hostPorts,omitempty"`
 	Release   *TServerRelease `json:"release,omitempty"`
@@ -338,9 +338,9 @@ type TTreeBusiness struct {
 type TTreeApp struct {
 	Name         string         `json:"name"`
 	BusinessRef  string         `json:"businessRef"`
-	CreatePerson string         `json:"createPerson"`
-	CreateTime   k8sMetaV1.Time `json:"createTime"`
-	Mark         string         `json:"mark"`
+	CreatePerson string         `json:"createPerson,omitempty"`
+	CreateTime   k8sMetaV1.Time `json:"createTime,omitempty"`
+	Mark         string         `json:"mark,omitempty"`
 }
 
 // +genclient
@@ -575,10 +575,10 @@ type TFrameworkTarsEndpoint struct {
 type TFrameworkConfig struct {
 	k8sMetaV1.TypeMeta   `json:",inline"`
 	k8sMetaV1.ObjectMeta `json:"metadata,omitempty"`
-	ImageBuild           TFrameworkImageBuild               `json:"imageBuild"`
-	ImageRegistry        TFrameworkImageRegistry            `json:"imageRegistry"`
-	RecordLimit          TFrameworkRecordLimit              `json:"recordLimit"`
-	NodeImage            TFrameworkNodeImage                `json:"nodeImage"`
+	ImageBuild           TFrameworkImageBuild                `json:"imageBuild"`
+	ImageRegistry        TFrameworkImageRegistry             `json:"imageRegistry"`
+	RecordLimit          TFrameworkRecordLimit               `json:"recordLimit"`
+	NodeImage            TFrameworkNodeImage                 `json:"nodeImage"`
 	UPChain              map[string][]TFrameworkTarsEndpoint `json:"upChain"`
 }
 

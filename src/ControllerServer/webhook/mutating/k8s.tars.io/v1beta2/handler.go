@@ -49,6 +49,9 @@ func init() {
 
 		"CREATE/TImage": mutatingCreateTImage,
 		"UPDATE/TImage": mutatingUpdateTImage,
+
+		"CREATE/TTemplate": mutatingCreateTTemplate,
+		"UPDATE/TTemplate": mutatingUpdateTTemplate,
 	}
 }
 
@@ -436,18 +439,10 @@ func mutatingCreateTTree(requestAdmissionView *k8sAdmissionV1.AdmissionReview) (
 	for i, app := range newTTree.Apps {
 		if app.BusinessRef != "" {
 			if _, ok := businessMap[app.BusinessRef]; !ok {
-				newTTreeApps := &crdV1beta2.TTreeApp{
-					Name:         app.Name,
-					BusinessRef:  "",
-					CreatePerson: app.CreatePerson,
-					CreateTime:   app.CreateTime,
-					Mark:         app.Mark,
-				}
-				bs, _ := json.Marshal(newTTreeApps)
 				jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
 					OP:    crdMeta.JsonPatchReplace,
-					Path:  fmt.Sprintf("/apps/%d", i),
-					Value: string(bs),
+					Path:  fmt.Sprintf("/apps/%d/businessRef", i),
+					Value: "",
 				})
 			}
 		}
@@ -692,4 +687,53 @@ func mutatingCreateTImage(requestAdmissionView *k8sAdmissionV1.AdmissionReview) 
 
 func mutatingUpdateTImage(requestAdmissionView *k8sAdmissionV1.AdmissionReview) ([]byte, error) {
 	return mutatingCreateTImage(requestAdmissionView)
+}
+
+func mutatingCreateTTemplate(requestAdmissionView *k8sAdmissionV1.AdmissionReview) ([]byte, error) {
+	ttemplate := &crdV1beta2.TTemplate{}
+	_ = json.Unmarshal(requestAdmissionView.Request.Object.Raw, ttemplate)
+
+	var jsonPatch crdMeta.JsonPatch
+
+	for i := 0; i < 1; i++ {
+
+		fatherless := ttemplate.Name == ttemplate.Spec.Parent
+
+		if fatherless {
+			if ttemplate.Labels != nil {
+				if _, ok := ttemplate.Labels[crdMeta.ParentLabel]; ok {
+					jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
+						OP:   crdMeta.JsonPatchRemove,
+						Path: "/metadata/labels/tars.io~1Parent",
+					})
+				}
+			}
+			break
+		}
+
+		if ttemplate.Labels == nil {
+			labels := map[string]string{}
+			jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
+				OP:    crdMeta.JsonPatchAdd,
+				Path:  "/metadata/labels",
+				Value: labels,
+			})
+		}
+
+		jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
+			OP:    crdMeta.JsonPatchAdd,
+			Path:  "/metadata/labels/tars.io~1Parent",
+			Value: ttemplate.Spec.Parent,
+		})
+	}
+
+	if jsonPatch != nil {
+		return json.Marshal(jsonPatch)
+	}
+
+	return nil, nil
+}
+
+func mutatingUpdateTTemplate(requestAdmissionView *k8sAdmissionV1.AdmissionReview) ([]byte, error) {
+	return mutatingCreateTTemplate(requestAdmissionView)
 }

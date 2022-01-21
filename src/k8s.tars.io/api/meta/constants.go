@@ -1,6 +1,6 @@
 package meta
 
-const GarbageCollectorAccount = "system:serviceaccount:kube-system:generic-garbage-collector"
+const KubernetesSystemAccountPrefix = "system:serviceaccount:kube-system:"
 
 const (
 	ResourceOutControlReason = "OutControl"
@@ -57,6 +57,7 @@ const TarsNodeLabel = "tars.io/node"             // 此标签表示 该节点可
 const TarsAbilityLabelPrefix = "tars.io/ability" // 此标签表示 该节点可以被 tars 当做 App节点池使用
 
 const TemplateLabel = "tars.io/Template"
+const ParentLabel = "tars.io/Parent"
 const TSubTypeLabel = "tars.io/SubType"
 
 const TServerAppLabel = "tars.io/ServerApp"

@@ -151,7 +151,7 @@ func (b *Builder) onBuildSuccess(task *Task) {
 			},
 			{
 				OP:   meta.JsonPatchRemove,
-				Path: "/release/-",
+				Path: fmt.Sprintf("/releases/%d", len(task.timage.Releases)),
 			},
 			{
 				OP:    meta.JsonPatchAdd,

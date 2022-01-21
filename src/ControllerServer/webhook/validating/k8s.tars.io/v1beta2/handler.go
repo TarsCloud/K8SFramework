@@ -231,7 +231,7 @@ func validTServer(newTServer, oldTServer *crdV1beta2.TServer, clients *controlle
 		}
 
 		templateName := newTServer.Spec.Tars.Template
-		_, err := informers.TTemplateInformer.Lister().TTemplates(namespace).Get(templateName)
+		_, err := informers.TTemplateInformer.Lister().ByNamespace(namespace).Get(templateName)
 		if err != nil {
 			if !errors.IsNotFound(err) {
 				return fmt.Errorf(crdMeta.ResourceGetError, "ttemplate", namespace, templateName, err.Error())
@@ -560,13 +560,14 @@ func validUpdateTConfig(clients *controller.Clients, informers *controller.Infor
 }
 
 func validDeleteTConfig(clients *controller.Clients, informers *controller.Informers, view *k8sAdmissionV1.AdmissionReview) error {
-
+	username := view.Request.UserInfo.Username
 	controllerUserName := controller.GetControllerUsername()
-	if controllerUserName == view.Request.UserInfo.Username || controllerUserName == crdMeta.DefaultUnlawfulAndOnlyForDebugUserName {
+
+	if controllerUserName == username || controllerUserName == crdMeta.DefaultUnlawfulAndOnlyForDebugUserName {
 		return nil
 	}
 
-	if view.Request.UserInfo.Username == crdMeta.GarbageCollectorAccount {
+	if strings.HasPrefix(username, crdMeta.KubernetesSystemAccountPrefix) {
 		return nil
 	}
 
@@ -592,7 +593,7 @@ func validTTemplate(newTTemplate *crdV1beta2.TTemplate, oldTTemplate *crdV1beta2
 
 	parentName := newTTemplate.Spec.Parent
 	if parentName == "" {
-		return fmt.Errorf(crdMeta.ResourceInvalidError, "ttemplate", "value of filed \"/spec/parent\" should not empty ")
+		return fmt.Errorf(crdMeta.ResourceInvalidError, "ttemplate", "value of filed \".spec.parent\" should not empty ")
 	}
 
 	if newTTemplate.Name == newTTemplate.Spec.Parent {
@@ -600,9 +601,12 @@ func validTTemplate(newTTemplate *crdV1beta2.TTemplate, oldTTemplate *crdV1beta2
 	}
 
 	namespace := newTTemplate.Namespace
-
-	if _, err := informers.TTemplateInformer.Lister().TTemplates(namespace).Get(parentName); err != nil {
-		return fmt.Errorf(crdMeta.ResourceGetError, "ttemplate", namespace, parentName, err.Error())
+	_, err := informers.TTemplateInformer.Lister().ByNamespace(namespace).Get(parentName)
+	if err != nil {
+		if !errors.IsNotFound(err) {
+			return fmt.Errorf(crdMeta.ResourceGetError, "ttemplate", namespace, parentName, err.Error())
+		}
+		return fmt.Errorf(crdMeta.ResourceNotExistError, "ttemplate", namespace, parentName)
 	}
 
 	return nil
@@ -625,24 +629,39 @@ func validUpdateTTemplate(clients *controller.Clients, informers *controller.Inf
 }
 
 func validDeleteTTemplate(clients *controller.Clients, informers *controller.Informers, view *k8sAdmissionV1.AdmissionReview) error {
-
+	username := view.Request.UserInfo.Username
 	controllerUserName := controller.GetControllerUsername()
-	if controllerUserName == view.Request.UserInfo.Username || controllerUserName == crdMeta.DefaultUnlawfulAndOnlyForDebugUserName {
+
+	if controllerUserName == username || controllerUserName == crdMeta.DefaultUnlawfulAndOnlyForDebugUserName {
+		return nil
+	}
+
+	if strings.HasPrefix(username, crdMeta.KubernetesSystemAccountPrefix) {
 		return nil
 	}
 
 	ttemplate := &crdV1beta2.TTemplate{}
 	_ = json.Unmarshal(view.Request.OldObject.Raw, ttemplate)
-	requirement, _ := labels.NewRequirement(crdMeta.TemplateLabel, selection.DoubleEquals, []string{ttemplate.Name})
 	namespace := ttemplate.Namespace
-	tServers, err := informers.TServerInformer.Lister().TServers(namespace).List(labels.NewSelector().Add(*requirement))
+
+	requirement, _ := labels.NewRequirement(crdMeta.TemplateLabel, selection.DoubleEquals, []string{ttemplate.Name})
+	tservers, err := informers.TServerInformer.Lister().TServers(namespace).List(labels.NewSelector().Add(*requirement))
 	if err != nil {
-		utilRuntime.HandleError(err)
-		return err
+		return fmt.Errorf(crdMeta.ResourceSelectorError, namespace, "tservers", err.Error())
 	}
-	if tServers != nil && len(tServers) != 0 {
-		return fmt.Errorf("cannot delete ttemplate %s/%s because it is reference by some tserver", namespace, view.Request.Name)
+	if tservers != nil && len(tservers) != 0 {
+		return fmt.Errorf("cannot delete ttemplate %s/%s because it is reference by some tserver", namespace, ttemplate.Name)
 	}
+
+	requirement, _ = labels.NewRequirement(crdMeta.ParentLabel, selection.DoubleEquals, []string{ttemplate.Name})
+	ttemplates, err := informers.TTemplateInformer.Lister().ByNamespace(namespace).List(labels.NewSelector().Add(*requirement))
+	if err != nil {
+		return fmt.Errorf(crdMeta.ResourceSelectorError, namespace, "ttemplates", err.Error())
+	}
+	if ttemplates != nil && len(ttemplates) != 0 {
+		return fmt.Errorf("cannot delete ttemplate %s/%s because it is reference by some ttemplate", namespace, ttemplate.Name)
+	}
+
 	return nil
 }
 
@@ -718,18 +737,24 @@ func validUpdateTTree(clients *controller.Clients, informers *controller.Informe
 	if controllerUserName == view.Request.UserInfo.Username || controllerUserName == crdMeta.DefaultUnlawfulAndOnlyForDebugUserName {
 		return nil
 	}
-	newTTree := &crdV1beta2.TTree{}
-	_ = json.Unmarshal(view.Request.Object.Raw, newTTree)
+	ttree := &crdV1beta2.TTree{}
+	_ = json.Unmarshal(view.Request.Object.Raw, ttree)
 
 	oldTTree := &crdV1beta2.TTree{}
 	_ = json.Unmarshal(view.Request.OldObject.Raw, oldTTree)
 
-	return validTTree(newTTree, oldTTree, clients, informers)
+	return validTTree(ttree, oldTTree, clients, informers)
 }
 
 func validDeleteTTree(clients *controller.Clients, informers *controller.Informers, view *k8sAdmissionV1.AdmissionReview) error {
+	username := view.Request.UserInfo.Username
 	controllerUserName := controller.GetControllerUsername()
-	if controllerUserName == view.Request.UserInfo.Username || controllerUserName == crdMeta.DefaultUnlawfulAndOnlyForDebugUserName {
+
+	if controllerUserName == username || controllerUserName == crdMeta.DefaultUnlawfulAndOnlyForDebugUserName {
+		return nil
+	}
+
+	if strings.HasPrefix(username, crdMeta.KubernetesSystemAccountPrefix) {
 		return nil
 	}
 
@@ -816,8 +841,14 @@ func validUpdateTFrameworkConfig(clients *controller.Clients, informers *control
 }
 
 func validDeleteTFrameworkConfig(clients *controller.Clients, informers *controller.Informers, view *k8sAdmissionV1.AdmissionReview) error {
+	username := view.Request.UserInfo.Username
 	controllerUserName := controller.GetControllerUsername()
-	if controllerUserName == view.Request.UserInfo.Username || controllerUserName == crdMeta.DefaultUnlawfulAndOnlyForDebugUserName {
+
+	if controllerUserName == username || controllerUserName == crdMeta.DefaultUnlawfulAndOnlyForDebugUserName {
+		return nil
+	}
+
+	if strings.HasPrefix(username, crdMeta.KubernetesSystemAccountPrefix) {
 		return nil
 	}
 

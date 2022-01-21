@@ -102,7 +102,7 @@ func (r *TFrameworkConfigReconciler) reconcile(key string) reconcile.Result {
 		return reconcile.AllOk
 	}
 
-	tframeworkConfig, err := r.informers.TFrameworkConfigInformer.Lister().TFrameworkConfigs(namespace).Get(name)
+	tframeworkconfig, err := r.informers.TFrameworkConfigInformer.Lister().TFrameworkConfigs(namespace).Get(name)
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(crdMeta.ResourceGetError, "tfameworkconfig", namespace, name, err.Error()))
@@ -111,10 +111,10 @@ func (r *TFrameworkConfigReconciler) reconcile(key string) reconcile.Result {
 		return reconcile.AllOk
 	}
 
-	if tframeworkConfig.DeletionTimestamp != nil {
+	if tframeworkconfig.DeletionTimestamp != nil {
 		return reconcile.AllOk
 	}
 
-	controller.SetTFrameworkConfig(namespace, tframeworkConfig)
+	controller.SetTFrameworkConfig(namespace, tframeworkconfig)
 	return reconcile.AllOk
 }

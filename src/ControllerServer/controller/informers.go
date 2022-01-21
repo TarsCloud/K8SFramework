@@ -36,9 +36,9 @@ type Informers struct {
 	DaemonSetInformer   k8sInformersAppsV1.DaemonSetInformer
 	StatefulSetInformer k8sInformersAppsV1.StatefulSetInformer
 
-	TServerInformer          crdInformersV1beta2.TServerInformer
-	TEndpointInformer        crdInformersV1beta2.TEndpointInformer
-	TTemplateInformer        crdInformersV1beta2.TTemplateInformer
+	TServerInformer   crdInformersV1beta2.TServerInformer
+	TEndpointInformer crdInformersV1beta2.TEndpointInformer
+
 	TImageInformer           crdInformersV1beta2.TImageInformer
 	TTreeInformer            crdInformersV1beta2.TTreeInformer
 	TExitedRecordInformer    crdInformersV1beta2.TExitedRecordInformer
@@ -46,7 +46,8 @@ type Informers struct {
 	TAccountInformer         crdInformersV1beta2.TAccountInformer
 	TFrameworkConfigInformer crdInformersV1beta2.TFrameworkConfigInformer
 
-	TConfigInformer k8sInformers.GenericInformer
+	TConfigInformer   k8sInformers.GenericInformer
+	TTemplateInformer k8sInformers.GenericInformer
 
 	receivers []EventsReceiver
 }
@@ -74,7 +75,7 @@ func newInformers(clients *Clients) *Informers {
 
 	tserverInformer := crdInformerFactory.Crd().V1beta2().TServers()
 	tendpointInformer := crdInformerFactory.Crd().V1beta2().TEndpoints()
-	ttemplateInformer := crdInformerFactory.Crd().V1beta2().TTemplates()
+
 	timageInformer := crdInformerFactory.Crd().V1beta2().TImages()
 	ttreeInformer := crdInformerFactory.Crd().V1beta2().TTrees()
 	texitedRecordInformer := crdInformerFactory.Crd().V1beta2().TExitedRecords()
@@ -83,6 +84,7 @@ func newInformers(clients *Clients) *Informers {
 	tframeworkconfigInformer := crdInformerFactory.Crd().V1beta2().TFrameworkConfigs()
 
 	tconfigInformer := metadataInformerFactory.ForResource(crdV1beta2.SchemeGroupVersion.WithResource("tconfigs"))
+	ttemplateInformer := metadataInformerFactory.ForResource(crdV1beta2.SchemeGroupVersion.WithResource("ttemplates"))
 
 	informers = &Informers{
 		k8sInformerFactory:           k8sInformerFactory,
