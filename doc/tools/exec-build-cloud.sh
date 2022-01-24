@@ -91,6 +91,8 @@ IMAGE="docker.tarsyun.com/${GROUP}/${NAME}:${TAG}"
 node /root/yaml-tools/index -f $VALUES -s repo.image -v $IMAGE -u
 node /root/yaml-tools/index -f $VALUES -s cloud.version -v $TAG -u
 node /root/yaml-tools/index -f $VALUES -s cloud.deploy -v $VALUES -u
+node /root/yaml-tools/index -f $VALUES -s cloud.group -v $GROUP -u
+node /root/yaml-tools/index -f $VALUES -s cloud.name -v $NAME -u
 
 echo "---------------------Environment---------------------------------"
 echo "BIN:                  "$BIN
