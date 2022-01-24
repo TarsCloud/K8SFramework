@@ -61,6 +61,7 @@ LOGO="`node /root/yaml-tools/index -f $VALUES -n -g cloud.logo`"
 CHANGELIST="`node /root/yaml-tools/index -f $VALUES -n -g cloud.changelist`"
 TARS="`node /root/yaml-tools/index -f $VALUES -n -g cloud.protocols`"
 README="`node /root/yaml-tools/index -f $VALUES -n -g cloud.readme`"
+README_CN="`node /root/yaml-tools/index -f $VALUES -n -g cloud.readme_cn`"
 ASSETS="`node /root/yaml-tools/index -f $VALUES -n -g cloud.assets`"
 HELM_VERSION=`node /root/yaml-tools/index -f /root/helm-template/Chart.yaml -g version`
 
@@ -105,6 +106,7 @@ echo "LOGO:                 "$LOGO
 echo "IMAGE:                "$IMAGE
 echo "TARS:                 "$TARS
 echo "README:               "$README
+echo "README_CN:            "$README_CN
 echo "ASSETS:               "$ASSETS
 echo "CHANGELIST:           "$CHANGELIST
 echo "HELM_VERSION:         "$HELM_VERSION
@@ -129,6 +131,16 @@ if [ "$README" != "" ]; then
     echo "COPY $README /usr/local/cloud/data/$README" >> ${NewDockerfile}
 fi
 
+if [ "$README_CN" != "" ]; then
+    if [ ! -f $README_CN ] ; then
+        echo "readme file($README_CN) not exists, exit."
+        exit -1
+    fi
+
+    echo "COPY $README_CN /usr/local/cloud/data/$README_CN" >> ${NewDockerfile}
+fi
+
+
 if [ "$LOGO" != "" ]; then
     if [ ! -f $LOGO ] ; then
         echo "logo file($LOGO) not exists, exit."
@@ -150,6 +162,8 @@ fi
 for KEY in ${ASSETS}; do
     echo "COPY $KEY /usr/local/cloud/data/$KEY" >> ${NewDockerfile}
 done
+
+# echo "RUN cd /usr/local/server/bin && tar czfv ${GROUP}.${NAME}.tgz bin && mv ${GROUP}.${NAME}.tgz /usr/local/cloud/data/" >> ${NewDockerfile}
 
 echo "docker build . -f ${NewDockerfile} -t $IMAGE --build-arg BIN=$BIN --build-arg BaseImage=$BASEIMAGE --build-arg ServerType=$SERVERTYPE"
 docker build . -f ${NewDockerfile} -t $IMAGE --build-arg BIN=$BIN --build-arg BaseImage=$BASEIMAGE --build-arg ServerType=$SERVERTYPE
