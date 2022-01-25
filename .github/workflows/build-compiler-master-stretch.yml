@@ -1,4 +1,4 @@
-name: build-base-compiler-master-jessie
+name: build-base-compiler-master-stretch
 
 
 on:
@@ -6,21 +6,21 @@ on:
     branches:
       - master
     paths:
-      - ".github/workflows/build-compiler-master-jessie.yml"
+      - ".github/workflows/build-compiler-master-stretch.yml"
       - "doc/tools/*"
       - "doc/tools/yaml-tools/*"
       - "doc/tools/helm-template/*"
       - "doc/tools/helm-lib/*"
-      - "doc/base-compiler-jessie.Dockerfile"
+      - "doc/base-compiler-stretch.Dockerfile"
   pull_request:
     branches:
       - master
     paths:
-      - ".github/workflows/build-compiler-master-jessie.yml"
+      - ".github/workflows/build-compiler-master-stretch.yml"
       - "doc/tools/*"
       - "doc/tools/helm-template/*"
       - "doc/tools/helm-lib/*"
-      - "doc/base-compiler-jessie.Dockerfile"
+      - "doc/base-compiler-stretch.Dockerfile"
   schedule:
     - cron: '0 05 * * *'
 
@@ -34,9 +34,9 @@ jobs:
       - name: login docker hub
         run: docker login -u ${{ secrets.name }} -p ${{ secrets.pass }}
       - name: Build docker
-        run: cd doc && docker build . -f base-compiler-jessie.Dockerfile -t tarscloud/base-compiler-jessie:master --build-arg master
+        run: cd doc && docker build . -f base-compiler-stretch.Dockerfile -t tarscloud/base-compiler-stretch:master --build-arg master
       - name: push master docker
-        run: docker push tarscloud/base-compiler-jessie:master
+        run: docker push tarscloud/base-compiler-stretch:master
       - name: push latest docker
-        run: docker tag tarscloud/base-compiler-jessie:master tarscloud/base-compiler-jessie:latest && docker push tarscloud/base-compiler-jessie:latest
+        run: docker tag tarscloud/base-compiler-stretch:master tarscloud/base-compiler-stretch:latest && docker push tarscloud/base-compiler-stretch:latest
 
