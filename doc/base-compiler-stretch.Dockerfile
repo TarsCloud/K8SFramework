@@ -16,7 +16,7 @@ RUN cd /root                                                                    
 # FROM golang:1.16-stretch AS igolong
 # RUN apt update && apt install git -y
 
-FROM php:7.4.26-apache-stretch AS iphp
+FROM php:7.3.29-apache-stretch AS iphp
 
 # image debian:stretch had "ls bug", we use busybox ls instead
 RUN rm -rf /bin/ls
