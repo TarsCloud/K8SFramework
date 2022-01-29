@@ -68,7 +68,7 @@ COPY --from=ihelm /tmp/helm /usr/local/bin/helm
 COPY --from=ikubectl /tmp/kubectl /usr/local/bin/kubectl
 
 ENV PATH=/usr/local/openjdk-8/bin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-ENV GOPATH=/usr/local/go
+ENV GOPATH=/go
 
 # image debian:stretch had "ls bug", we use busybox ls instead
 
@@ -88,8 +88,8 @@ RUN go get github.com/TarsCloud/TarsGo/tars \
     && cd $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go \
     && go build .  \
     && mkdir -p /usr/local/go/bin \
-    && chmod a+x /usr/local/go/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go/tars2go \
-    && ln -s /usr/local/go/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go/tars2go /usr/local/go/bin/tars2go 
+    && chmod a+x $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go/tars2go \
+    && ln -s $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go/tars2go /usr/local/go/bin/tars2go 
 
 # RUN apt update && apt install -y                                                       \
 #     g++ make cmake flex bison git ca-certificates curl wget libssl-dev zlib1g-dev
