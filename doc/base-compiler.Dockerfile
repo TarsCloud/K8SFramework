@@ -84,22 +84,12 @@ RUN apt update                                                                  
 RUN locale-gen en_US.utf8
 ENV LANG en_US.utf8
 
-
 RUN go get github.com/TarsCloud/TarsGo/tars \
     && cd $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go \
     && go build .  \
     && mkdir -p /usr/local/go/bin \
     && chmod a+x /usr/local/go/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go/tars2go \
     && ln -s /usr/local/go/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go/tars2go /usr/local/go/bin/tars2go 
-
-
-# RUN cd /root                                                                           \
-#     && git clone https://github.com/TarsCloud/TarsGo.git                               \
-#     && cd /root/TarsGo/tars/tools/tars2go                                              \
-#     && go build .                                                                      \
-#     && mkdir -p /usr/local/go/bin                                                      \
-#     && mv tars2go /usr/local/go/bin/tars2go
-
 
 RUN apt purge -y                                                                       \
     && apt clean all                                                                   \

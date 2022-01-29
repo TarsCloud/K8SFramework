@@ -1,20 +1,20 @@
-# docker build . -f base-compiler.Dockerfile -t tarscloud/base-compiler:master --build-arg master
-FROM debian:stretch AS itars
-RUN apt update && apt install -y                                                       \
-    g++ make cmake flex bison git ca-certificates curl wget libssl-dev zlib1g-dev
+# docker build . -f base-compiler-stretch.Dockerfile -t tarscloud/base-compiler-stretch:master --build-arg master
+# FROM debian:stretch AS itars
+# RUN apt update && apt install -y                                                       \
+#     g++ make cmake flex bison git ca-certificates curl wget libssl-dev zlib1g-dev
 
-RUN cd /root                                                                           \
-    && git clone https://github.com/TarsCloud/TarsCpp.git --recursive                  \
-    && cd /root/TarsCpp                                                                \
-    && git checkout $BRANCH && git submodule update --remote --recursive               \
-    && mkdir -p build                                                                  \
-    && cd build                                                                        \
-    && cmake ..                                                                        \
-    && make -j4                                                                        \
-    && make install
+# RUN cd /root                                                                           \
+#     && git clone https://github.com/TarsCloud/TarsCpp.git --recursive                  \
+#     && cd /root/TarsCpp                                                                \
+#     && git checkout $BRANCH && git submodule update --remote --recursive               \
+#     && mkdir -p build                                                                  \
+#     && cd build                                                                        \
+#     && cmake ..                                                                        \
+#     && make -j4                                                                        \
+#     && make install
 
-# FROM golang:1.16-stretch AS igolong
-# RUN apt update && apt install git -y
+FROM golang:1.16-stretch AS igolang
+RUN apt update && apt install git -y
 
 FROM php:7.3.29-apache-stretch AS iphp
 
@@ -58,8 +58,8 @@ RUN mv $(command -v  kubectl) /tmp/kubectl
 FROM php:7.3.29-apache-stretch
 ENV DEBIAN_FRONTEND=noninteractive
 
-COPY --from=itars /usr/local /usr/local
-# COPY --from=igolong /usr/local /usr/local
+# COPY --from=itars /usr/local /usr/local
+COPY --from=igolang /usr/local /usr/local
 COPY --from=iphp /usr/local /usr/local
 COPY --from=ijava /usr/local /usr/local
 COPY --from=inode /usr/local /usr/local
@@ -75,7 +75,7 @@ ENV GOPATH=/usr/local/go
 RUN rm -rf /bin/ls
 
 RUN apt update                                                                         \
-    && apt install -y git cmake make maven gdb golang                                     \
+    && apt install -y git cmake make maven gdb                                         \
     ca-certificates openssl telnet curl wget default-mysql-client                      \
     iputils-ping vim tcpdump net-tools binutils procps tree python python3             \
     libssl-dev zlib1g-dev libzip-dev  tzdata localepurge                               \
@@ -84,7 +84,6 @@ RUN apt update                                                                  
 RUN locale-gen en_US.utf8
 ENV LANG en_US.utf8
 
-
 RUN go get github.com/TarsCloud/TarsGo/tars \
     && cd $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go \
     && go build .  \
@@ -92,14 +91,19 @@ RUN go get github.com/TarsCloud/TarsGo/tars \
     && chmod a+x /usr/local/go/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go/tars2go \
     && ln -s /usr/local/go/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go/tars2go /usr/local/go/bin/tars2go 
 
+# RUN apt update && apt install -y                                                       \
+#     g++ make cmake flex bison git ca-certificates curl wget libssl-dev zlib1g-dev
 
-# RUN cd /root                                                                           \
-#     && git clone https://github.com/TarsCloud/TarsGo.git                               \
-#     && cd /root/TarsGo/tars/tools/tars2go                                              \
-#     && go build .                                                                      \
-#     && mkdir -p /usr/local/go/bin                                                      \
-#     && mv tars2go /usr/local/go/bin/tars2go
-
+RUN cd /root                                                                           \
+    && git clone https://github.com/TarsCloud/TarsCpp.git --recursive                  \
+    && cd /root/TarsCpp                                                                \
+    && git checkout $BRANCH && git submodule update --remote --recursive               \
+    && mkdir -p build                                                                  \
+    && cd build                                                                        \
+    && cmake ..                                                                        \
+    && make -j4                                                                        \
+    && make install                                                                    \
+    && rm -rf /root/TarsCpp
 
 RUN apt purge -y                                                                       \
     && apt clean all                                                                   \
