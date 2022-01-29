@@ -77,7 +77,7 @@ ARG BRANCH
 RUN rm -rf /bin/ls
 
 RUN apt update                                                                         \
-    && apt install -y git cmake make maven gdb                                         \
+    && apt install -y git cmake make maven gdb bison flex                              \
     ca-certificates openssl telnet curl wget default-mysql-client                      \
     iputils-ping vim tcpdump net-tools binutils procps tree python python3             \
     libssl-dev zlib1g-dev libzip-dev  tzdata localepurge                               \
