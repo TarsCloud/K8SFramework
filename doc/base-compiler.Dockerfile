@@ -86,6 +86,7 @@ RUN apt update                                                                  
 
 RUN locale-gen en_US.utf8
 ENV LANG en_US.utf8
+RUN go env -w GO111MODULE=off
 
 RUN go get github.com/TarsCloud/TarsGo/tars \
     && cd $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go \
