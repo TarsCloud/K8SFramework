@@ -34,7 +34,7 @@ jobs:
       - name: login docker hub
         run: docker login -u ${{ secrets.name }} -p ${{ secrets.pass }}
       - name: Build docker
-        run: cd doc && docker build . -f base-compiler-stretch.Dockerfile -t tarscloud/base-compiler-stretch:master --build-arg master
+        run: cd doc && docker build . -f base-compiler-stretch.Dockerfile -t tarscloud/base-compiler-stretch:master --build-arg BRANCH=master
       - name: push master docker
         run: docker push tarscloud/base-compiler-stretch:master
       - name: push latest docker

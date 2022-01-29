@@ -18,7 +18,7 @@ jobs:
       - name: login docker hub
         run: docker login -u ${{ secrets.name }} -p ${{ secrets.pass }}
       - name: Build docker
-        run: cd doc && docker build . -f base-compiler.Dockerfile -t tarscloud/base-compiler:${{ steps.get_version.outputs.VERSION }} --build-arg ${{ steps.get_version.outputs.VERSION }}
+        run: cd doc && docker build . -f base-compiler.Dockerfile -t tarscloud/base-compiler:${{ steps.get_version.outputs.VERSION }} --build-arg BRANCH=${{ steps.get_version.outputs.VERSION }}
       - name: push ${{ steps.get_version.outputs.VERSION }} docker
         run: docker push tarscloud/base-compiler:${{ steps.get_version.outputs.VERSION }}
 

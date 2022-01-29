@@ -1,4 +1,4 @@
-# docker build . -f base-compiler-stretch.Dockerfile -t tarscloud/base-compiler-stretch:master --build-arg master
+# docker build . -f base-compiler-stretch.Dockerfile -t tarscloud/base-compiler-stretch:master --build-arg BRANCH=master
 # FROM debian:stretch AS itars
 # RUN apt update && apt install -y                                                       \
 #     g++ make cmake flex bison git ca-certificates curl wget libssl-dev zlib1g-dev
@@ -60,6 +60,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # COPY --from=itars /usr/local /usr/local
 COPY --from=igolang /usr/local /usr/local
+COPY --from=igolang /go /go
 COPY --from=iphp /usr/local /usr/local
 COPY --from=ijava /usr/local /usr/local
 COPY --from=inode /usr/local /usr/local
@@ -70,6 +71,7 @@ COPY --from=ikubectl /tmp/kubectl /usr/local/bin/kubectl
 ENV PATH=/usr/local/openjdk-8/bin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ENV GOPATH=/go
 
+ARG BRANCH
 # image debian:stretch had "ls bug", we use busybox ls instead
 
 RUN rm -rf /bin/ls
