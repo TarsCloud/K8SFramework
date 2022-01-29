@@ -13,8 +13,8 @@
 #     && make -j4                                                                        \
 #     && make install
 
-FROM golang:1.16-stretch AS igolang
-RUN apt update && apt install git -y
+FROM golang:1.17-stretch AS igolang
+# RUN apt update && apt install git -y
 
 FROM php:7.3.29-apache-stretch AS iphp
 

@@ -1,19 +1,19 @@
 # docker build . -f base-compiler.Dockerfile -t tarscloud/base-compiler:master --build-arg master
-FROM debian:bullseye AS itars
-RUN apt update && apt install -y                                                       \
-    g++ make cmake flex bison git ca-certificates curl wget libssl-dev zlib1g-dev
+# FROM debian:bullseye AS itars
+# RUN apt update && apt install -y                                                       \
+#     g++ make cmake flex bison git ca-certificates curl wget libssl-dev zlib1g-dev
 
-RUN cd /root                                                                           \
-    && git clone https://github.com/TarsCloud/TarsCpp.git --recursive                  \
-    && cd /root/TarsCpp                                                                \
-    && git checkout $BRANCH && git submodule update --remote --recursive               \
-    && mkdir -p build                                                                  \
-    && cd build                                                                        \
-    && cmake ..                                                                        \
-    && make -j4                                                                        \
-    && make install
+# RUN cd /root                                                                           \
+#     && git clone https://github.com/TarsCloud/TarsCpp.git --recursive                  \
+#     && cd /root/TarsCpp                                                                \
+#     && git checkout $BRANCH && git submodule update --remote --recursive               \
+#     && mkdir -p build                                                                  \
+#     && cd build                                                                        \
+#     && cmake ..                                                                        \
+#     && make -j4                                                                        \
+#     && make install
 
-# FROM golang:1.16-bullseye AS igolong
+FROM golang:1.17-bullseye AS igolang
 # RUN apt update && apt install git -y
 
 FROM php:7.4.26-apache-bullseye AS iphp
@@ -58,8 +58,8 @@ RUN mv $(command -v  kubectl) /tmp/kubectl
 FROM php:7.4.26-apache-bullseye
 ENV DEBIAN_FRONTEND=noninteractive
 
-COPY --from=itars /usr/local /usr/local
-# COPY --from=igolong /usr/local /usr/local
+# COPY --from=itars /usr/local /usr/local
+COPY --from=igolang /usr/local /usr/local
 COPY --from=iphp /usr/local /usr/local
 COPY --from=ijava /usr/local /usr/local
 COPY --from=inode /usr/local /usr/local
@@ -68,7 +68,7 @@ COPY --from=ihelm /tmp/helm /usr/local/bin/helm
 COPY --from=ikubectl /tmp/kubectl /usr/local/bin/kubectl
 
 ENV PATH=/usr/local/openjdk-8/bin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-ENV GOPATH=/usr/local/go
+ENV GOPATH=/go
 
 # image debian:bullseye had "ls bug", we use busybox ls instead
 
@@ -88,8 +88,19 @@ RUN go get github.com/TarsCloud/TarsGo/tars \
     && cd $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go \
     && go build .  \
     && mkdir -p /usr/local/go/bin \
-    && chmod a+x /usr/local/go/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go/tars2go \
-    && ln -s /usr/local/go/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go/tars2go /usr/local/go/bin/tars2go 
+    && chmod a+x $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go/tars2go \
+    && ln -s $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go/tars2go /usr/local/go/bin/tars2go 
+
+RUN cd /root                                                                           \
+    && git clone https://github.com/TarsCloud/TarsCpp.git --recursive                  \
+    && cd /root/TarsCpp                                                                \
+    && git checkout $BRANCH && git submodule update --remote --recursive               \
+    && mkdir -p build                                                                  \
+    && cd build                                                                        \
+    && cmake ..                                                                        \
+    && make -j4                                                                        \
+    && make install                                                                    \
+    && rm -rf /root/TarsCpp
 
 RUN apt purge -y                                                                       \
     && apt clean all                                                                   \
