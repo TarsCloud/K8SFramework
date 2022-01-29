@@ -106,6 +106,7 @@ RUN cd /root                                                                    
     && cmake ..                                                                        \
     && make -j4                                                                        \
     && make install                                                                    \
+    && cd /                                                                            \
     && rm -rf /root/TarsCpp
 
 RUN apt purge -y                                                                       \
