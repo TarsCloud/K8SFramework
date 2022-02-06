@@ -56,11 +56,16 @@ spec:
 {{- else}}
     nodeSelector: []
 {{- end}}      
+{{- if .Values.resources}}      
+    resources:
+{{ toYaml .Values.resources | indent 6}}
+{{- end}}      
     abilityAffinity: {{ .Values.abilityAffinity | default "AppOrServerPreferred" }}
     notStacked: {{ .Values.notStacked | default false }}
     daemonSet: {{ .Values.daemonSet | default false }}
     imagePullPolicy: {{ .Values.imagePullPolicy | default "Always" }}
     launcherType: {{ .Values.launcherType | default "background" }}
+
 {{- if .Values.updateStrategy}}      
 {{ toYaml .Values.updateStrategy | indent 6}}
 {{- else}}
