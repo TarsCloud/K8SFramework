@@ -52,12 +52,27 @@ ln -s "${_IMAGE_BIND_SERVER_DIR_}" "${ServerBinDir}"
 case ${ServerType} in
 "cpp" | "nodejs-pkg" | "go")
   export LD_LIBRARY_PATH=${ServerBinDir}:${ServerBinDir}/lib
+
   export ServerLauncherFile="${ServerBinDir}/${ServerName}"
 
   if [ ! -f "$ServerLauncherFile" ]; then
-    echo "$ServerLauncherFile file not exist"
-    exit 255
+    echo "$ServerLauncherFile file not exist, choose file Server"
+
+      IsExeExists="false"
+      for exe in `find $ServerBinDir/ -executable -type f -name "*Server"`
+      do
+        IsExeExists="true"
+        export ServerName=`basename $exe`
+        export ServerLauncherFile="${ServerBinDir}/${ServerName}"
+        break;
+      done
+
+      if [ "$IsExeExists" == "false" ]; then
+         echo "$ServerLauncherFile file not exist"
+         exit 255
+      fi
   fi
+
 
   chmod +x "${ServerLauncherFile}"
 
