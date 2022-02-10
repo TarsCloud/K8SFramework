@@ -1,3 +1,21 @@
+## v1.2.1 20220218
+
+### en
+
+- TarsWeb update to v2.4.24
+- When tarsnode starts the CPP/go service, if no matching exe is found, look for the first server to start it
+- The helm package has been upgraded and all configuration items supported by tserver have been added
+- base-compiler-stretch is added to support lower versions of GCC
+- fix controller some bug
+
+### cn
+
+- TarsWeb 升级到 v2.4.24, 优化了 k8s 管理
+- tarsnode 启动 Cpp/Go 服务时, 如果找不到匹配的 exe, 则查找第一个 Server 来启动
+- 升级了 helm 包, 增加了 TServer 所支持的所有配置项
+- 增加了 base-compiler-stretch, 支持低版本的 gcc
+- 修复 controller 的一些 bug
+
 ## v1.2.0 20220118
 
 ### en
