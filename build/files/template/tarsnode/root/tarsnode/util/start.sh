@@ -62,7 +62,7 @@ case ${ServerType} in
       for exe in `find $ServerBinDir/ -executable -type f -name "*Server"`
       do
         IsExeExists="true"
-        export ServerLauncherFile="${ServerBinDir}/${ServerName}"
+        export ServerLauncherFile="${ServerBinDir}/${exe}"
         break;
       done
 
