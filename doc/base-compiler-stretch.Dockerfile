@@ -53,7 +53,7 @@ FROM devth/helm:v3.7.1 AS ihelm
 RUN mv $(command -v  helm) /tmp/helm
 
 FROM bitnami/kubectl:1.20 AS ikubectl
-RUN mv $(command -v  kubectl) /tmp/kubectl
+RUN cp -rf $(command -v  kubectl) /tmp/kubectl
 
 FROM php:7.3.29-apache-stretch
 ENV DEBIAN_FRONTEND=noninteractive
