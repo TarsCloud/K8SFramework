@@ -3,7 +3,6 @@ package v1beta2
 import (
 	"context"
 	"crypto/md5"
-	"encoding/json"
 	"fmt"
 	k8sAdmissionV1 "k8s.io/api/admission/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
@@ -12,6 +11,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
 	patchTypes "k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/json"
 	utilRuntime "k8s.io/apimachinery/pkg/util/runtime"
 	crdV1beta2 "k8s.tars.io/api/crd/v1beta2"
 	crdMeta "k8s.tars.io/api/meta"
@@ -274,7 +274,7 @@ func validTServer(newTServer, oldTServer *crdV1beta2.TServer, clients *controlle
 				return fmt.Errorf(crdMeta.ResourceInvalidError, "tserver", fmt.Sprintf("duplicate port value %d", hostPort.Port))
 			}
 
-			hostPortNameRefs[hostPort.NameRef] = nil
+			hostPortNameRefs[nameRef] = nil
 			hostPortPorts[hostPort.Port] = nil
 		}
 	}

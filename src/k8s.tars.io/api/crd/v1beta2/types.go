@@ -330,9 +330,9 @@ type TTreeBusiness struct {
 	Name         string         `json:"name"`
 	Show         string         `json:"show"`
 	Weight       int32          `json:"weight"`
-	Mark         string         `json:"mark"`
-	CreatePerson string         `json:"createPerson"`
-	CreateTime   k8sMetaV1.Time `json:"createTime"`
+	CreatePerson string         `json:"createPerson,omitempty"`
+	CreateTime   k8sMetaV1.Time `json:"createTime,omitempty"`
+	Mark         string         `json:"mark,omitempty"`
 }
 
 type TTreeApp struct {

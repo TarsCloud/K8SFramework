@@ -179,6 +179,9 @@ func buildPodImagePullSecrets(tserver *crdV1beta2.TServer) []k8sCoreV1.LocalObje
 
 		if tserver.Spec.Tars != nil && tserver.Spec.Release.TServerReleaseNode != nil {
 			nodeSecret = tserver.Spec.Release.TServerReleaseNode.Secret
+			if nodeSecret == "" {
+				_, nodeSecret = controller.GetDefaultNodeImage(tserver.Namespace)
+			}
 		}
 	}
 
@@ -282,14 +285,33 @@ func buildContainerPorts(tserver *crdV1beta2.TServer) []k8sCoreV1.ContainerPort 
 }
 
 func buildPodReadinessGates(tserver *crdV1beta2.TServer) []k8sCoreV1.PodReadinessGate {
-	if tserver.Spec.K8S.ReadinessGate == nil || *tserver.Spec.K8S.ReadinessGate == "" {
-		return nil
+	if tserver.Spec.K8S.ReadinessGate != nil && *tserver.Spec.K8S.ReadinessGate != "" {
+		if tserver.Spec.SubType == crdV1beta2.Normal || *tserver.Spec.K8S.ReadinessGate == crdMeta.TPodReadinessGate {
+			return []k8sCoreV1.PodReadinessGate{
+				{
+					ConditionType: k8sCoreV1.PodConditionType(*tserver.Spec.K8S.ReadinessGate),
+				},
+			}
+		}
+
+		return []k8sCoreV1.PodReadinessGate{
+			{
+				ConditionType: k8sCoreV1.PodConditionType(*tserver.Spec.K8S.ReadinessGate),
+			},
+			{
+				ConditionType: crdMeta.TPodReadinessGate,
+			},
+		}
 	}
-	return []k8sCoreV1.PodReadinessGate{
-		{
-			ConditionType: crdMeta.TPodReadinessGate,
-		},
+
+	if tserver.Spec.SubType == crdV1beta2.TARS {
+		return []k8sCoreV1.PodReadinessGate{
+			{
+				ConditionType: crdMeta.TPodReadinessGate,
+			},
+		}
 	}
+	return nil
 }
 
 func buildPodAffinity(tserver *crdV1beta2.TServer) *k8sCoreV1.Affinity {

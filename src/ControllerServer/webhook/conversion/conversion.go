@@ -60,7 +60,7 @@ func extractAPIVersion(in runtime.RawExtension) (*k8sMetaV1.TypeMeta, error) {
 // map[Kind]map[FromGV]map[ToGV]func([]runtime.RawExtension) []runtime.RawExtension
 var conversionFunctions map[string]map[string]map[string]func([]runtime.RawExtension) []runtime.RawExtension
 
-func _cvTServer1a2To1b2(src *crdV1beta1.TServer) (dst *crdV1beta2.TServer) {
+func _cvTServer1b1To1b2(src *crdV1beta1.TServer) (dst *crdV1beta2.TServer) {
 	dst = &crdV1beta2.TServer{
 		TypeMeta: k8sMetaV1.TypeMeta{
 			APIVersion: "k8s.tars.io/v1beta2",
@@ -76,11 +76,11 @@ func _cvTServer1a2To1b2(src *crdV1beta1.TServer) (dst *crdV1beta2.TServer) {
 
 	var conversionAnnotation string
 	if src.ObjectMeta.Annotations != nil {
-		conversionAnnotation, _ = src.ObjectMeta.Annotations[crdMeta.TConversionAnnotationPrefix+"."+"1a21b2"]
+		conversionAnnotation, _ = src.ObjectMeta.Annotations[crdMeta.TConversionAnnotationPrefix+"."+"1b11b2"]
 	}
 
 	if conversionAnnotation != "" {
-		var diff = crdMeta.TServerConversion1a21b2{}
+		var diff = crdMeta.TServerConversion1b11b2{}
 		err := json.Unmarshal([]byte(conversionAnnotation), &diff)
 		if err == nil {
 			dst.Spec.K8S.UpdateStrategy = diff.Append.UpdateStrategy
@@ -107,18 +107,18 @@ func _cvTServer1a2To1b2(src *crdV1beta1.TServer) (dst *crdV1beta2.TServer) {
 	return dst
 }
 
-func cvTServer1a2To1b2(s []runtime.RawExtension) []runtime.RawExtension {
+func cvTServer1b1To1b2(s []runtime.RawExtension) []runtime.RawExtension {
 	d := make([]runtime.RawExtension, len(s), len(s))
 	for i := range s {
 		var src = &crdV1beta1.TServer{}
 		_ = json.Unmarshal(s[i].Raw, src)
-		dst := _cvTServer1a2To1b2(src)
+		dst := _cvTServer1b1To1b2(src)
 		d[i].Raw, _ = json.Marshal(dst)
 	}
 	return d
 }
 
-func _cvTServer1b2To1a2(src *crdV1beta2.TServer) (dst *crdV1beta1.TServer) {
+func _cvTServer1b2To1b1(src *crdV1beta2.TServer) (dst *crdV1beta1.TServer) {
 	dst = &crdV1beta1.TServer{
 		TypeMeta: k8sMetaV1.TypeMeta{
 			APIVersion: "k8s.tars.io/v1beta1",
@@ -132,8 +132,8 @@ func _cvTServer1b2To1a2(src *crdV1beta2.TServer) (dst *crdV1beta1.TServer) {
 
 	dst.Status = crdV1beta1.TServerStatus(src.Status)
 
-	diff := crdMeta.TServerConversion1a21b2{
-		Append: crdMeta.TServerAppend1a21b2{
+	diff := crdMeta.TServerConversion1b11b2{
+		Append: crdMeta.TServerAppend1b11b2{
 			UpdateStrategy:  src.Spec.K8S.UpdateStrategy,
 			ImagePullPolicy: src.Spec.K8S.ImagePullPolicy,
 			LauncherType:    src.Spec.K8S.LauncherType,
@@ -146,26 +146,26 @@ func _cvTServer1b2To1a2(src *crdV1beta2.TServer) (dst *crdV1beta1.TServer) {
 	dbs, _ := json.Marshal(diff)
 	if dst.Annotations == nil {
 		dst.Annotations = map[string]string{
-			crdMeta.TConversionAnnotationPrefix + "." + "1a21b2": string(dbs),
+			crdMeta.TConversionAnnotationPrefix + "." + "1b11b2": string(dbs),
 		}
 	} else {
-		dst.Annotations[crdMeta.TConversionAnnotationPrefix+"."+"1a21b2"] = string(dbs)
+		dst.Annotations[crdMeta.TConversionAnnotationPrefix+"."+"1b11b2"] = string(dbs)
 	}
 	return dst
 }
 
-func cvTServer1b2To1a2(s []runtime.RawExtension) []runtime.RawExtension {
+func cvTServer1b2To1b1(s []runtime.RawExtension) []runtime.RawExtension {
 	d := make([]runtime.RawExtension, len(s), len(s))
 	for i := range s {
 		var src = &crdV1beta2.TServer{}
 		_ = json.Unmarshal(s[i].Raw, src)
-		dst := _cvTServer1b2To1a2(src)
+		dst := _cvTServer1b2To1b1(src)
 		d[i].Raw, _ = json.Marshal(dst)
 	}
 	return d
 }
 
-func cvTDeploy1a2To1b2(s []runtime.RawExtension) []runtime.RawExtension {
+func cvTDeploy1b1To1b2(s []runtime.RawExtension) []runtime.RawExtension {
 	d := make([]runtime.RawExtension, len(s), len(s))
 
 	for i := range s {
@@ -178,7 +178,7 @@ func cvTDeploy1a2To1b2(s []runtime.RawExtension) []runtime.RawExtension {
 			},
 			Spec: src.Apply,
 		}
-		tserver := _cvTServer1a2To1b2(fakeTserver)
+		tserver := _cvTServer1b1To1b2(fakeTserver)
 		var dst = &crdV1beta2.TDeploy{
 			TypeMeta: k8sMetaV1.TypeMeta{
 				APIVersion: "k8s.tars.io/v1beta2",
@@ -201,7 +201,7 @@ func cvTDeploy1a2To1b2(s []runtime.RawExtension) []runtime.RawExtension {
 	return d
 }
 
-func cvTDeploy1b2To1a2(s []runtime.RawExtension) []runtime.RawExtension {
+func cvTDeploy1b2To1b1(s []runtime.RawExtension) []runtime.RawExtension {
 	d := make([]runtime.RawExtension, len(s), len(s))
 
 	for i := range s {
@@ -214,7 +214,7 @@ func cvTDeploy1b2To1a2(s []runtime.RawExtension) []runtime.RawExtension {
 			},
 			Spec: src.Apply,
 		}
-		tserver := _cvTServer1b2To1a2(fakeTserver)
+		tserver := _cvTServer1b2To1b1(fakeTserver)
 		var dst = &crdV1beta1.TDeploy{
 			TypeMeta: k8sMetaV1.TypeMeta{
 				APIVersion: "k8s.tars.io/v1beta1",
@@ -240,12 +240,12 @@ func cvTDeploy1b2To1a2(s []runtime.RawExtension) []runtime.RawExtension {
 func init() {
 	conversionFunctions = map[string]map[string]map[string]func([]runtime.RawExtension) []runtime.RawExtension{
 		"TServer": {
-			"k8s.tars.io/v1beta1": {"k8s.tars.io/v1beta2": cvTServer1a2To1b2},
-			"k8s.tars.io/v1beta2": {"k8s.tars.io/v1beta1": cvTServer1b2To1a2},
+			"k8s.tars.io/v1beta1": {"k8s.tars.io/v1beta2": cvTServer1b1To1b2},
+			"k8s.tars.io/v1beta2": {"k8s.tars.io/v1beta1": cvTServer1b2To1b1},
 		},
 		"TDeploy": {
-			"k8s.tars.io/v1beta1": {"k8s.tars.io/v1beta2": cvTDeploy1a2To1b2},
-			"k8s.tars.io/v1beta2": {"k8s.tars.io/v1beta1": cvTDeploy1b2To1a2},
+			"k8s.tars.io/v1beta1": {"k8s.tars.io/v1beta2": cvTDeploy1b1To1b2},
+			"k8s.tars.io/v1beta2": {"k8s.tars.io/v1beta1": cvTDeploy1b2To1b1},
 		},
 	}
 }

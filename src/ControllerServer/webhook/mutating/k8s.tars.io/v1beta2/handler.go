@@ -2,12 +2,13 @@ package v1beta2
 
 import (
 	"crypto/sha1"
-	"encoding/json"
 	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"hash/crc32"
 	k8sAdmissionV1 "k8s.io/api/admission/v1"
+	"k8s.io/apimachinery/pkg/api/equality"
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/utils/integer"
 	crdV1beta2 "k8s.tars.io/api/crd/v1beta2"
 	crdMeta "k8s.tars.io/api/meta"
@@ -190,6 +191,15 @@ func mutatingCreateTServer(requestAdmissionView *k8sAdmissionV1.AdmissionReview)
 				OP:    crdMeta.JsonPatchAdd,
 				Path:  "/spec/k8s/readinessGate",
 				Value: crdMeta.TPodReadinessGate,
+			})
+		}
+	}
+
+	if tserver.Spec.Normal != nil {
+		if _, ok := tserver.Labels[crdMeta.TemplateLabel]; ok {
+			jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
+				OP:   crdMeta.JsonPatchRemove,
+				Path: "/metadata/labels/tars.io~1Template",
 			})
 		}
 	}
@@ -536,7 +546,7 @@ func mutatingUpdateTAccount(requestAdmissionView *k8sAdmissionV1.AdmissionReview
 	}
 
 	passwordChanged := false
-	for {
+	for i := 0; i < 1; i++ {
 		if newTAccount.Spec.Authentication.Password != nil {
 			passwordString := *newTAccount.Spec.Authentication.Password
 			ok, _ := regexp.MatchString(PasswordPattern, passwordString)
@@ -562,20 +572,7 @@ func mutatingUpdateTAccount(requestAdmissionView *k8sAdmissionV1.AdmissionReview
 			break
 		}
 
-		if newTAccount.Spec.Authentication.BCryptPassword == nil {
-			passwordChanged = true
-			break
-		}
-
-		if oldTAccount.Spec.Authentication.BCryptPassword == nil {
-			passwordChanged = true
-		}
-
-		oldPassword := []byte(*oldTAccount.Spec.Authentication.BCryptPassword)
-		newPassword := []byte(*newTAccount.Spec.Authentication.BCryptPassword)
-
-		err := bcrypt.CompareHashAndPassword(oldPassword, newPassword)
-		if err != nil {
+		if !equality.Semantic.DeepEqual(oldTAccount.Spec.Authentication.BCryptPassword, newTAccount.Spec.Authentication.BCryptPassword) {
 			passwordChanged = true
 			break
 		}

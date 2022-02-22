@@ -2,11 +2,11 @@ package v1beta2
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"k8s.io/apimachinery/pkg/api/errors"
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/json"
 	utilRuntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	k8sWatchV1 "k8s.io/apimachinery/pkg/watch"

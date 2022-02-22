@@ -54,8 +54,8 @@ func main() {
 
 	callbacks := leaderelection.LeaderCallbacks{
 		OnStartedLeading: func(ctx context.Context) {
-			for _, reconcile := range reconciles {
-				reconcile.Start(stopCh)
+			for _, reconciler := range reconciles {
+				reconciler.Start(stopCh)
 			}
 		},
 		OnStoppedLeading: func() {

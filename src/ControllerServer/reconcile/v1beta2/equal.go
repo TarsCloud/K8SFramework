@@ -655,6 +655,11 @@ func EqualTServerAndDaemonSet(tserver *crdV1beta2.TServer, daemonSet *k8sAppsV1.
 		return false
 	}
 
+	targetReadinessGate := buildPodReadinessGates(tserver)
+	if !equality.Semantic.DeepEqual(targetReadinessGate, daemonsetSpecTemplateSpec.ReadinessGates) {
+		return false
+	}
+
 	targetImagePullSecrets := buildPodImagePullSecrets(tserver)
 	if !equality.Semantic.DeepEqual(targetImagePullSecrets, daemonsetSpecTemplateSpec.ImagePullSecrets) {
 		return false
@@ -752,6 +757,12 @@ func EqualTServerAndStatefulSet(tserver *crdV1beta2.TServer, statefulSet *k8sApp
 		return false
 	}
 
+	/*
+		Because updates to statefulset spec for fields other than 'replicas', 'template', 'updateStrategy' and 'minReadySeconds' are forbidden,
+		We skip compare spec.K8S.PodManagementPolicy with statefulSet.Spec.PodManagementPolicy
+		If you would like to change statefulSet.Spec.PodManagementPolicy, delete the statefulset and wait for the rebuild
+	*/
+
 	targetLabels := map[string]string{
 		crdMeta.TServerAppLabel:  tserver.Spec.App,
 		crdMeta.TServerNameLabel: tserver.Spec.Server,
@@ -807,6 +818,11 @@ func EqualTServerAndStatefulSet(tserver *crdV1beta2.TServer, statefulSet *k8sApp
 
 	targetVolumes := buildPodVolumes(tserver)
 	if !equalVolumes(targetVolumes, statefulSetSpecTemplateSpec.Volumes) {
+		return false
+	}
+
+	targetReadinessGate := buildPodReadinessGates(tserver)
+	if !equality.Semantic.DeepEqual(targetReadinessGate, statefulSetSpecTemplateSpec.ReadinessGates) {
 		return false
 	}
 

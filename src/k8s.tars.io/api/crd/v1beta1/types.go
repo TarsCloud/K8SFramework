@@ -29,7 +29,7 @@ type TServerServant struct {
 	Connection int32  `json:"connection"`
 	Capacity   int32  `json:"capacity"`
 	Timeout    int32  `json:"timeout"`
-	IsTars      bool   `json:"isTars"`
+	IsTars     bool   `json:"isTars"`
 	IsTcp      bool   `json:"isTcp"`
 }
 
@@ -208,7 +208,7 @@ type TServerNormal struct {
 type TServerSubType string
 
 const (
-	TARS    TServerSubType = "tars"
+	TARS   TServerSubType = "tars"
 	Normal TServerSubType = "normal"
 )
 
@@ -217,7 +217,7 @@ type TServerSpec struct {
 	Server    string          `json:"server"`
 	SubType   TServerSubType  `json:"subType"`
 	Important int32           `json:"important"`
-	Tars       *TServerTars     `json:"tars,omitempty"`
+	Tars      *TServerTars    `json:"tars,omitempty"`
 	Normal    *TServerNormal  `json:"normal,omitempty"`
 	K8S       TServerK8S      `json:"k8s"`
 	Release   *TServerRelease `json:"release,omitempty"`
@@ -251,7 +251,7 @@ type TEndpointSpec struct {
 	Server    string          `json:"server"`
 	SubType   TServerSubType  `json:"subType"`
 	Important int32           `json:"important"`
-	Tars       *TServerTars     `json:"tars,omitempty"`
+	Tars      *TServerTars    `json:"tars,omitempty"`
 	Normal    *TServerNormal  `json:"normal,omitempty"`
 	HostPorts []*TK8SHostPort `json:"hostPorts,omitempty"`
 	Release   *TServerRelease `json:"release,omitempty"`

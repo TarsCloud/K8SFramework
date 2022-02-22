@@ -1,10 +1,10 @@
 package v1
 
 import (
-	"encoding/json"
 	"fmt"
 	k8sAdmissionV1 "k8s.io/api/admission/v1"
 	k8sAppsV1 "k8s.io/api/apps/v1"
+	"k8s.io/apimachinery/pkg/util/json"
 	crdMeta "k8s.tars.io/api/meta"
 	"tarscontroller/controller"
 	crdV1beta2 "tarscontroller/reconcile/v1beta2"
