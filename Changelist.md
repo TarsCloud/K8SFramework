@@ -1,3 +1,17 @@
+## v1.2.2 20220225
+
+### en
+
+- TarsWeb update to v2.4.25
+- add unittest
+- fix controller some bug
+
+### cn
+
+- TarsWeb 升级到 v2.4.25, 优化了 k8s 管理
+- 增加了自动测试
+- 修复 controller 的一些 bug
+
 ## v1.2.1 20220218
 
 ### en
