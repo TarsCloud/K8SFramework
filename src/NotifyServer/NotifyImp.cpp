@@ -52,3 +52,21 @@ void NotifyImp::notifyServer(const string& sServerName, NOTIFYLEVEL level, const
 	notifyRecord.source = "program";
 	NotifyMsgQueue::getInstance()->add(notifyRecord);
 }
+
+void NotifyImp::reportNotifyInfo(const tars::ReportInfo& info, tars::TarsCurrentPtr current)
+{
+	// std::string sPodName = current->getIp();
+
+	LOG->debug() << "reportNotifyInfo|" << info.sApp << "|" << info.sServer << "|" << info.sNodeName << "|" << info.sMessage << endl;
+
+	NotifyRecord notifyRecord;
+	notifyRecord.app = info.sApp;
+	notifyRecord.server = info.sServer;
+	notifyRecord.podName = info.sNodeName;
+	notifyRecord.impThread = info.sThreadId;
+	notifyRecord.level = etos(info.eLevel);
+	notifyRecord.message = info.sMessage;
+	notifyRecord.notifyTime = TNOW;
+	// notifyRecord.source = info.source;
+	NotifyMsgQueue::getInstance()->add(notifyRecord);
+}

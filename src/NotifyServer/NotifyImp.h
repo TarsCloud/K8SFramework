@@ -55,9 +55,7 @@ public:
 	 *reportNotifyInfo
 	 *@param info
 	 */
-	void reportNotifyInfo(const tars::ReportInfo& info, tars::TarsCurrentPtr current) override
-	{
-	}
+	void reportNotifyInfo(const tars::ReportInfo& info, tars::TarsCurrentPtr current) override;
 };
 
 #endif
