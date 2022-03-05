@@ -1,3 +1,15 @@
+## v1.2.3 20220305
+
+### en
+
+- TarsWeb update to v2.4.26
+- tarsnotify add reportNotifyInfo
+
+### cn
+
+- TarsWeb 升级到 v2.4.26, 优化了 web 各种体验
+- tarsnotify 添加了 reportNotifyInfo 接口
+
 ## v1.2.2 20220225
 
 ### en
