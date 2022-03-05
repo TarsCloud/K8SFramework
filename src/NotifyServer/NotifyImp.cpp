@@ -67,6 +67,6 @@ void NotifyImp::reportNotifyInfo(const tars::ReportInfo& info, tars::TarsCurrent
 	notifyRecord.level = etos(info.eLevel);
 	notifyRecord.message = info.sMessage;
 	notifyRecord.notifyTime = TNOW;
-	notifyRecord.source = info.source;
+	notifyRecord.source = "server";
 	NotifyMsgQueue::getInstance()->add(notifyRecord);
 }
