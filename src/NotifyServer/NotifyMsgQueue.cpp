@@ -30,7 +30,7 @@ void NotifyMsgQueue::init(const TC_Config& config)
 	if (_index.empty())
 	{
 		auto message = std::string("get empty index value");
-		TLOGERROR(message << std::endl);
+		TLOG_ERROR(message << std::endl);
 		throw std::runtime_error(message);
 	}
 
@@ -70,7 +70,7 @@ void NotifyMsgQueue::run()
 			_qMsg.pop_front(data, -1);
 			if (!checkLimit(data.app + "." + data.server))
 			{
-				TLOGERROR("limit fail|" << data.app << "." << data.server << "|" << data.podName << "|" << data.level << "|" << data.message
+				TLOG_ERROR("limit fail|" << data.app << "." << data.server << "|" << data.podName << "|" << data.level << "|" << data.message
 										<< endl);
 				continue;
 			}
@@ -95,12 +95,12 @@ void NotifyMsgQueue::writeToES(const vector<NotifyRecord>& data)
 
 void FreqLimit::initLimit(const TC_Config& conf)
 {
-	string limitConf = conf.get("/tars/server<notify_limit>", "300:5");
+	string limitConf = conf.get("/tars/server<notify_limit>", "300:10");
 	vector<int> vi = TC_Common::sepstr<int>(limitConf, ":,|");
 	if (vi.size() != 2)
 	{
 		_interval = 300;
-		_count = 5;
+		_count = 10;
 	}
 	else
 	{

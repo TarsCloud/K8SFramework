@@ -39,7 +39,7 @@ void NotifyImp::reportServer(const string& sServerName, const string& sThreadId,
 
 void NotifyImp::notifyServer(const string& sServerName, NOTIFYLEVEL level, const string& sMessage, tars::TarsCurrentPtr current)
 {
-	std::string sPodName = current->getIp();
+	std::string sPodName = current->getHostName();
 	vector<string> v = TC_Common::sepstr<string>(sServerName, ".");
 	NotifyRecord notifyRecord;
 	notifyRecord.app = v[0];
@@ -55,7 +55,7 @@ void NotifyImp::notifyServer(const string& sServerName, NOTIFYLEVEL level, const
 
 void NotifyImp::reportNotifyInfo(const tars::ReportInfo& info, tars::TarsCurrentPtr current)
 {
-	std::string sPodName = current->getIp();
+	std::string sPodName = current->getHostName();
 
 	LOG->debug() << "reportNotifyInfo|" << info.sApp << "|" << info.sServer << "|" << info.sNodeName << "|" << info.sMessage << endl;
 
