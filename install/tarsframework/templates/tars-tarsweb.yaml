@@ -136,19 +136,16 @@ spec:
     image: "{{.Values.helm.dockerhub.registry }}/tars.tarsweb:{{.Values.helm.build.id}}"
 
 ---
+
 {{- $apiIsStable := eq (include "tars.ingress.isStable" .) "true" }}
 {{- $ingressSupportsPathType := eq (include "tars.ingress.supportsPathType" .) "true" }}
-{{- $ingressClass := index .Values "ingress-nginx" "controller" "ingressClass" }}
-{{- $ingress := lookup .tars.ingress.isStable  "Ingress" .Release.Namespace "tars-web" -}}
+{{- $ingress := lookup (include "tars.ingress.apiVersion" .)  "Ingress" .Release.Namespace "tars-web" -}}
 {{- if not $ingress -}}
-kind: Ingress
 apiVersion: {{ include "tars.ingress.apiVersion" . }}
+kind: Ingress
 metadata:
   name: tars-web
   annotations:
-    {{- if $ingressClass }}
-    kubernetes.io/ingress.class: {{ $ingressClass }}
-    {{- end }}
     nginx.ingress.kubernetes.io/proxy-body-size: "0"
     nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "1200"
@@ -175,3 +172,4 @@ spec:
 {{- else}}
   {{ $ingress | toYaml }}
 {{- end }}
+
