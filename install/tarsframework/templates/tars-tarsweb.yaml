@@ -139,7 +139,7 @@ spec:
 {{- $apiIsStable := eq (include "tars.ingress.isStable" .) "true" }}
 {{- $ingressSupportsPathType := eq (include "tars.ingress.supportsPathType" .) "true" }}
 {{- $ingressClass := index .Values "ingress-nginx" "controller" "ingressClass" }}
-{{- $ingress := lookup "networking.k8s.io/v1beta1"  "Ingress" .Release.Namespace "tars-web" -}}
+{{- $ingress := lookup .tars.ingress.isStable  "Ingress" .Release.Namespace "tars-web" -}}
 {{- if not $ingress -}}
 kind: Ingress
 apiVersion: {{ include "tars.ingress.apiVersion" . }}
