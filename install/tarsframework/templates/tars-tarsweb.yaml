@@ -136,10 +136,13 @@ spec:
     image: "{{.Values.helm.dockerhub.registry }}/tars.tarsweb:{{.Values.helm.build.id}}"
 
 ---
-{{ $ingress := lookup "networking.k8s.io/v1beta1"  "Ingress" .Release.Namespace "tars-web" -}}
+
+{{- $apiIsStable := eq (include "tars.ingress.isStable" .) "true" }}
+{{- $ingressSupportsPathType := eq (include "tars.ingress.supportsPathType" .) "true" }}
+{{- $ingress := lookup (include "tars.ingress.apiVersion" .)  "Ingress" .Release.Namespace "tars-web" -}}
 {{- if not $ingress -}}
+apiVersion: {{ include "tars.ingress.apiVersion" . }}
 kind: Ingress
-apiVersion: networking.k8s.io/v1beta1
 metadata:
   name: tars-web
   annotations:
@@ -152,9 +155,21 @@ spec:
     - host: {{.Values.web}}
       http:
         paths:
-          - backend:
+          - path: /
+            {{- if $ingressSupportsPathType }}
+            pathType: Prefix
+            {{- end }}
+            backend:
+              {{- if $apiIsStable }}
+              service:
+                name: tars-tarsweb
+                port:
+                  number: 3000
+              {{- else }}
               serviceName: tars-tarsweb
               servicePort: 3000
+              {{- end }}
 {{- else}}
   {{ $ingress | toYaml }}
 {{- end }}
+
