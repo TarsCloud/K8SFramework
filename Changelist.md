@@ -1,3 +1,17 @@
+## v1.2.4 20220321
+
+### en
+
+- Update: tarscpp(v3.0.5) & tarsweb(v2.4.27)
+- Add: ingress adapter all k8s version
+- Fix: tarsnotify podName is empty
+
+### cn
+
+- Update: tarscpp(v3.0.5) & tarsweb(v2.4.27)
+- 添加: ingress 适配了所有版本
+- 修复: tarsnotify 修复 podName 是空的问题
+
 ## v1.2.3 20220305
 
 ### en
