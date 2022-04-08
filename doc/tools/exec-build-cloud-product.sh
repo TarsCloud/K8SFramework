@@ -32,13 +32,19 @@ fi
 NODEJS_SHELL="/root/yaml-tools/index"
 NODEJS_SHELL="/Volumes/MyData/centos/K8SFramework/doc/tools/yaml-tools/index"
 
-GROUP="`node $NODEJS_SHELL -f $VALUES -g product.group`"
-LOGO="`node $NODEJS_SHELL -f $VALUES -n -g product.logo`"
-CHANGELIST="`node $NODEJS_SHELL -f $VALUES -n -g product.changelist`"
-README="`node $NODEJS_SHELL -f $VALUES -n -g product.readme`"
-README_CN="`node $NODEJS_SHELL -f $VALUES -n -g product.readme_cn`"
-ASSETS="`node $NODEJS_SHELL -f $VALUES -n -g product.assets`"
-SERVERS="`node $NODEJS_SHELL -f $VALUES -n -g product.servers`"
+GROUP="`node $NODEJS_SHELL -f $VALUES -g cloud.group`"
+LOGO="`node $NODEJS_SHELL -f $VALUES -n -g cloud.logo`"
+CHANGELIST="`node $NODEJS_SHELL -f $VALUES -n -g cloud.changelist`"
+README="`node $NODEJS_SHELL -f $VALUES -n -g cloud.readme`"
+README_CN="`node $NODEJS_SHELL -f $VALUES -n -g cloud.readme_cn`"
+ASSETS="`node $NODEJS_SHELL -f $VALUES -n -g cloud.assets`"
+SERVERS="`node $NODEJS_SHELL -f $VALUES -n -g cloud.servers`"
+TYPE="`node $NODEJS_SHELL -f $VALUES -n -g cloud.type`"
+
+if [ "$TYPE" != "product" ] ; then
+    echo "type must be product, exit."
+    exit -1
+fi
 
 if [ -z $GROUP ]; then
     echo "group in ${VALUES} must not be empty"
@@ -58,9 +64,9 @@ fi
 IMAGE="docker.tarsyun.com/${GROUP}/${GROUP}:${TAG}"
 
 # update values image
-node $NODEJS_SHELL -f $VALUES -s product.image -v $IMAGE -u
-node $NODEJS_SHELL -f $VALUES -s product.version -v $TAG -u
-node $NODEJS_SHELL -f $VALUES -s product.group -v $GROUP -u
+node $NODEJS_SHELL -f $VALUES -s cloud.image -v $IMAGE -u
+node $NODEJS_SHELL -f $VALUES -s cloud.version -v $TAG -u
+node $NODEJS_SHELL -f $VALUES -s cloud.group -v $GROUP -u
 
 echo "---------------------Environment---------------------------------"
 echo "VALUES:               "$VALUES
