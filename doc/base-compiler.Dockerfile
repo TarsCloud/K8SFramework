@@ -126,6 +126,7 @@ COPY tools/Dockerfile /root/Dockerfile
 
 COPY tools/exec-build.sh /usr/bin/
 COPY tools/exec-build-cloud.sh /usr/bin/
+COPY tools/exec-build-cloud-product.sh /usr/bin/
 COPY tools/exec-deploy.sh /usr/bin/
 COPY tools/exec-helm.sh /usr/bin/
 
