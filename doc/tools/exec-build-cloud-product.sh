@@ -33,6 +33,7 @@ NODEJS_SHELL="/root/yaml-tools/index"
 # NODEJS_SHELL="/Volumes/MyData/centos/K8SFramework/doc/tools/yaml-tools/index"
 
 GROUP="`node $NODEJS_SHELL -f $VALUES -g cloud.group`"
+NAME="`node $NODEJS_SHELL -f $VALUES -g cloud.name`"
 LOGO="`node $NODEJS_SHELL -f $VALUES -n -g cloud.logo`"
 CHANGELIST="`node $NODEJS_SHELL -f $VALUES -n -g cloud.changelist`"
 README="`node $NODEJS_SHELL -f $VALUES -n -g cloud.readme`"
@@ -51,6 +52,11 @@ if [ -z $GROUP ]; then
     exit -1
 fi
 
+if [ -z $NAME ]; then
+    echo "name in ${VALUES} must not be empty"
+    exit -1
+fi
+
 if [ -z $LOGO ]; then
     echo "logo in ${VALUES} must not be empty"
     exit -1
@@ -61,7 +67,7 @@ if [ ! -f $LOGO ] ; then
     exit -1
 fi
 
-IMAGE="docker.tarsyun.com/${GROUP}/${GROUP}:${TAG}"
+IMAGE="docker.tarsyun.com/${GROUP}/${NAME}:${TAG}"
 
 # update values image
 node $NODEJS_SHELL -f $VALUES -s cloud.image -v $IMAGE -u
@@ -72,6 +78,7 @@ echo "---------------------Environment---------------------------------"
 echo "VALUES:               "$VALUES
 echo "TAG:                  "$TAG
 echo "GROUP:                "$GROUP
+echo "NAME:                 "$NAME
 echo "LOGO:                 "$LOGO
 echo "IMAGE:                "$IMAGE
 echo "SERVERS:              "$SERVERS
