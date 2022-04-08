@@ -30,7 +30,7 @@ if [ -z $TAG ]; then
 fi
 
 NODEJS_SHELL="/root/yaml-tools/index"
-NODEJS_SHELL="/Volumes/MyData/centos/K8SFramework/doc/tools/yaml-tools/index"
+# NODEJS_SHELL="/Volumes/MyData/centos/K8SFramework/doc/tools/yaml-tools/index"
 
 GROUP="`node $NODEJS_SHELL -f $VALUES -g cloud.group`"
 LOGO="`node $NODEJS_SHELL -f $VALUES -n -g cloud.logo`"
