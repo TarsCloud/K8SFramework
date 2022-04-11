@@ -187,10 +187,6 @@ func validTServer(newTServer, oldTServer *crdV1beta2.TServer, clients *controlle
 			portName := strings.ToLower(servant.Name)
 			portValue := servant.Port
 
-			if portName == crdMeta.NodeServantName {
-				return fmt.Errorf(crdMeta.ResourceInvalidError, "tserver", fmt.Sprintf("servants name value should not equal %s", crdMeta.NodeServantName))
-			}
-
 			if portValue == crdMeta.NodeServantPort {
 				return fmt.Errorf(crdMeta.ResourceInvalidError, "tserver", fmt.Sprintf("servants port value should not equal %d", crdMeta.NodeServantPort))
 			}
@@ -210,10 +206,6 @@ func validTServer(newTServer, oldTServer *crdV1beta2.TServer, clients *controlle
 		for _, port := range newTServer.Spec.Tars.Ports {
 			portName := strings.ToLower(port.Name)
 			portValue := port.Port
-
-			if portName == crdMeta.NodeServantName {
-				return fmt.Errorf(crdMeta.ResourceInvalidError, "tserver", fmt.Sprintf("port name value should not equal %s", crdMeta.NodeServantName))
-			}
 
 			if portValue == crdMeta.NodeServantPort {
 				return fmt.Errorf(crdMeta.ResourceInvalidError, "tserver", fmt.Sprintf("port value should not equal %d", crdMeta.NodeServantPort))
