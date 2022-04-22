@@ -23,6 +23,9 @@ spec:
         <index>
           notify= {{.Release.Namespace}}_notify_
           kevent = {{.Release.Namespace}}_kevent_
+          test_inf = {{.Release.Namespace}}_test_inf
+          test_case = {{.Release.Namespace}}_test_case
+          bm_case =  {{.Release.Namespace}}_bm_case
         </index>
         <indexpre>
           stat = {{.Release.Namespace}}_stat_
