@@ -1,3 +1,37 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tars-tarsnotify
+  namespace: {{.Release.Namespace}}
+---
+
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: tars-tarsnotify
+  namespace: {{.Release.Namespace}}
+rules:
+  - apiGroups: [ "" ]
+    resources: [ pods ]
+    verbs: [ get ,list, watch ]
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tars-tarsnotify
+  namespace: {{.Release.Namespace}}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: tars-tarsnotify
+subjects:
+  - kind: ServiceAccount
+    name: tars-tarsnotify
+    namespace: {{.Release.Namespace}}
+---
+
+
 apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
 kind: TImage
 metadata:
@@ -43,6 +77,7 @@ spec:
       - name: NotifyObj
         port: 13111
   k8s:
+    serviceAccount: tars-tarsnotify
     replicas: 1
     env:
       - name: Namespace
