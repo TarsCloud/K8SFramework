@@ -45,11 +45,43 @@ while(false)                                             \
 
 static void findObjectById_(const std::string& id, vector<EndpointF>& activeEp, vector<EndpointF>* inactiveEp)
 {
+	constexpr int FixedTimeout = 6000;
+
+	constexpr char FixedRegistryServerHost[] = "tars-tarsregistry";
+
+	constexpr char FixedQueryAdapterName[] = "tars.tarsregistry.QueryObj";
+	constexpr int FixedQueryAdapterPort = 17890;
+
+	constexpr char FixedRegistryAdapterName[] = "tars.tarsregistry.RegistryObj";
+	constexpr int FixedRegistryAdapterPort = 17891;
+
     std::vector<std::string> v = TC_Common::sepstr<string>(id, ".");
     if (v.size() != 3)
     {
         return;
     }
+
+	if (id == FixedQueryAdapterName)
+	{
+		EndpointF endpointF{};
+		endpointF.host = FixedRegistryServerHost;
+		endpointF.port = FixedQueryAdapterPort;
+		endpointF.istcp = true;
+		endpointF.timeout = FixedTimeout;
+		activeEp.push_back(endpointF);
+		return;
+	}
+
+	if (id == FixedRegistryAdapterName)
+	{
+		EndpointF endpointF{};
+		endpointF.host = FixedRegistryServerHost;
+		endpointF.port = FixedRegistryAdapterPort;
+		endpointF.istcp = true;
+		endpointF.timeout = FixedTimeout;
+		activeEp.push_back(endpointF);
+		return;
+	}
 
     bool serviceExistInCluster = false;
 /*
