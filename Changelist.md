@@ -1,3 +1,21 @@
+## v1.2.5 20220425
+
+### en
+
+- Update: tarscpp(v3.0.6) & tarsweb(v3.0.0)
+- Add: Complete the support of cloud application market and add CRD: tframeworkkey yaml
+- Add: replace ip in notify with domain
+- Add: servantName can now be equal to "nodeobj"
+- Add: add exec-build-cloud.sh to support cloud market
+
+### cn
+
+- Update: tarscpp(v3.0.6) & tarsweb(v3.0.0)
+- 添加: 完成云应用市场的支持, 增加了 CRD: TFrameworkKey.yaml
+- 添加: tarnotify 中替换 ip 为域名
+- 添加: 业务服务的 obj 可以等于"nodeobj"
+- 添加: 增加了 exec-build-cloud.sh 脚本以支持市场服务的打包
+
 ## v1.2.4 20220321
 
 ### en
