@@ -89,11 +89,7 @@ ENV LANG en_US.utf8
 RUN go env -w GO111MODULE=off
 
 RUN go get github.com/TarsCloud/TarsGo/tars \
-    && cd $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go \
-    && go build .  \
-    && mkdir -p /usr/local/go/bin \
-    && chmod a+x $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go/tars2go \
-    && ln -s $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go/tars2go /usr/local/go/bin/tars2go 
+    && go get github.com/TarsCloud/TarsGo/tars/tools/tars2go
 
 RUN cd /root                                                                           \
     && git clone https://github.com/TarsCloud/TarsCpp.git --recursive                  \
