@@ -85,13 +85,10 @@ RUN apt update                                                                  
 
 RUN locale-gen en_US.utf8
 ENV LANG en_US.utf8
-RUN go env -w GO111MODULE=off
-
 RUN go get github.com/TarsCloud/TarsGo/tars \
-    && go get github.com/TarsCloud/TarsGo/tars/tools/tars2go
+    && go install github.com/TarsCloud/TarsGo/tars/tools/tars2go@latest
 
-# RUN apt update && apt install -y                                                       \
-#     g++ make cmake flex bison git ca-certificates curl wget libssl-dev zlib1g-dev
+RUN go env -w GO111MODULE=on
 
 RUN cd /root                                                                           \
     && git clone https://github.com/TarsCloud/TarsCpp.git --recursive                  \

@@ -1,20 +1,6 @@
 # docker build . -f base-compiler.Dockerfile -t tarscloud/base-compiler:master --build-arg BRANCH=master
-# FROM debian:bullseye AS itars
-# RUN apt update && apt install -y                                                       \
-#     g++ make cmake flex bison git ca-certificates curl wget libssl-dev zlib1g-dev
-
-# RUN cd /root                                                                           \
-#     && git clone https://github.com/TarsCloud/TarsCpp.git --recursive                  \
-#     && cd /root/TarsCpp                                                                \
-#     && git checkout $BRANCH && git submodule update --remote --recursive               \
-#     && mkdir -p build                                                                  \
-#     && cd build                                                                        \
-#     && cmake ..                                                                        \
-#     && make -j4                                                                        \
-#     && make install
 
 FROM golang:1.17-bullseye AS igolang
-# RUN apt update && apt install git -y
 
 FROM php:7.4.26-apache-bullseye AS iphp
 
@@ -58,7 +44,6 @@ RUN cp -rf $(command -v  kubectl) /tmp/kubectl
 FROM php:7.4.26-apache-bullseye
 ENV DEBIAN_FRONTEND=noninteractive
 
-# COPY --from=itars /usr/local /usr/local
 COPY --from=igolang /usr/local /usr/local
 COPY --from=igolang /go /go
 COPY --from=iphp /usr/local /usr/local
@@ -86,10 +71,11 @@ RUN apt update                                                                  
 
 RUN locale-gen en_US.utf8
 ENV LANG en_US.utf8
-RUN go env -w GO111MODULE=off
 
 RUN go get github.com/TarsCloud/TarsGo/tars \
-    && go get github.com/TarsCloud/TarsGo/tars/tools/tars2go
+    && go install github.com/TarsCloud/TarsGo/tars/tools/tars2go@latest
+
+RUN go env -w GO111MODULE=on
 
 RUN cd /root                                                                           \
     && git clone https://github.com/TarsCloud/TarsCpp.git --recursive                  \
