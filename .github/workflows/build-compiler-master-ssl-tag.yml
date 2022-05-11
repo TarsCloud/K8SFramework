@@ -1,4 +1,4 @@
-name: build-base-compiler-master-tag
+name: build-base-compiler-master-ssl-tag
 
 on:
   push:
@@ -17,8 +17,9 @@ jobs:
       - uses: actions/checkout@v1
       - name: login docker hub
         run: docker login -u ${{ secrets.name }} -p ${{ secrets.pass }}
-      - name: Build docker
-        run: cd doc && docker build . -f base-compiler.Dockerfile -t tarscloud/base-compiler:${{ steps.get_version.outputs.VERSION }} --build-arg BRANCH=master
-      - name: push master docker
-        run: docker push tarscloud/base-compiler:${{ steps.get_version.outputs.VERSION }}
+      - name: Build ssl docker
+        run: cd doc && docker build . -f base-compiler-ssl.Dockerfile -t tarscloud/base-compiler-ssl:${{ steps.get_version.outputs.VERSION }} --build-arg BRANCH=master
+      - name: push master ssl docker
+        run: docker push tarscloud/base-compiler-ssl:${{ steps.get_version.outputs.VERSION }}
+
 
