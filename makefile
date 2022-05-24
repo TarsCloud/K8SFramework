@@ -44,7 +44,7 @@ endef
 define func_push_image
 	$(call func_check_params, REGISTRY_URL BUILD_VERSION)
 	$(if $(REGISTRY_USER), @($(ENV_DOCKER) login -u $(REGISTRY_USER) -p $(REGISTRY_PASSWORD) $(REGISTRY_URL)))
-	$(ENV_DOCKER) push $(REGISTRY_URL)/$1:$(BUILD_VERSION)
+	$(ENV_DOCKER) push $(REGISTRY_URL:docker.io/%=%)/$1:$(BUILD_VERSION)
 endef
 
 ### compiler : build and push compiler image to registry
