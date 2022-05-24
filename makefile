@@ -36,8 +36,8 @@ define func_build_image
 	$(if $(findstring $1,tars.tarsweb),\
 		$(call func_check_params, TARS_WEB_DIR) \
 		mkdir -p $(TARS_WEB_DIR) && rm -rf $3/root/root/tars-web && cp -r $(PWD)/$(TARS_WEB_DIR) $3/root/root/tars-web && git submodule update --init --recursive \
-		&& $(ENV_DOCKER) build -t $(REGISTRY_URL)/$1:$(BUILD_VERSION) -f $2 $3,\
-		$(ENV_DOCKER) build -t $(REGISTRY_URL)/$1:$(BUILD_VERSION) -f $2 --build-arg REGISTRY_URL=$(REGISTRY_URL) --build-arg BUILD_VERSION=$(BUILD_VERSION) $3 \
+		&& $(ENV_DOCKER) build -t $(REGISTRY_URL:docker.io/%=%)/$1:$(BUILD_VERSION) -f $2 $3,\
+		$(ENV_DOCKER) build -t $(REGISTRY_URL:docker.io/%=%)/$1:$(BUILD_VERSION) -f $2 --build-arg REGISTRY_URL=$(REGISTRY_URL:docker.io/%=%) --build-arg BUILD_VERSION=$(BUILD_VERSION) $3 \
 	)
 endef
 
