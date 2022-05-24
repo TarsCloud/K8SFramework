@@ -1,0 +1,38 @@
+name: k8s-framework-build
+
+on: 
+  push:
+    branches: 
+      - master
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-20.04 
+    env:
+      REGISTRY_URL: tarscloud
+      REGISTRY_USER: ${{ secrets.name }} 
+      REGISTRY_PASSWORD: ${{ secrets.pass }}
+      BUILD_VERSION: latest
+
+    steps:
+    - name: env
+      run: env
+    - uses: actions/checkout@v1
+    - name: Check out the repo
+      uses: actions/checkout@v3
+
+    - name: Build Compiler Images
+      run: make compiler
+
+    - name: Build And Push Base Images To Registry
+      run: make base
+
+    - name: Build And Push Controller Images To Registry
+      run: make controller
+
+    - name: Build And Push Framework Images To Registry
+      run: make framework
+
+

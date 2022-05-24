@@ -1,0 +1,35 @@
+name: build-tag
+
+on:
+  push:
+    tags:
+      - v*
+jobs:
+  build:
+    runs-on: ubuntu-20.04 
+
+    env:
+      REGISTRY_URL: tarscloud
+      REGISTRY_USER: ${{ secrets.name }} 
+      REGISTRY_PASSWORD: ${{ secrets.pass }}
+
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v3
+
+      - name: Get version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+
+      - name: Build Compiler Images
+        run: make compiler BUILD_VERSION=${{ steps.get_version.outputs.VERSION }}
+
+      - name: Build And Push Base Images To Registry
+        run: make base BUILD_VERSION=${{ steps.get_version.outputs.VERSION }}
+
+      - name: Build And Push Controller Images To Registry
+        run: make controller BUILD_VERSION=${{ steps.get_version.outputs.VERSION }}
+
+      - name: Build And Push Framework Images To Registry
+        run: make framework BUILD_VERSION=${{ steps.get_version.outputs.VERSION }}
+
