@@ -6,11 +6,11 @@ _REGISTRY_URL_=""
 _REGISTRY_USER_=""
 _REGISTRY_PASSWORD_=""
 
-_CHART_VERSION_=1.4.0-dev
+_CHART_VERSION_=1.3.0-master
 _CHART_APPVERSION_=v1beta3
 _CHART_DST_=charts
 
-_BUILD_VERSION_=1.4.0-dev
+_BUILD_VERSION_=1.3.0-master
 
 #########################################################################################################################
 ### Please Do Not Edit This Block Unless You Know What You Are Doing ###
