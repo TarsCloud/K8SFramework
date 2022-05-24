@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
+	"hash/crc32"
 	"io"
+	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/rand"
 	utilRuntime "k8s.io/apimachinery/pkg/util/runtime"
-	"math/rand"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -26,15 +28,17 @@ type RestfulResponse struct {
 	Status  int          `json:"status"`
 	Message string       `json:"message"`
 	Result  *BuildResult `json:"result,omitempty"`
+	Handler string       `json:"handler,omitempty"`
 }
 
-func Handler(writer http.ResponseWriter, r *http.Request) {
+func Handler(engine *Engine, writer http.ResponseWriter, r *http.Request) {
 
 	writer.Header().Add("Content-Type", "application/json")
 
 	wait := r.URL.Query().Get("wait")
 
 	response := &RestfulResponse{
+		Handler: glPodName,
 		Status:  http.StatusInternalServerError,
 		Message: http.StatusText(http.StatusInternalServerError),
 		Result:  nil,
@@ -42,7 +46,6 @@ func Handler(writer http.ResponseWriter, r *http.Request) {
 
 	var err error
 	for true {
-
 		vars := mux.Vars(r)
 
 		if len(vars) == 0 {
@@ -69,20 +72,6 @@ func Handler(writer http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		app := r.FormValue(ServerAppFormKey)
-		name := r.FormValue(ServerNameFormKey)
-		secret := r.FormValue(ServerSecretFormKey)
-		serverType := r.FormValue(ServerTypeFormKey)
-		serverTag := r.FormValue(ServerTagFormKey)
-
-		basImage := r.FormValue(BaseImageFormKey)
-		basImageSecret := r.FormValue(BaseImageSecretFormKey)
-
-		person := r.FormValue(CreatePersonFormKey)
-		mark := r.FormValue(MarkFormKey)
-
-		//fixme  should valid values from client;
-
 		var multipartServerFile multipart.File
 		var multipartFileHandler *multipart.FileHeader
 		if multipartServerFile, multipartFileHandler, err = r.FormFile(ServerFileFormKey); err != nil {
@@ -93,14 +82,39 @@ func Handler(writer http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		idString := fmt.Sprintf("v%s-%x", time.Now().Format("20060102030405"), rand.Intn(0xefffff)+0x100000)
+		task := &Task{
+			id:         fmt.Sprintf("v%s-%x-%x", time.Now().Format("20060102030405"), crc32.ChecksumIEEE([]byte(glPodName)), rand.Intn(0xefff)+0x1000),
+			createTime: k8sMetaV1.Now(),
+			handler:    glPodName,
+			userParams: TaskUserParams{
+				Timage:          timageName,
+				ServerApp:       r.FormValue(ServerAppFormKey),
+				ServerName:      r.FormValue(ServerNameFormKey),
+				ServerType:      r.FormValue(ServerTypeFormKey),
+				ServerTag:       r.FormValue(ServerTagFormKey),
+				ServerFile:      "",
+				Secret:          r.FormValue(ServerSecretFormKey),
+				BaseImage:       r.FormValue(BaseImageFormKey),
+				BaseImageSecret: r.FormValue(BaseImageSecretFormKey),
+				CreatePerson:    r.FormValue(CreatePersonFormKey),
+				Mark:            r.FormValue(MarkFormKey),
+			},
+		}
+
+		//if ok, err = validateUserParams(task.userParams); !ok {
+		//	err = fmt.Errorf("invalid fields format %s", err.Error())
+		//	response.Status = http.StatusBadRequest
+		//	response.Message = err.Error()
+		//	utilRuntime.HandleError(err)
+		//	break
+		//}
 
 		var serverFile string
 		multipartFileName := multipartFileHandler.Filename
 		if strings.HasSuffix(multipartFileName, ".tar.gz") || strings.HasSuffix(multipartFileName, ".tgz") {
-			serverFile = fmt.Sprintf("%s/%s.%s-%s%s", AbsoluteServerFileSaveDir, app, name, idString, ".tgz")
+			serverFile = fmt.Sprintf("%s/%s.%s-%s%s", glPodUploadDir, task.userParams.ServerApp, task.userParams.ServerName, task.id, ".tgz")
 		} else if strings.HasSuffix(multipartFileName, ".war") || strings.HasSuffix(multipartFileName, ".jar") {
-			serverFile = fmt.Sprintf("%s/%s.%s-%s%s", AbsoluteServerFileSaveDir, app, name, idString, filepath.Ext(multipartFileName))
+			serverFile = fmt.Sprintf("%s/%s.%s-%s%s", glPodUploadDir, task.userParams.ServerApp, task.userParams.ServerName, task.id, filepath.Ext(multipartFileName))
 		} else {
 			err = fmt.Errorf("unsupported server file type %s", serverFile)
 			response.Status = http.StatusBadRequest
@@ -108,6 +122,7 @@ func Handler(writer http.ResponseWriter, r *http.Request) {
 			utilRuntime.HandleError(err)
 			break
 		}
+		task.userParams.ServerFile = serverFile
 
 		f, _ := os.OpenFile(serverFile, os.O_CREATE|os.O_WRONLY, 0666)
 		if _, err = io.Copy(f, multipartServerFile); err != nil {
@@ -119,10 +134,15 @@ func Handler(writer http.ResponseWriter, r *http.Request) {
 			break
 		}
 
+		go func() {
+			time.Sleep(AutoDeleteServerFileDuration)
+			_ = os.Remove(serverFile)
+		}()
+
 		var image string
 
 		if wait != "1" && wait != "true" {
-			if image, err = builder.PostTask(idString, timageName, app, name, serverType, serverTag, serverFile, basImage, basImageSecret, secret, person, mark); err != nil {
+			if image, err = engine.PostTask(task); err != nil {
 				response.Status = http.StatusInternalServerError
 				response.Message = err.Error()
 				break
@@ -130,23 +150,23 @@ func Handler(writer http.ResponseWriter, r *http.Request) {
 			response.Status = http.StatusCreated
 			response.Message = http.StatusText(http.StatusCreated)
 			response.Result = &BuildResult{
-				ID:     idString,
+				ID:     task.id,
 				Image:  image,
-				Secret: secret,
+				Secret: task.userParams.Secret,
 				Source: timageName,
 			}
 			break
 		}
 
-		waitChan := make(chan error, 1)
-		if image, err = builder.PostTask(idString, timageName, app, name, serverType, serverTag, serverFile, basImage, basImageSecret, secret, person, mark, withWaitChan(waitChan)); err != nil {
+		task.waitChan = make(chan error, 1)
+		if image, err = engine.PostTask(task); err != nil {
 			response.Status = http.StatusInternalServerError
 			response.Message = err.Error()
 			break
 		}
 
 		select {
-		case err = <-waitChan:
+		case err = <-task.waitChan:
 			if err != nil {
 				response.Status = http.StatusInternalServerError
 				response.Message = err.Error()
@@ -155,13 +175,14 @@ func Handler(writer http.ResponseWriter, r *http.Request) {
 			response.Status = http.StatusOK
 			response.Message = http.StatusText(http.StatusOK)
 			response.Result = &BuildResult{
-				ID:     idString,
+				ID:     task.id,
 				Image:  image,
-				Secret: secret,
+				Secret: task.userParams.Secret,
 				Source: timageName,
 			}
 			break
 		}
+
 		break
 	}
 	bs, _ := json.Marshal(response)
@@ -172,7 +193,7 @@ func Handler(writer http.ResponseWriter, r *http.Request) {
 type RestfulServer struct {
 }
 
-func NewRestfulServer() *RestfulServer {
+func NewRestful() *RestfulServer {
 	return &RestfulServer{}
 }
 
@@ -181,7 +202,7 @@ func (s *RestfulServer) Start(stopCh chan struct{}) {
 	router.HandleFunc("/api/{version}/timage/{timage}/building", func(writer http.ResponseWriter, request *http.Request) {
 		switch request.Method {
 		case http.MethodPost:
-			Handler(writer, request)
+			Handler(glEngine, writer, request)
 		default:
 			writer.WriteHeader(http.StatusMethodNotAllowed)
 		}

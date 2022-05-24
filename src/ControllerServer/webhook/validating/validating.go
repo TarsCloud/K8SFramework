@@ -5,26 +5,38 @@ import (
 	"fmt"
 	k8sAdmissionV1 "k8s.io/api/admission/v1"
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	tarsMetaV1beta2 "k8s.tars.io/meta/v1beta2"
+	tarsMetaV1beta3 "k8s.tars.io/meta/v1beta3"
 	"net/http"
 	"tarscontroller/controller"
-	appsV1 "tarscontroller/webhook/validating/apps/v1"
-	coreV1 "tarscontroller/webhook/validating/core/v1"
-	crdV1beta2 "tarscontroller/webhook/validating/k8s.tars.io/v1beta2"
+	validatingAppsV1 "tarscontroller/webhook/validating/apps/v1"
+	validatingCoreV1 "tarscontroller/webhook/validating/core/v1"
+	validatingCrdV1Beta2 "tarscontroller/webhook/validating/k8s.tars.io/v1beta2"
+	validatingCrdV1Beta3 "tarscontroller/webhook/validating/k8s.tars.io/v1beta3"
 )
 
 type Validating struct {
-	crdV1beta2Handler *crdV1beta2.Handler
-	coreV1Handler     *coreV1.Handler
-	appsV1Handler     *appsV1.Handler
+	clients   *controller.Clients
+	informers *controller.Informers
 }
 
 func New(clients *controller.Clients, informers *controller.Informers) *Validating {
-	v := &Validating{
-		crdV1beta2Handler: crdV1beta2.New(clients, informers),
-		coreV1Handler:     coreV1.New(clients, informers),
-		appsV1Handler:     appsV1.New(clients, informers),
+	return &Validating{
+		clients:   clients,
+		informers: informers,
 	}
-	return v
+}
+
+var handlers = map[string]func(*controller.Clients, *controller.Informers, *k8sAdmissionV1.AdmissionReview) error{}
+
+func init() {
+	handlers = map[string]func(*controller.Clients, *controller.Informers, *k8sAdmissionV1.AdmissionReview) error{
+		"core/v1":                    validatingCoreV1.Handler,
+		"/v1":                        validatingCoreV1.Handler,
+		"apps/v1":                    validatingAppsV1.Handler,
+		tarsMetaV1beta2.GroupVersion: validatingCrdV1Beta2.Handler,
+		tarsMetaV1beta3.GroupVersion: validatingCrdV1Beta3.Handler,
+	}
 }
 
 func (v *Validating) Handle(w http.ResponseWriter, r *http.Request) {
@@ -36,15 +48,10 @@ func (v *Validating) Handle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	gv := fmt.Sprintf("%s/%s", requestView.Request.Kind.Group, requestView.Request.Kind.Version)
-	switch gv {
-	case "k8s.tars.io/v1beta2":
-		err = v.crdV1beta2Handler.Handle(requestView)
-	case "apps/v1":
-		err = v.appsV1Handler.Handle(requestView)
-	case "/v1", "core/v1":
-		err = v.coreV1Handler.Handle(requestView)
-	default:
+	if fun, ok := handlers[gv]; !ok {
 		err = fmt.Errorf("unsupported validating %s.%s", gv, requestView.Request.Kind.Kind)
+	} else {
+		err = fun(v.clients, v.informers, requestView)
 	}
 
 	var responseView = &k8sAdmissionV1.AdmissionReview{

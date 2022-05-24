@@ -26,10 +26,10 @@ import (
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
 	cache "k8s.io/client-go/tools/cache"
-	crdv1beta1 "k8s.tars.io/api/crd/v1beta1"
 	versioned "k8s.tars.io/client-go/clientset/versioned"
 	internalinterfaces "k8s.tars.io/client-go/informers/externalversions/internalinterfaces"
 	v1beta1 "k8s.tars.io/client-go/listers/crd/v1beta1"
+	crdv1beta1 "k8s.tars.io/crd/v1beta1"
 )
 
 // TImageInformer provides access to a shared informer and lister for

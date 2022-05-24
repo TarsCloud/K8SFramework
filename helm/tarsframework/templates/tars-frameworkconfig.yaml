@@ -1,0 +1,57 @@
+{{- $tfc:= (lookup (printf "k8s.tars.io/%s" .Chart.AppVersion) "TFrameworkConfig" .Release.Namespace "tars-framework")}}
+apiVersion: k8s.tars.io/v1beta3
+kind: TFrameworkConfig
+metadata:
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-9"
+  name: tars-framework
+  namespace: {{.Release.Namespace }}
+imageUpload:
+  registry: {{ .Values.upload.registry }}
+  secret: {{ .Values.upload.secret }}
+imageBuild:
+  {{- if $tfc }}
+  maxBuildTime: {{$tfc.imageBuild.maxBuildTime}}
+  idFormat: {{$tfc.imageBuild.idFormat}}
+  {{- else }}
+  maxBuildTime: 600
+  idFormat: ""
+  {{- end}}
+  executor:
+    image: "{{.Values.framework.registry }}/tars.tarskaniko:{{.Values.framework.tag}}"
+    secret: {{ .Values.framework.secret }}
+nodeImage:
+  image: "{{.Values.framework.registry }}/tars.tarsnode:{{.Values.framework.tag}}"
+  secret: {{ .Values.framework.secret }}
+recordLimit:
+  {{- if $tfc }}
+  timageRelease: {{$tfc.recordLimit.timageRelease}}
+  texitedPod: {{$tfc.recordLimit.texitedPod}}
+  tconfigHistory: {{$tfc.recordLimit.tconfigHistory}}
+  {{- else }}
+  timageRelease: 60
+  texitedPod: 32
+  tconfigHistory: 32
+  {{- end}}
+upChain:
+ {{- if $tfc }}
+ {{- range $k, $ups:= ($tfc).upChain }}
+ {{printf  "%s:" $k |indent 2 }}
+ {{- range $up:= $ups}}
+ {{printf "- host: %s" $up.host|indent 2 }}
+ {{printf "  port: %d" $up.port|indent 2 }}
+ {{printf "  timeout: %d" $up.timeout|indent 2 }}
+ {{- end }}
+ {{- end }}
+{{- else }}
+  { }
+{{- end}}
+expand:
+ {{- if $tfc }}
+ {{- range $k, $v:= ($tfc).expand }}
+ {{printf  "%s: %s" $k ($v | toYaml) | indent 2 }}
+ {{- end }}
+{{- else }}
+  { }
+{{- end}}

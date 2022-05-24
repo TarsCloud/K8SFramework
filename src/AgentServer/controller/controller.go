@@ -27,7 +27,6 @@ import (
 	"math/rand"
 	"os"
 	"tarsagent/controller/common"
-	"tarsagent/controller/image"
 	"tarsagent/controller/localpv"
 	"time"
 
@@ -91,9 +90,9 @@ func getNode(k8sClient *kubernetes.Clientset) (*v1.Node, error) {
 
 func startController(namespace string, k8sClient *kubernetes.Clientset, crdClient *crdClientSet.Clientset, k8sNode *v1.Node) {
 	tstorageClass := common.MountConfig{
-		Name: common.TStorageClassName,
-		HostDir: common.TLocalVolumeHostDir,
-		MountDir: common.TLocalVolumeHostDir,
+		Name:       common.TStorageClassName,
+		HostDir:    common.TLocalVolumeHostDir,
+		MountDir:   common.TLocalVolumeHostDir,
 		VolumeMode: common.TLocalVolumeMode,
 	}
 
@@ -101,7 +100,7 @@ func startController(namespace string, k8sClient *kubernetes.Clientset, crdClien
 
 	usrConfig := &common.UserConfig{
 		Node:            k8sNode,
-		TStorageClass:	 tstorageClass,
+		TStorageClass:   tstorageClass,
 		NodeLabelsForPV: nodeLabelForPV,
 		MinResyncPeriod: metav1.Duration{Duration: 5 * time.Minute},
 		Namespace:       namespace,
@@ -119,9 +118,9 @@ func startController(namespace string, k8sClient *kubernetes.Clientset, crdClien
 
 	runtimeConfig := &common.RuntimeConfig{
 		UserConfig:         usrConfig,
-		Cache:           	common.NewVolumeCache(),
-		VolUtil:         	common.NewVolumeUtil(),
-		APIUtil:         	common.NewAPIUtil(k8sClient),
+		Cache:              common.NewVolumeCache(),
+		VolUtil:            common.NewVolumeUtil(),
+		APIUtil:            common.NewAPIUtil(k8sClient),
 		K8sClient:          k8sClient,
 		CrdClient:          crdClient,
 		Name:               agentName,
@@ -130,9 +129,6 @@ func startController(namespace string, k8sClient *kubernetes.Clientset, crdClien
 		K8sInformerFactory: informers.NewSharedInformerFactory(k8sClient, resyncPeriod),
 		CrdInformerFactory: crdInformers.NewSharedInformerFactory(crdClient, resyncPeriod),
 	}
-
-	// Image downloader
-	image.NewDownloader(runtimeConfig)
 
 	// Local PV cache/discovery/deleter
 	discoverer, deleter, err := getLocalPVComponents(runtimeConfig)

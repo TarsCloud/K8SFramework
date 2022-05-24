@@ -1,0 +1,110 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tars-tarsregistry
+  namespace: {{.Release.Namespace}}
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: tars-tarsregistry
+  namespace: {{.Release.Namespace}}
+rules:
+  - apiGroups: [ "" ]
+    resources: [ pods/status ]
+    verbs: [ patch ]
+  - apiGroups: [ "" ]
+    resources: [ configmaps ]
+    verbs: [ get,list,watch ]
+  - apiGroups: [ k8s.tars.io ]
+    resources: [ ttemplates,tendpoints,tframeworkconfigs ]
+    verbs: [ get ,list, watch ]
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tars-tarsregistry
+  namespace: {{.Release.Namespace}}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: tars-tarsregistry
+subjects:
+  - kind: ServiceAccount
+    name: tars-tarsregistry
+
+---
+
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
+kind: TImage
+metadata:
+  name: tars-tarsregistry
+  namespace: {{.Release.Namespace}}
+  labels:
+    tars.io/ServerApp: tars
+    tars.io/ServerName: tarsregistry
+imageType: server
+releases:
+  - id: {{.Values.framework.tag | quote }}
+    image: "{{.Values.framework.registry }}/tars.tarsregistry:{{.Values.framework.tag}}"
+    {{- if.Values.framework.secret}}
+    secret: {{.Values.framework.secret |quote }}
+    {{- end}}
+{{- include "TImageMerger" (dict "version" .Chart.AppVersion "namespace" .Release.Namespace  "name" "tars-tarsregistry" ) | nindent 2 -}}
+{{"\n"}}
+---
+
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
+kind: TServer
+metadata:
+  name: tars-tarsregistry
+  namespace: {{.Release.Namespace}}
+  annotations:
+    tars.io/MinReplicas: "2"
+  labels:
+    tars.io/ServerApp: tars
+    tars.io/ServerName: tarsregistry
+    tars.io/SubType: normal
+spec:
+  app: tars
+  server: tarsregistry
+  subType: normal
+  normal:
+    ports:
+      - name: queryobj
+        port: 17890
+      - name: registryobj
+        port: 17891
+  k8s:
+    replicas: 2
+    serviceAccount: tars-tarsregistry
+    readinessGates: [ tars.io/active ]
+    env:
+      - name: Namespace
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.namespace
+      - name: PodName
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.name
+      - name: PodIP
+        valueFrom:
+          fieldRef:
+            fieldPath: status.podIP
+    mounts:
+      - name: host-log-dir
+        source:
+          hostPath:
+            path: /usr/local/app/tars/app_log
+            type: DirectoryOrCreate
+        mountPath: /usr/local/app/tars/app_log
+        subPathExpr: $(Namespace)/$(PodName)
+  release:
+    id: {{.Values.framework.tag | quote }}
+    image: "{{.Values.framework.registry }}/tars.tarsregistry:{{.Values.framework.tag}}"
+    {{- if.Values.framework.secret}}
+    secret: {{.Values.framework.secret |quote }}
+    {{- end}}

@@ -1,0 +1,14 @@
+framework:
+  registry: _FRAMEWORK_REGISTRY_
+  tag: _FRAMEWORK_TAG_
+  secret: ""
+
+upload:
+  registry: ""
+  secret: ""
+
+web: ""
+
+elk:
+  nodes:
+    - tars-elasticsearch:9200

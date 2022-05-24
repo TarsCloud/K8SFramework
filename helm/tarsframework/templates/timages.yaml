@@ -1,0 +1,103 @@
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
+kind: TImage
+metadata:
+  name: node
+  namespace: {{.Release.Namespace}}
+imageType: node
+mark: builtin release
+releases:
+  - id: builtin-node-{{.Values.framework.tag}}
+    image: "{{.Values.framework.registry }}/tars.tarsnode:{{.Values.framework.tag}}"
+    {{- if.Values.framework.secret}}
+    secret: {{.Values.framework.secret |quote }}
+    {{- end}}
+    mark: builtin release for tarsnode
+{{- include "TImageMerger" (dict "version" .Chart.AppVersion "namespace" .Release.Namespace  "name" "node" ) | nindent 2 -}}
+{{"\n"}}
+---
+
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
+kind: TImage
+metadata:
+  labels:
+    tars.io/ImageType: base
+    tars.io/Supported.cpp: ""
+    tars.io/Supported.go: ""
+  name: cppbase
+  namespace: {{.Release.Namespace}}
+imageType: base
+supportedType: [ cpp,go ]
+mark: builtin release
+releases:
+  - id: builtin-cppbase-{{.Values.framework.tag}}
+    image: "{{.Values.framework.registry }}/tars.cppbase:{{.Values.framework.tag}}"
+    {{- if.Values.framework.secret}}
+    secret: {{.Values.framework.secret |quote }}
+    {{- end}}
+    mark: builtin for [cpp,go] server
+{{- include "TImageMerger" (dict "version" .Chart.AppVersion "namespace" .Release.Namespace  "name" "cppbase" ) | nindent 2 -}}
+{{"\n"}}
+---
+
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
+kind: TImage
+metadata:
+  labels:
+    tars.io/ImageType: base
+    tars.io/Supported.java-jar: ""
+    tars.io/Supported.java-war: ""
+  name: javabase
+  namespace: {{.Release.Namespace}}
+imageType: base
+supportedType: [ java-jar,java-war ]
+mark: builtin release
+releases:
+  - id: builtin-java8base-{{.Values.framework.tag}}
+    image: "{{.Values.framework.registry }}/tars.javabase:{{.Values.framework.tag}}"
+    {{- if.Values.framework.secret}}
+    secret: {{.Values.framework.secret |quote }}
+    {{- end}}
+{{- include "TImageMerger" (dict "version" .Chart.AppVersion "namespace" .Release.Namespace  "name" "javabase" ) | nindent 2 -}}
+{{"\n"}}
+---
+
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
+kind: TImage
+metadata:
+  labels:
+    tars.io/ImageType: base
+    tars.io/Supported.nodejs: ""
+  name: nodejsbase
+  namespace: {{.Release.Namespace}}
+imageType: base
+supportedType: [ nodejs ]
+mark: builtin release
+releases:
+  - id: builtin-nodejsbase-{{.Values.framework.tag}}
+    image: "{{.Values.framework.registry }}/tars.nodejsbase:{{.Values.framework.tag}}"
+    {{- if.Values.framework.secret}}
+    secret: {{.Values.framework.secret |quote }}
+    {{- end}}
+{{- include "TImageMerger" (dict "version" .Chart.AppVersion "namespace" .Release.Namespace  "name" "nodejsbase" ) | nindent 2 -}}
+{{"\n"}}
+---
+
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
+kind: TImage
+metadata:
+  labels:
+    tars.io/ImageType: base
+    tars.io/Supported.php: ""
+  name: php74base
+  namespace: {{.Release.Namespace}}
+imageType: base
+supportedType: [ php ]
+mark: builtin release
+releases:
+  - id: builtin-php74base-{{.Values.framework.tag}}
+    image: "{{.Values.framework.registry }}/tars.php74base:{{.Values.framework.tag}}"
+    {{- if.Values.framework.secret}}
+    secret: {{.Values.framework.secret |quote }}
+    {{- end}}
+{{- include "TImageMerger" (dict "version" .Chart.AppVersion "namespace" .Release.Namespace  "name" "php74base" ) | nindent 2 -}}
+{{"\n"}}

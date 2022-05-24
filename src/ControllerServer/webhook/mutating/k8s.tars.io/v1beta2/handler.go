@@ -10,8 +10,9 @@ import (
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/utils/integer"
-	crdV1beta2 "k8s.tars.io/api/crd/v1beta2"
-	crdMeta "k8s.tars.io/api/meta"
+	tarsCrdV1beta2 "k8s.tars.io/crd/v1beta2"
+	tarsMetaTools "k8s.tars.io/meta/tools"
+	tarsMetaV1beta2 "k8s.tars.io/meta/v1beta2"
 	"math"
 	"regexp"
 	"strconv"
@@ -20,22 +21,10 @@ import (
 	"time"
 )
 
-type Handler struct {
-	clients  *controller.Clients
-	informer *controller.Informers
-}
-
-func New(clients *controller.Clients, informers *controller.Informers) *Handler {
-	return &Handler{clients: clients, informer: informers}
-}
-
 var functions map[string]func(*k8sAdmissionV1.AdmissionReview) ([]byte, error)
 
 func init() {
 	functions = map[string]func(*k8sAdmissionV1.AdmissionReview) ([]byte, error){
-		"CREATE/TDeploy": mutatingCreateTDeploy,
-		"UPDATE/TDeploy": mutatingUpdateTDeploy,
-
 		"CREATE/TServer": mutatingCreateTServer,
 		"UPDATE/TServer": mutatingUpdateTServer,
 
@@ -56,7 +45,7 @@ func init() {
 	}
 }
 
-func (v *Handler) Handle(view *k8sAdmissionV1.AdmissionReview) ([]byte, error) {
+func Handle(clients *controller.Clients, informer *controller.Informers, view *k8sAdmissionV1.AdmissionReview) ([]byte, error) {
 	key := fmt.Sprintf("%s/%s", string(view.Request.Operation), view.Request.Kind.Kind)
 	if fun, ok := functions[key]; ok {
 		return fun(view)
@@ -64,149 +53,67 @@ func (v *Handler) Handle(view *k8sAdmissionV1.AdmissionReview) ([]byte, error) {
 	return nil, fmt.Errorf("unsupported mutating %s %s.%s", view.Request.Operation, view.Request.Kind.Version, view.Request.Kind.Kind)
 }
 
-func mutatingCreateTDeploy(requestAdmissionView *k8sAdmissionV1.AdmissionReview) ([]byte, error) {
-	tdeploy := &crdV1beta2.TDeploy{}
-	_ = json.Unmarshal(requestAdmissionView.Request.Object.Raw, tdeploy)
-
-	var jsonPatch crdMeta.JsonPatch
-
-	if tdeploy.Labels == nil {
-		labels := map[string]string{}
-		jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-			OP:    crdMeta.JsonPatchAdd,
-			Path:  "/metadata/labels",
-			Value: labels,
-		})
-	}
-
-	jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-		OP:    crdMeta.JsonPatchAdd,
-		Path:  "/metadata/labels/tars.io~1Approve",
-		Value: "Pending",
-	})
-
-	if tdeploy.Approve != nil {
-		jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-			OP:   crdMeta.JsonPatchRemove,
-			Path: "/approve",
-		})
-	}
-
-	if tdeploy.Deployed != nil {
-		jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-			OP:   crdMeta.JsonPatchRemove,
-			Path: "/deployed",
-		})
-	}
-
-	if jsonPatch != nil {
-		return json.Marshal(jsonPatch)
-	}
-	return nil, nil
-}
-
-func mutatingUpdateTDeploy(requestAdmissionView *k8sAdmissionV1.AdmissionReview) ([]byte, error) {
-	tdeploy := &crdV1beta2.TDeploy{}
-	_ = json.Unmarshal(requestAdmissionView.Request.Object.Raw, tdeploy)
-
-	var jsonPatch crdMeta.JsonPatch
-
-	if tdeploy.Labels == nil {
-		labels := map[string]string{}
-		jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-			OP:    crdMeta.JsonPatchAdd,
-			Path:  "/metadata/labels",
-			Value: labels,
-		})
-	}
-
-	if tdeploy.Approve == nil {
-		jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-			OP:    crdMeta.JsonPatchAdd,
-			Path:  "/metadata/labels/tars.io~1Approve",
-			Value: "Pending",
-		})
-	} else if tdeploy.Approve.Result {
-		jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-			OP:    crdMeta.JsonPatchAdd,
-			Path:  "/metadata/labels/tars.io~1Approve",
-			Value: "Approved",
-		})
-	} else {
-		jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-			OP:    crdMeta.JsonPatchAdd,
-			Path:  "/metadata/labels/tars.io~1Approve",
-			Value: "Reject",
-		})
-	}
-
-	if jsonPatch != nil {
-		return json.Marshal(jsonPatch)
-	}
-	return nil, nil
-}
-
 func mutatingCreateTServer(requestAdmissionView *k8sAdmissionV1.AdmissionReview) ([]byte, error) {
-	tserver := &crdV1beta2.TServer{}
+	tserver := &tarsCrdV1beta2.TServer{}
 	_ = json.Unmarshal(requestAdmissionView.Request.Object.Raw, tserver)
 
-	var jsonPatch crdMeta.JsonPatch
+	var jsonPatch tarsMetaTools.JsonPatch
 
 	if tserver.Labels == nil {
 		labels := map[string]string{}
-		jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-			OP:    crdMeta.JsonPatchAdd,
+		jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+			OP:    tarsMetaTools.JsonPatchAdd,
 			Path:  "/metadata/labels",
 			Value: labels,
 		})
 	}
 
-	jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-		OP:    crdMeta.JsonPatchAdd,
+	jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+		OP:    tarsMetaTools.JsonPatchAdd,
 		Path:  "/metadata/labels/tars.io~1ServerApp",
 		Value: tserver.Spec.App,
 	})
 
-	jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-		OP:    crdMeta.JsonPatchAdd,
+	jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+		OP:    tarsMetaTools.JsonPatchAdd,
 		Path:  "/metadata/labels/tars.io~1ServerName",
 		Value: tserver.Spec.Server,
 	})
 
-	jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-		OP:    crdMeta.JsonPatchAdd,
+	jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+		OP:    tarsMetaTools.JsonPatchAdd,
 		Path:  "/metadata/labels/tars.io~1SubType",
 		Value: string(tserver.Spec.SubType),
 	})
 
 	if tserver.Spec.Tars != nil {
-		jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-			OP:    crdMeta.JsonPatchAdd,
+		jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+			OP:    tarsMetaTools.JsonPatchAdd,
 			Path:  "/metadata/labels/tars.io~1Template",
 			Value: tserver.Spec.Tars.Template,
 		})
 
-		if tserver.Spec.K8S.ReadinessGate == nil {
-			jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-				OP:    crdMeta.JsonPatchAdd,
+		if tserver.Spec.K8S.ReadinessGate != tarsMetaV1beta2.TPodReadinessGate {
+			jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+				OP:    tarsMetaTools.JsonPatchAdd,
 				Path:  "/spec/k8s/readinessGate",
-				Value: crdMeta.TPodReadinessGate,
+				Value: tarsMetaV1beta2.TPodReadinessGate,
 			})
 		}
 	}
 
 	if tserver.Spec.Normal != nil {
-		if _, ok := tserver.Labels[crdMeta.TemplateLabel]; ok {
-			jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-				OP:   crdMeta.JsonPatchRemove,
+		if _, ok := tserver.Labels[tarsMetaV1beta2.TemplateLabel]; ok {
+			jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+				OP:   tarsMetaTools.JsonPatchRemove,
 				Path: "/metadata/labels/tars.io~1Template",
 			})
 		}
 	}
 
 	if len(tserver.Spec.K8S.HostPorts) > 0 || tserver.Spec.K8S.HostIPC {
-		jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-			OP:    crdMeta.JsonPatchAdd,
+		jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+			OP:    tarsMetaTools.JsonPatchAdd,
 			Path:  "/spec/k8s/notStacked",
 			Value: true,
 		})
@@ -217,30 +124,30 @@ func mutatingCreateTServer(requestAdmissionView *k8sAdmissionV1.AdmissionReview)
 
 	if tserver.Annotations != nil {
 		const pattern = "^[1-9]?[0-9]$"
-		if maxReplicas, ok := tserver.Annotations[crdMeta.TMaxReplicasAnnotation]; ok {
+		if maxReplicas, ok := tserver.Annotations[tarsMetaV1beta2.TMaxReplicasAnnotation]; ok {
 			matched, _ := regexp.MatchString(pattern, maxReplicas)
 			if !matched {
-				return nil, fmt.Errorf(crdMeta.ResourceInvalidError, "tserver", "unexpected annotation format")
+				return nil, fmt.Errorf(tarsMetaV1beta2.ResourceInvalidError, "tserver", "unexpected annotation format")
 			}
 			maxReplicasValue, _ = strconv.Atoi(maxReplicas)
 		}
 
-		if minReplicas, ok := tserver.Annotations[crdMeta.TMinReplicasAnnotation]; ok {
+		if minReplicas, ok := tserver.Annotations[tarsMetaV1beta2.TMinReplicasAnnotation]; ok {
 			matched, _ := regexp.MatchString(pattern, minReplicas)
 			if !matched {
-				return nil, fmt.Errorf(crdMeta.ResourceInvalidError, "tserver", "unexpected annotation format")
+				return nil, fmt.Errorf(tarsMetaV1beta2.ResourceInvalidError, "tserver", "unexpected annotation format")
 			}
 			minReplicasValue, _ = strconv.Atoi(minReplicas)
 		}
 
 		if minReplicasValue > maxReplicasValue {
-			return nil, fmt.Errorf(crdMeta.ResourceInvalidError, "tserver", "unexpected annotation value")
+			return nil, fmt.Errorf(tarsMetaV1beta2.ResourceInvalidError, "tserver", "unexpected annotation value")
 		}
 	}
 
 	if tserver.Spec.Release == nil {
-		jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-			OP:    crdMeta.JsonPatchReplace,
+		jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+			OP:    tarsMetaTools.JsonPatchReplace,
 			Path:  "/spec/k8s/replicas",
 			Value: 0,
 		})
@@ -249,16 +156,16 @@ func mutatingCreateTServer(requestAdmissionView *k8sAdmissionV1.AdmissionReview)
 		replicas = integer.IntMax(replicas, minReplicasValue)
 		replicas = integer.IntMin(replicas, maxReplicasValue)
 
-		jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-			OP:    crdMeta.JsonPatchReplace,
+		jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+			OP:    tarsMetaTools.JsonPatchReplace,
 			Path:  "/spec/k8s/replicas",
 			Value: replicas,
 		})
 
 		if tserver.Spec.Release.Time.IsZero() {
 			now := k8sMetaV1.Now()
-			jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-				OP:    crdMeta.JsonPatchAdd,
+			jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+				OP:    tarsMetaTools.JsonPatchAdd,
 				Path:  "/spec/release/time",
 				Value: now.ToUnstructured(),
 			})
@@ -267,18 +174,18 @@ func mutatingCreateTServer(requestAdmissionView *k8sAdmissionV1.AdmissionReview)
 		if tserver.Spec.Tars != nil {
 			if tserver.Spec.Release.TServerReleaseNode == nil || tserver.Spec.Release.TServerReleaseNode.Image == "" {
 				image, secret := controller.GetDefaultNodeImage(tserver.Namespace)
-				if image == crdMeta.ServiceImagePlaceholder {
-					return nil, fmt.Errorf(crdMeta.ResourceInvalidError, tserver, "no default node image has been set")
+				if image == tarsMetaV1beta2.ServiceImagePlaceholder {
+					return nil, fmt.Errorf(tarsMetaV1beta2.ResourceInvalidError, tserver, "no default node image has been set")
 				}
 
-				jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-					OP:    crdMeta.JsonPatchAdd,
+				jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+					OP:    tarsMetaTools.JsonPatchAdd,
 					Path:  "/spec/release/nodeImage",
 					Value: image,
 				})
 
-				jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-					OP:    crdMeta.JsonPatchAdd,
+				jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+					OP:    tarsMetaTools.JsonPatchAdd,
 					Path:  "/spec/release/nodeSecret",
 					Value: secret,
 				})
@@ -288,15 +195,15 @@ func mutatingCreateTServer(requestAdmissionView *k8sAdmissionV1.AdmissionReview)
 		if tserver.Spec.Normal != nil {
 			if tserver.Spec.Release.TServerReleaseNode != nil {
 				if tserver.Spec.Release.TServerReleaseNode.Image != "" {
-					jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-						OP:   crdMeta.JsonPatchRemove,
+					jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+						OP:   tarsMetaTools.JsonPatchRemove,
 						Path: "/spec/release/nodeImage",
 					})
 				}
 
 				if tserver.Spec.Release.TServerReleaseNode.Secret != "" {
-					jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-						OP:   crdMeta.JsonPatchRemove,
+					jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+						OP:   tarsMetaTools.JsonPatchRemove,
 						Path: "/spec/release/nodeSecret",
 					})
 				}
@@ -315,59 +222,59 @@ func mutatingUpdateTServer(requestAdmissionView *k8sAdmissionV1.AdmissionReview)
 }
 
 func mutatingCreateTConfig(requestAdmissionView *k8sAdmissionV1.AdmissionReview) ([]byte, error) {
-	tconfig := &crdV1beta2.TConfig{}
+	tconfig := &tarsCrdV1beta2.TConfig{}
 	_ = json.Unmarshal(requestAdmissionView.Request.Object.Raw, tconfig)
 
-	var jsonPatch crdMeta.JsonPatch
+	var jsonPatch tarsMetaTools.JsonPatch
 
 	if tconfig.Labels == nil {
 		labels := map[string]string{}
-		jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-			OP:    crdMeta.JsonPatchAdd,
+		jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+			OP:    tarsMetaTools.JsonPatchAdd,
 			Path:  "/metadata/labels",
 			Value: labels,
 		})
 	}
 
-	jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-		OP:    crdMeta.JsonPatchAdd,
+	jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+		OP:    tarsMetaTools.JsonPatchAdd,
 		Path:  "/metadata/labels/tars.io~1ServerApp",
 		Value: tconfig.App,
 	})
 
-	jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-		OP:    crdMeta.JsonPatchAdd,
+	jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+		OP:    tarsMetaTools.JsonPatchAdd,
 		Path:  "/metadata/labels/tars.io~1ServerName",
 		Value: tconfig.Server,
 	})
 
-	jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-		OP:    crdMeta.JsonPatchAdd,
+	jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+		OP:    tarsMetaTools.JsonPatchAdd,
 		Path:  "/metadata/labels/tars.io~1ConfigName",
 		Value: tconfig.ConfigName,
 	})
 
-	jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-		OP:    crdMeta.JsonPatchAdd,
+	jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+		OP:    tarsMetaTools.JsonPatchAdd,
 		Path:  "/metadata/labels/tars.io~1PodSeq",
 		Value: tconfig.PodSeq,
 	})
 
-	jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-		OP:    crdMeta.JsonPatchAdd,
+	jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+		OP:    tarsMetaTools.JsonPatchAdd,
 		Path:  "/metadata/labels/tars.io~1Activated",
 		Value: fmt.Sprintf("%t", tconfig.Activated),
 	})
 
 	versionString := fmt.Sprintf("%s-%x", time.Now().Format("20060102030405"), crc32.ChecksumIEEE([]byte(tconfig.Name)))
-	jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-		OP:    crdMeta.JsonPatchAdd,
+	jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+		OP:    tarsMetaTools.JsonPatchAdd,
 		Path:  "/version",
 		Value: versionString,
 	})
 
-	jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-		OP:    crdMeta.JsonPatchAdd,
+	jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+		OP:    tarsMetaTools.JsonPatchAdd,
 		Path:  "/metadata/labels/tars.io~1Version",
 		Value: versionString,
 	})
@@ -379,52 +286,52 @@ func mutatingCreateTConfig(requestAdmissionView *k8sAdmissionV1.AdmissionReview)
 }
 
 func mutatingUpdateTConfig(requestAdmissionView *k8sAdmissionV1.AdmissionReview) ([]byte, error) {
-	tconfig := &crdV1beta2.TConfig{}
+	tconfig := &tarsCrdV1beta2.TConfig{}
 	_ = json.Unmarshal(requestAdmissionView.Request.Object.Raw, tconfig)
 
-	var jsonPatch crdMeta.JsonPatch
+	var jsonPatch tarsMetaTools.JsonPatch
 
 	if tconfig.Labels == nil {
 		labels := map[string]string{}
-		jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-			OP:    crdMeta.JsonPatchAdd,
+		jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+			OP:    tarsMetaTools.JsonPatchAdd,
 			Path:  "/metadata/labels",
 			Value: labels,
 		})
 	}
 
-	jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-		OP:    crdMeta.JsonPatchAdd,
+	jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+		OP:    tarsMetaTools.JsonPatchAdd,
 		Path:  "/metadata/labels/tars.io~1ServerApp",
 		Value: tconfig.App,
 	})
 
-	jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-		OP:    crdMeta.JsonPatchAdd,
+	jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+		OP:    tarsMetaTools.JsonPatchAdd,
 		Path:  "/metadata/labels/tars.io~1ServerName",
 		Value: tconfig.Server,
 	})
 
-	jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-		OP:    crdMeta.JsonPatchAdd,
+	jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+		OP:    tarsMetaTools.JsonPatchAdd,
 		Path:  "/metadata/labels/tars.io~1ConfigName",
 		Value: tconfig.ConfigName,
 	})
 
-	jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-		OP:    crdMeta.JsonPatchAdd,
+	jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+		OP:    tarsMetaTools.JsonPatchAdd,
 		Path:  "/metadata/labels/tars.io~1PodSeq",
 		Value: tconfig.PodSeq,
 	})
 
-	jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-		OP:    crdMeta.JsonPatchAdd,
+	jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+		OP:    tarsMetaTools.JsonPatchAdd,
 		Path:  "/metadata/labels/tars.io~1Activated",
 		Value: fmt.Sprintf("%t", tconfig.Activated),
 	})
 
-	jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-		OP:    crdMeta.JsonPatchAdd,
+	jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+		OP:    tarsMetaTools.JsonPatchAdd,
 		Path:  "/metadata/labels/tars.io~1Version",
 		Value: tconfig.Version,
 	})
@@ -436,7 +343,7 @@ func mutatingUpdateTConfig(requestAdmissionView *k8sAdmissionV1.AdmissionReview)
 }
 
 func mutatingCreateTTree(requestAdmissionView *k8sAdmissionV1.AdmissionReview) ([]byte, error) {
-	newTTree := &crdV1beta2.TTree{}
+	newTTree := &tarsCrdV1beta2.TTree{}
 	_ = json.Unmarshal(requestAdmissionView.Request.Object.Raw, newTTree)
 
 	businessMap := make(map[string]interface{}, len(newTTree.Businesses))
@@ -444,13 +351,13 @@ func mutatingCreateTTree(requestAdmissionView *k8sAdmissionV1.AdmissionReview) (
 		businessMap[business.Name] = nil
 	}
 
-	var jsonPatch crdMeta.JsonPatch
+	var jsonPatch tarsMetaTools.JsonPatch
 
 	for i, app := range newTTree.Apps {
 		if app.BusinessRef != "" {
 			if _, ok := businessMap[app.BusinessRef]; !ok {
-				jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-					OP:    crdMeta.JsonPatchReplace,
+				jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+					OP:    tarsMetaTools.JsonPatchReplace,
 					Path:  fmt.Sprintf("/apps/%d/businessRef", i),
 					Value: "",
 				})
@@ -480,10 +387,10 @@ const UnsafeTAccountAnnotationKey = "kubectl.kubernetes.io/last-applied-configur
 const UnsafeTAccountAnnotationPath = "/metadata/annotations/kubectl.kubernetes.io~1last-applied-configuration"
 
 func mutatingCreateTAccount(requestAdmissionView *k8sAdmissionV1.AdmissionReview) ([]byte, error) {
-	newTAccount := &crdV1beta2.TAccount{}
+	newTAccount := &tarsCrdV1beta2.TAccount{}
 	_ = json.Unmarshal(requestAdmissionView.Request.Object.Raw, newTAccount)
 
-	var jsonPatch crdMeta.JsonPatch
+	var jsonPatch tarsMetaTools.JsonPatch
 
 	if newTAccount.Spec.Authentication.Password != nil {
 		passwordString := *newTAccount.Spec.Authentication.Password
@@ -493,29 +400,29 @@ func mutatingCreateTAccount(requestAdmissionView *k8sAdmissionV1.AdmissionReview
 			return nil, err
 		}
 		bcryptPassword, _ := generateBcryptPassword(passwordString)
-		jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-			OP:   crdMeta.JsonPatchRemove,
+		jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+			OP:   tarsMetaTools.JsonPatchRemove,
 			Path: "/spec/authentication/password",
 		})
 
-		jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-			OP:    crdMeta.JsonPatchAdd,
+		jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+			OP:    tarsMetaTools.JsonPatchAdd,
 			Path:  "/spec/authentication/bcryptPassword",
 			Value: string(bcryptPassword),
 		})
 	}
 
-	tokens := make([]crdV1beta2.TAccountAuthenticationToken, 0, 0)
-	jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-		OP:    crdMeta.JsonPatchAdd,
+	tokens := make([]tarsCrdV1beta2.TAccountAuthenticationToken, 0, 0)
+	jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+		OP:    tarsMetaTools.JsonPatchAdd,
 		Path:  "/spec/authentication/tokens",
 		Value: tokens,
 	})
 
 	if newTAccount.Annotations != nil {
 		if _, ok := newTAccount.Annotations[UnsafeTAccountAnnotationKey]; ok {
-			jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-				OP:   crdMeta.JsonPatchRemove,
+			jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+				OP:   tarsMetaTools.JsonPatchRemove,
 				Path: UnsafeTAccountAnnotationPath,
 			})
 		}
@@ -528,18 +435,18 @@ func mutatingCreateTAccount(requestAdmissionView *k8sAdmissionV1.AdmissionReview
 }
 
 func mutatingUpdateTAccount(requestAdmissionView *k8sAdmissionV1.AdmissionReview) ([]byte, error) {
-	newTAccount := &crdV1beta2.TAccount{}
+	newTAccount := &tarsCrdV1beta2.TAccount{}
 	_ = json.Unmarshal(requestAdmissionView.Request.Object.Raw, newTAccount)
 
-	oldTAccount := &crdV1beta2.TAccount{}
+	oldTAccount := &tarsCrdV1beta2.TAccount{}
 	_ = json.Unmarshal(requestAdmissionView.Request.OldObject.Raw, oldTAccount)
 
-	var jsonPatch crdMeta.JsonPatch
+	var jsonPatch tarsMetaTools.JsonPatch
 
 	if newTAccount.Annotations != nil {
 		if _, ok := newTAccount.Annotations[UnsafeTAccountAnnotationKey]; ok {
-			jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-				OP:   crdMeta.JsonPatchRemove,
+			jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+				OP:   tarsMetaTools.JsonPatchRemove,
 				Path: UnsafeTAccountAnnotationPath,
 			})
 		}
@@ -557,13 +464,13 @@ func mutatingUpdateTAccount(requestAdmissionView *k8sAdmissionV1.AdmissionReview
 
 			bcryptPassword, _ := generateBcryptPassword(passwordString)
 
-			jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-				OP:   crdMeta.JsonPatchRemove,
+			jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+				OP:   tarsMetaTools.JsonPatchRemove,
 				Path: "/spec/authentication/password",
 			})
 
-			jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-				OP:    crdMeta.JsonPatchAdd,
+			jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+				OP:    tarsMetaTools.JsonPatchAdd,
 				Path:  "/spec/authentication/bcryptPassword",
 				Value: string(bcryptPassword),
 			})
@@ -579,9 +486,9 @@ func mutatingUpdateTAccount(requestAdmissionView *k8sAdmissionV1.AdmissionReview
 	}
 
 	if passwordChanged {
-		tokens := make([]crdV1beta2.TAccountAuthenticationToken, 0, 0)
-		jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-			OP:    crdMeta.JsonPatchAdd,
+		tokens := make([]tarsCrdV1beta2.TAccountAuthenticationToken, 0, 0)
+		jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+			OP:    tarsMetaTools.JsonPatchAdd,
 			Path:  "/spec/authentication/tokens",
 			Value: tokens,
 		})
@@ -594,22 +501,22 @@ func mutatingUpdateTAccount(requestAdmissionView *k8sAdmissionV1.AdmissionReview
 }
 
 func mutatingCreateTImage(requestAdmissionView *k8sAdmissionV1.AdmissionReview) ([]byte, error) {
-	timage := &crdV1beta2.TImage{}
+	timage := &tarsCrdV1beta2.TImage{}
 	_ = json.Unmarshal(requestAdmissionView.Request.Object.Raw, timage)
 
-	var jsonPatch crdMeta.JsonPatch
+	var jsonPatch tarsMetaTools.JsonPatch
 
 	if timage.Labels == nil {
 		labels := map[string]string{}
-		jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-			OP:    crdMeta.JsonPatchAdd,
+		jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+			OP:    tarsMetaTools.JsonPatchAdd,
 			Path:  "/metadata/labels",
 			Value: labels,
 		})
 	}
 
-	jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-		OP:    crdMeta.JsonPatchAdd,
+	jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+		OP:    tarsMetaTools.JsonPatchAdd,
 		Path:  "/metadata/labels/tars.io~1ImageType",
 		Value: timage.ImageType,
 	})
@@ -628,8 +535,8 @@ func mutatingCreateTImage(requestAdmissionView *k8sAdmissionV1.AdmissionReview) 
 		} else {
 			if strings.HasPrefix(k, "tars.io/Supported.") {
 				v := strings.ReplaceAll(k, "tars.io/", "tars.io~1")
-				jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-					OP:   crdMeta.JsonPatchRemove,
+				jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+					OP:   tarsMetaTools.JsonPatchRemove,
 					Path: fmt.Sprintf("/metadata/labels/%s", v),
 				})
 			}
@@ -637,8 +544,8 @@ func mutatingCreateTImage(requestAdmissionView *k8sAdmissionV1.AdmissionReview) 
 	}
 
 	for _, v := range shouldAddSupportedLabel {
-		jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-			OP:    crdMeta.JsonPatchAdd,
+		jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+			OP:    tarsMetaTools.JsonPatchAdd,
 			Path:  fmt.Sprintf("/metadata/labels/tars.io~1Supported.%s", v),
 			Value: v,
 		})
@@ -650,8 +557,8 @@ func mutatingCreateTImage(requestAdmissionView *k8sAdmissionV1.AdmissionReview) 
 	for i, v := range timage.Releases {
 		if _, ok := existing[v.ID]; ok {
 			newSeqAfterRemove := i - len(removes)
-			jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-				OP:   crdMeta.JsonPatchRemove,
+			jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+				OP:   tarsMetaTools.JsonPatchRemove,
 				Path: fmt.Sprintf("/releases/%d", newSeqAfterRemove),
 			})
 			removes[i] = nil
@@ -667,8 +574,8 @@ func mutatingCreateTImage(requestAdmissionView *k8sAdmissionV1.AdmissionReview) 
 				if i > len(removes) {
 					newSeqAfterRemove = i - len(removes)
 				}
-				jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-					OP:    crdMeta.JsonPatchAdd,
+				jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+					OP:    tarsMetaTools.JsonPatchAdd,
 					Path:  fmt.Sprintf("/releases/%d/createTime", newSeqAfterRemove),
 					Value: now,
 				})
@@ -687,10 +594,10 @@ func mutatingUpdateTImage(requestAdmissionView *k8sAdmissionV1.AdmissionReview) 
 }
 
 func mutatingCreateTTemplate(requestAdmissionView *k8sAdmissionV1.AdmissionReview) ([]byte, error) {
-	ttemplate := &crdV1beta2.TTemplate{}
+	ttemplate := &tarsCrdV1beta2.TTemplate{}
 	_ = json.Unmarshal(requestAdmissionView.Request.Object.Raw, ttemplate)
 
-	var jsonPatch crdMeta.JsonPatch
+	var jsonPatch tarsMetaTools.JsonPatch
 
 	for i := 0; i < 1; i++ {
 
@@ -698,9 +605,9 @@ func mutatingCreateTTemplate(requestAdmissionView *k8sAdmissionV1.AdmissionRevie
 
 		if fatherless {
 			if ttemplate.Labels != nil {
-				if _, ok := ttemplate.Labels[crdMeta.ParentLabel]; ok {
-					jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-						OP:   crdMeta.JsonPatchRemove,
+				if _, ok := ttemplate.Labels[tarsMetaV1beta2.ParentLabel]; ok {
+					jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+						OP:   tarsMetaTools.JsonPatchRemove,
 						Path: "/metadata/labels/tars.io~1Parent",
 					})
 				}
@@ -710,15 +617,15 @@ func mutatingCreateTTemplate(requestAdmissionView *k8sAdmissionV1.AdmissionRevie
 
 		if ttemplate.Labels == nil {
 			labels := map[string]string{}
-			jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-				OP:    crdMeta.JsonPatchAdd,
+			jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+				OP:    tarsMetaTools.JsonPatchAdd,
 				Path:  "/metadata/labels",
 				Value: labels,
 			})
 		}
 
-		jsonPatch = append(jsonPatch, crdMeta.JsonPatchItem{
-			OP:    crdMeta.JsonPatchAdd,
+		jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
+			OP:    tarsMetaTools.JsonPatchAdd,
 			Path:  "/metadata/labels/tars.io~1Parent",
 			Value: ttemplate.Spec.Parent,
 		})

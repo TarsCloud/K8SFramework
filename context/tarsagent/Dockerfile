@@ -1,0 +1,6 @@
+ARG REGISTRY_URL
+ARG BUILD_VERSION
+FROM $REGISTRY_URL/tars.cppbase:$BUILD_VERSION
+ENV ServerType=cpp
+COPY /root /
+RUN chmod +x /bin/entrypoint.sh

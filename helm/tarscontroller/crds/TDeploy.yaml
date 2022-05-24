@@ -1,0 +1,1164 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: tdeploys.k8s.tars.io
+spec:
+  conversion:
+    strategy: Webhook
+    webhook:
+      conversionReviewVersions:
+        - v1
+      clientConfig:
+        service:
+          name: tars-webhook-service
+          namespace: tars-system
+          path: /conversion
+        caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURUakNDQWphZ0F3SUJBZ0lKQVBPR1ZENlpIZHMvTUEwR0NTcUdTSWIzRFFFQkN3VUFNRHd4Q3pBSkJnTlYKQkFZVEFrTk9NUTR3REFZRFZRUUlEQVZJZFVKbGFURU9NQXdHQTFVRUJ3d0ZWM1ZvWVc0eERUQUxCZ05WQkFvTQpCSFJoY25Nd0hoY05NakV3T1RFMU1Ea3lNREV4V2hjTk5Ea3dNVE13TURreU1ERXhXakE4TVFzd0NRWURWUVFHCkV3SkRUakVPTUF3R0ExVUVDQXdGU0hWQ1pXa3hEakFNQmdOVkJBY01CVmQxYUdGdU1RMHdDd1lEVlFRS0RBUjAKWVhKek1JSUJJakFOQmdrcWhraUc5dzBCQVFFRkFBT0NBUThBTUlJQkNnS0NBUUVBMXVYeFYvK2FxaXFBSkRhaQp6OVJWTmppYnFIeUxDOGpaRFF6UnlkSkNVTnp1R0ZybWNONTJ2NE10T3cxc3U0Z1NQZUdLQzBTRmthTkV1MmZnClVyZFh3TVAydXF5QTR4allCRUZXMXowOWdlMUV5TTlpM0ZJNG12UkltN3c5YmNrb2NQK1hWbklvVFUwaTJ4eFMKOWlrcU1hdklIV0VqMnJnZThvK3BCQ2NDenYxWi9yNnJubnk0aDYyUW1VeXFXalpmMWdYQm9UaU1HZmZtVUxiLwpSSHZMUWtScEJpUktRdytaalFlRk5uTmxYVjVxOTV1emJjSHl4Z1lZZFZQTm4zZFNVSTFBZ0RQRmNwWWlZZ1RYCndUeThVbW93TSszKzBkYzJnR0ZLOTRaRWIxb2ExTmcwYnh6ZjFLbGRnbUxGOHNVN1dPR1hiYXdkY3JEaStWb1EKUGl1bTd3SURBUUFCbzFNd1VUQWRCZ05WSFE0RUZnUVU0Sm9SRzkwd0xNM01iWWxLd0o1NEZMSmJRdXN3SHdZRApWUjBqQkJnd0ZvQVU0Sm9SRzkwd0xNM01iWWxLd0o1NEZMSmJRdXN3RHdZRFZSMFRBUUgvQkFVd0F3RUIvekFOCkJna3Foa2lHOXcwQkFRc0ZBQU9DQVFFQUphVXV4NkpDZGRUOGEvWTk3OG9pQUVWaktIcjBmbnhvb3Y3K1FhOGUKbFEwOGNCSVJVZ0pSaUJxcVhheHEreVNvbWhFQk44dkU3SjB6a3lHeWxjSjJDaWRzOWdGK0R3dVZ5NTlXdGxxYgpwR2ZRQVRwLzZlTjlzd0JuSmtsUFNhanBsV3BtdnZZMTJhSENHOGZHYi9vb3J0cTk4UmplaVM1NmoyQStFTVAyCktnMEVBV0RmMFd1YUpCNzJ3K0tyaldVZUJuS1R4c1ZqTjNNK0NCT2xHQkN5QnQ2NS9EMzd4Ukk1R1VYOGR1WVAKM2IxeENKcW5McWZGYVV1NFRUV0t5WlVIQktVUjI0cUlSNHMzWWpRckZObkRMMmVQZ3JTVmFVMEpoYWR0dmlCZApFVG43ZXl2MVNFWUZaWC82L0FEY2lTTTVFNXhaMUhUMFB5S3l3MG42S2lNU3pBPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+  group: k8s.tars.io
+  names:
+    kind: TDeploy
+    listKind: TDeployList
+    plural: tdeploys
+    shortNames:
+      - td
+    singular: tdeploy
+  scope: Namespaced
+  versions:
+    - name: v1beta1
+      served: true
+      storage: false
+      schema:
+        openAPIV3Schema:
+          properties:
+            apply:
+              type: object
+              properties:
+                app:
+                  type: string
+                  pattern: ^[A-Za-z][0-9A-Za-z]*$
+                  maxLength: 63
+                server:
+                  type: string
+                  pattern: ^[A-Za-z][0-9A-Za-z]*$
+                  maxLength: 63
+                important:
+                  type: integer
+                  minimum: 1
+                  maximum: 20
+                  default: 3
+                subType:
+                  type: string
+                  enum: [ tars,normal ]
+                tars:
+                  type: object
+                  properties:
+                    profile:
+                      type: string
+                      default: ""
+                    servants:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                            pattern: ^[A-Za-z][0-9A-Za-z]{0,59}Obj$
+                          port:
+                            type: integer
+                            minimum: 1
+                            maximum: 65535
+                          thread:
+                            type: integer
+                            minimum: 1
+                            maximum: 99
+                            default: 3
+                          capacity:
+                            type: integer
+                            minimum: 1
+                            maximum: 3000000
+                            default: 10000
+                          connection:
+                            type: integer
+                            minimum: 1
+                            maximum: 3000000
+                            default: 10000
+                          isTars:
+                            type: boolean
+                            default: true
+                          isTcp:
+                            type: boolean
+                            default: true
+                          timeout:
+                            type: integer
+                            minimum: -1
+                            maximum: 6000000
+                            default: 60000
+                        required: [ name,port ]
+                      default: [ ]
+                    ports:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                            pattern: ^([0-9a-z][-0-9a-z]*)?[0-9a-z]$
+                            maxLength: 15
+                          port:
+                            type: integer
+                            minimum: 1
+                            maximum: 65535
+                          isTcp:
+                            type: boolean
+                            default: true
+                        required: [ name,port ]
+                    asyncThread:
+                      type: integer
+                      minimum: 0
+                      maximum: 50
+                      default: 3
+                    template:
+                      type: string
+                      pattern: ^([0-9a-z][-0-9a-z]*)?[0-9a-z](\.([0-9a-z][-0-9a-z]*)?[0-9a-z])*$
+                      maxLength: 253
+                  required: [ servants,template ]
+                normal:
+                  type: object
+                  properties:
+                    ports:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                            pattern: ^([0-9a-z][-0-9a-z]*)?[0-9a-z]$
+                            maxLength: 15
+                          port:
+                            type: integer
+                            minimum: 1
+                            maximum: 65535
+                          isTcp:
+                            type: boolean
+                            default: true
+                        required: [ name,port ]
+                  required: [ ports ]
+                k8s:
+                  type: object
+                  properties:
+                    abilityAffinity:
+                      type: string
+                      enum: [ AppRequired,ServerRequired, AppOrServerPreferred,None ]
+                      default: AppOrServerPreferred
+                    daemonSet:
+                      type: boolean
+                      default: false
+                    env:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                            pattern: ^[_0-9A-Za-z]*$
+                            maxLength: 63
+                          value:
+                            type: string
+                          valueFrom:
+                            type: object
+                            properties:
+                              fieldRef:
+                                type: object
+                                properties:
+                                  apiVersion:
+                                    type: string
+                                  fieldPath:
+                                    type: string
+                              resourceFieldRef:
+                                type: object
+                                properties:
+                                  containerName:
+                                    type: string
+                                  resource:
+                                    type: string
+                                  divisor:
+                                    x-kubernetes-int-or-string: true
+                                    default: "1"
+                                required: [ resource ]
+                              configMapKeyRef:
+                                type: object
+                                properties:
+                                  name:
+                                    type: string
+                                    pattern: ^([0-9a-z][-0-9a-z]*)?[0-9a-z](\.([0-9a-z][-0-9a-z]*)?[0-9a-z])*$
+                                    maxLength: 253
+                                  key:
+                                    type: string
+                                    pattern: ^([0-9A-Za-z][-0-9a-z]*)?[0-9A-Za-z]$
+                                    maxLength: 63
+                                  optional:
+                                    type: boolean
+                                    default: true
+                                required: [ name,key ]
+                              secretKeyRef:
+                                type: object
+                                properties:
+                                  name:
+                                    type: string
+                                    pattern: ^([0-9a-z][-0-9a-z]*)?[0-9a-z](\.([0-9a-z][-0-9a-z]*)?[0-9a-z])*$
+                                    maxLength: 253
+                                  key:
+                                    type: string
+                                    pattern: ^([0-9A-Za-z][-0-9a-z]*)?[0-9A-Za-z]$
+                                    maxLength: 63
+                                  optional:
+                                    type: boolean
+                                    default: true
+                                required: [ name,key ]
+                            oneOf:
+                              - required: [ fieldRef ]
+                              - required: [ resourceFieldRef ]
+                              - required: [ configMapKeyRef ]
+                              - required: [ secretKeyRef ]
+                        oneOf:
+                          - required: [ value ]
+                          - required: [ valueFrom ]
+                        required: [ name ]
+                    envFrom:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          configMapRef:
+                            type: object
+                            properties:
+                              name:
+                                type: string
+                                pattern: ^([0-9a-z][-0-9a-z]*)?[0-9a-z](\.([0-9a-z][-0-9a-z]*)?[0-9a-z])*$
+                                maxLength: 253
+                              optional:
+                                type: boolean
+                                default: true
+                            required: [ name ]
+                          secretRef:
+                            type: object
+                            properties:
+                              name:
+                                type: string
+                                pattern: ^([0-9a-z][-0-9a-z]*)?[0-9a-z](\.([0-9a-z][-0-9a-z]*)?[0-9a-z])*$
+                                maxLength: 253
+                              optional:
+                                type: boolean
+                                default: true
+                            required: [ name ]
+                          prefix:
+                            type: string
+                            pattern: ^[A-Za-z][_0-9A-Za-z]*$
+                            maxLength: 63
+                        oneOf:
+                          - required: [ configMapRef ]
+                          - required: [ secretRef ]
+                    hostIPC:
+                      default: false
+                      type: boolean
+                    hostNetwork:
+                      default: false
+                      type: boolean
+                    hostPorts:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          nameRef:
+                            type: string
+                            pattern: ^([0-9A-Za-z][-0-9a-z]*)?[0-9A-Za-z]$
+                            maxLength: 63
+                          port:
+                            type: integer
+                            minimum: 1
+                            maximum: 65535
+                        required: [ nameRef,port ]
+                    mounts:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                            pattern: ^([0-9A-Za-z][-0-9a-z]*)?[0-9A-Za-z]$
+                            maxLength: 63
+                          source:
+                            type: object
+                            properties:
+                              configMap:
+                                type: object
+                                properties:
+                                  name:
+                                    type: string
+                                  items:
+                                    type: array
+                                    items:
+                                      type: object
+                                      properties:
+                                        key:
+                                          type: string
+                                          pattern: ^[-._0-9A-Za-z]{1,253}$
+                                        path:
+                                          type: string
+                                        mode:
+                                          type: integer
+                                          minimum: 0
+                                          maximum: 0777
+                                          default: 0644
+                                    required: [ key,path ]
+                                  defaultMode:
+                                    type: integer
+                                    minimum: 0
+                                    maximum: 0777
+                                    default: 0644
+                                  optional:
+                                    type: boolean
+                                    default: true
+                                required: [ name ]
+                              secret:
+                                type: object
+                                properties:
+                                  secretName:
+                                    type: string
+                                  items:
+                                    type: array
+                                    items:
+                                      type: object
+                                      properties:
+                                        key:
+                                          type: string
+                                          pattern: ^[-._0-9A-Za-z]{1,253}$
+                                        path:
+                                          type: string
+                                        mode:
+                                          type: integer
+                                          minimum: 0
+                                          maximum: 0777
+                                          default: 0644
+                                    required: [ key,path ]
+                                  defaultMode:
+                                    type: integer
+                                    minimum: 0
+                                    maximum: 0777
+                                    default: 0644
+                                  optional:
+                                    type: boolean
+                                    default: true
+                                required: [ name ]
+                              emptyDir:
+                                type: object
+                                properties:
+                                  medium:
+                                    type: string
+                                    enum: [ "",Memory ]
+                                  sizeLimit:
+                                    x-kubernetes-int-or-string: true
+                              hostPath:
+                                type: object
+                                properties:
+                                  path:
+                                    type: string
+                                  type:
+                                    type: string
+                                    enum: [ "",Directory,DirectoryOrCreate,FileOrCreate,File,Socket,CharDevice,BlockDevice ]
+                                required: [ path,type ]
+                              persistentVolumeClaim:
+                                type: object
+                                properties:
+                                  claimName:
+                                    type: string
+                                  readOnly:
+                                    type: boolean
+                                    default: false
+                                required: [ claimName ]
+                              persistentVolumeClaimTemplate:
+                                type: object
+                                properties:
+                                  metadata:
+                                    type: object
+                                    properties:
+                                      labels:
+                                        type: object
+                                        additionalProperties:
+                                          type: string
+                                          pattern: ^([0-9A-Za-z][-_.0-9A-Za-z]*)?[0-9A-Za-z]?$
+                                          maxLength: 63
+                                      annotations:
+                                        type: object
+                                        additionalProperties:
+                                          type: string
+                                          pattern: ^([0-9A-Za-z][-_.0-9A-Za-z]*)?[0-9A-Za-z]?$
+                                          maxLength: 63
+                                  spec:
+                                    type: object
+                                    properties:
+                                      accessModes:
+                                        type: array
+                                        items:
+                                          type: string
+                                          enum: [ ReadWriteOnce,ReadOnlyMany,ReadWriteMany ]
+                                        minItems: 1
+                                      volumeName:
+                                        type: string
+                                      storageClassName:
+                                        type: string
+                                      volumeMode:
+                                        type: string
+                                        enum: [ Block,Filesystem ]
+                                      resources:
+                                        type: object
+                                        properties:
+                                          limits:
+                                            type: object
+                                            properties:
+                                              storage:
+                                                x-kubernetes-int-or-string: true
+                                                pattern: ^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
+                                            required: [ storage ]
+                                          requests:
+                                            type: object
+                                            properties:
+                                              storage:
+                                                x-kubernetes-int-or-string: true
+                                                pattern: ^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
+                                            required: [ storage ]
+                                        required: [ requests ]
+                                      selector:
+                                        type: object
+                                        properties:
+                                          matchLabels:
+                                            type: object
+                                            additionalProperties:
+                                              type: string
+                                              pattern: ^([0-9A-Za-z][-_.0-9A-Za-z]*)?[0-9A-Za-z]?$
+                                              maxLength: 63
+                                          matchExpressions:
+                                            type: array
+                                            items:
+                                              type: object
+                                              properties:
+                                                key:
+                                                  type: string
+                                                  pattern: ^([0-9A-Za-z][-0-9A-Za-z_./]*)?[0-9A-Za-z]$
+                                                  maxLength: 63
+                                                operator:
+                                                  type: string
+                                                  enum: [ In,NotIn,Exists,DoesNotExist ]
+                                                values:
+                                                  type: array
+                                                  items:
+                                                    type: string
+                                                    pattern: ^([0-9A-Za-z][-_.0-9A-Za-z]*)?[0-9A-Za-z]?$
+                                                    maxLength: 63
+                                    required: [ accessModes,resources ]
+                                required: [ spec ]
+                              tLocalVolume:
+                                type: object
+                                properties:
+                                  uid:
+                                    type: string
+                                    pattern: ^(0|[1-9][0-9]{0,5})$
+                                    default: "0"
+                                  gid:
+                                    type: string
+                                    pattern: ^(0|[1-9][0-9]{0,5})$
+                                    default: "0"
+                                  mode:
+                                    type: string
+                                    parrern: ^0?[1-7]{3,3}$
+                                    default: "755"
+                            oneOf:
+                              - required: [ configMap ]
+                              - required: [ secret ]
+                              - required: [ persistentVolumeClaim ]
+                              - required: [ persistentVolumeClaimTemplate ]
+                              - required: [ hostPath ]
+                              - required: [ emptyDir ]
+                              - required: [ tLocalVolume ]
+                          readOnly:
+                            type: boolean
+                            default: false
+                          mountPath:
+                            type: string
+                          subPath:
+                            type: string
+                          mountPropagation:
+                            type: string
+                            enum: [ None,HostToContainer,Bidirectional ]
+                          subPathExpr:
+                            type: string
+                        require: [ name,source,mountPath ]
+                    nodeSelector:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          key:
+                            type: string
+                            pattern: ^([0-9A-Za-z][-0-9A-Za-z_.]*)?[0-9A-Za-z](/([0-9A-Za-z][-0-9A-Za-z_.]*)?[0-9A-Za-z])?$
+                            maxLength: 63
+                          operator:
+                            type: string
+                            enum: [ In,NotIn,Exists,DoesNotExist,Gt,Lt ]
+                          values:
+                            type: array
+                            items:
+                              type: string
+                              pattern: ^([0-9A-Za-z][-_.0-9A-Za-z]*)?[0-9A-Za-z]?$
+                              maxLength: 63
+                        require: [ key,operator,values ]
+                      default: [ ]
+                    notStacked:
+                      type: boolean
+                      default: false
+                    podManagementPolicy:
+                      type: string
+                      enum: [ OrderedReady,Parallel ]
+                      default: Parallel
+                    readinessGate:
+                      type: string
+                      enum: [ "",tars.io/active ]
+                    replicas:
+                      type: integer
+                      minimum: 0
+                      maximum: 99
+                    resources:
+                      type: object
+                      properties:
+                        requests:
+                          type: object
+                          properties:
+                            memory:
+                              type: string
+                              pattern: ^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
+                            cpu:
+                              type: string
+                              pattern: ^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
+                        limits:
+                          type: object
+                          properties:
+                            memory:
+                              type: string
+                              pattern: ^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
+                            cpu:
+                              type: string
+                              pattern: ^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
+                    serviceAccount:
+                      type: string
+                      pattern: ^([0-9A-Za-z][-0-9a-z]*)?[0-9A-Za-z]$
+                      maxLength: 63
+                release:
+                  type: object
+                  properties:
+                    source:
+                      type: string
+                      #                      pattern: ^([0-9a-z][-0-9a-z]*)?[0-9a-z](\.([0-9a-z][-0-9a-z]*)?[0-9a-z])*$
+                      maxLength: 253
+                    id:
+                      type: string
+                      pattern: ^([0-9A-Za-z][-_.0-9A-Za-z]*)?[0-9A-Za-z]$
+                      maxLength: 63
+                    image:
+                      type: string
+                      pattern: ^[\x2D-\x3A\x61-\x7A]*$
+                      maxLength: 500
+                    secret:
+                      type: string
+                      pattern: ^([0-9a-z][-0-9a-z]*)?[0-9a-z](\.([0-9a-z][-0-9a-z]*)?[0-9a-z])*$
+                      maxLength: 253
+                    time:
+                      type: string
+                      format: date-time
+                  required: [ id,image ]
+              required: [ app ,server,subType ]
+              oneOf:
+                - required: [ tars,k8s ]
+                - required: [ normal,k8s ]
+            approve:
+              properties:
+                person:
+                  type: string
+                  pattern: ^[A-Za-z][0-9A-Za-z_.-]{0,15}$
+                reason:
+                  type: string
+                  maxLength: 300
+                result:
+                  type: boolean
+                time:
+                  type: string
+                  format: date-time
+              required:
+                - person
+                - time
+                - result
+                - reason
+              type: object
+            deployed:
+              type: boolean
+          required: [ apply ]
+          type: object
+    - name: v1beta2
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          properties:
+            apply:
+              type: object
+              properties:
+                app:
+                  type: string
+                  pattern: ^[A-Za-z][0-9A-Za-z]*$
+                  maxLength: 63
+                server:
+                  type: string
+                  pattern: ^[A-Za-z][0-9A-Za-z]*$
+                  maxLength: 63
+                important:
+                  type: integer
+                  minimum: 1
+                  maximum: 20
+                  default: 3
+                subType:
+                  type: string
+                  enum: [ tars,normal ]
+                tars:
+                  type: object
+                  properties:
+                    profile:
+                      type: string
+                      default: ""
+                    servants:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                            pattern: ^[A-Za-z][0-9A-Za-z]{0,59}Obj$
+                          port:
+                            type: integer
+                            minimum: 1
+                            maximum: 65535
+                          thread:
+                            type: integer
+                            minimum: 1
+                            maximum: 99
+                            default: 3
+                          capacity:
+                            type: integer
+                            minimum: 1
+                            maximum: 3000000
+                            default: 10000
+                          connection:
+                            type: integer
+                            minimum: 1
+                            maximum: 3000000
+                            default: 10000
+                          isTars:
+                            type: boolean
+                            default: true
+                          isTcp:
+                            type: boolean
+                            default: true
+                          timeout:
+                            type: integer
+                            minimum: -1
+                            maximum: 6000000
+                            default: 60000
+                        required: [ name,port ]
+                      default: [ ]
+                    ports:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                            pattern: ^([0-9a-z][-0-9a-z]*)?[0-9a-z]$
+                            maxLength: 15
+                          port:
+                            type: integer
+                            minimum: 1
+                            maximum: 65535
+                          isTcp:
+                            type: boolean
+                            default: true
+                        required: [ name,port ]
+                    asyncThread:
+                      type: integer
+                      minimum: 0
+                      maximum: 50
+                      default: 3
+                    template:
+                      type: string
+                      pattern: ^([0-9a-z][-0-9a-z]*)?[0-9a-z](\.([0-9a-z][-0-9a-z]*)?[0-9a-z])*$
+                      maxLength: 253
+                  required: [ servants,template ]
+                k8s:
+                  type: object
+                  properties:
+                    abilityAffinity:
+                      type: string
+                      enum: [ AppRequired,ServerRequired, AppOrServerPreferred,None ]
+                      default: AppOrServerPreferred
+                    daemonSet:
+                      type: boolean
+                      default: false
+                    env:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                            pattern: ^[-._0-9A-Za-z]{1,63}$
+                          value:
+                            type: string
+                          valueFrom:
+                            type: object
+                            properties:
+                              fieldRef:
+                                type: object
+                                properties:
+                                  apiVersion:
+                                    type: string
+                                  fieldPath:
+                                    type: string
+                              resourceFieldRef:
+                                type: object
+                                properties:
+                                  containerName:
+                                    type: string
+                                  resource:
+                                    type: string
+                                  divisor:
+                                    x-kubernetes-int-or-string: true
+                                    default: "1"
+                                required: [ resource ]
+                              configMapKeyRef:
+                                type: object
+                                properties:
+                                  name:
+                                    type: string
+                                    pattern: ^([0-9a-z][-0-9a-z]*)?[0-9a-z](\.([0-9a-z][-0-9a-z]*)?[0-9a-z])*$
+                                    maxLength: 253
+                                  key:
+                                    type: string
+                                    pattern: ^([0-9A-Za-z][-0-9a-z]*)?[0-9A-Za-z]$
+                                    maxLength: 63
+                                  optional:
+                                    type: boolean
+                                    default: true
+                                required: [ name,key ]
+                              secretKeyRef:
+                                type: object
+                                properties:
+                                  name:
+                                    type: string
+                                    pattern: ^([0-9a-z][-0-9a-z]*)?[0-9a-z](\.([0-9a-z][-0-9a-z]*)?[0-9a-z])*$
+                                    maxLength: 253
+                                  key:
+                                    type: string
+                                    pattern: ^([0-9A-Za-z][-0-9a-z]*)?[0-9A-Za-z]$
+                                    maxLength: 63
+                                  optional:
+                                    type: boolean
+                                    default: true
+                                required: [ name,key ]
+                            oneOf:
+                              - required: [ fieldRef ]
+                              - required: [ resourceFieldRef ]
+                              - required: [ configMapKeyRef ]
+                              - required: [ secretKeyRef ]
+                        oneOf:
+                          - required: [ value ]
+                          - required: [ valueFrom ]
+                        required: [ name ]
+                    envFrom:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          configMapRef:
+                            type: object
+                            properties:
+                              name:
+                                type: string
+                                pattern: ^([0-9a-z][-0-9a-z]*)?[0-9a-z](\.([0-9a-z][-0-9a-z]*)?[0-9a-z])*$
+                                maxLength: 253
+                              optional:
+                                type: boolean
+                                default: true
+                            required: [ name ]
+                          secretRef:
+                            type: object
+                            properties:
+                              name:
+                                type: string
+                                pattern: ^([0-9a-z][-0-9a-z]*)?[0-9a-z](\.([0-9a-z][-0-9a-z]*)?[0-9a-z])*$
+                                maxLength: 253
+                              optional:
+                                type: boolean
+                                default: true
+                            required: [ name ]
+                          prefix:
+                            type: string
+                            pattern: ^[A-Za-z][_0-9A-Za-z]*$
+                            maxLength: 63
+                        oneOf:
+                          - required: [ configMapRef ]
+                          - required: [ secretRef ]
+                    hostIPC:
+                      default: false
+                      type: boolean
+                    hostNetwork:
+                      default: false
+                      type: boolean
+                    hostPorts:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          nameRef:
+                            type: string
+                            pattern: ^([0-9A-Za-z][-0-9a-z]*)?[0-9A-Za-z]$
+                            maxLength: 63
+                          port:
+                            type: integer
+                            minimum: 1
+                            maximum: 65535
+                        required: [ nameRef,port ]
+                    mounts:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                            pattern: ^([0-9A-Za-z][-0-9a-z]*)?[0-9A-Za-z]$
+                            maxLength: 63
+                          source:
+                            type: object
+                            properties:
+                              configMap:
+                                type: object
+                                properties:
+                                  name:
+                                    type: string
+                                  items:
+                                    type: array
+                                    items:
+                                      type: object
+                                      properties:
+                                        key:
+                                          type: string
+                                          pattern: ^[-._0-9A-Za-z]{1,253}$
+                                        path:
+                                          type: string
+                                        mode:
+                                          type: integer
+                                          minimum: 0
+                                          maximum: 0777
+                                          default: 0644
+                                    required: [ key,path ]
+                                  defaultMode:
+                                    type: integer
+                                    minimum: 0
+                                    maximum: 0777
+                                    default: 0644
+                                  optional:
+                                    type: boolean
+                                    default: true
+                                required: [ name ]
+                              secret:
+                                type: object
+                                properties:
+                                  secretName:
+                                    type: string
+                                  items:
+                                    type: array
+                                    items:
+                                      type: object
+                                      properties:
+                                        key:
+                                          type: string
+                                          pattern: ^[-._0-9A-Za-z]{1,253}$
+                                        path:
+                                          type: string
+                                        mode:
+                                          type: integer
+                                          minimum: 0
+                                          maximum: 0777
+                                          default: 0644
+                                    required: [ key,path ]
+                                  defaultMode:
+                                    type: integer
+                                    minimum: 0
+                                    maximum: 0777
+                                    default: 0644
+                                  optional:
+                                    type: boolean
+                                    default: true
+                                required: [ secretName ]
+                              emptyDir:
+                                type: object
+                                properties:
+                                  medium:
+                                    type: string
+                                    enum: [ "",Memory ]
+                                  sizeLimit:
+                                    x-kubernetes-int-or-string: true
+                              hostPath:
+                                type: object
+                                properties:
+                                  path:
+                                    type: string
+                                  type:
+                                    type: string
+                                    enum: [ "",Directory,DirectoryOrCreate,FileOrCreate,File,Socket,CharDevice,BlockDevice ]
+                                required: [ path,type ]
+                              persistentVolumeClaim:
+                                type: object
+                                properties:
+                                  claimName:
+                                    type: string
+                                  readOnly:
+                                    type: boolean
+                                    default: false
+                                required: [ claimName ]
+                              persistentVolumeClaimTemplate:
+                                type: object
+                                properties:
+                                  metadata:
+                                    type: object
+                                    properties:
+                                      labels:
+                                        type: object
+                                        additionalProperties:
+                                          type: string
+                                          pattern: ^([0-9A-Za-z][-_.0-9A-Za-z]*)?[0-9A-Za-z]?$
+                                          maxLength: 63
+                                      annotations:
+                                        type: object
+                                        additionalProperties:
+                                          type: string
+                                          pattern: ^([0-9A-Za-z][-_.0-9A-Za-z]*)?[0-9A-Za-z]?$
+                                          maxLength: 63
+                                  spec:
+                                    type: object
+                                    properties:
+                                      accessModes:
+                                        type: array
+                                        items:
+                                          type: string
+                                          enum: [ ReadWriteOnce,ReadOnlyMany,ReadWriteMany ]
+                                        minItems: 1
+                                      volumeName:
+                                        type: string
+                                      storageClassName:
+                                        type: string
+                                      volumeMode:
+                                        type: string
+                                        enum: [ Block,Filesystem ]
+                                      resources:
+                                        type: object
+                                        properties:
+                                          limits:
+                                            type: object
+                                            properties:
+                                              storage:
+                                                x-kubernetes-int-or-string: true
+                                                pattern: ^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
+                                            required: [ storage ]
+                                          requests:
+                                            type: object
+                                            properties:
+                                              storage:
+                                                x-kubernetes-int-or-string: true
+                                                pattern: ^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
+                                            required: [ storage ]
+                                        required: [ requests ]
+                                      selector:
+                                        type: object
+                                        properties:
+                                          matchLabels:
+                                            type: object
+                                            additionalProperties:
+                                              type: string
+                                              pattern: ^([0-9A-Za-z][-_.0-9A-Za-z]*)?[0-9A-Za-z]?$
+                                              maxLength: 63
+                                          matchExpressions:
+                                            type: array
+                                            items:
+                                              type: object
+                                              properties:
+                                                key:
+                                                  type: string
+                                                  pattern: ^([0-9A-Za-z][-0-9A-Za-z_./]*)?[0-9A-Za-z]$
+                                                  maxLength: 63
+                                                operator:
+                                                  type: string
+                                                  enum: [ In,NotIn,Exists,DoesNotExist ]
+                                                values:
+                                                  type: array
+                                                  items:
+                                                    type: string
+                                                    pattern: ^([0-9A-Za-z][-_.0-9A-Za-z]*)?[0-9A-Za-z]?$
+                                                    maxLength: 63
+                                    required: [ accessModes,resources ]
+                                required: [ spec ]
+                              tLocalVolume:
+                                type: object
+                                properties:
+                                  uid:
+                                    type: string
+                                    pattern: ^(0|[1-9][0-9]{0,5})$
+                                    default: "0"
+                                  gid:
+                                    type: string
+                                    pattern: ^(0|[1-9][0-9]{0,5})$
+                                    default: "0"
+                                  mode:
+                                    type: string
+                                    parrern: ^0?[1-7]{3,3}$
+                                    default: "755"
+                            oneOf:
+                              - required: [ configMap ]
+                              - required: [ secret ]
+                              - required: [ persistentVolumeClaim ]
+                              - required: [ persistentVolumeClaimTemplate ]
+                              - required: [ hostPath ]
+                              - required: [ emptyDir ]
+                              - required: [ tLocalVolume ]
+                          readOnly:
+                            type: boolean
+                            default: false
+                          mountPath:
+                            type: string
+                          subPath:
+                            type: string
+                          mountPropagation:
+                            type: string
+                            enum: [ None,HostToContainer,Bidirectional ]
+                          subPathExpr:
+                            type: string
+                        require: [ name,source,mountPath ]
+                    nodeSelector:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          key:
+                            type: string
+                            pattern: ^([0-9A-Za-z][-0-9A-Za-z_.]*)?[0-9A-Za-z](/([0-9A-Za-z][-0-9A-Za-z_.]*)?[0-9A-Za-z])?$
+                            maxLength: 63
+                          operator:
+                            type: string
+                            enum: [ In,NotIn,Exists,DoesNotExist,Gt,Lt ]
+                          values:
+                            type: array
+                            items:
+                              type: string
+                              pattern: ^([0-9A-Za-z][-_.0-9A-Za-z]*)?[0-9A-Za-z]?$
+                              maxLength: 63
+                        require: [ key,operator,values ]
+                      default: [ ]
+                    notStacked:
+                      type: boolean
+                      default: false
+                    podManagementPolicy:
+                      type: string
+                      enum: [ OrderedReady,Parallel ]
+                      default: Parallel
+                    readinessGate:
+                      type: string
+                      enum: [ "",tars.io/active ]
+                    replicas:
+                      type: integer
+                      minimum: 0
+                      maximum: 99
+                    resources:
+                      type: object
+                      properties:
+                        requests:
+                          type: object
+                          properties:
+                            memory:
+                              type: string
+                              pattern: ^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
+                            cpu:
+                              type: string
+                              pattern: ^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
+                        limits:
+                          type: object
+                          properties:
+                            memory:
+                              type: string
+                              pattern: ^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
+                            cpu:
+                              type: string
+                              pattern: ^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$
+                      default: { }
+                    serviceAccount:
+                      type: string
+                      pattern: ^([0-9A-Za-z][-0-9a-z]*)?[0-9A-Za-z]$
+                      maxLength: 63
+                    imagePullPolicy:
+                      type: string
+                      enum: [ Always,Never,IfNotPresent ]
+                      default: Always
+                    launcherType:
+                      type: string
+                      enum: [ foreground,background ]
+                      default: background
+                    updateStrategy:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                          enum: [ RollingUpdate, OnDelete ]
+                          default: RollingUpdate
+                        rollingUpdate:
+                          type: object
+                          properties:
+                            partition:
+                              type: integer
+                              default: 0
+                          default: { }
+                      default: { }
+                mark:
+                  type: string
+                  maxLength: 300
+                person:
+                  type: string
+                  maxLength: 100
+              required: [ app ,server,subType,tars,k8s ]
+            approve:
+              properties:
+                person:
+                  type: string
+                  pattern: ^[A-Za-z][0-9A-Za-z_.-]{0,15}$
+                reason:
+                  type: string
+                  maxLength: 300
+                result:
+                  type: boolean
+                time:
+                  type: string
+                  format: date-time
+              required:
+                - person
+                - time
+                - result
+                - reason
+              type: object
+            deployed:
+              type: boolean
+          required: [ apply ]
+          type: object

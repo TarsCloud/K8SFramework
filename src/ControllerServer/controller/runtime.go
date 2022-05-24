@@ -4,23 +4,21 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	k8sCoreV1 "k8s.io/api/core/v1"
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilRuntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/client-go/kubernetes"
 	k8sSchema "k8s.io/client-go/kubernetes/scheme"
-	k8sCoreTypedV1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	k8sMetadata "k8s.io/client-go/metadata"
 	k8sClientCmd "k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/leaderelection"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	"k8s.io/client-go/tools/record"
-	crdV1beta2 "k8s.tars.io/api/crd/v1beta2"
-	crdMeta "k8s.tars.io/api/meta"
 	crdVersioned "k8s.tars.io/client-go/clientset/versioned"
 	crdScheme "k8s.tars.io/client-go/clientset/versioned/scheme"
+	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
+	tarsMetaV1beta3 "k8s.tars.io/meta/v1beta3"
 	"os"
 	"strings"
 	"sync"
@@ -32,7 +30,7 @@ var crdClient crdVersioned.Interface
 var k8sMetadataClient k8sMetadata.Interface
 var informers *Informers
 
-var tframeworkConfigs map[string]*crdV1beta2.TFrameworkConfig
+var tframeworkConfigs map[string]*tarsCrdV1beta3.TFrameworkConfig
 var tframeworkRWLock sync.RWMutex
 
 var controllerServiceAccount string
@@ -43,8 +41,8 @@ const TControllerServiceAccount = "tars-controller"
 
 func GetDefaultNodeImage(namespace string) (image string, secret string) {
 
-	var tfc *crdV1beta2.TFrameworkConfig
-	var timage *crdV1beta2.TImage
+	var tfc *tarsCrdV1beta3.TFrameworkConfig
+	var timage *tarsCrdV1beta3.TImage
 	var err error
 	if informers.synced {
 		if tfc = GetTFrameworkConfig(namespace); tfc != nil {
@@ -64,15 +62,15 @@ func GetDefaultNodeImage(namespace string) (image string, secret string) {
 		}
 
 		utilRuntime.HandleError(fmt.Errorf("no default node image set"))
-		return crdMeta.ServiceImagePlaceholder, ""
+		return tarsMetaV1beta3.ServiceImagePlaceholder, ""
 	}
 
-	tfc, _ = crdClient.CrdV1beta2().TFrameworkConfigs(namespace).Get(context.TODO(), crdMeta.FixedTFrameworkConfigResourceName, k8sMetaV1.GetOptions{})
+	tfc, _ = crdClient.CrdV1beta3().TFrameworkConfigs(namespace).Get(context.TODO(), tarsMetaV1beta3.FixedTFrameworkConfigResourceName, k8sMetaV1.GetOptions{})
 	if tfc != nil {
 		return tfc.NodeImage.Image, tfc.NodeImage.Secret
 	}
 
-	timage, _ = crdClient.CrdV1beta2().TImages(namespace).Get(context.TODO(), "node", k8sMetaV1.GetOptions{})
+	timage, _ = crdClient.CrdV1beta3().TImages(namespace).Get(context.TODO(), "node", k8sMetaV1.GetOptions{})
 	if timage != nil {
 		for _, release := range timage.Releases {
 			if strings.HasPrefix(release.ID, "default") {
@@ -82,7 +80,7 @@ func GetDefaultNodeImage(namespace string) (image string, secret string) {
 	}
 
 	utilRuntime.HandleError(fmt.Errorf("no default node image set"))
-	return crdMeta.ServiceImagePlaceholder, ""
+	return tarsMetaV1beta3.ServiceImagePlaceholder, ""
 }
 
 func GetControllerUsername() string {
@@ -90,23 +88,25 @@ func GetControllerUsername() string {
 }
 
 func createRecorder(namespace string) {
-	if recorder == nil {
-		eventBroadcaster := record.NewBroadcaster()
-		eventBroadcaster.StartRecordingToSink(&k8sCoreTypedV1.EventSinkImpl{Interface: k8sClient.CoreV1().Events(namespace)})
-		recorder = eventBroadcaster.NewRecorder(k8sSchema.Scheme, k8sCoreV1.EventSource{
-			Component: "tarscontroller",
-			Host:      "",
-		})
-	}
+	//fixme
+	//if recorder == nil {
+	//	eventBroadcaster := record.NewBroadcaster()
+	//	eventBroadcaster.StartRecordingToSink(&k8sCoreTypedV1.EventSinkImpl{Interface: k8sClient.CoreV1().Events(namespace)})
+	//	recorder = eventBroadcaster.NewRecorder(k8sSchema.Scheme, k8sCoreV1.EventSource{
+	//		Component: "tarscontroller",
+	//		Host:      "",
+	//	})
+	//}
 }
 
-func Event(namespace string, object runtime.Object, eventType, reason, message string) {
-	if recorder == nil {
-		createRecorder(namespace)
-	}
-	if recorder != nil {
-		recorder.Event(object, eventType, reason, message)
-	}
+func Event(object runtime.Object, eventType, reason, message string) {
+	//fixme
+	//if recorder == nil {
+	//	createRecorder(controllerNamespace)
+	//}
+	//if recorder != nil {
+	//	recorder.Event(object, eventType, reason, message)
+	//}
 }
 
 func CreateContext(masterUrl, kubeConfigPath string) (*Clients, *Informers, error) {
@@ -139,11 +139,11 @@ func CreateContext(masterUrl, kubeConfigPath string) (*Clients, *Informers, erro
 		controllerNamespace = string(bs)
 	} else {
 		utilRuntime.HandleError(fmt.Errorf("cannot read namespace file : %s", err.Error()))
-		controllerNamespace = crdMeta.DefaultControllerNamespace
+		controllerNamespace = tarsMetaV1beta3.DefaultControllerNamespace
 	}
 
 	if masterUrl != "" || kubeConfigPath != "" {
-		controllerServiceAccount = crdMeta.DefaultUnlawfulAndOnlyForDebugUserName
+		controllerServiceAccount = tarsMetaV1beta3.DefaultUnlawfulAndOnlyForDebugUserName
 	} else {
 		controllerServiceAccount = fmt.Sprintf("system:serviceaccount:%s:%s", controllerNamespace, TControllerServiceAccount)
 	}
@@ -202,7 +202,7 @@ func LeaderElectAndRun(callbacks leaderelection.LeaderCallbacks) {
 	})
 }
 
-func GetTFrameworkConfig(namespace string) *crdV1beta2.TFrameworkConfig {
+func GetTFrameworkConfig(namespace string) *tarsCrdV1beta3.TFrameworkConfig {
 	tframeworkRWLock.RLock()
 	defer tframeworkRWLock.RUnlock()
 	if tframeworkConfigs == nil {
@@ -212,7 +212,7 @@ func GetTFrameworkConfig(namespace string) *crdV1beta2.TFrameworkConfig {
 	return tfc
 }
 
-func SetTFrameworkConfig(namespace string, tfc *crdV1beta2.TFrameworkConfig) {
+func SetTFrameworkConfig(namespace string, tfc *tarsCrdV1beta3.TFrameworkConfig) {
 	tframeworkRWLock.Lock()
 	defer tframeworkRWLock.Unlock()
 	if tframeworkConfigs != nil {
@@ -220,7 +220,7 @@ func SetTFrameworkConfig(namespace string, tfc *crdV1beta2.TFrameworkConfig) {
 		return
 	}
 
-	tframeworkConfigs = map[string]*crdV1beta2.TFrameworkConfig{
+	tframeworkConfigs = map[string]*tarsCrdV1beta3.TFrameworkConfig{
 		namespace: tfc.DeepCopy(),
 	}
 }

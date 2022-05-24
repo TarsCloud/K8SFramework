@@ -2,73 +2,92 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
-	utilRuntime "k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/client-go/kubernetes"
-	k8sSchema "k8s.io/client-go/kubernetes/scheme"
-	k8sClientCmd "k8s.io/client-go/tools/clientcmd"
-	crdVersioned "k8s.tars.io/client-go/clientset/versioned"
-	crdScheme "k8s.tars.io/client-go/clientset/versioned/scheme"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 )
 
-type K8SContext struct {
-	k8sClient kubernetes.Interface
-	crdClient crdVersioned.Interface
-	namespace string
-}
+var (
+	glPodName      string
+	glPodUploadDir string
+	glPodBuildDir  string
+	glPodCacheDir  string
 
-func CreateK8SContext(masterUrl, kubeConfigPath string) *K8SContext {
-	clusterConfig, err := k8sClientCmd.BuildConfigFromFlags(masterUrl, kubeConfigPath)
-	if err != nil {
-		utilRuntime.HandleError(fmt.Errorf("fatal eror : %s", err.Error()))
+	glHostBuildDir string
+	glHostCacheDir string
+
+	glStopChan chan struct{}
+
+	glK8sContext *K8SContext
+	glEngine     *Engine
+	glWatcher    *Watcher
+	glRestful    *RestfulServer
+)
+
+func init() {
+	glPodName = os.Getenv("PodName")
+	if glPodName == "" {
+		log.Printf("get empty PodName value")
 		os.Exit(-1)
 	}
 
-	k8sClient := kubernetes.NewForConfigOrDie(clusterConfig)
-
-	crdClient := crdVersioned.NewForConfigOrDie(clusterConfig)
-
-	utilRuntime.Must(crdScheme.AddToScheme(k8sSchema.Scheme))
-
-	const namespaceFile = "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
-
-	var namespace string
-	var bs []byte
-	if bs, err = ioutil.ReadFile(namespaceFile); err != nil {
-		utilRuntime.HandleError(fmt.Errorf("fatal error :  unable to load namespace value, %s", err.Error()))
+	workspaceInPod := os.Getenv("WorkSpaceInPod")
+	if workspaceInPod == "" {
+		log.Printf("get empty WorkSpaceInPod value")
 		os.Exit(-1)
-	} else {
-		namespace = string(bs)
 	}
-	return &K8SContext{
-		k8sClient: k8sClient,
-		crdClient: crdClient,
-		namespace: namespace,
+
+	glPodUploadDir = fmt.Sprintf("%s%s/%s", workspaceInPod, UploadDir, glPodName)
+	_ = os.RemoveAll(glPodUploadDir)
+	if err := os.MkdirAll(glPodUploadDir, 0777); err != nil {
+		log.Printf("create upload dir failed: %s", err.Error())
+		os.Exit(-1)
 	}
+
+	glPodBuildDir = fmt.Sprintf("%s%s/%s", workspaceInPod, BuildDir, glPodName)
+	_ = os.RemoveAll(glPodBuildDir)
+	if err := os.MkdirAll(glPodBuildDir, 0777); err != nil {
+		log.Printf("create build dir failed: %s", err.Error())
+		os.Exit(-1)
+	}
+
+	glPodCacheDir = fmt.Sprintf("%s%s/%s", workspaceInPod, CacheDir, glPodName)
+	_ = os.RemoveAll(glPodCacheDir)
+	if err := os.MkdirAll(glPodCacheDir, 0777); err != nil {
+		log.Printf("create build dir failed: %s", err.Error())
+		os.Exit(-1)
+	}
+
+	hostWorkspace := os.Getenv("WorkSpaceInHost")
+	if hostWorkspace == "" {
+		log.Printf("get empty WorkSpaceInHost value")
+		os.Exit(-1)
+	}
+
+	glHostBuildDir = fmt.Sprintf("%s%s/%s", hostWorkspace, BuildDir, glPodName)
+	glHostCacheDir = fmt.Sprintf("%s%s/%s", hostWorkspace, CacheDir, glPodName)
 }
 
 func main() {
 
-	stopChan := make(chan struct{})
-	k8sContext := CreateK8SContext("", "")
+	glStopChan = make(chan struct{})
 
-	watcher := NewWatcher(k8sContext)
-	watcher.Start(stopChan)
-	watcher.WaitSync(stopChan)
+	glK8sContext = CreateK8SContext("", "")
 
-	//todo check config values;
+	glWatcher = NewWatcher()
+	glWatcher.Start(glStopChan)
+	glWatcher.WaitSync(glStopChan)
 
-	builder = NewBuilder(k8sContext)
-	builder.Start(stopChan, MaximumConcurrencyBuildTask)
+	glEngine = NewEngine()
+	glEngine.Start(glStopChan, MaximumConcurrencyBuildTask)
 
-	restfulServer := NewRestfulServer()
-	restfulServer.Start(stopChan)
+	glRestful = NewRestful()
+	glRestful.Start(glStopChan)
 
 	sigChan := make(chan os.Signal)
+
 	signal.Notify(sigChan, syscall.SIGCHLD, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	for true {
 		sig := <-sigChan
@@ -80,6 +99,6 @@ func main() {
 			break
 		}
 	}
-	close(stopChan)
+	close(glStopChan)
 	time.Sleep(time.Second * 1)
 }

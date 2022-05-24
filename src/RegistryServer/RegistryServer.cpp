@@ -19,7 +19,7 @@ static void createK8SContext()
     K8SClient::instance().start();
     K8SWatcher::instance().start();
 
-    K8SWatcherSetting teWatchSetting("k8s.tars.io", "v1beta2", "tendpoints", K8SParams::Namespace());
+    K8SWatcherSetting teWatchSetting("k8s.tars.io", "v1beta3", "tendpoints", K8SParams::Namespace());
     teWatchSetting.preList = K8SWatchCallback::preTEList;
     teWatchSetting.postList = K8SWatchCallback::postTEList;
     teWatchSetting.onAdded = K8SWatchCallback::onTEAdded;
@@ -27,7 +27,7 @@ static void createK8SContext()
     teWatchSetting.onDeleted = K8SWatchCallback::onTEDeleted;
     teWatchSetting.onError = onError;
 
-    K8SWatcherSetting ttWatchSetting("k8s.tars.io", "v1beta2", "ttemplates", K8SParams::Namespace());
+    K8SWatcherSetting ttWatchSetting("k8s.tars.io", "v1beta3", "ttemplates", K8SParams::Namespace());
     ttWatchSetting.preList = K8SWatchCallback::preTTList;
     ttWatchSetting.postList = K8SWatchCallback::postTTList;
     ttWatchSetting.onAdded = K8SWatchCallback::onTTAdded;
@@ -35,7 +35,7 @@ static void createK8SContext()
     ttWatchSetting.onDeleted = K8SWatchCallback::onTTDeleted;
     ttWatchSetting.onError = onError;
 
-    K8SWatcherSetting tfcWatchSetting("k8s.tars.io", "v1beta2", "tframeworkconfigs", K8SParams::Namespace());
+    K8SWatcherSetting tfcWatchSetting("k8s.tars.io", "v1beta3", "tframeworkconfigs", K8SParams::Namespace());
     tfcWatchSetting.setFiledFilter("metadata.name=tars-framework");
     tfcWatchSetting.onAdded = K8SWatchCallback::onTFCAdded;
     tfcWatchSetting.onModified = K8SWatchCallback::onTFCModified;

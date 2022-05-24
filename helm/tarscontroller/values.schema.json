@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "properties": {
+    "controller": {
+      "type": "object",
+      "properties": {
+        "registry": {
+          "description": "image hub address where tarsimage can pull tars controller service image",
+          "type": "string",
+          "pattern": "^[\\w.~%-]+(:\\d{1,5})?(/[\\w.~%-]+){0,5}$"
+        },
+        "tag": {
+          "description": "tars controller service image's tag, In general tag value is equal to the BUILD_VERSION specified when executing make",
+          "type": "string",
+          "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][\\da-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][\\da-zA-Z-]*))*))?(?:\\+([\\da-zA-Z-]+(?:\\.[\\da-zA-Z-]+)*))?$"
+        },
+        "secret": {
+          "description": "Docker Image Pull Secret, If You Set This Value,You Should Create It In Kubernetes By Yourself ",
+          "type": "string",
+          "pattern": "^([\\da-z][-\\da-z]*)?[\\da-z]?(\\.([\\da-z][-\\da-z]*)?[\\da-z])*$",
+          "default": "",
+          "maxLength": 253
+        }
+      },
+      "required": [
+        "registry",
+        "tag"
+      ]
+    }
+  },
+  "required": [
+    "controller"
+  ]
+}

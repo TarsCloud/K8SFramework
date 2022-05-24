@@ -50,6 +50,7 @@ include(cmake/golang.cmake)
 add_subdirectory(ImageServer)
 add_subdirectory(AgentServer)
 add_subdirectory(ControllerServer)
+add_subdirectory(KanikoServer)
 
 install(DIRECTORY ../builder/deploy DESTINATION ${TARS_PATH}
         PATTERN "*.sh"

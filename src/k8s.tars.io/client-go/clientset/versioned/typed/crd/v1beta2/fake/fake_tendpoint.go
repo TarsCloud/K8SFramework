@@ -27,7 +27,7 @@ import (
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	testing "k8s.io/client-go/testing"
-	v1beta2 "k8s.tars.io/api/crd/v1beta2"
+	v1beta2 "k8s.tars.io/crd/v1beta2"
 )
 
 // FakeTEndpoints implements TEndpointInterface

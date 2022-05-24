@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "properties": {
+    "framework": {
+      "type": "object",
+      "properties": {
+        "registry": {
+          "description": "image hub address where tarsimage can pull tars framework service image",
+          "type": "string",
+          "pattern": "^[\\w.~%-]+(:\\d{1,5})?(/[\\w.~%-]+){0,5}$"
+        },
+        "tag": {
+          "description": "tars framework service image's tag, usually, tag value is equal to the BUILD_VERSION you specified when you executed make",
+          "type": "string",
+          "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][\\da-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][\\da-zA-Z-]*))*))?(?:\\+([\\da-zA-Z-]+(?:\\.[\\da-zA-Z-]+)*))?$"
+        },
+        "secret": {
+          "description": "k8s secret resource name that describe registry authentication information",
+          "type": "string",
+          "pattern": "^([\\da-z][-\\da-z]*)?[\\da-z]?(\\.([\\da-z][-\\da-z]*)?[\\da-z])*$",
+          "default": "",
+          "maxLength": 253
+        }
+      },
+      "required": [
+        "registry",
+        "tag"
+      ]
+    },
+    "upload": {
+      "type": "object",
+      "properties": {
+        "registry": {
+          "description": "Image hub address where tarsimage can push service image",
+          "type": "string",
+          "pattern": "^[\\w.~%-]+(:\\d{1,5})?(/[\\w.~%-]+){0,5}$"
+        },
+        "secret": {
+          "description": "k8s secret resource name that describe registry authentication information",
+          "type": "string",
+          "pattern": "^([\\da-z][-\\da-z]*)?[\\da-z]?(\\.([\\da-z][-\\da-z]*)?[\\da-z])*$",
+          "default": "",
+          "maxLength": 253
+        }
+      },
+      "required": [
+        "registry"
+      ]
+    },
+    "web": {
+      "type": "string",
+      "pattern": ""
+    }
+  },
+  "required": [
+    "framework",
+    "upload"
+  ]
+}

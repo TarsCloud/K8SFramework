@@ -1,6 +1,0 @@
-helm:
-    build:
-      id: latest
-    dockerhub:
-      registry: tarscloud
-

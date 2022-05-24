@@ -1,6 +1,6 @@
 module k8s.tars.io
 
-go 1.14
+go 1.15
 
 require (
 	k8s.io/api v0.18.19

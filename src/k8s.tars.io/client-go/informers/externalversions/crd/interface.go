@@ -21,6 +21,7 @@ package crd
 import (
 	v1beta1 "k8s.tars.io/client-go/informers/externalversions/crd/v1beta1"
 	v1beta2 "k8s.tars.io/client-go/informers/externalversions/crd/v1beta2"
+	v1beta3 "k8s.tars.io/client-go/informers/externalversions/crd/v1beta3"
 	internalinterfaces "k8s.tars.io/client-go/informers/externalversions/internalinterfaces"
 )
 
@@ -30,6 +31,8 @@ type Interface interface {
 	V1beta1() v1beta1.Interface
 	// V1beta2 provides access to shared informers for resources in V1beta2.
 	V1beta2() v1beta2.Interface
+	// V1beta3 provides access to shared informers for resources in V1beta3.
+	V1beta3() v1beta3.Interface
 }
 
 type group struct {
@@ -51,4 +54,9 @@ func (g *group) V1beta1() v1beta1.Interface {
 // V1beta2 returns a new v1beta2.Interface.
 func (g *group) V1beta2() v1beta2.Interface {
 	return v1beta2.New(g.factory, g.namespace, g.tweakListOptions)
+}
+
+// V1beta3 returns a new v1beta3.Interface.
+func (g *group) V1beta3() v1beta3.Interface {
+	return v1beta3.New(g.factory, g.namespace, g.tweakListOptions)
 }

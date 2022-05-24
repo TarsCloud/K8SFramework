@@ -1,0 +1,20 @@
+{{ $tr := lookup (printf "k8s.tars.io/%s" .Chart.AppVersion) "TTree" .Release.Namespace "tars-tree" -}}
+{{- if not $tr -}}
+apiVersion: k8s.tars.io/v1beta3
+kind: TTree
+metadata:
+  name: tars-tree
+  namespace: {{.Release.Namespace }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-10"
+apps:
+  - businessRef: TarsFramework
+    name: tars
+  - businessRef: TarsFramework
+    name: base
+businesses:
+  - name: TarsFramework
+    show: tars框架服务
+    weight: 5
+{{- end -}}

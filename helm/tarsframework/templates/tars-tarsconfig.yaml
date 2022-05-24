@@ -1,0 +1,102 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tars-tarsconfig
+  namespace: {{.Release.Namespace}}
+---
+
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: tars-tarsconfig
+  namespace: {{.Release.Namespace}}
+rules:
+  - apiGroups: [ "" ]
+    resources: [ pods ]
+    verbs: [ get ,list, watch ]
+  - apiGroups: [ k8s.tars.io ]
+    resources: [ tconfigs ]
+    verbs: [ get ,list, watch ]
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tars-tarsconfig
+  namespace: {{.Release.Namespace}}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: tars-tarsconfig
+subjects:
+  - kind: ServiceAccount
+    name: tars-tarsconfig
+    namespace: {{.Release.Namespace}}
+---
+
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
+kind: TImage
+metadata:
+  name: tars-tarsconfig
+  namespace: {{.Release.Namespace}}
+  labels:
+    tars.io/ServerApp: tars
+    tars.io/ServerName: tarsconfig
+imageType: server
+releases:
+  - id: {{.Values.framework.tag | quote }}
+    image: "{{.Values.framework.registry }}/tars.tarsconfig:{{.Values.framework.tag}}"
+    {{- if.Values.framework.secret}}
+    secret: {{.Values.framework.secret |quote }}
+    {{- end}}
+{{- include "TImageMerger" (dict "version" .Chart.AppVersion "namespace" .Release.Namespace  "name" "tars-tarsconfig" ) | nindent 2 -}}
+{{"\n"}}
+---
+
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
+kind: TServer
+metadata:
+  name: tars-tarsconfig
+  namespace: {{.Release.Namespace}}
+  annotations:
+    tars.io/MinReplicas: "1"
+  labels:
+    tars.io/ServerApp: tars
+    tars.io/ServerName: tarsconfig
+    tars.io/SubType: tars
+    tars.io/Template: tars.default
+spec:
+  app: tars
+  server: tarsconfig
+  subType: tars
+  tars:
+    template: tars.cpp
+    servants:
+      - name: ConfigObj
+        port: 11111
+  k8s:
+    replicas: 1
+    serviceAccount: tars-tarsconfig
+    env:
+      - name: Namespace
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.namespace
+      - name: PodName
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.name
+    mounts:
+      - name: host-log-dir
+        source:
+          hostPath:
+            path: /usr/local/app/tars/app_log
+            type: DirectoryOrCreate
+        mountPath: /usr/local/app/tars/app_log
+        subPathExpr: $(Namespace)/$(PodName)
+  release:
+    id: {{.Values.framework.tag }}
+    image: "{{.Values.framework.registry }}/tars.tarsconfig:{{.Values.framework.tag}}"
+    {{- if.Values.framework.secret}}
+    secret: {{.Values.framework.secret |quote }}
+    {{- end}}

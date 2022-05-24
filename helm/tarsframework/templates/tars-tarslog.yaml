@@ -1,0 +1,92 @@
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
+kind: TImage
+metadata:
+  name: tars-tarslog
+  namespace: {{.Release.Namespace}}
+  labels:
+    tars.io/ServerApp: tars
+    tars.io/ServerName: tarslog
+imageType: server
+releases:
+  - id: {{.Values.framework.tag | quote }}
+    image: "{{.Values.framework.registry }}/tars.tarslog:{{.Values.framework.tag}}"
+    {{- if.Values.framework.secret}}
+    secret: {{.Values.framework.secret |quote }}
+    {{- end}}
+{{- include "TImageMerger" (dict "version" .Chart.AppVersion "namespace" .Release.Namespace  "name" "tars-tarslog" ) | nindent 2 -}}
+{{"\n"}}
+---
+
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
+kind: TServer
+metadata:
+  name: tars-tarslog
+  namespace: {{.Release.Namespace}}
+  labels:
+    tars.io/ServerApp: tars
+    tars.io/ServerName: tarslog
+    tars.io/SubType: tars
+    tars.io/Template: tars.es
+spec:
+  app: tars
+  server: tarslog
+  subType: tars
+  tars:
+    template: tars.es
+    profile: |
+      <tars>
+      	<log>
+          logpath=/usr/local/app/tars/remote_app_log
+          logthread=10
+          compressed=true
+          <format>
+            hour=xx
+          </format>
+        </log>
+        <elk>
+          # protocol connect to es
+          protocol=http
+          <nodes>
+            # es node address
+            tars-elasticsearch:9200
+          </nodes>
+          log_dir=/usr/local/app/tars/remote_app_log/_tars_/_trace_
+        </elk>
+      </tars>
+    servants:
+      - name: LogObj
+        port: 12111
+        thread: 5
+      - name: TopologyObj
+        port: 13030
+        thread: 3
+  k8s:
+    replicas: 1
+    env:
+      - name: Namespace
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.namespace
+      - name: PodName
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.name
+    mounts:
+      - name: host-log-dir
+        source:
+          hostPath:
+            path: /usr/local/app/tars/app_log
+            type: DirectoryOrCreate
+        mountPath: /usr/local/app/tars/app_log
+        subPathExpr: $(Namespace)/$(PodName)
+      - mountPath: /usr/local/app/tars/remote_app_log
+        name: remote-log-dir
+        source:
+          tLocalVolume: { }
+        subPathExpr: $(PodName)
+  release:
+    id: {{.Values.framework.tag | quote }}
+    image: "{{.Values.framework.registry }}/tars.tarslog:{{.Values.framework.tag}}"
+    {{- if.Values.framework.secret}}
+    secret: {{.Values.framework.secret |quote }}
+    {{- end}}

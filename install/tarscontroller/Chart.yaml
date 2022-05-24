@@ -1,7 +1,0 @@
-apiVersion: v2
-name: tarscontroller
-version: 1.2.0
-#kubeVersion: ">= 1.17.0 <= 1.19.0"
-type: application
-keywords: [ tars ,tarscontroller ]
-appVersion: v1beta2

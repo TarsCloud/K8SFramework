@@ -26,8 +26,8 @@ import (
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	rest "k8s.io/client-go/rest"
-	v1beta1 "k8s.tars.io/api/crd/v1beta1"
 	scheme "k8s.tars.io/client-go/clientset/versioned/scheme"
+	v1beta1 "k8s.tars.io/crd/v1beta1"
 )
 
 // TExitedRecordsGetter has a method to return a TExitedRecordInterface.

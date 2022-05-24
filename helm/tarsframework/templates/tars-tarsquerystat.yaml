@@ -1,0 +1,64 @@
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
+kind: TImage
+metadata:
+  name: tars-tarsquerystat
+  namespace: {{.Release.Namespace}}
+  labels:
+    tars.io/ServerApp: tars
+    tars.io/ServerName: tarsquerystat
+imageType: server
+releases:
+  - id: {{.Values.framework.tag | quote }}
+    image: "{{.Values.framework.registry }}/tars.tarsquerystat:{{.Values.framework.tag}}"
+    {{- if.Values.framework.secret}}
+    secret: {{.Values.framework.secret |quote }}
+    {{- end}}
+{{- include "TImageMerger" (dict "version" .Chart.AppVersion "namespace" .Release.Namespace  "name" "tars-tarsquerystat" ) | nindent 2 -}}
+{{"\n"}}
+---
+
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
+kind: TServer
+metadata:
+  name: tars-tarsquerystat
+  namespace: {{.Release.Namespace}}
+  labels:
+    tars.io/ServerApp: tars
+    tars.io/ServerName: tarsquerystat
+    tars.io/SubType: tars
+    tars.io/Template: tars.es
+spec:
+  app: tars
+  server: tarsquerystat
+  subType: tars
+  tars:
+    template: tars.es
+    servants:
+      - name: QueryObj
+        port: 16000
+        thread: 5
+  k8s:
+    replicas: 1
+    env:
+      - name: Namespace
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.namespace
+      - name: PodName
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.name
+    mounts:
+      - name: host-log-dir
+        source:
+          hostPath:
+            path: /usr/local/app/tars/app_log
+            type: DirectoryOrCreate
+        mountPath: /usr/local/app/tars/app_log
+        subPathExpr: $(Namespace)/$(PodName)
+  release:
+    id: {{.Values.framework.tag | quote }}
+    image: "{{.Values.framework.registry }}/tars.tarsquerystat:{{.Values.framework.tag}}"
+    {{- if.Values.framework.secret}}
+    secret: {{.Values.framework.secret |quote }}
+    {{- end}}

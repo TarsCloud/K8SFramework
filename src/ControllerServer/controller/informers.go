@@ -9,10 +9,10 @@ import (
 	k8sInformersCoreV1 "k8s.io/client-go/informers/core/v1"
 	"k8s.io/client-go/metadata/metadatainformer"
 	"k8s.io/client-go/tools/cache"
-	crdV1beta2 "k8s.tars.io/api/crd/v1beta2"
-	crdMeta "k8s.tars.io/api/meta"
-	crdInformers "k8s.tars.io/client-go/informers/externalversions"
-	crdInformersV1beta2 "k8s.tars.io/client-go/informers/externalversions/crd/v1beta2"
+	tarsInformers "k8s.tars.io/client-go/informers/externalversions"
+	tarsInformersV1beta3 "k8s.tars.io/client-go/informers/externalversions/crd/v1beta3"
+	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
+	tarsMetaV1beta3 "k8s.tars.io/meta/v1beta3"
 )
 
 type EventsReceiver interface {
@@ -23,7 +23,7 @@ type Informers struct {
 	k8sInformerFactory           k8sInformers.SharedInformerFactory
 	k8sInformerFactoryWithFilter k8sInformers.SharedInformerFactory
 	k8sMetadataInformerFactor    metadatainformer.SharedInformerFactory
-	crdInformerFactory           crdInformers.SharedInformerFactory
+	tarsInformerFactory          tarsInformers.SharedInformerFactory
 
 	synced  bool
 	synceds []cache.InformerSynced
@@ -36,15 +36,14 @@ type Informers struct {
 	DaemonSetInformer   k8sInformersAppsV1.DaemonSetInformer
 	StatefulSetInformer k8sInformersAppsV1.StatefulSetInformer
 
-	TServerInformer   crdInformersV1beta2.TServerInformer
-	TEndpointInformer crdInformersV1beta2.TEndpointInformer
+	TServerInformer   tarsInformersV1beta3.TServerInformer
+	TEndpointInformer tarsInformersV1beta3.TEndpointInformer
 
-	TImageInformer           crdInformersV1beta2.TImageInformer
-	TTreeInformer            crdInformersV1beta2.TTreeInformer
-	TExitedRecordInformer    crdInformersV1beta2.TExitedRecordInformer
-	TDeployInformer          crdInformersV1beta2.TDeployInformer
-	TAccountInformer         crdInformersV1beta2.TAccountInformer
-	TFrameworkConfigInformer crdInformersV1beta2.TFrameworkConfigInformer
+	TImageInformer           tarsInformersV1beta3.TImageInformer
+	TTreeInformer            tarsInformersV1beta3.TTreeInformer
+	TExitedRecordInformer    tarsInformersV1beta3.TExitedRecordInformer
+	TAccountInformer         tarsInformersV1beta3.TAccountInformer
+	TFrameworkConfigInformer tarsInformersV1beta3.TFrameworkConfigInformer
 
 	TConfigInformer   k8sInformers.GenericInformer
 	TTemplateInformer k8sInformers.GenericInformer
@@ -58,10 +57,10 @@ func newInformers(clients *Clients) *Informers {
 
 	k8sInformerFactoryWithFilter := k8sInformers.NewSharedInformerFactoryWithOptions(clients.K8sClient, 0, k8sInformers.WithTweakListOptions(
 		func(options *k8sMetaV1.ListOptions) {
-			options.LabelSelector = fmt.Sprintf("%s,%s", crdMeta.TServerAppLabel, crdMeta.TServerNameLabel)
+			options.LabelSelector = fmt.Sprintf("%s,%s", tarsMetaV1beta3.TServerAppLabel, tarsMetaV1beta3.TServerNameLabel)
 		}))
 
-	crdInformerFactory := crdInformers.NewSharedInformerFactoryWithOptions(clients.CrdClient, 0)
+	tarsInformerFactory := tarsInformers.NewSharedInformerFactoryWithOptions(clients.CrdClient, 0)
 
 	metadataInformerFactory := metadatainformer.NewSharedInformerFactory(clients.K8sMetadataClient, 0)
 
@@ -73,24 +72,24 @@ func newInformers(clients *Clients) *Informers {
 	daemonSetInformer := k8sInformerFactoryWithFilter.Apps().V1().DaemonSets()
 	statefulSetInformer := k8sInformerFactoryWithFilter.Apps().V1().StatefulSets()
 
-	tserverInformer := crdInformerFactory.Crd().V1beta2().TServers()
-	tendpointInformer := crdInformerFactory.Crd().V1beta2().TEndpoints()
+	tserverInformer := tarsInformerFactory.Crd().V1beta3().TServers()
+	tendpointInformer := tarsInformerFactory.Crd().V1beta3().TEndpoints()
 
-	timageInformer := crdInformerFactory.Crd().V1beta2().TImages()
-	ttreeInformer := crdInformerFactory.Crd().V1beta2().TTrees()
-	texitedRecordInformer := crdInformerFactory.Crd().V1beta2().TExitedRecords()
-	tdeployInformer := crdInformerFactory.Crd().V1beta2().TDeploys()
-	taccountInformer := crdInformerFactory.Crd().V1beta2().TAccounts()
-	tframeworkconfigInformer := crdInformerFactory.Crd().V1beta2().TFrameworkConfigs()
+	timageInformer := tarsInformerFactory.Crd().V1beta3().TImages()
+	ttreeInformer := tarsInformerFactory.Crd().V1beta3().TTrees()
+	texitedRecordInformer := tarsInformerFactory.Crd().V1beta3().TExitedRecords()
 
-	tconfigInformer := metadataInformerFactory.ForResource(crdV1beta2.SchemeGroupVersion.WithResource("tconfigs"))
-	ttemplateInformer := metadataInformerFactory.ForResource(crdV1beta2.SchemeGroupVersion.WithResource("ttemplates"))
+	taccountInformer := tarsInformerFactory.Crd().V1beta3().TAccounts()
+	tframeworkconfigInformer := tarsInformerFactory.Crd().V1beta3().TFrameworkConfigs()
+
+	tconfigInformer := metadataInformerFactory.ForResource(tarsCrdV1beta3.SchemeGroupVersion.WithResource("tconfigs"))
+	ttemplateInformer := metadataInformerFactory.ForResource(tarsCrdV1beta3.SchemeGroupVersion.WithResource("ttemplates"))
 
 	informers = &Informers{
 		k8sInformerFactory:           k8sInformerFactory,
 		k8sInformerFactoryWithFilter: k8sInformerFactoryWithFilter,
 		k8sMetadataInformerFactor:    metadataInformerFactory,
-		crdInformerFactory:           crdInformerFactory,
+		tarsInformerFactory:          tarsInformerFactory,
 
 		NodeInformer:                  nodeInformer,
 		ServiceInformer:               serviceInformer,
@@ -106,7 +105,6 @@ func newInformers(clients *Clients) *Informers {
 		TImageInformer:        timageInformer,
 		TTreeInformer:         ttreeInformer,
 		TExitedRecordInformer: texitedRecordInformer,
-		TDeployInformer:       tdeployInformer,
 		TAccountInformer:      taccountInformer,
 
 		TConfigInformer:          tconfigInformer,
@@ -128,7 +126,7 @@ func newInformers(clients *Clients) *Informers {
 			timageInformer.Informer().HasSynced,
 			ttreeInformer.Informer().HasSynced,
 			texitedRecordInformer.Informer().HasSynced,
-			tdeployInformer.Informer().HasSynced,
+
 			taccountInformer.Informer().HasSynced,
 			tframeworkconfigInformer.Informer().HasSynced,
 
@@ -150,7 +148,6 @@ func newInformers(clients *Clients) *Informers {
 	setEventHandler("timage", informers.TImageInformer.Informer(), informers)
 	setEventHandler("ttree", informers.TTreeInformer.Informer(), informers)
 	setEventHandler("texitedrecord", informers.TExitedRecordInformer.Informer(), informers)
-	setEventHandler("tdeploy", informers.TDeployInformer.Informer(), informers)
 	setEventHandler("taccount", informers.TAccountInformer.Informer(), informers)
 	setEventHandler("tframeworkconfig", informers.TFrameworkConfigInformer.Informer(), informers)
 	setEventHandler("tconfig", informers.TConfigInformer.Informer(), informers)
@@ -191,7 +188,7 @@ func (i *Informers) Start(stop chan struct{}) {
 	i.k8sInformerFactory.Start(stop)
 	i.k8sInformerFactoryWithFilter.Start(stop)
 	i.k8sMetadataInformerFactor.Start(stop)
-	i.crdInformerFactory.Start(stop)
+	i.tarsInformerFactory.Start(stop)
 }
 
 func (i *Informers) Synced() bool {

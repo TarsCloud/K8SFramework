@@ -7,7 +7,7 @@ import (
 	"os"
 	"tarscontroller/controller"
 	"tarscontroller/reconcile"
-	reconcileV1beta2 "tarscontroller/reconcile/v1beta2"
+	"tarscontroller/reconcile/v1beta3"
 	"tarscontroller/webhook"
 	"time"
 )
@@ -30,20 +30,19 @@ func main() {
 
 	// new reconcile should before call informers.start() => because reconcile should registry into informers
 	reconciles := []reconcile.Reconcile{
-		reconcileV1beta2.NewNodeReconciler(clients, informers, 1),
-		reconcileV1beta2.NewTDeployReconciler(clients, informers, 1),
-		reconcileV1beta2.NewDaemonSetReconciler(clients, informers, 1),
-		reconcileV1beta2.NewTTreeReconciler(clients, informers, 1),
-		reconcileV1beta2.NewServiceReconciler(clients, informers, 1),
-		reconcileV1beta2.NewTExitedPodReconciler(clients, informers, 1),
-		reconcileV1beta2.NewStatefulSetReconciler(clients, informers, 3),
-		reconcileV1beta2.NewTServerReconciler(clients, informers, 3),
-		reconcileV1beta2.NewTEndpointReconciler(clients, informers, 3),
-		reconcileV1beta2.NewTAccountReconciler(clients, informers, 1),
-		reconcileV1beta2.NewTConfigReconciler(clients, informers, 1),
-		reconcileV1beta2.NewTImageReconciler(clients, informers, 1),
-		reconcileV1beta2.NewPVCReconciler(clients, informers, 1),
-		reconcileV1beta2.NewTFrameworkConfigReconciler(clients, informers, 1),
+		v1beta3.NewNodeReconciler(clients, informers, 1),
+		v1beta3.NewDaemonSetReconciler(clients, informers, 1),
+		v1beta3.NewTTreeReconciler(clients, informers, 1),
+		v1beta3.NewServiceReconciler(clients, informers, 1),
+		v1beta3.NewTExitedPodReconciler(clients, informers, 1),
+		v1beta3.NewStatefulSetReconciler(clients, informers, 3),
+		v1beta3.NewTServerReconciler(clients, informers, 3),
+		v1beta3.NewTEndpointReconciler(clients, informers, 3),
+		v1beta3.NewTAccountReconciler(clients, informers, 1),
+		v1beta3.NewTConfigReconciler(clients, informers, 1),
+		v1beta3.NewTImageReconciler(clients, informers, 1),
+		v1beta3.NewPVCReconciler(clients, informers, 1),
+		v1beta3.NewTFrameworkConfigReconciler(clients, informers, 1),
 	}
 
 	informers.Start(stopCh)

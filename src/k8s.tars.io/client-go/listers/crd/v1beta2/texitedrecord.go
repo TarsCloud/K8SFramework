@@ -22,7 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
-	v1beta2 "k8s.tars.io/api/crd/v1beta2"
+	v1beta2 "k8s.tars.io/crd/v1beta2"
 )
 
 // TExitedRecordLister helps list TExitedRecords.

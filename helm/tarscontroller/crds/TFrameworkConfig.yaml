@@ -1,0 +1,207 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: tframeworkconfigs.k8s.tars.io
+spec:
+  conversion:
+    strategy: Webhook
+    webhook:
+      conversionReviewVersions:
+        - v1
+      clientConfig:
+        service:
+          name: tars-webhook-service
+          namespace: tars-system
+          path: /conversion
+        caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURUakNDQWphZ0F3SUJBZ0lKQVBPR1ZENlpIZHMvTUEwR0NTcUdTSWIzRFFFQkN3VUFNRHd4Q3pBSkJnTlYKQkFZVEFrTk9NUTR3REFZRFZRUUlEQVZJZFVKbGFURU9NQXdHQTFVRUJ3d0ZWM1ZvWVc0eERUQUxCZ05WQkFvTQpCSFJoY25Nd0hoY05NakV3T1RFMU1Ea3lNREV4V2hjTk5Ea3dNVE13TURreU1ERXhXakE4TVFzd0NRWURWUVFHCkV3SkRUakVPTUF3R0ExVUVDQXdGU0hWQ1pXa3hEakFNQmdOVkJBY01CVmQxYUdGdU1RMHdDd1lEVlFRS0RBUjAKWVhKek1JSUJJakFOQmdrcWhraUc5dzBCQVFFRkFBT0NBUThBTUlJQkNnS0NBUUVBMXVYeFYvK2FxaXFBSkRhaQp6OVJWTmppYnFIeUxDOGpaRFF6UnlkSkNVTnp1R0ZybWNONTJ2NE10T3cxc3U0Z1NQZUdLQzBTRmthTkV1MmZnClVyZFh3TVAydXF5QTR4allCRUZXMXowOWdlMUV5TTlpM0ZJNG12UkltN3c5YmNrb2NQK1hWbklvVFUwaTJ4eFMKOWlrcU1hdklIV0VqMnJnZThvK3BCQ2NDenYxWi9yNnJubnk0aDYyUW1VeXFXalpmMWdYQm9UaU1HZmZtVUxiLwpSSHZMUWtScEJpUktRdytaalFlRk5uTmxYVjVxOTV1emJjSHl4Z1lZZFZQTm4zZFNVSTFBZ0RQRmNwWWlZZ1RYCndUeThVbW93TSszKzBkYzJnR0ZLOTRaRWIxb2ExTmcwYnh6ZjFLbGRnbUxGOHNVN1dPR1hiYXdkY3JEaStWb1EKUGl1bTd3SURBUUFCbzFNd1VUQWRCZ05WSFE0RUZnUVU0Sm9SRzkwd0xNM01iWWxLd0o1NEZMSmJRdXN3SHdZRApWUjBqQkJnd0ZvQVU0Sm9SRzkwd0xNM01iWWxLd0o1NEZMSmJRdXN3RHdZRFZSMFRBUUgvQkFVd0F3RUIvekFOCkJna3Foa2lHOXcwQkFRc0ZBQU9DQVFFQUphVXV4NkpDZGRUOGEvWTk3OG9pQUVWaktIcjBmbnhvb3Y3K1FhOGUKbFEwOGNCSVJVZ0pSaUJxcVhheHEreVNvbWhFQk44dkU3SjB6a3lHeWxjSjJDaWRzOWdGK0R3dVZ5NTlXdGxxYgpwR2ZRQVRwLzZlTjlzd0JuSmtsUFNhanBsV3BtdnZZMTJhSENHOGZHYi9vb3J0cTk4UmplaVM1NmoyQStFTVAyCktnMEVBV0RmMFd1YUpCNzJ3K0tyaldVZUJuS1R4c1ZqTjNNK0NCT2xHQkN5QnQ2NS9EMzd4Ukk1R1VYOGR1WVAKM2IxeENKcW5McWZGYVV1NFRUV0t5WlVIQktVUjI0cUlSNHMzWWpRckZObkRMMmVQZ3JTVmFVMEpoYWR0dmlCZApFVG43ZXl2MVNFWUZaWC82L0FEY2lTTTVFNXhaMUhUMFB5S3l3MG42S2lNU3pBPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+  group: k8s.tars.io
+  names:
+    kind: TFrameworkConfig
+    listKind: TFrameworkConfigList
+    plural: tframeworkconfigs
+    singular: tframeworkconfig
+    shortNames: [ tfc ]
+  scope: Namespaced
+  versions:
+    - name: v1beta2
+      served: _V1BETA2_SERVED_
+      storage: _V1BETA2_STORAGE_
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            imageBuild:
+              type: object
+              properties:
+                maxBuildTime: #seconds
+                  type: integer
+                  minimum: 180
+                  maximum: 900
+                  default: 300
+                idFormat:
+                  type: string
+              default: { }
+            imageRegistry:
+              type: object
+              properties:
+                registry:
+                  type: string
+                  pattern: ^[\x2D-\x3A\x61-\x7A]*$
+                  maxLength: 500
+                secret:
+                  type: string
+                  pattern: ^([0-9a-z][-0-9a-z]*)?[0-9a-z]?(\.([0-9a-z][-0-9a-z]*)?[0-9a-z])*$
+              required: [ registry ]
+            recordLimit:
+              type: object
+              properties:
+                texitedPod:
+                  type: integer
+                  minimum: 10
+                  maximum: 100
+                  default: 48
+                tconfigHistory:
+                  type: integer
+                  minimum: 10
+                  maximum: 100
+                  default: 48
+                timageRelease:
+                  type: integer
+                  minimum: 10
+                  maximum: 100
+                  default: 48
+              default: { }
+            nodeImage:
+              type: object
+              properties:
+                image:
+                  type: string
+                  pattern: ^[\x2D-\x3A\x61-\x7A]*$
+                  maxLength: 500
+                secret:
+                  type: string
+                  pattern: ^([0-9a-z][-0-9a-z]*)?[0-9a-z]?(\.([0-9a-z][-0-9a-z]*)?[0-9a-z])*$
+                  maxLength: 253
+              required: [ image ]
+            upChain:
+              type: object
+              additionalProperties:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    host:
+                      type: string
+                      pattern: ^[\x2D-\x3A\x61-\x7A]*$
+                      maxLength: 500
+                    port:
+                      type: integer
+                      minimum: 1
+                      maximum: 65535
+                    timeout:
+                      type: integer
+                      default: 6000
+                required: [ host,port ]
+              default: { }
+            expand:
+              type: object
+              additionalProperties:
+                type: string
+              default: { }
+          required: [ imageRegistry,nodeImage ]
+    - name: v1beta3
+      served: _V1BETA3_SERVED_
+      storage: _V1BETA3_STORAGE_
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            imageBuild:
+              type: object
+              properties:
+                maxBuildTime: #seconds
+                  type: integer
+                  minimum: 180
+                  maximum: 900
+                  default: 300
+                idFormat:
+                  type: string
+                executor:
+                  type: object
+                  properties:
+                    image:
+                      type: string
+                      pattern: ^[\x2D-\x3A\x61-\x7A]*$
+                      maxLength: 500
+                    secret:
+                      type: string
+                      pattern: ^([0-9a-z][-0-9a-z]*)?[0-9a-z]?(\.([0-9a-z][-0-9a-z]*)?[0-9a-z])*$
+                  required: [ image ]
+              required: [ executor ]
+            imageUpload:
+              type: object
+              properties:
+                registry:
+                  type: string
+                  pattern: ^[\x2D-\x3A\x61-\x7A]*$
+                  maxLength: 500
+                secret:
+                  type: string
+                  pattern: ^([0-9a-z][-0-9a-z]*)?[0-9a-z]?(\.([0-9a-z][-0-9a-z]*)?[0-9a-z])*$
+              required: [ registry ]
+            recordLimit:
+              type: object
+              properties:
+                texitedPod:
+                  type: integer
+                  minimum: 10
+                  maximum: 100
+                  default: 48
+                tconfigHistory:
+                  type: integer
+                  minimum: 10
+                  maximum: 100
+                  default: 48
+                timageRelease:
+                  type: integer
+                  minimum: 10
+                  maximum: 100
+                  default: 48
+              default: { }
+            nodeImage:
+              type: object
+              properties:
+                image:
+                  type: string
+                  pattern: ^[\x2D-\x3A\x61-\x7A]*$
+                  maxLength: 500
+                secret:
+                  type: string
+                  pattern: ^([0-9a-z][-0-9a-z]*)?[0-9a-z]?(\.([0-9a-z][-0-9a-z]*)?[0-9a-z])*$
+              required: [ image ]
+            upChain:
+              type: object
+              additionalProperties:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    host:
+                      type: string
+                      pattern: ^[\x2D-\x3A\x61-\x7A]*$
+                      maxLength: 500
+                    port:
+                      type: integer
+                      minimum: 1
+                      maximum: 65535
+                    timeout:
+                      type: integer
+                      default: 6000
+                required: [ host,port ]
+              default: { }
+            expand:
+              type: object
+              additionalProperties:
+                type: string
+              default: { }
+          required: [ imageBuild,imageUpload,nodeImage ]

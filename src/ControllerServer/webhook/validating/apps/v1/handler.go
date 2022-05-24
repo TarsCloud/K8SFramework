@@ -5,9 +5,9 @@ import (
 	k8sAdmissionV1 "k8s.io/api/admission/v1"
 	k8sAppsV1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/util/json"
-	crdMeta "k8s.tars.io/api/meta"
+	tarsMetaV1beta3 "k8s.tars.io/meta/v1beta3"
 	"tarscontroller/controller"
-	crdV1beta2 "tarscontroller/reconcile/v1beta2"
+	tarsCrdV1beta3 "tarscontroller/reconcile/v1beta3"
 )
 
 var functions = map[string]func(*controller.Clients, *controller.Informers, *k8sAdmissionV1.AdmissionReview) error{}
@@ -24,19 +24,10 @@ func init() {
 	}
 }
 
-type Handler struct {
-	clients  *controller.Clients
-	informer *controller.Informers
-}
-
-func New(clients *controller.Clients, informers *controller.Informers) *Handler {
-	return &Handler{clients: clients, informer: informers}
-}
-
-func (v *Handler) Handle(view *k8sAdmissionV1.AdmissionReview) error {
+func Handler(clients *controller.Clients, informers *controller.Informers, view *k8sAdmissionV1.AdmissionReview) error {
 	key := fmt.Sprintf("%s/%s", view.Request.Operation, view.Request.Kind.Kind)
 	if fun, ok := functions[key]; ok {
-		return fun(v.clients, v.informer, view)
+		return fun(clients, informers, view)
 	}
 	return fmt.Errorf("unsupported validating %s %s.%s", view.Request.Operation, view.Request.Kind.Version, view.Request.Kind.Kind)
 }
@@ -45,9 +36,9 @@ func validStatefulSet(newStatefulset *k8sAppsV1.StatefulSet, oldStatefulset *k8s
 	namespace := newStatefulset.Namespace
 	tserver, err := informer.TServerInformer.Lister().TServers(namespace).Get(newStatefulset.Name)
 	if err != nil {
-		return fmt.Errorf(crdMeta.ResourceGetError, "tserver", namespace, newStatefulset.Name, err.Error())
+		return fmt.Errorf(tarsMetaV1beta3.ResourceGetError, "tserver", namespace, newStatefulset.Name, err.Error())
 	}
-	if !crdV1beta2.EqualTServerAndStatefulSet(tserver, newStatefulset) {
+	if !tarsCrdV1beta3.EqualTServerAndStatefulSet(tserver, newStatefulset) {
 		return fmt.Errorf("resource should be modified through tserver")
 	}
 	return nil
@@ -55,7 +46,7 @@ func validStatefulSet(newStatefulset *k8sAppsV1.StatefulSet, oldStatefulset *k8s
 
 func validCreateStatefulSet(clients *controller.Clients, informer *controller.Informers, view *k8sAdmissionV1.AdmissionReview) error {
 	controllerUserName := controller.GetControllerUsername()
-	if controllerUserName == view.Request.UserInfo.Username || controllerUserName == crdMeta.DefaultUnlawfulAndOnlyForDebugUserName {
+	if controllerUserName == view.Request.UserInfo.Username || controllerUserName == tarsMetaV1beta3.DefaultUnlawfulAndOnlyForDebugUserName {
 		return nil
 	}
 	return fmt.Errorf("only use authorized account can create statefulset")
@@ -63,7 +54,7 @@ func validCreateStatefulSet(clients *controller.Clients, informer *controller.In
 
 func validUpdateStatefulSet(clients *controller.Clients, informer *controller.Informers, view *k8sAdmissionV1.AdmissionReview) error {
 	controllerUserName := controller.GetControllerUsername()
-	if controllerUserName == view.Request.UserInfo.Username || controllerUserName == crdMeta.DefaultUnlawfulAndOnlyForDebugUserName {
+	if controllerUserName == view.Request.UserInfo.Username || controllerUserName == tarsMetaV1beta3.DefaultUnlawfulAndOnlyForDebugUserName {
 		return nil
 	}
 	newStatefulset := &k8sAppsV1.StatefulSet{}
@@ -79,9 +70,9 @@ func validDaemonset(newDaemonset, oldDaemonset *k8sAppsV1.DaemonSet, clients *co
 	namespace := newDaemonset.Namespace
 	tserver, err := informer.TServerInformer.Lister().TServers(namespace).Get(newDaemonset.Name)
 	if err != nil {
-		return fmt.Errorf(crdMeta.ResourceGetError, "tserver", namespace, newDaemonset.Name, err.Error())
+		return fmt.Errorf(tarsMetaV1beta3.ResourceGetError, "tserver", namespace, newDaemonset.Name, err.Error())
 	}
-	if !crdV1beta2.EqualTServerAndDaemonSet(tserver, newDaemonset) {
+	if !tarsCrdV1beta3.EqualTServerAndDaemonSet(tserver, newDaemonset) {
 		return fmt.Errorf("this resource should be modified through tserver")
 	}
 	return nil
@@ -89,7 +80,7 @@ func validDaemonset(newDaemonset, oldDaemonset *k8sAppsV1.DaemonSet, clients *co
 
 func validCreateDaemonSet(clients *controller.Clients, informer *controller.Informers, view *k8sAdmissionV1.AdmissionReview) error {
 	controllerUserName := controller.GetControllerUsername()
-	if controllerUserName == view.Request.UserInfo.Username || controllerUserName == crdMeta.DefaultUnlawfulAndOnlyForDebugUserName {
+	if controllerUserName == view.Request.UserInfo.Username || controllerUserName == tarsMetaV1beta3.DefaultUnlawfulAndOnlyForDebugUserName {
 		return nil
 	}
 	return fmt.Errorf("only use authorized account can create daemonset")
@@ -97,7 +88,7 @@ func validCreateDaemonSet(clients *controller.Clients, informer *controller.Info
 
 func validUpdateDaemonSet(clients *controller.Clients, informer *controller.Informers, view *k8sAdmissionV1.AdmissionReview) error {
 	controllerUserName := controller.GetControllerUsername()
-	if controllerUserName == view.Request.UserInfo.Username || controllerUserName == crdMeta.DefaultUnlawfulAndOnlyForDebugUserName {
+	if controllerUserName == view.Request.UserInfo.Username || controllerUserName == tarsMetaV1beta3.DefaultUnlawfulAndOnlyForDebugUserName {
 		return nil
 	}
 	newDaemonset := &k8sAppsV1.DaemonSet{}

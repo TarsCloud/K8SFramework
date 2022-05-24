@@ -1,0 +1,4 @@
+controller:
+  registry: _CONTROLLER_REGISTRY_
+  tag: _CONTROLLER_TAG_
+  secret: ""

@@ -20,8 +20,8 @@ package v1beta1
 
 import (
 	rest "k8s.io/client-go/rest"
-	v1beta1 "k8s.tars.io/api/crd/v1beta1"
 	"k8s.tars.io/client-go/clientset/versioned/scheme"
+	v1beta1 "k8s.tars.io/crd/v1beta1"
 )
 
 type CrdV1beta1Interface interface {

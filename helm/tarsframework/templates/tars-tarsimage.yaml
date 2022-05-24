@@ -1,0 +1,127 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tars-tarsimage
+  namespace: {{.Release.Namespace}}
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: tars-tarsimage
+  namespace: {{.Release.Namespace}}
+rules:
+  - apiGroups: [ "" ]
+    resources: [ secrets ]
+    verbs: [ get ]
+  - apiGroups: [ "" ]
+    resources: [ pods ]
+    verbs: [ create, get, list, watch, delete ]
+  - apiGroups: [ k8s.tars.io ]
+    resources: [ timages ]
+    verbs: [ get ,update, patch ]
+  - apiGroups: [ k8s.tars.io ]
+    resources: [ tframeworkconfigs ]
+    verbs: [ get ,list, watch ]
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tars-tarsimage
+  namespace: {{.Release.Namespace}}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: tars-tarsimage
+subjects:
+  - kind: ServiceAccount
+    name: tars-tarsimage
+    namespace: {{.Release.Namespace}}
+---
+
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
+kind: TImage
+metadata:
+  name: tars-tarsimage
+  namespace: {{.Release.Namespace}}
+  labels:
+    tars.io/ServerApp: tars
+    tars.io/ServerName: tarsimage
+imageType: server
+releases:
+  - id: {{.Values.framework.tag | quote }}
+    image: "{{.Values.framework.registry }}/tars.tarsimage:{{.Values.framework.tag}}"
+    {{- if.Values.framework.secret}}
+    secret: {{.Values.framework.secret |quote }}
+    {{- end}}
+{{- include "TImageMerger" (dict "version" .Chart.AppVersion "namespace" .Release.Namespace  "name" "tars-tarsimage" ) | nindent 2 -}}
+{{"\n"}}
+---
+
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
+kind: TServer
+metadata:
+  name: tars-tarsimage
+  namespace: {{.Release.Namespace}}
+  labels:
+    tars.io/ServerApp: tars
+    tars.io/ServerName: tarsimage
+    tars.io/SubType: normal
+spec:
+  app: tars
+  server: tarsimage
+  subType: normal
+  normal:
+    ports:
+      - name: http
+        port: 80
+  k8s:
+    replicas: 1
+    env:
+      - name: Namespace
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.namespace
+      - name: PodName
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.name
+      - name: WorkSpaceInHost
+        value: /usr/local/app/tars/app_data
+      - name: WorkSpaceInPod
+        value: /workspace
+    mounts:
+      - name: workspace
+        source:
+          hostPath:
+            path: /usr/local/app/tars/app_data
+            type: DirectoryOrCreate
+        mountPath: /workspace
+    serviceAccount: tars-tarsimage
+  release:
+    id: {{.Values.framework.tag | quote }}
+    image: "{{.Values.framework.registry }}/tars.tarsimage:{{.Values.framework.tag}}"
+    {{- if.Values.framework.secret}}
+    secret: {{.Values.framework.secret |quote }}
+    {{- end}}
+
+---
+apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
+kind: TImage
+metadata:
+  name: tars-tarskaniko
+  namespace: {{.Release.Namespace}}
+  labels:
+    tars.io/ServerApp: tars
+    tars.io/ServerName: tarskaniko
+imageType: server
+releases:
+  - id: {{.Values.framework.tag | quote }}
+    image: "{{.Values.framework.registry }}/tars.tarskaniko:{{.Values.framework.tag}}"
+    {{- if.Values.framework.secret}}
+    secret: {{.Values.framework.secret |quote }}
+    {{- end}}
+{{- include "TImageMerger" (dict "version" .Chart.AppVersion "namespace" .Release.Namespace  "name" "tars-tarskaniko" ) | nindent 2 -}}
+{{"\n"}}
+---

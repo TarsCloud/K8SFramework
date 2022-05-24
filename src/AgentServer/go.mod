@@ -1,6 +1,6 @@
 module tarsagent
 
-go 1.14
+go 1.16
 
 require (
 	github.com/containerd/containerd v1.5.2 // indirect
