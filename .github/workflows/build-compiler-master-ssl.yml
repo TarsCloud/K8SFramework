@@ -6,20 +6,20 @@ on:
       - master
     paths:
       - ".github/workflows/build-compiler-master-ssl.yml"
-      - "doc/tools/*"
-      - "doc/tools/yaml-tools/*"
-      - "doc/tools/helm-template/*"
-      - "doc/tools/helm-lib/*"
-      - "doc/base-compiler-ssl.Dockerfile"
+      - "compiler/tools/*"
+      - "compiler/tools/yaml-tools/*"
+      - "compiler/tools/helm-template/*"
+      - "compiler/tools/helm-lib/*"
+      - "compiler/base-compiler-ssl.Dockerfile"
   pull_request:
     branches:
       - master
     paths:
       - ".github/workflows/build-compiler-master-ssl.yml"
-      - "doc/tools/*"
-      - "doc/tools/helm-template/*"
-      - "doc/tools/helm-lib/*"
-      - "doc/base-compiler-ssl.Dockerfile"
+      - "compiler/tools/*"
+      - "compiler/tools/helm-template/*"
+      - "compiler/tools/helm-lib/*"
+      - "compiler/base-compiler-ssl.Dockerfile"
 
 jobs:
   build:
@@ -31,7 +31,7 @@ jobs:
       - name: login docker hub
         run: docker login -u ${{ secrets.name }} -p ${{ secrets.pass }}
       - name: Build ssl docker
-        run: cd doc && docker build . -f base-compiler-ssl.Dockerfile -t tarscloud/base-compiler-ssl:master --build-arg BRANCH=master
+        run: cd compiler && docker build . -f base-compiler-ssl.Dockerfile -t tarscloud/base-compiler-ssl:master --build-arg BRANCH=master
       - name: push master ssl docker
         run: docker push tarscloud/base-compiler-ssl:master
       - name: push latest ssl docker

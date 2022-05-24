@@ -7,20 +7,20 @@ on:
       - master
     paths:
       - ".github/workflows/build-deploy.yml"
-      - "doc/tools/*"
-      - "doc/tools/yaml-tools/*"
-      - "doc/tools/helm-template/*"
-      - "doc/tools/helm-lib/*"
-      - "doc/base-deploy.Dockerfile"
+      - "compiler/tools/*"
+      - "compiler/tools/yaml-tools/*"
+      - "compiler/tools/helm-template/*"
+      - "compiler/tools/helm-lib/*"
+      - "compiler/base-deploy.Dockerfile"
   pull_request:
     branches:
       - master
     paths:
       - ".github/workflows/build-deploy.yml"
-      - "doc/tools/helm-template/*"
-      - "doc/tools/helm-lib/*"
-      - "doc/tools/*"
-      - "doc/base-deploy.Dockerfile"
+      - "compiler/tools/helm-template/*"
+      - "compiler/tools/helm-lib/*"
+      - "compiler/tools/*"
+      - "compiler/base-deploy.Dockerfile"
       
 jobs:
   build:
@@ -34,7 +34,7 @@ jobs:
       - name: login docker hub
         run: docker login -u ${{ secrets.name }} -p ${{ secrets.pass }}
       - name: Build docker
-        run: cd doc && docker build . -f base-deploy.Dockerfile -t tarscloud/base-deploy
+        run: cd compiler && docker build . -f base-deploy.Dockerfile -t tarscloud/base-deploy
       - name: push master docker
         run: docker push tarscloud/base-deploy
 

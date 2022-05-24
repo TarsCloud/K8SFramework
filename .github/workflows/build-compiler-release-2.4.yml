@@ -7,22 +7,20 @@ on:
       - master
     paths:
       - ".github/workflows/build-compiler-release-2.4.yml"
-      - "doc/tools/*"
-      - "doc/tools/yaml-tools/*"
-      - "doc/tools/helm-template/*"
-      - "doc/tools/helm-lib/*"
-      - "doc/base-compiler.Dockerfile"
+      - "compiler/tools/*"
+      - "compiler/tools/yaml-tools/*"
+      - "compiler/tools/helm-template/*"
+      - "compiler/tools/helm-lib/*"
+      - "compiler/base-compiler.Dockerfile"
   pull_request:
     branches:
       - master
     paths:
       - ".github/workflows/build-compiler-release-2.4.yml"
-      - "doc/tools/*"
-      - "doc/tools/helm-template/*"
-      - "doc/tools/helm-lib/*"
-      - "doc/base-compiler.Dockerfile"
-  schedule:
-    - cron: '0 05 * * *'
+      - "compiler/tools/*"
+      - "compiler/tools/helm-template/*"
+      - "compiler/tools/helm-lib/*"
+      - "compiler/base-compiler.Dockerfile"
       
 jobs:
   build:
@@ -36,7 +34,7 @@ jobs:
       - name: login docker hub
         run: docker login -u ${{ secrets.name }} -p ${{ secrets.pass }}
       - name: Build docker
-        run: cd doc && docker build . -f base-compiler.Dockerfile -t tarscloud/base-compiler:v2.4 --build-arg BRANCH=release/2.4
+        run: cd compiler && docker build . -f base-compiler.Dockerfile -t tarscloud/base-compiler:v2.4 --build-arg BRANCH=release/2.4
       - name: push release/2.4 docker
         run: docker push tarscloud/base-compiler:v2.4
 

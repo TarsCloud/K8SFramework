@@ -20,7 +20,7 @@ jobs:
       - name: login docker hub
         run: docker login -u ${{ secrets.name }} -p ${{ secrets.pass }}
       - name: Build docker
-        run: cd doc && docker build . -f base-deploy.Dockerfile -t tarscloud/base-deploy:${{ steps.get_version.outputs.VERSION }}
+        run: cd compiler && docker build . -f base-deploy.Dockerfile -t tarscloud/base-deploy:${{ steps.get_version.outputs.VERSION }}
       - name: push master docker
         run: docker push tarscloud/base-deploy:${{ steps.get_version.outputs.VERSION }}
 
