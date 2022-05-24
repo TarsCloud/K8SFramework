@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-20.04 
 
     env:
+      DOCKER_RUN_WITHOUT_IT: 1
       REGISTRY_URL: docker.io/tarscloud
       REGISTRY_USER: ${{ secrets.name }} 
       REGISTRY_PASSWORD: ${{ secrets.pass }}
