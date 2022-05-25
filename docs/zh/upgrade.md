@@ -8,11 +8,11 @@
         + [兼容性含义](#兼容性含义)
     * [下载](#下载)
     * [执行](#执行)
-        + [升级 CRD](#升级 CRD)
-        + [升级 Controller](#升级 Controller)
-        + [等待 Controller 启动](#等待 Controller 启动)
-        + [升级 Framework](#升级 Framework)
-        + [等待 Framework 启动](#等待 Framework 启动)
+        + [升级 CRD](#升级CRD)
+        + [升级 Controller](#升级Controller)
+        + [等待 Controller 启动](#等待Controller 启动)
+        + [升级 Framework](#升级Framework)
+        + [等待 Framework 启动](#等待Framework启动)
 
 # 升级
 
@@ -20,30 +20,25 @@
 
 ### 版本格式
 
-**TarsCloud K8SFramework** 在发布 Helm Chart 时,采用与 Kubernetes 相同格式的版本.
-
-具体为: "主板本号.次版本号.修订号-附注说明", 其中附注说明为可选项.
+**TarsCloud K8SFramework** 在发布 Helm Chart 时,采用与 Kubernetes 相同格式的版本.  
+具体为: "主版本号.次版本号.修订号-附注说明", 其中附注说明为可选项.
 
 ### 版本规则
-
 1. 根据最高 CRD Version 生成 项目主版本号与次版本号, 比如:
-
    最高 CRD Version 为 v1beta3 时, 主版本号为 "1" , 次版本号为 "3" ,
-
    最高 CRD Version 为 v2beta1 时,主版本号为 "2" , 次版本号为 "1"
-
-2. 修订号与附注在发布时酌情定义
-
-2. 主板本号,次版本号,修订号按整数升序发布
+2. 修订号与附注在发布时酌情定义.
+3. 主版本号,次版本号,修订号按整数升序发布
+4. 
 
 ### 版本兼容性
 
-**TarsCloud K8SFramework** 提供最多三个"主板本.次版本"的兼容性保证.具体规则为
+**TarsCloud K8SFramework** 提供最多三个"主版本.次版本"的兼容性保证.具体规则为
 
-1. 相同的 "主板本.次版本", 提供兼容性保证
-2. 当 "次版本" == 0 时, 提供前一主板本的最新两个次版本的兼容性保证
-3. 当 "次版本" == 1 时, 提供前一主板本的最新一个次版本,同主版本的最新一个次版本的兼容性保证
-4. 当 "次版本" >=2 时, 提供同主板本的最新两个次版本的兼容性保证
+1. 相同的 "主版本.次版本", 提供兼容性保证
+2. 当 "次版本" == 0 时, 提供前一主版本的最新两个次版本的兼容性保证
+3. 当 "次版本" == 1 时, 提供前一主版本的最新一个次版本,同主版本的最新一个次版本的兼容性保证
+4. 当 "次版本" >=2 时, 提供同主版本的最新两个次版本的兼容性保证
 
 ### 兼容性含义
 
@@ -73,10 +68,10 @@ helm search repo tars-k8s
 
 ## 执行
 
-### 升级 CRD
+### 升级CRD
 
 如果您意图跨越 "主版本.次版本" 号升级 Controller, 则需要先升级 crd 定义  
-同时,跨越 "主版本.次版本" 号升级 Controller 尤其需要关注版本兼容性,  
+同时, 跨越 "主版本.次版本" 号升级 Controller 尤其需要关注版本兼容性,  
 不兼容的升级可能导致正在运行的服务中断甚至 crd 对象丢失
 
 ```shell
@@ -87,7 +82,7 @@ sed -i -E 's#^apiVersion:(.*)$#---\napiVersion:\1#g' crds.yaml
 kubectl apply -f tars-crds.yaml
 ```
 
-### 升级 Controller
+### 升级Controller
 
 您可以执行以下命令来升级 Controller:
 
@@ -96,7 +91,7 @@ helm upgrade tarscontroller tarscontroller-${Version}.tgz                      #
 helm upgrade tarscontroller tars-k8s/tarscontroller-${Version}                 # helm repo
 ```
 
-### 等待 Controller 启动
+### 等待Controller 启动
 
 您可以执行以下命令查看 Controller 启动状态
 
@@ -104,7 +99,7 @@ helm upgrade tarscontroller tars-k8s/tarscontroller-${Version}                 #
 kubectl get pods -n tars-system -o wide                                       
 ```
 
-### 升级 Framework
+### 升级Framework
 
 您可以执行以下命令来升级 Framework
 
@@ -134,7 +129,7 @@ helm upgrade tarsframework -n ${namespace} -f tarsframework.yaml tarsframework-$
 helm upgrade tarsframework -n ${namespace} -f tarsframework.yaml tars-k8s/tarsframework-${version} #helm repo
 ```
 
-### 等待 Framework 启动
+### 等待Framework 启动
 
 您可以执行以下命令来查看 Framework 启动状态
 

@@ -2,11 +2,11 @@
 
 ## 下载
 
-**TarsCloud K8SFramework**  会发布 tarscontroller 和 tarsframework 两种 Helm Chart.
+**TarsCloud K8SFramework**  会发布 tarscontroller 和 tarsframework 两种 Helm Chart.  
 
-您可以直接下载或者使用 helm repo来获取已发布版本.
+您可以直接下载或者使用 helm repo来获取已发布版本.  
 
-需要注意的是 tarscontroller, tarsframework 可能有不同的版本号. 只要"主板本.次版本" 相同即可匹配
+需要注意的是 tarscontroller, tarsframework 可能有不同的版本号. 只要"主板本.次版本" 相同即可匹配  
 
 + 直接下载
 
