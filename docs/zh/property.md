@@ -5,11 +5,11 @@
 + 定义 CRD 抽象 Tars 框架的的概念,动作.
 + 通过准入控制校验 CRD 对象的合法性,合理性.
 + 调谐 CRD 对象, 生成 Kubernetes 原生对象 (Service,StatefulSet,DaemonSet)
-基于此,我们主要从
+  基于此,我们主要从
 + CRD 的定义,准入控制和调谐
 + TServer 与Service ,StatefulSet,DaemonSet 的映射
 + 其他在开发,使用,运维中需要了解的特性
-等方面阐述 **TarsCloud K8SFramework** 特性
+  等方面阐述 **TarsCloud K8SFramework** 特性
 
 * [CRD](#crd)
     + [tserver](#tserver)
@@ -20,8 +20,8 @@
     + [tendpoint](#tendpoint)
     + [texitedrecord](#texitedrecord)
     + [tframeworkconfig](#tframeworkconfig)
-* [TServer 与 Service 的映射](#TServer 与 Service 的映射)
-* [TServer 与 StatefulSet 的映射](#TServer 与 StatefulSet 的映射)
+* [TServer 与 Service 的映射](#TServer与Service的映射)
+* [TServer 与 StatefulSet 的映射](#TServer与StatefulSet的映射)
     + [tserver.k8s.affinity](#tserverk8saffinity)
     + [tserver.spec.k8s.env](#tserverspeck8senv)
     + [tserver.spec.k8s.envFrom](#tserverspeck8senvfrom)
@@ -39,7 +39,7 @@
     + [tserver.spec.k8s.readinessGate](#tserverspeck8sreadinessgate)
     + [tserver.spec.k8s.launcherType](#tserverspeck8slaunchertype)
     + [tserver.spec.k8s.mounts](#tserverspeck8smounts)
-* [TServer 与 DaemonSet 的映射](#TServer 与 DaemonSet 的映射)
+* [TServer 与 DaemonSet 的映射](#TServer与DaemonSet的映射)
 * [其他特性](#其他特性)
     + [时区](#时区)
     + [宿主机磁盘](#宿主机磁盘)
@@ -678,7 +678,7 @@ Validating
 
 无
 
-## TServer 与 Service 的映射
+## TServer与Service的映射
 
 当 tserver.k8s.daemonset==false 为时, controller 从一个 tserver 对象, 映射出同名 service 对象
 
@@ -717,7 +717,7 @@ selector 被映射为 tars.io/ServerApp: $(tserver.app)  , tars.io/ServerName: $
 如果 tserver.subType==tars, 那么 ports 会被 映射为 name: $(tserver.tars.servants.name), port: $(tserver.tars.servants.port) ,
 protocol: TCP|UDP
 
-## TServer 与 StatefulSet 的映射
+## TServer与StatefulSet的映射
 
 当 tserver.k8s.daemonset==false 为时, controller 从一个 tserver 对象, 映射出同名 statefulset 对象.
 
@@ -744,14 +744,14 @@ tserver.k8s.affinity 字段描述的是 tars 服务的节点亲和性功能.
   statefulset.spec.template.spec.affinity 会被 映射为:
   ```yaml
   affinity:
-  	nodeAffinity:
-  		requiredDuringSchedulingIgnoredDuringExecution:
-  			nodeSelectorTerms:
-  			- matchExpressions:
-  			  - key: tars.io/node.tars
-  			    operator: Exists
-  			  - key: tars.io/ability.$(tserver.namespace).$(tserver.spec.app)
-  			    operator: Exists
+      nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+                  - key: tars.io/node.tars
+                    operator: Exists
+                  - key: tars.io/ability.$(tserver.namespace).$(tserver.spec.app)
+                    operator: Exists
   ```
 
 + ServerRequired
@@ -762,14 +762,14 @@ tserver.k8s.affinity 字段描述的是 tars 服务的节点亲和性功能.
 
   ```yaml
   affinity:
-  	nodeAffinity:
-  		requiredDuringSchedulingIgnoredDuringExecution:
-  			nodeSelectorTerms:
-  			- matchExpressions:
-  			  - key: tars.io/node.tars
-  			    operator: Exists
-  			  - key: tars.io/ability.$(tserver.namespace).$(tserver.spec.app)-$(tserver.spec.server)
-  			    operator: Exists
+      nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+              - matchExpressions:
+                - key: tars.io/node.tars
+                  operator: Exists
+                - key: tars.io/ability.$(tserver.namespace).$(tserver.spec.app)-$(tserver.spec.server)
+                  operator: Exists
   ```
 
 
@@ -1104,7 +1104,7 @@ TLocalVolume 的实现:
 
 注意: 只有 spec.k8s.daemonset 的 tserver 才可以使用 PersistentVolumeClaimTemplate ,TLocalVolume
 
-## TServer 与 DaemonSet 的映射
+## TServer与DaemonSet的映射
 
 如果 tserver.spec.k8s.daemonset==true . controller 从一个 tserver 对象衍生出同名 daemonset 对象. tserver 到 daemonset 的映射规则与 tserver 到
 daemonset 的映射规则基本一致. 除了以下两种情况:

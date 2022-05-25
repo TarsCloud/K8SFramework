@@ -10,7 +10,7 @@
     * [执行](#执行)
         + [升级 CRD](#升级CRD)
         + [升级 Controller](#升级Controller)
-        + [等待 Controller 启动](#等待Controller 启动)
+        + [等待 Controller 启动](#等待Controller启动)
         + [升级 Framework](#升级Framework)
         + [等待 Framework 启动](#等待Framework启动)
 
@@ -24,12 +24,13 @@
 具体为: "主版本号.次版本号.修订号-附注说明", 其中附注说明为可选项.
 
 ### 版本规则
+
 1. 根据最高 CRD Version 生成 项目主版本号与次版本号, 比如:
    最高 CRD Version 为 v1beta3 时, 主版本号为 "1" , 次版本号为 "3" ,
    最高 CRD Version 为 v2beta1 时,主版本号为 "2" , 次版本号为 "1"
 2. 修订号与附注在发布时酌情定义.
 3. 主版本号,次版本号,修订号按整数升序发布
-4. 
+4.
 
 ### 版本兼容性
 

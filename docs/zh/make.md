@@ -1,70 +1,123 @@
 # 构建
 
-当前, 您可以  **TarsCloud K8SFramework** 已经使用 Makefile构建项目. 您可以通过执行 make [target] 打成构建目标,
-一些目标可能需要您提供构建参数, 您可以以环境变量的方式指定这些参数,或者在执行 make [target] 时附属参数名=参数值
+**TarsCloud K8SFramework** 使用 Makefile 构建作为项目构建工具. 您可以通过执行 make [target] 完成构建目标  
+一些目标可能需要您提供指定参数, 您可以以环境变量的方式指定这些参数,或者在执行 make [target] 时通过 Param=${Value} 方式指定
 
 ## 构建参数
 
-在开始介绍构建目标前, 我们希望您能理解一些必要的参数含义
+在开始讨论构建目标前, 我们希望您能理解一些术语
 
-+ BUILD_VERSION
-  在构建 **TarsCloud K8SFramework** 过程中, 会生成多种 Docker 镜像 , Makefile 会尝试使用 BUILD_VERSION 作为 镜像的 Tag
-  除了通过环境变量或者命令行指定参数外，您可以在 param.sh 填充 \_BUILD_VERSION_ 值来指定参数值
++ Kubernetes Docker-Registry Secret  
+  Kubernetes 总是从某个镜像仓库下载镜像然后将其启动为容器, 如果镜像仓库需要客户端提供账号，密码后才能下载镜像,  
+  我们称之为私有镜像仓库, 此时,您需要在 Kubernetes 集群建立一个特定格式的,包含了仓库地址, 账号, 密码信息的secret,  
+  这就是 [Kubernetes Docker-Registry Secret](https://kubernetes.io/zh/docs/tasks/configure-pod-container/pull-image-private-registry)
 
-+ REGISTRY_URL , REGISTRY_USER, REGISTRY_PASSWORD
-  在构建 **TarsCloud K8SFramework** 过程中, 会生成多种 Docker 镜像 ，Makefile 会尝试将这些镜像推送到您指定的仓库地址 ${REGISTRY_URL},
-  如果您的仓库地址开启了账号，密码验证, 您同时需要提供 账号${REGISTRY_USER}, 密码 ${REGISTRY_PASSWORD}
-  除了通过环境变量或者命令行指定参数外，您可以在 param.sh 填充 \_REGISTRY_URL_, \_REGISTRY_USER_ \_REGISTRY_PASSWORD_ 值来指定参数值.
-  如果您期望编译出的镜像, chart 被实际使用, 此时最好是填充一个公开仓库地址.。当然,使用私密地址也可以工作, 但是在安装时需要额外指定参数.
+也希望您能理解一些必要的参数含义
+
++ BUILD_VERSION  
+  在构建 **TarsCloud K8SFramework** 过程中, make 会生成一些 Docker 镜像并且尝试使用 BUILD_VERSION 作为 镜像的 Tag  
+  您可以通过环境变量, 命令行指定 BUILD_VERSION 值, 您也可以在 param.sh 文件中设置 \_BUILD_VERSION_ 值来指定参数值
+
+
++ REGISTRY_URL , REGISTRY_USER, REGISTRY_PASSWORD  
+  在构建 **TarsCloud K8SFramework** 过程中, 会生成多种 Docker 镜像 ，Makefile 会尝试将这些镜像推送到您指定的仓库地址 ${REGISTRY_URL},  
+  如果您的仓库地址开启了账号，密码验证, 您同时需要提供 账号${REGISTRY_USER}, 密码 ${REGISTRY_PASSWORD}  
+  您可以通过环境变量, 命令行指定这些参数值 ,也可以通过在 param.sh 文件中设置 \_REGISTRY_URL_, \_REGISTRY_USER_,\_REGISTRY_PASSWORD_ 来指定参数值
+  我们建议您在构建源码时,使用公开仓库, 这个会降低实际部署使用时难度.
+
 
 + CHART_VERSION, CHART_APPVERSION, CHART_DST
-  如果您的构建目标是chart.controller, chart.framework 您需要提供 CHART_VERSION, CHART_APPVERSION,CHART_DST参数值
-  分别定义生成 chart 包的 version, appversion 值以及 chart 包的存放目录
-  除了通过环境变量或者命令行指定参数外，您可以在 param.sh 填充 \__CHART_VERSION_, \_CHART_APPVERSION_ ,\_CHART_DST_ 值来指定参数值
+  CHART_VERSION, CHART_APPVERSION,CHART_DST 分别指生成 chart 包的 version, appversion 值以及 chart 包的存放目录  
+  您可以通过环境变量, 命令行指定这些参数值，可以在 param.sh 填充 \__CHART_VERSION_, \_CHART_APPVERSION_ ,\_CHART_DST_ 值来指定参数值
 
-+ UPLOAD_REGISTRY, UPLOAD_SECRET
-  **TarsCloud K8SFramework** 内置了镜像编译服务将您的原生程序包编译成 Docker镜像, 您需要提供一个镜像仓库地址来接收和存储这些镜像
-  UPLOAD_REGISTRY 参数值表示您准备的仓库地址
-  如果您的仓库需要账号,密码访问, 您需要新建一个 Kubernetes Docker-Registry Secret ,将 Secret 名字赋值给 UPLOAD_SECRET
++ UPLOAD_REGISTRY, UPLOAD_SECRET  
+  **TarsCloud K8SFramework** 内置了镜像编译服务将您的原生程序包编译成 Docker镜像, 您需要提供一个镜像仓库地址来接收和存储这些镜像  
+  UPLOAD_REGISTRY 参数值表示您准备的仓库地址, 如果您提供的是一个私有仓库,您还需要新建 Kubernetes Docker-Registry Secret, 并将 Secret 名字赋值给 UPLOAD_SECRET  
+  您可以通过环境变量, 命令行指定这些参数值
 
 ## 构建目标
 
-+ [base name]
-  base name 是 **TarsCloud K8SFramework** 项目中基础镜像的泛指, 具体包括
+### base
 
-  ```
-  base: cppbase javabase nodejsbase php74base
-  ```
-  您可以执行 make cppbase , make javabase 等来构建和上传基础镜像
-+ [server name]
-  server name 是 **TarsCloud K8SFramework** 项目中所有服务的泛指, 具体包括
+base 是 **TarsCloud K8SFramework** 项目中基础镜像的集合名,具体包括
 
-  ```shell
-  controlelr servers: tarscontroller tarsagent
-  framework servers: tarskaniko tarsimage tarsnode tarsregistry tarsconfig tarslog tarsnotify tarsstat tarsproperty
-                     tarsquerystat tarsqueryproperty tarskevent tarsweb elasticsearch"
-  ```
-  您可以执行 make tarscontroller , make tarsnode 等在构建和上传这些服务镜像
-+ chart.controller, chart.framework
-  分别构建 Controller, Framework 的 Helm Chart
-+ secret
-  用于构建 一个 Kubernetes docker-registry secret,
-  除了仓库地址,仓库账号,仓库密码外，您还需要提供命名空间参数( NAMESPACE) 以及 Secret 的名字参数(NAME)
-+ install.controller ,upgrade.controller
-  分别用于安装和升级 Controller
-  您需要提供 CHART 参数，指向 Controller Chart 包
-  如果您构建 Chart 包时使用的是私用仓库地址,你需要使用 "make secret " 在 tars-system 命名空间新建一个 docker-registry secret , 并 额外指定参数 CONTROLLER_SECRET=${secret name}
+```
+base: cppbase javabase nodejsbase php74base
+```
 
-+ install.framework ,upgrade.framework
-  分别用于安装和升级 framework
-  您需要提供 CHART 参数，表示 Framework Chart 的路径
-  您需要提供 命名空间参数, 表示 Framework Chart 安装的命名空间
-  您需要提供 UPLOAD_REGISTRY, UPLOAD_SECRET 参数
-  如果您构建 Chart 包时使用的是私用仓库地址,你需要使用 "make secret " 在安装命名空间新建一个 docker-registry secret , 并额外指定参数 FRAMEWORK_SECRET=${secret name}
+您也可以执行 make cppbase , make javabase 构建指定基础镜像
 
-+ base , controller , framework
-  分别为 基础镜像, Controller Server , Framework Server 的集合构建目标
-+ chart
-  chart.controller , chart.framework 的集合构建目标
-+ all
-  base , controller , framework, all 的集合构建目标
+> 您需要提供 REGISTRY_URL, BUILD_VERSION 参数
+> 如果 REGISTRY_URL 需要客户端提供账号,密码才能上传镜像，您还需要提供 REGISTRY_USER, REGISTRY_PASSWORD 参数
+
+#### controller
+
+controller 是 **TarsCloud K8SFramework** 项目中 Controller 包含的服务集合名,具体包括
+
+```
+controlelr: tarscontroller tarsagent
+```
+
+您也可以执行 make tarscontroller , make tarsagent 构建指定服务镜像
+> 您需要提供 REGISTRY_URL, BUILD_VERSION 参数
+> 如果 REGISTRY_URL 要求客户端提供账号,密码才能上传镜像, 您还需要提供 REGISTRY_USER, REGISTRY_PASSWORD 参数
+
+### framework
+
+framework 是 **TarsCloud K8SFramework** 项目中 Framework 包含的服务集合名,具体包括
+
+```
+framework: tarskaniko tarsimage tarsnode tarsregistry tarsconfig tarslog tarsnotify
+				   tarsstat tarsproperty tarsquerystat tarsqueryproperty tarskevent tarsweb elasticsearch
+```
+
+您也可以执行 make tarskaniko , make tarsimage ... 构建指定服务镜像
+
+> 您需要提供 REGISTRY_URL, BUILD_VERSION 参数
+> 如果 REGISTRY_URL 要求客户端提供账号,密码才能上传镜像, 您还需要提供 REGISTRY_USER, REGISTRY_PASSWORD 参数
+
+### chart
+
+chart 是 **TarsCloud K8SFramework** 项目中 Chart 包的集合名,具体包括
+
+```
+chart: chart.controller chart.framework 为 Controller Helm Chart 包和Framework Helm Chart 包 
+```
+
+您也可以指定 make chart.controller, make chart.framework 来构建指定 Chart
+
+> 您需要提供 REGISTRY_URL, BUILD_VERSION 参数
+> 如果 REGISTRY_URL 要求客户端提供账号,密码才能上传镜像, 您还需要提供 REGISTRY_USER, REGISTRY_PASSWORD 参数
+> 根据需要,您可以指定 CHART_VERSION ,CHART_APPVERSION, CHART_DST 参数
+
+### all
+
+all 是 base, controller, framework, chart 四个构建目标的集合名
+
+> 您需要提供 REGISTRY_URL, BUILD_VERSION 参数
+> 如果 REGISTRY_URL 需要客户端提供账号,密码才能上传镜像，您还需要提供 REGISTRY_USER, REGISTRY_PASSWORD 参数
+> 根据需要,您可以指定 CHART_VERSION ,CHART_APPVERSION, CHART_DST 参数
+
+### secret
+
+用于构建 一个 Kubernetes docker-registry secret
+> 您需要提供 REGISTRY_URL ,REGISTRY_USER, REGISTRY_PASSWORD 参数
+> 您需要提供命名空间参数( NAMESPACE) 以及 Secret 的名字参数(NAME)
+
+### install.controller , upgrade.controller
+
+分别用于安装和升级 Controller
+> 您需要提供 CHART 参数，指向 Controller Chart 包
+> 如果您构建 Chart 包时使用的是私有仓库, 您需要在 tars-system 命名空间新建 docker-registry secret , 并指定 CONTROLLER_SECRET=${secret}
+
+### install.framework ,upgrade.framework
+
+分别用于安装和升级 framework
+> 您需要提供 CHART 参数，表示 Framework Chart 的路径
+> 您需要提供 NAMESPACE 参数, 表示 Framework Chart 安装的命名空间
+> 您需要提供 UPLOAD_REGISTRY 参数, 如果UPLOAD_REGISTRY 指向私有仓库, 您需要在待安装的命名空间内新建 Kubernetes Docker-Registry Sercret 并且指定 UPLOAD_SECRET=${secret}  
+> 如果您在构建 Chart 包时使用的是私有仓库, 您需要在待安装的命名空间内新建 Kubernetes Docker-Registry Sercret 并且指定 FRAMEWORK_SECRET=${secret}
+
+### help
+
+help 用于输出 make 帮助信息
