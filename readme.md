@@ -1,5 +1,5 @@
 # 目录
-- [Tars K8SFramework](#tars-k8sframework)
+- [TarsCloud K8SFramework](#tars-k8sframework)
   * [设计](#设计)
     + [CRD](#crd)
     + [Controller](#controller)
@@ -11,11 +11,11 @@
   * [Todo](#todo)
 
 
-# Tars K8SFramework
+# TarsCloud K8SFramework
 
-**Tars K8SFramework** 是为了将 Tars 部署在 Kubernetes 集群而做的适应性改造项目.  
-**Tars K8SFramework** 提供了包括部署,升级,回滚,、伸缩容,配置变更的在内的 Tars 服务全生命周期管理.  
-借助 **Tars K8SFramework**, Tars 服务可以无缝运行在公有云或私有部署的 Kubernetes 集群.
+**TarsCloud K8SFramework** 是为了将 Tars 部署在 Kubernetes 集群而做的适应性改造项目.  
+**TarsCloud K8SFramework** 提供了包括部署,升级,回滚,、伸缩容,配置变更的在内的 Tars 服务全生命周期管理.  
+借助 **TarsCloud K8SFramework**, Tars 服务可以无缝运行在公有云或私有部署的 Kubernetes 集群.
 
 ## 设计
 
