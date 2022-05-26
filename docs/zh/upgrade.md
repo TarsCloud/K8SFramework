@@ -54,7 +54,7 @@
 ## 下载
 
 您可以 <<直接下载>> 或者使用 << helm repo >> 两种方式来获取已发布版本.  
-需要注意的是只要符合兼容性规则,您可以分别升级 Controller 或 Framework.
+需要理解的是只要符合兼容性规则,您可以分别升级 Controller 或 Framework.
 
 + 直接下载
 
@@ -70,12 +70,13 @@ helm search repo tars-k8s
 
 ## 执行
 
+### 确认兼容性
+
+在执行前,请您再次确认待升/降级 的 Chart 包兼容性
+
 ### 升级CRD
 
-如果您意图跨越 "主版本.次版本" 号升级 Controller, 则需要先升级 crd 定义  
-同时, 跨越 "主版本.次版本" 号升级 Controller 尤其需要关注版本兼容性,  
-不兼容的升级可能导致正在运行的服务中断甚至 crd 对象丢失
-
+如果您意图跨越 "主版本.次版本" 号升级 Controller, 则需要先升级 crd 定义
 ```shell
 helm show crds tarscontroller-${Version}.tgz > tars-crds.yaml                  # 直接下载
 helm show crds tars-k8s/tarscontroller-${Version} > tars-crds.yaml             # helm repo

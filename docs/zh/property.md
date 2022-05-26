@@ -41,9 +41,10 @@
     + [tserver.spec.k8s.mounts](#tserverspeck8smounts)
 * [TServer 与 DaemonSet 的映射](#TServer与DaemonSet的映射)
 * [其他特性](#其他特性)
-    + [时区](#时区)
-    + [宿主机磁盘](#宿主机磁盘)
-    + [服务镜像](#服务镜像)
+    + [镜像分类](#镜像分类)
+    + [镜像构建](#镜像构建)
+    + [磁盘管理](#磁盘管理)
+    + [时区管理](#时区管理)
 
 ## CRD
 
@@ -1114,9 +1115,170 @@ daemonset 的映射规则基本一致. 除了以下两种情况:
 
 ### 其他重要特性
 
-#### 时区
+#### 镜像分类
 
-#### 宿主机磁盘
+**TarsCloud K8SFramework**  中涉及到了很多种镜像, 下文为您整体介绍这些镜像的种类
 
-#### 服务镜像
++ tarsnode 镜像
 
+  每个最终运行的 tars 服务都是由 tarsnode 进程启动和守护的, 换句话说  
+
+  在最终启动的 tars 服务容器中, 都是先启动 tarsnode 进程, 随后由  tarsnode 进程启动和管理 tars 业务服务进程. 
+
+  这种启动方式在客观上要求  **TarsCloud K8SFramework**   项目提供一种单独 tarsnode 镜像,
+
+  然后由控制器将 tarsnode 程序从 tarsnode 镜像中提取出来,与tars 业务服务镜像 合并到一起, 生成最终的 tars 服务容器
+
+  > 尽管 "由 tarsnode 启动以及守护业务服务" 给人的第一印象是 "不够云原生 " , 但仍然有足够的理由这么做:
+  >
+  > 1. 可以最大程度的兼容原生 Tars框架的 使用习惯，包括 暂停/重启服务,发送命令等操作
+  >
+  > 2. 由业务程序作为前台进程在容器内运行时可行的, 但 "程序运行崩溃, 容器随即就会被删除" 会给故障处理带来挑战.
+  > 3. tarsnode 能监听 业务进程的心跳状态, 避免需要在 Kubernetes 层面上配置非常多的 存活探针 
+  >
+  > 针对 "不够云原生" 的指责,我们提供了 "FrontGround" , "BackGround" 两种启动方式:
+  >
+  >     BackGround:  tarsnode 做为容器内前台(1号)进程,业务进程被 tarsnode 管理和守护,完全兼容 原生 Tars 框架的管理方式(重启/暂停服务 ，发送命令操作)
+  >             
+  >     FrontGround:  业务进程作为容器内前台(1号)进程, tarsnode 随后启动作为心跳监听进程, 此时,只能兼容原生Tars框架的发送命令操作
+
+
+
++ base 镜像
+
+   每个业务服务运行都离不开一个基础运行环境, 我们将这个基础运行环境固化到单独的镜像中, 称之为 base 镜像
+
+  基于某个 base 构建您的 业务服务镜像, 可以降低构造业务服务镜像的难度,也可以提供资源复用率.  
+
+  **TarsCloud K8SFramework**   项目内置了一些 base 镜像 ,您可以根据需要定制您自己的 base 镜像
+
+  
+
++ server 镜像
+
+  每个业务服务的每个版本都是一个独立的镜像, 我们称之为 server 镜像.  
+
+  您可以自行构建 server 镜像或者 通过 tarsweb 上传发布包的方式构建出服务镜像.
+
+  
+
++ executor 镜像
+
+	   **TarsCloud K8SFramework**   项目内置了一个镜像编译服务, 最终的镜像编译工作是由  executor 镜像的的 tarskaniko 程序执行的.  
+
+
+
+#### 镜像构建
+
+我们只建议您 自行构建 base 镜像和 server 镜像, 下文只阐述 base 镜像与 server 镜像的构建方法
+
+
+
+##### Base 镜像构建
+
+必要性:  如果内置的 base 镜像不满足的程序运行时需求,或者您需要在大量服务镜像中内置某个基础组件时可添加基础镜像
+
+操作步骤:
+
+1. 确定基础镜像能支持 Tars 服务类型
+
+   > 当前 TarsCloud K8SFramework 支持了 四种 Tars 服务类型 分别为:  cpp/go/nodejs/(java-jar,java-war)  
+   >
+   > 您需要明确目标基础镜像可以支持的  Tars 服务类型, 为此种类型安装合适的运行环境,比如针对 nodejs ,你需要在镜像中包含 node程序和基础  nodejs 库 
+
+2.  生成 Dockerfile 文件，已经构建您的镜像,提交到镜像仓库
+
+3.  添加基础镜像到框架中 
+
+   > 云原生方式添加:
+   >
+   > 新建  Yaml文件 mybase.yaml ,并按说明填充内容
+   >
+   > ```yaml
+   > apiVersion: k8s.tars.io/v1beta3
+   > kind: TImage
+   > metadata:
+   > name: mybase #按需填充您希望的对象名
+   > namespace: #填充您的 Framework 安装的命名空间
+   > imageType: base
+   > releases:
+   > - id: #请设置和填充一个 id 
+   >   image: #请填充镜像地址
+   >   mark: #请填充一些说明信息
+   > supportedType: [] #填充您的镜像支持的 Tars 服务类型
+   > ```
+   >
+   > ```she
+   > 执行 kubectl apply -f mybase.yaml
+   > ```
+   > 管理平台方式:  
+   > 在管理平台, 依次点击 "运维管理"->"基础镜像管理"->"添加"，并根据提示内容填入信息
+
+##### Server 镜像构建
+
+操作步骤:
+
+1:  确认您的服务类型
+
+> 当前 TarsCloud K8SFramework 支持了 四种服务类型 分别为:  cpp/go/nodejs/(java-jar,java-war)  ,您根据服务选择
+
+2:  选择以下一种方式构建镜像
+
++ 通过管理平台构建
+
+  > 在管理平台,进入目标服务界面, 依次点击 "发布管理"->"上传发布包", 然后根据提示填入内容信息
+
++ 自行构建
+
+  > 1.  新建和编辑 Dockerfile, 按说明填充 内容
+  > ```dockerfile
+  > FROM base                          #请按需填写您的基础镜像
+  > ....                               #请按需填写您的构建流程
+  > RUN rm -rf /etc/localtime          #镜像内的 /etc/localtime 文件会影响 挂载宿主机的 /etc/localtime 文件
+  > COPY server /usr/local/server/bin  #请按需更改您的服务程序目录名
+  > ENV ServerType=cpp                 #请按需填充您的服务类型
+  > ```
+  >
+  > 2. 构建镜像并推送到镜像仓库
+  > 3. 通过管理平台将镜像提交到服务版本列表
+  
+   如果的您的服务需要第三方库, 可以在 程序同级新建 lib 目录,然后将 so 文件放置其中
+  
+
+#### 磁盘管理
+
+在 Framework 程序部署和运行时,会挂载所在宿主机的 /usr/local/app/tars 目录, 并使用一些磁盘空间,  
+
+您可以单独硬盘到此目录, 或者软连接一块较大的磁盘空间到此目录. 
+
+目录使用情况如下: 
+
++  日志占用
+
+  为了便于故障排查, 我们使用 Kubernetes HostPath 存储 业务容器的运行日志  
+
+  容器内的日志存储目录为:  /usr/local/app/tars/app_log/${App}/${Server}  
+
+  宿主机的日志存储目录为:  /usr/local/app/tars/app_log/${Namespace}/${PodName}/${App}/${Server}
+
+  
+
++ 镜像缓存占用  
+
+  我们内置的镜像编译服务,为了加快编译速度,我们通过  Kubernetes HostPath  共享一些缓存数据  
+
+  宿主机存储目录为: /usr/local/app/tars/image_build
+
+  
+
++ TLV 占用  
+
+  **TarsCloud K8SFramework** 提供了 TLV 的功能, 会在宿主机新建目录作为  Kubernetes LocalPV 分配给使用者
+
+  宿主机存储账号目录为:  /usr/local/app/tars/host-mount
+
+#### 时区管理
+
+Controller 在映射 Tars 服务的 Pod时，总是会尝试将 宿主机的 /etc/localtime 挂载到 Pod内, 大多数情况下，这种方式可以保证 Pod与宿主机使用的是同一时区  
+
+但是我们发现在某些特殊场景无效，我们正才探索更好的方法.

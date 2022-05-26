@@ -23,14 +23,12 @@
 
 在开始安装前,我们建议您做一些准备工作,这样框架启动会更加顺利.
 
-1. 准备一个镜像仓库以及访问仓库所需要的账号,密码
+### 1. 选定 namespace
 
-> 您现有的 Tars 服务程序是以原生形式存在的,需要编译成Docker 镜像后才能被 Kubernetes 集调度.
-> 为此,**TarsCloud K8SFramework** 内置了 tarsimage, tarskaniko 提供镜像编译服务,
-> 您可以在 **TarsCloud K8SFramework** 管理平台上传原生程序包,经由 tarsimage, tarskaniko 编译成镜像
-> 在正式安装前,您需要准备一个可用的镜像仓库地址, 用于接收存储编译后的镜像.
+> 您可以在不同的 Kubernetes Namespace 分别部署一套 Framework, 每套 Framework 都是是完整且独立运行的的 Tars 框架.
+> 在正式安装前, 明确您将要部署的 Framework 所在 Namespace 非常重要
 
-2. 选定可用节点
+### 2. 选定可用节点
 
 > **TarsCloud K8SFramework** 只会将 Pod 调度到您明确指出可以被 **TarsCloud K8SFramework** 使用的集群节点
 > 所以在正式部署前, 明确哪些集群节点属于 **TarsCloud K8SFramework** 可用节点非常重要.
@@ -39,13 +37,12 @@
 > ```shell
 > kubeclt get nodes -o wide
 > ```
+>
+> 作为选定节点的参考指标, 我们希望您能理解  **TarsCloud K8SFramework** 的磁盘管理策略, 具体请参考 <<[特性](property.sh)>> 文档的 "磁盘管理" 一节 
 
-3. 选定 namespace
+### 3. 添加节点标签
 
-> 您可以在不同的 Kubernetes Namespace 分别部署一套 Framework, 每套 Framework 都是是完整且独立运行的的 Tars 框架.
-> 在正式安装前, 明确您将要部署的 Framework 所在 Namespace 非常重要
-
-4. 为选定节点添加标签, 标识该节点属于 **TarsCloud K8SFramework** 的可用节点,标签格式为: tars.io/node.${namespace}
+添加标签是为了标识该节点属于 **TarsCloud K8SFramework** 的可用节点,标签格式为: tars.io/node.${namespace}
 
 > 您可以使用如下指令完成完成该操作:
 
@@ -66,15 +63,24 @@
 > ```
 > 撤销标签后, 已经被调度运行的 pod 是否会立刻被节点驱逐由 Kubernetes 的调度器策略决定
 
-5. 在 2 的基础上, 选定支持 tlv( tars local volume) 的节点, 在节点添加 tars.io/SupportLocalVolume 标签
+### 4.  选定支持 TLV的节点
 
-> 关于 tlv 的介绍可以参考 [<<TarsK8S 特性>>](property.md)
-> 如果您仅仅是用于测试, 那么您可以给任意节点添加该标签
+在 2 的基础上, 选定支持 tlv( tars local volume) 的节点, 在节点添加 tars.io/SupportLocalVolume 标签
+
+> 关于 tlv 的介绍可以参考 [<<特性>>](property.md) ,  "TServer与Statefulset的映射. tserver.spec.k8s.mounts" 和 "磁盘管理.TLV" 章节 
+> 如果您仅仅是用于测试, 那么您暂时可以给任意节点添加该标签
 > 您可以使用 以下命令执行该操作:
 
 > ```shell
 > kubeclt label nodes ${node1} ${node2} ... tars.io/SupportLocalVolume=
 > ```
+
+### 5. 准备镜像仓库
+
+> 您现有的 Tars 服务程序是以原生形式存在的,需要编译成Docker 镜像后才能被 Kubernetes 集调度.
+> 为此,**TarsCloud K8SFramework** 内置了 tarsimage, tarskaniko 提供镜像编译服务,
+> 您可以在 **TarsCloud K8SFramework** 管理平台上传原生程序包,经由 tarsimage, tarskaniko 编译成镜像
+> 在正式安装前,您需要准备一个可用的镜像仓库地址, 用于接收存储编译后的镜像.
 
 ## 执行
 
@@ -88,7 +94,7 @@
 
 以下是详细安装步骤:
 
-### 安装 Controller
+### 1. 安装 Controller
 
 您可以使用如下命令安装 Controller:
 
@@ -97,7 +103,7 @@ helm install tarscontroller tarscontroller-${version}.tgz            #本地包�
 helm install tarscontroller tars-k8s/tarscontroller-${version}       #helm repo 模式
 ```
 
-### 等待 Controller 启动
+### 2. 等待 Controller 启动
 
 您可以使用如下命令查看 controller pod 启动详情 :
 
@@ -105,7 +111,7 @@ helm install tarscontroller tars-k8s/tarscontroller-${version}       #helm repo 
 kubectl get pods -n tars-system -o wide
 ```
 
-### 生成 Framework 配置文件
+### 3. 生成 Framework 配置文件
 
 新建 tarsframework.yaml 文件, 按说明填充值
 
@@ -121,7 +127,7 @@ upload:
 web: ""
 ```
 
-### 安装 Framework
+### 4. 安装 Framework
 
 执行命令安装 Framework:
 
@@ -130,7 +136,7 @@ helm install tarsframework -n ${namespace} --create-namespace -f tarsframework.y
 helm install tarsframework -n ${namespace} --create-namespace -f tarsframework.yaml tars-k8s/tarsframework-${version} #helm repo模式
 ```
 
-### 等待 Framework 启动
+### 5. 等待 Framework 启动
 
 您可以执行如下命令查看 Framework 服务的 Pod 启动状态:
 
@@ -140,7 +146,9 @@ kubectl get pods -n ${namespace} -o wide
 
 如果未遵循 "准备" 操作, 此时会发现部分 Framework 服务 pod 启动失败. 请参考 "故障排查" 处理
 
-### Framework 启动故障排查
+
+
+## Framework 启动故障排查
 
 故障现象:
 

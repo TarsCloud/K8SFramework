@@ -88,14 +88,14 @@ spec:
           fieldRef:
             fieldPath: metadata.name
       - name: WorkSpaceInHost
-        value: /usr/local/app/tars/app_data
+        value: /usr/local/app/tars/image_build
       - name: WorkSpaceInPod
         value: /workspace
     mounts:
       - name: workspace
         source:
           hostPath:
-            path: /usr/local/app/tars/app_data
+            path: /usr/local/app/tars/image_build
             type: DirectoryOrCreate
         mountPath: /workspace
     serviceAccount: tars-tarsimage
