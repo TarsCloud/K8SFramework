@@ -55,8 +55,6 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&TTreeList{},
 		&TConfig{},
 		&TConfigList{},
-		&TDeploy{},
-		&TDeployList{},
 		&TAccount{},
 		&TAccountList{},
 		&TImage{},

@@ -36,10 +36,6 @@ func (c *FakeCrdV1beta2) TConfigs(namespace string) v1beta2.TConfigInterface {
 	return &FakeTConfigs{c, namespace}
 }
 
-func (c *FakeCrdV1beta2) TDeploys(namespace string) v1beta2.TDeployInterface {
-	return &FakeTDeploys{c, namespace}
-}
-
 func (c *FakeCrdV1beta2) TEndpoints(namespace string) v1beta2.TEndpointInterface {
 	return &FakeTEndpoints{c, namespace}
 }

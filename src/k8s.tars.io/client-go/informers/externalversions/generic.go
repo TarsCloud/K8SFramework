@@ -59,8 +59,6 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Crd().V1beta1().TAccounts().Informer()}, nil
 	case v1beta1.SchemeGroupVersion.WithResource("tconfigs"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Crd().V1beta1().TConfigs().Informer()}, nil
-	case v1beta1.SchemeGroupVersion.WithResource("tdeploys"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Crd().V1beta1().TDeploys().Informer()}, nil
 	case v1beta1.SchemeGroupVersion.WithResource("tendpoints"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Crd().V1beta1().TEndpoints().Informer()}, nil
 	case v1beta1.SchemeGroupVersion.WithResource("texitedrecords"):
@@ -79,8 +77,6 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Crd().V1beta2().TAccounts().Informer()}, nil
 	case v1beta2.SchemeGroupVersion.WithResource("tconfigs"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Crd().V1beta2().TConfigs().Informer()}, nil
-	case v1beta2.SchemeGroupVersion.WithResource("tdeploys"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Crd().V1beta2().TDeploys().Informer()}, nil
 	case v1beta2.SchemeGroupVersion.WithResource("tendpoints"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Crd().V1beta2().TEndpoints().Informer()}, nil
 	case v1beta2.SchemeGroupVersion.WithResource("texitedrecords"):
@@ -101,8 +97,6 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Crd().V1beta3().TAccounts().Informer()}, nil
 	case v1beta3.SchemeGroupVersion.WithResource("tconfigs"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Crd().V1beta3().TConfigs().Informer()}, nil
-	case v1beta3.SchemeGroupVersion.WithResource("tdeploys"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Crd().V1beta3().TDeploys().Informer()}, nil
 	case v1beta3.SchemeGroupVersion.WithResource("tendpoints"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Crd().V1beta3().TEndpoints().Informer()}, nil
 	case v1beta3.SchemeGroupVersion.WithResource("texitedrecords"):

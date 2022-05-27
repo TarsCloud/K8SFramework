@@ -28,8 +28,6 @@ type Interface interface {
 	TAccounts() TAccountInformer
 	// TConfigs returns a TConfigInformer.
 	TConfigs() TConfigInformer
-	// TDeploys returns a TDeployInformer.
-	TDeploys() TDeployInformer
 	// TEndpoints returns a TEndpointInformer.
 	TEndpoints() TEndpointInformer
 	// TExitedRecords returns a TExitedRecordInformer.
@@ -63,11 +61,6 @@ func (v *version) TAccounts() TAccountInformer {
 // TConfigs returns a TConfigInformer.
 func (v *version) TConfigs() TConfigInformer {
 	return &tConfigInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
-}
-
-// TDeploys returns a TDeployInformer.
-func (v *version) TDeploys() TDeployInformer {
-	return &tDeployInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // TEndpoints returns a TEndpointInformer.

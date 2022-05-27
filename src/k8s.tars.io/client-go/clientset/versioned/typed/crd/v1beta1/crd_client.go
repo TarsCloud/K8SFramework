@@ -28,7 +28,6 @@ type CrdV1beta1Interface interface {
 	RESTClient() rest.Interface
 	TAccountsGetter
 	TConfigsGetter
-	TDeploysGetter
 	TEndpointsGetter
 	TExitedRecordsGetter
 	TImagesGetter
@@ -48,10 +47,6 @@ func (c *CrdV1beta1Client) TAccounts(namespace string) TAccountInterface {
 
 func (c *CrdV1beta1Client) TConfigs(namespace string) TConfigInterface {
 	return newTConfigs(c, namespace)
-}
-
-func (c *CrdV1beta1Client) TDeploys(namespace string) TDeployInterface {
-	return newTDeploys(c, namespace)
 }
 
 func (c *CrdV1beta1Client) TEndpoints(namespace string) TEndpointInterface {

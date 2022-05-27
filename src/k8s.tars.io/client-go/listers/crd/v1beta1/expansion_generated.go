@@ -34,14 +34,6 @@ type TConfigListerExpansion interface{}
 // TConfigNamespaceLister.
 type TConfigNamespaceListerExpansion interface{}
 
-// TDeployListerExpansion allows custom methods to be added to
-// TDeployLister.
-type TDeployListerExpansion interface{}
-
-// TDeployNamespaceListerExpansion allows custom methods to be added to
-// TDeployNamespaceLister.
-type TDeployNamespaceListerExpansion interface{}
-
 // TEndpointListerExpansion allows custom methods to be added to
 // TEndpointLister.
 type TEndpointListerExpansion interface{}

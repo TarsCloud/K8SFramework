@@ -22,8 +22,6 @@ type TAccountExpansion interface{}
 
 type TConfigExpansion interface{}
 
-type TDeployExpansion interface{}
-
 type TEndpointExpansion interface{}
 
 type TExitedRecordExpansion interface{}

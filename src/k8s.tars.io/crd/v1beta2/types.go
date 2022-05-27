@@ -415,31 +415,6 @@ type TConfigList struct {
 	Items              []TConfig `json:"items"`
 }
 
-type TDeployApprove struct {
-	Person string         `json:"person"`
-	Time   k8sMetaV1.Time `json:"time"`
-	Reason string         `json:"reason"`
-	Result bool           `json:"result"`
-}
-
-// +genclient
-// +genclient:noStatus
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-type TDeploy struct {
-	k8sMetaV1.TypeMeta   `json:",inline"`
-	k8sMetaV1.ObjectMeta `json:"metadata,omitempty"`
-	Apply                TServerSpec     `json:"apply"`
-	Approve              *TDeployApprove `json:"approve,omitempty"`
-	Deployed             *bool           `json:"deployed,omitempty"`
-}
-
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-type TDeployList struct {
-	k8sMetaV1.TypeMeta `json:",inline"`
-	k8sMetaV1.ListMeta `json:"metadata"`
-	Items              []TDeploy `json:"items"`
-}
-
 type TAccountAuthenticationToken struct {
 	Name           string         `json:"name"`
 	Content        string         `json:"content"`
