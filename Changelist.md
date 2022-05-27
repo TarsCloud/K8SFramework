@@ -1,3 +1,39 @@
+## 1.3.2 20220528
+
+### en
+
+- added and use v1beta3 as the crd storage version. changes since vebeta2 as follows:
+  - TServer:
+    - spec.k8s.readiness changed from string to array
+    - added spec.k8s.command field
+    - added spec.k8s.args field
+  - TFrameworkConfig:
+    - added ImageBuild.Executor.Image field
+    - added ImageBuild.Executor.Secret field
+    - changed ImageRegistry domain name to ImageUpload
+- removed tdeploy crd and related code
+- build the project with makefile
+- fixed some tarscontroller server bugs
+- added tarskaniko server for compiling images, and "Docker In Docker" is no longer required
+- developed a new version and compatibility plan
+
+### cn
+
+- 新增并将 v1beta3 作为 crd 存储版本, 相比 v1beta2 变动如下:
+  - TServer:
+    - spec.k8s.readiness 由 string 变更为 array
+    - 新增 spec.k8s.command 域
+    - 新增 spec.k8s.args 域
+  - TFrameworkConfig:
+    - 新增 ImageBuild.Executor.Image 字段
+    - 新增 ImageBuild.Executor.Secret 字段
+    - 变更 ImageRegistry 域名为 ImageUpload
+- 移除了 tdeploy crd 及相关代码
+- 使用 makefile 构建项目
+- 修复了一些 tarscontroller 服务的 bug
+- 新增 tarskaniko 服务用于编译镜像,且不再需要 "Docker In Docker"
+- 制定了全新的版本与兼容性计划
+
 ## v1.2.5 20220425
 
 ### en
