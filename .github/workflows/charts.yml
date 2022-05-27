@@ -1,0 +1,45 @@
+name: charts
+
+on:
+  push:
+    tags:
+      - '[1-9][0-9]?.[1-9][0-9]?.0'
+      - '[1-9][0-9]?.[1-9][0-9]?.0-[a-z]'
+      - '[1-9][0-9]?.[1-9][0-9]?.0-[a-z][a-z0-9]+'
+      - '[1-9][0-9]?.[1-9][0-9]?.[1-9][0-9]?'
+      - '[1-9][0-9]?.[1-9][0-9]?.[1-9][0-9]?-[a-z]'
+      - '[1-9][0-9]?.[1-9][0-9]?.[1-9][0-9]?-[a-z][a-z0-9]+'
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+
+    env:
+      DOCKER_RUN_WITHOUT_IT: 1
+      REGISTRY_URL: docker.io/tarscloud
+      REGISTRY_USER: ${{ secrets.name }}
+      REGISTRY_PASSWORD: ${{ secrets.pass }}
+
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v3
+
+      - name: Get version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+
+      - name: Build TarsController Chart
+        run: make chart.controller CHART_VERSION=${{ steps.get_version.outputs.VERSION }} BUILD_VERSION=${{ steps.get_version.outputs.VERSION }}
+
+      - name: Build TarsFramework Chart
+        run: make chart.framework CHART_VERSION=${{ steps.get_version.outputs.VERSION }} BUILD_VERSION=${{ steps.get_version.outputs.VERSION }}
+
+      - name: Helm Index
+        run: helm repo index charts
+
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: auto index chars with version ${{ steps.get_version.outputs.VERSION }}
+          branch: master
+          file_pattern: charts/**
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

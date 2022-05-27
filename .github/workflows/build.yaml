@@ -2,10 +2,10 @@ name: build
 on:
   push:
     branches: [ master ]
-    paths-ignore: [ docs/,charts/ ]
+    paths-ignore: [ docs/**,charts/** ]
   pull_request:
     branches: [ master ]
-    paths-ignore: [ docs/,charts/ ]
+    paths-ignore: [ docs/**,charts/** ]
 
 jobs:
   build:
