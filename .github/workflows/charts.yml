@@ -34,7 +34,7 @@ jobs:
         run: make chart.framework CHART_VERSION=${{ steps.get_version.outputs.VERSION }} BUILD_VERSION=${{ steps.get_version.outputs.VERSION }}
 
       - name: Helm Index
-        run: helm repo index charts
+        run: helm repo index charts --url https://tarscloud.github.io/K8SFramework/charts
 
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
