@@ -1,24 +1,5 @@
 # 安装
 
-## 下载
-
-**TarsCloud K8SFramework**  会发布 tarscontroller 和 tarsframework 两种 Helm Chart.  
-
-您可以直接下载或者使用 helm repo来获取已发布版本.  
-
-需要注意的是 tarscontroller, tarsframework 可能有不同的版本号. 只要"主板本.次版本" 相同即可匹配  
-
-+ 直接下载
-
-  您可以在 [github](https://github.com/TarsCloud/K8SFramework/tree/master/charts) 查看并下载 **TarsCloud K8SFramework** 已经发布的 Helm Chart
-
-+ 添加 Helm repo
-
-  ```shell
-  helm repo add tars-k8s https://tarscloud.github.io/K8SFramework/charts
-  helm search repo tars-k8s
-  ```
-
 ## 准备
 
 在开始安装前,我们建议您做一些准备工作,这样框架启动会更加顺利.
@@ -38,7 +19,7 @@
 > kubeclt get nodes -o wide
 > ```
 >
-> 作为选定节点的参考指标, 我们希望您能理解  **TarsCloud K8SFramework** 的磁盘管理策略, 具体请参考 <<[特性](property.sh)>> 文档的 "磁盘管理" 一节 
+> 作为选定节点的参考指标, 我们希望您能理解  **TarsCloud K8SFramework** 的磁盘管理策略, 具体请参考 <<[特性](property.sh)>> 文档的 "磁盘管理" 一节
 
 ### 3. 添加节点标签
 
@@ -63,11 +44,11 @@
 > ```
 > 撤销标签后, 已经被调度运行的 pod 是否会立刻被节点驱逐由 Kubernetes 的调度器策略决定
 
-### 4.  选定支持 TLV的节点
+### 4. 选定支持 TLV的节点
 
 在 2 的基础上, 选定支持 tlv( tars local volume) 的节点, 在节点添加 tars.io/SupportLocalVolume 标签
 
-> 关于 tlv 的介绍可以参考 [<<特性>>](property.md) ,  "TServer与Statefulset的映射. tserver.spec.k8s.mounts" 和 "磁盘管理.TLV" 章节 
+> 关于 tlv 的介绍可以参考 [<<特性>>](property.md) ,  "TServer与Statefulset的映射. tserver.spec.k8s.mounts" 和 "磁盘管理.TLV" 章节
 > 如果您仅仅是用于测试, 那么您暂时可以给任意节点添加该标签
 > 您可以使用 以下命令执行该操作:
 
@@ -84,17 +65,24 @@
 
 ## 执行
 
-整个执行过程分为五步
+### 1. 下载Chart
 
-1. 安装 Controller
-2. 等待 Controller 启动
-3. 生成 Framework 的配置文件
-4. 安装 Framework
-4. 等待 Framework 启动
+**TarsCloud K8SFramework**  会发布 tarscontroller 和 tarsframework 两种 Helm Chart.
+您可以 "直接下载" 或者 使用 "Helm Repo" 来获取已发布版本.
+需要注意的是 tarscontroller, tarsframework 可能有不同的版本号. 只要"主板本.次版本" 相同即可匹配
 
-以下是详细安装步骤:
++ 直接下载
 
-### 1. 安装 Controller
+  您可以在 [github](https://github.com/TarsCloud/K8SFramework/tree/master/charts) 查看并下载 **TarsCloud K8SFramework** 已经发布的 Helm Chart
+
++ 添加 Helm repo
+
+  ```shell
+  helm repo add tars-k8s https://tarscloud.github.io/K8SFramework/charts
+  helm search repo tars-k8s
+  ```
+
+### 2. 安装 Controller
 
 您可以使用如下命令安装 Controller:
 
@@ -103,7 +91,7 @@ helm install tarscontroller tarscontroller-${version}.tgz            #本地包�
 helm install tarscontroller tars-k8s/tarscontroller-${version}       #helm repo 模式
 ```
 
-### 2. 等待 Controller 启动
+### 3. 等待 Controller 启动
 
 您可以使用如下命令查看 controller pod 启动详情 :
 
@@ -111,7 +99,7 @@ helm install tarscontroller tars-k8s/tarscontroller-${version}       #helm repo 
 kubectl get pods -n tars-system -o wide
 ```
 
-### 3. 生成 Framework 配置文件
+### 4. 生成 Framework 配置文件
 
 新建 tarsframework.yaml 文件, 按说明填充值
 
@@ -127,7 +115,7 @@ upload:
 web: ""
 ```
 
-### 4. 安装 Framework
+### 5. 安装 Framework
 
 执行命令安装 Framework:
 
@@ -136,7 +124,7 @@ helm install tarsframework -n ${namespace} --create-namespace -f tarsframework.y
 helm install tarsframework -n ${namespace} --create-namespace -f tarsframework.yaml tars-k8s/tarsframework-${version} #helm repo模式
 ```
 
-### 5. 等待 Framework 启动
+### 6. 等待 Framework 启动
 
 您可以执行如下命令查看 Framework 服务的 Pod 启动状态:
 
@@ -146,9 +134,7 @@ kubectl get pods -n ${namespace} -o wide
 
 如果未遵循 "准备" 操作, 此时会发现部分 Framework 服务 pod 启动失败. 请参考 "故障排查" 处理
 
-
-
-## Framework 启动故障排查
+## 故障排查
 
 故障现象:
 
@@ -158,7 +144,7 @@ kubectl get pods -n ${namespace} -o wide
 
 故障处理:
 
-+ 为处理问题1, 您需要遵循  "安装.准备"  给选定节点添加  "tars.io/node.${namespace}"  标签
++ 为处理问题1, 您需要遵循 "准备" 给选定节点添加  "tars.io/node.${namespace}"  标签
 
   ```shell
   # 查询节点
@@ -168,7 +154,7 @@ kubectl get pods -n ${namespace} -o wide
   kubeclt label nodes node_1 node_2 tars.io/node.tars-dev=
   ```
 
-+ 为处理问题2, 您需要遵循  "安装准备"  给选定节点添加  "tars.io/SupportLocalVolume" 标签
++ 为处理问题2, 您需要遵循 "准备" 给选定节点添加  "tars.io/SupportLocalVolume" 标签
 
   ```shell
   # 查询节点
@@ -178,7 +164,7 @@ kubectl get pods -n ${namespace} -o wide
   kubeclt label nodes node_1 node_2 tars.io/SupportLocalVolume=
   ```
 
-+ 为处理问题3, 您需要遵循  "安装准备"  给选定节点添加  "tars.io/SupportLocalVolume" 标签
++ 为处理问题3, 您需要遵循 "准备" 给选定节点添加  "tars.io/SupportLocalVolume" 标签
   ```shell
   # 查询节点
   kubeclt get nodes

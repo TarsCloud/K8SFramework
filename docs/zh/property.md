@@ -1113,7 +1113,7 @@ daemonset 的映射规则基本一致. 除了以下两种情况:
 1. tserver.k8s.affinity, tserver.k8s.nodeSelector, tserver.k8s.notStacked 不再生效
 2. 无法使用 persistentVolumeClaimTemplat , tLocalVolume
 
-### 其他重要特性
+### 其他特性
 
 #### 镜像分类
 
