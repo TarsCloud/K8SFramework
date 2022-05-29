@@ -6,8 +6,9 @@ RUN cd /root/tars-web &&rm -rf .git && rm -rf package-lock.json && npm install
 
 FROM node:lts-bullseye
 COPY --from=First /root /
-ENV LANG en_US.utf8
-ENV DEBIAN_FRONTEND=noninteractive
+
+ENV LANG C.UTF-8
+ENV LANGUAGE C.UTF-8
 
 RUN rm -rf /bin/ls                                                                        \
 # image debian:bullseye had "ls bug", we use busybox ls instead                           \
@@ -16,9 +17,8 @@ RUN rm -rf /bin/ls                                                              
        ca-certificates openssl telnet curl wget default-mysql-client                      \
        iputils-ping vim tcpdump net-tools binutils procps tree                            \
        libssl-dev zlib1g-dev                                                              \
-       tzdata localepurge busybox -y                                                      \
+       tzdata locales busybox -y                                                          \
     && busybox --install                                                                  \
-    && locale-gen en_US.utf8                                                              \
     && apt purge -y                                                                       \
     && apt clean all                                                                      \
     && rm -rf /var/lib/apt/lists/*                                                        \
