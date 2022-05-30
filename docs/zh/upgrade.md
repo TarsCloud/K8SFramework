@@ -27,8 +27,8 @@
 
 ### 版本规则
 
-1. 根据最高 CRD Version 生成 项目主版本号与次版本号, 比如:
-   最高 CRD Version 为 v1beta3 时, 主版本号为 "1" , 次版本号为 "3" ,
+1. 根据最高 CRD Version 生成 项目主版本号与次版本号, 比如:  
+   最高 CRD Version 为 v1beta3 时, 主版本号为 "1" , 次版本号为 "3"  
    最高 CRD Version 为 v2beta1 时,主版本号为 "2" , 次版本号为 "1"
 2. 修订号与附注在发布时酌情定义.
 3. 主版本号,次版本号,修订号按整数升序发布
@@ -80,27 +80,28 @@ helm search repo tars-k8s
 
 + 包解压方式
 
-    1. 如果您使用 "Helm repo" 方式获得 Chart 包, 需要先将 Chart 来拉取到本地
+  如果您使用 "Helm repo" 方式获得 Chart 包, 需要先将 Chart 来拉取到本地
 
-       ```shell
-       # 您需要将 ${Version}   替换成实际 版本号
-       helm pull tars-k8s/tarscontroller --version ${Version}
-       ```
+    ```shell
+    # 您需要将 ${Version}   替换成实际 版本号
+    helm pull tars-k8s/tarscontroller --version ${Version}
+    ```
 
-    2. 解压 tarscontroller chart 包
+  解压 tarscontroller chart 包
 
-       ```shell
-       tar zxvf tarscontroller-${Version}.tgz
-       ```
+    ```shell
+    tar zxvf tarscontroller-${Version}.tgz
+    ```
 
-    3. 安装 crd
+  安装 crd
 
-       ```shell
-       kubectl apply -f tarscontroller/crds
-       ```
+    ```shell
+    kubectl apply -f tarscontroller/crds
+    ```
 
 + 包提取方式
-    1. 获取 crd 定义
+
+  获取 crd 定义
 
    ```shell
    # 您需要将 ${Version}   替换成实际 版本号
@@ -109,14 +110,14 @@ helm search repo tars-k8s
    helm show crds tars-k8s/tarscontroller --version ${Version} > tars-crds.yaml   # helm repo
    ```
 
-    2. 添加分隔符
+  添加分隔符
 
    ```shell
    sed -i -E 's#^apiVersion:(.*)$#---\napiVersion:\1#g' tars-crds.yaml             # Linux
    sed -i "" -E 's#^apiVersion:(.*)$#---\napiVersion:\1#g' tars-crds.yaml          # MacOS 
    ```
 
-    3. 安装 crd
+  安装 crd
 
    ```shell
    kubectl apply -f tars-crds.yaml       
