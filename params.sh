@@ -25,7 +25,7 @@ _FRAMEWORK_SERVERS_="tarskaniko tarsimage tarsnode tarsregistry tarsconfig tarsl
                      tarsquerystat tarsqueryproperty tarskevent tarsweb elasticsearch"
 
 _CRD_SERVED_VERSIONS_="v1beta1 v1beta2 v1beta3"
-_CRD_STORAGE_VERSION_="v1beta3"
+_CRD_STORAGE_VERSION_="v1beta2"
 
 _PARAMS_="TARS_CPP_DIR TARS_WEB_DIR                                                                                  \
           REGISTRY_URL REGISTRY_USER REGISTRY_PASSWORD                                                               \
