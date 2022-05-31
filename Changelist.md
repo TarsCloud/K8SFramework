@@ -16,6 +16,7 @@
 - fixed some tarscontroller server bugs
 - added tarskaniko server for compiling images, and "Docker In Docker" is no longer required
 - developed a new version and compatibility plan
+- update tarsweb to v3.0.1
 
 ### cn
 
@@ -33,6 +34,7 @@
 - 修复了一些 tarscontroller 服务的 bug
 - 新增 tarskaniko 服务用于编译镜像,且不再需要 "Docker In Docker"
 - 制定了全新的版本与兼容性计划
+- 更新 TarsWeb 到 v3.0.1
 
 ## v1.2.5 20220425
 
