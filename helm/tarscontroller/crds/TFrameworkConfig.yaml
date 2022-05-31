@@ -103,6 +103,7 @@ spec:
                     timeout:
                       type: integer
                       default: 6000
+                minItems: 1
                 required: [ host,port ]
               default: { }
             expand:
@@ -202,6 +203,7 @@ spec:
                     timeout:
                       type: integer
                       default: 6000
+                minItems: 1
                 required: [ host,port ]
               default: { }
             expand:
