@@ -40,7 +40,7 @@ spec:
                   default: 300
                 idFormat:
                   type: string
-              default: { }
+                  default: ""
             imageRegistry:
               type: object
               properties:
@@ -51,6 +51,7 @@ spec:
                 secret:
                   type: string
                   pattern: ^([0-9a-z][-0-9a-z]*)?[0-9a-z]?(\.([0-9a-z][-0-9a-z]*)?[0-9a-z])*$
+                default: ""
               required: [ registry ]
             recordLimit:
               type: object
@@ -82,6 +83,7 @@ spec:
                   type: string
                   pattern: ^([0-9a-z][-0-9a-z]*)?[0-9a-z]?(\.([0-9a-z][-0-9a-z]*)?[0-9a-z])*$
                   maxLength: 253
+                  default: ""
               required: [ image ]
             upChain:
               type: object
@@ -136,6 +138,7 @@ spec:
                     secret:
                       type: string
                       pattern: ^([0-9a-z][-0-9a-z]*)?[0-9a-z]?(\.([0-9a-z][-0-9a-z]*)?[0-9a-z])*$
+                    default: ""
                   required: [ image ]
               required: [ executor ]
             imageUpload:
@@ -148,6 +151,7 @@ spec:
                 secret:
                   type: string
                   pattern: ^([0-9a-z][-0-9a-z]*)?[0-9a-z]?(\.([0-9a-z][-0-9a-z]*)?[0-9a-z])*$
+                  default: ""
               required: [ registry ]
             recordLimit:
               type: object
@@ -178,6 +182,7 @@ spec:
                 secret:
                   type: string
                   pattern: ^([0-9a-z][-0-9a-z]*)?[0-9a-z]?(\.([0-9a-z][-0-9a-z]*)?[0-9a-z])*$
+                  default: ""
               required: [ image ]
             upChain:
               type: object

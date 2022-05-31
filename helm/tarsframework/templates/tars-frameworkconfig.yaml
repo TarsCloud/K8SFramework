@@ -9,21 +9,37 @@ metadata:
   namespace: {{.Release.Namespace }}
 imageUpload:
   registry: {{ .Values.upload.registry }}
+  {{- if .Values.upload.secret}}
   secret: {{ .Values.upload.secret }}
+  {{- else }}
+  secret: ""
+  {{- end}}
 imageBuild:
   {{- if $tfc }}
-  maxBuildTime: {{$tfc.imageBuild.maxBuildTime}}
+  maxBuildTime: {{ ($tfc).imageBuild.maxBuildTime}}
+  {{- if $tfc.imageBuild.idFormat }}
   idFormat: {{$tfc.imageBuild.idFormat}}
+  {{- else }}
+  idFormat: ""
+  {{- end }}
   {{- else }}
   maxBuildTime: 600
   idFormat: ""
-  {{- end}}
+  {{- end }}
   executor:
     image: "{{.Values.framework.registry }}/tars.tarskaniko:{{.Values.framework.tag}}"
+    {{- if .Values.framework.secret}}
     secret: {{ .Values.framework.secret }}
+    {{- else }}
+    secret: ""
+    {{- end}}
 nodeImage:
   image: "{{.Values.framework.registry }}/tars.tarsnode:{{.Values.framework.tag}}"
+  {{- if .Values.framework.secret}}
   secret: {{ .Values.framework.secret }}
+  {{- else }}
+  secret: ""
+  {{- end}}
 recordLimit:
   {{- if $tfc }}
   timageRelease: {{$tfc.recordLimit.timageRelease}}
@@ -36,22 +52,31 @@ recordLimit:
   {{- end}}
 upChain:
  {{- if $tfc }}
+ {{- if gt (len ($tfc).upChain) 0 }}
  {{- range $k, $ups:= ($tfc).upChain }}
  {{printf  "%s:" $k |indent 2 }}
+ {{- if gt (len $$ups) 0 }}
  {{- range $up:= $ups}}
  {{printf "- host: %s" $up.host|indent 2 }}
  {{printf "  port: %d" $up.port|indent 2 }}
  {{printf "  timeout: %d" $up.timeout|indent 2 }}
  {{- end }}
+ {{- else }}
+  [ ]
+ {{- end }}
+ {{- end }}
+ {{- else}}
+  { }
  {{- end }}
 {{- else }}
   { }
-{{- end}}
+{{- end }}
 expand:
  {{- if $tfc }}
  {{- range $k, $v:= ($tfc).expand }}
  {{printf  "%s: %s" $k ($v | toYaml) | indent 2 }}
  {{- end }}
 {{- else }}
-  { }
+  nativeDBConfig: ""
+  nativeFrameworkConfig: ""
 {{- end}}
