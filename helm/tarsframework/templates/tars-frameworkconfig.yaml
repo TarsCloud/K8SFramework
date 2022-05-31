@@ -55,7 +55,7 @@ upChain:
  {{- if gt (len ($tfc).upChain) 0 }}
  {{- range $k, $ups:= ($tfc).upChain }}
  {{printf  "%s:" $k |indent 2 }}
- {{- if gt (len $$ups) 0 }}
+ {{- if gt (len $ups) 0 }}
  {{- range $up:= $ups}}
  {{printf "- host: %s" $up.host|indent 2 }}
  {{printf "  port: %d" $up.port|indent 2 }}
