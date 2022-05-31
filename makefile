@@ -22,7 +22,7 @@ override TARS_COMPILER_CONTEXT_DIR := context/compiler
 override TARS_COMPILER_DOCKERFILE := context/compiler/Dockerfile
 define func_create_compiler
 	mkdir -p $(TARS_CPP_DIR) && cd $(TARS_CPP_DIR) && git submodule update --init --recursive
-	cp -r $(PWD)/$(TARS_CPP_DIR) $(TARS_COMPILER_CONTEXT_DIR)/root/root
+	cp -rf $(PWD)/$(TARS_CPP_DIR) $(TARS_COMPILER_CONTEXT_DIR)/root/root
 	$(ENV_DOCKER) build -t tarscompiler:$(BUILD_VERSION) --build-arg BUILD_VERSION=$(BUILD_VERSION) $(TARS_COMPILER_CONTEXT_DIR)
 endef
 
@@ -35,7 +35,7 @@ define func_build_image
 	$(call func_check_params, REGISTRY_URL BUILD_VERSION)
 	$(if $(findstring $1,tars.tarsweb),\
 		$(call func_check_params, TARS_WEB_DIR) \
-		mkdir -p $(TARS_WEB_DIR) && rm -rf $3/root/root/tars-web && cp -r $(PWD)/$(TARS_WEB_DIR) $3/root/root/tars-web && git submodule update --init --recursive \
+		mkdir -p $(TARS_WEB_DIR) && rm -rf $3/root/root/tars-web && cp -rf $(PWD)/$(TARS_WEB_DIR) $3/root/root/tars-web && git submodule update --init --recursive \
 		&& $(ENV_DOCKER) build -t $(REGISTRY_URL)/$1:$(BUILD_VERSION) -f $2 $3,\
 		$(ENV_DOCKER) build -t $(REGISTRY_URL)/$1:$(BUILD_VERSION) -f $2 --build-arg REGISTRY_URL=$(REGISTRY_URL) --build-arg BUILD_VERSION=$(BUILD_VERSION) $3 \
 	)
@@ -124,7 +124,7 @@ chart.controller: $(if $(findstring $(WITHOUT_DEPENDS_CHECK),1),,controller)
 	$(call func_check_params, CHART_VERSION CHART_APPVERSION CHART_DST CRD_SERVED_VERSIONS CRD_STORAGE_VERSION REGISTRY_URL BUILD_VERSION)
 	@mkdir -p cache/helm
 	@rm -rf ${CONTROLLER_CHART_CACHE_DIR}
-	@cp -r "${CONTROLLER_CHART_TEMPLATE_DIR}" "${CONTROLLER_CHART_CACHE_DIR}"
+	@cp -rf "${CONTROLLER_CHART_TEMPLATE_DIR}" "${CONTROLLER_CHART_CACHE_DIR}"
 	@./util/render-conroller-chart.sh "$(CONTROLLER_CHART_CACHE_DIR)" "$(CHART_VERSION)" "$(CHART_APPVERSION)" "${CRD_SERVED_VERSIONS}" "$(CRD_STORAGE_VERSION)" "$(REGISTRY_URL)" "$(BUILD_VERSION)"
 	$(ENV_HELM) package -d "$(CHART_DST)" --version "$(CHART_VERSION)" --app-version "$(CHART_APPVERSION)"  "$(CONTROLLER_CHART_CACHE_DIR)"
 	@echo "$@ -> [ Done ]"
@@ -137,7 +137,7 @@ chart.framework: $(if $(findstring $(WITHOUT_DEPENDS_CHECK),1),,framework)
 	$(call func_check_params, CHART_VERSION CHART_APPVERSION CHART_DST REGISTRY_URL BUILD_VERSION)
 	@mkdir -p cache/helm
 	@rm -rf ${FRAMEWORK_CHART_CACHE_DIR}
-	@cp -r "${FRAMEWORK_CHART_TEMPLATE_DIR}" "${FRAMEWORK_CHART_CACHE_DIR}"
+	@cp -rf "${FRAMEWORK_CHART_TEMPLATE_DIR}" "${FRAMEWORK_CHART_CACHE_DIR}"
 	@./util/render-framework-chart.sh "$(FRAMEWORK_CHART_CACHE_DIR)" "$(CHART_VERSION)" "$(CHART_APPVERSION)" "$(REGISTRY_URL)" "$(BUILD_VERSION)"
 	$(ENV_HELM) package -d "$(CHART_DST)" --version "$(CHART_VERSION)" --app-version "$(CHART_APPVERSION)"  "$(FRAMEWORK_CHART_CACHE_DIR)"
 	@echo "$@ -> [ Done ]"
