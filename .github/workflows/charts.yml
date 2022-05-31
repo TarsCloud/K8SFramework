@@ -23,22 +23,28 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v3
 
-      - name: Get version
-        id: get_version
-        run: echo ::set-output name=VERSION::$(echo ${GITHUB_REF/refs\/tags\//} | cut -b2-)
+      - name: Get Chart Version
+        id: chart-version
+        run:
+          echo ::set-output name=CHART_VERSION::$(echo ${GITHUB_REF/refs\/tags\//} | cut -b2-)
+
+      - name: Get Build Version
+        id: build-version
+        run:
+          echo ::set-output name=BUILD_VERSION::${GITHUB_REF/refs\/tags\//}
 
       - name: Build TarsController Chart
-        run: make chart.controller CHART_VERSION=${{ steps.get_version.outputs.VERSION }} BUILD_VERSION=${{ steps.get_version.outputs.VERSION }}
+        run: make chart.controller CHART_VERSION=${{ steps.chart-version.outputs.CHART_VERSION }} BUILD_VERSION=${{ steps.build-version.outputs.BUILD_VERSION }}
 
       - name: Build TarsFramework Chart
-        run: make chart.framework CHART_VERSION=${{ steps.get_version.outputs.VERSION }} BUILD_VERSION=${{ steps.get_version.outputs.VERSION }}
+        run: make chart.framework CHART_VERSION=${{ steps.chart-version.outputs.CHART_VERSION }} BUILD_VERSION=${{ steps.build-version.outputs.BUILD_VERSION }}
 
       - name: Helm Index
         run: helm repo index charts --url https://tarscloud.github.io/K8SFramework/charts
 
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: auto index chars with version ${{ steps.get_version.outputs.VERSION }}
+          commit_message: index chars with version ${{ steps.chart-version.outputs.CHART_VERSION }}
           branch: master
           file_pattern: charts/**
         env:
