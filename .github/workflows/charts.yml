@@ -3,12 +3,12 @@ name: charts
 on:
   push:
     tags:
-      - '[1-9][0-9]?.[1-9][0-9]?.0'
-      - '[1-9][0-9]?.[1-9][0-9]?.0-[a-z]'
-      - '[1-9][0-9]?.[1-9][0-9]?.0-[a-z][a-z0-9]+'
-      - '[1-9][0-9]?.[1-9][0-9]?.[1-9][0-9]?'
-      - '[1-9][0-9]?.[1-9][0-9]?.[1-9][0-9]?-[a-z]'
-      - '[1-9][0-9]?.[1-9][0-9]?.[1-9][0-9]?-[a-z][a-z0-9]+'
+      - 'v[1-9][0-9]?.[1-9][0-9]?.0'
+      - 'v[1-9][0-9]?.[1-9][0-9]?.0-[a-z]'
+      - 'v[1-9][0-9]?.[1-9][0-9]?.0-[a-z][a-z0-9]+'
+      - 'v[1-9][0-9]?.[1-9][0-9]?.[1-9][0-9]?'
+      - 'v[1-9][0-9]?.[1-9][0-9]?.[1-9][0-9]?-[a-z]'
+      - 'v[1-9][0-9]?.[1-9][0-9]?.[1-9][0-9]?-[a-z][a-z0-9]+'
 jobs:
   build:
     runs-on: ubuntu-20.04
@@ -25,7 +25,7 @@ jobs:
 
       - name: Get version
         id: get_version
-        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+        run: echo ::set-output name=VERSION::$(echo ${GITHUB_REF/refs\/tags\//} | cut -b2-)
 
       - name: Build TarsController Chart
         run: make chart.controller CHART_VERSION=${{ steps.get_version.outputs.VERSION }} BUILD_VERSION=${{ steps.get_version.outputs.VERSION }}
