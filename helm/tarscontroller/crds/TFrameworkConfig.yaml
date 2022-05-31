@@ -51,7 +51,7 @@ spec:
                 secret:
                   type: string
                   pattern: ^([0-9a-z][-0-9a-z]*)?[0-9a-z]?(\.([0-9a-z][-0-9a-z]*)?[0-9a-z])*$
-                default: ""
+                  default: ""
               required: [ registry ]
             recordLimit:
               type: object
@@ -139,7 +139,7 @@ spec:
                     secret:
                       type: string
                       pattern: ^([0-9a-z][-0-9a-z]*)?[0-9a-z]?(\.([0-9a-z][-0-9a-z]*)?[0-9a-z])*$
-                    default: ""
+                      default: ""
                   required: [ image ]
               required: [ executor ]
             imageUpload:
