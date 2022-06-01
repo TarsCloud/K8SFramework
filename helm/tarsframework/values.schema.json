@@ -11,8 +11,7 @@
         },
         "tag": {
           "description": "tars framework service image's tag, usually, tag value is equal to the BUILD_VERSION you specified when you executed make",
-          "type": "string",
-          "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][\\da-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][\\da-zA-Z-]*))*))?(?:\\+([\\da-zA-Z-]+(?:\\.[\\da-zA-Z-]+)*))?$"
+          "type": "string"
         },
         "secret": {
           "description": "k8s secret resource name that describe registry authentication information",

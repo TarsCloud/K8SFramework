@@ -11,8 +11,7 @@
         },
         "tag": {
           "description": "tars controller service image's tag, In general tag value is equal to the BUILD_VERSION specified when executing make",
-          "type": "string",
-          "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][\\da-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][\\da-zA-Z-]*))*))?(?:\\+([\\da-zA-Z-]+(?:\\.[\\da-zA-Z-]+)*))?$"
+          "type": "string"
         },
         "secret": {
           "description": "Docker Image Pull Secret, If You Set This Value,You Should Create It In Kubernetes By Yourself ",
