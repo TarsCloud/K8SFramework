@@ -16,24 +16,25 @@
 
 + BUILD_VERSION  
   在构建 **TarsCloud K8SFramework** 过程中, make 会生成一些 Docker 镜像并且尝试使用 BUILD_VERSION 作为 镜像的 Tag  
-  您可以通过环境变量, 命令行指定 BUILD_VERSION 值, 您也可以在 param.sh 文件中设置 \_BUILD_VERSION_ 值来指定参数值
-
+  **TarsCloud K8SFramework** 已经在 param.sh 中为这些参数设置了默认值  
+  您可以通过环境变量或命令行重设 BUILD_VERSION 值, 您也可以通过在 param.sh 文件中设置 \_BUILD_VERSION_ 值来改变默认值
 
 + REGISTRY_URL , REGISTRY_USER, REGISTRY_PASSWORD  
-  在构建 **TarsCloud K8SFramework** 过程中, 会生成多种 Docker 镜像 ，Makefile 会尝试将这些镜像推送到您指定的仓库地址 ${REGISTRY_URL},  
-  如果您的仓库地址开启了账号，密码验证, 您同时需要提供 账号${REGISTRY_USER}, 密码 ${REGISTRY_PASSWORD}  
-  您可以通过环境变量, 命令行指定这些参数值 ,也可以通过在 param.sh 文件中设置 \_REGISTRY_URL_, \_REGISTRY_USER_,\_REGISTRY_PASSWORD_ 来指定参数值
-  我们建议您在构建源码时,使用公开仓库, 这个会降低实际部署使用时难度.
+  在构建 **TarsCloud K8SFramework** 过程中, 会生成多种 Docker 镜像 ，Makefile 会尝试将这些镜像推送到您指定的仓库地址 :REGISTRY_URL,  
+  如果您的仓库地址开启了账号,密码验证, 您还需要提供账号:REGISTRY_USER, 密码:REGISTRY_PASSWORD参数  
+  您可以通过环境变量, 命令行指定这些参数值,也可以通过在 param.sh 文件中设置 \_REGISTRY_URL_, \_REGISTRY_USER_,\_REGISTRY_PASSWORD_ 来指定参数值  
+  我们建议您在源码构建时,使用公开仓库, 这个会降低实际部署时的难度.
 
 
 + CHART_VERSION, CHART_APPVERSION, CHART_DST
   CHART_VERSION, CHART_APPVERSION,CHART_DST 分别指生成 chart 包的 version, appversion 值以及 chart 包的存放目录  
-  您可以通过环境变量, 命令行指定这些参数值，可以在 param.sh 填充 \__CHART_VERSION_, \_CHART_APPVERSION_ ,\_CHART_DST_ 值来指定参数值
+  **TarsCloud K8SFramework** 已经在 param.sh 中为这些参数设置了默认值  
+  您可以通过环境变量或命令行重设这些参数值, 您也可以通过在 param.sh 修改 \__CHART_VERSION_, \_CHART_APPVERSION_ ,\_CHART_DST_ 值来改变默认值
 
 + UPLOAD_REGISTRY, UPLOAD_SECRET  
-  **TarsCloud K8SFramework** 内置了镜像编译服务将您的原生程序包编译成 Docker镜像, 您需要提供一个镜像仓库地址来接收和存储这些镜像  
-  UPLOAD_REGISTRY 参数值表示您准备的仓库地址, 如果您提供的是一个私有仓库,您还需要新建 Kubernetes Docker-Registry Secret, 并将 Secret 名字赋值给 UPLOAD_SECRET  
-  您可以通过环境变量, 命令行指定这些参数值
+  **TarsCloud K8SFramework** 内置了镜像编译服务将您的原生程序包编译成 Docker镜像, 您需要一个镜像仓库地址:UPLOAD_REGISTRY 来接收和存储这些镜像  
+  如果您提供的是一个私有仓库,您还需要新建 Kubernetes Docker-Registry Secret, 并将 Secret 名字赋值给 UPLOAD_SECRET  
+  您可以通过环境变量或命令行指定这些参数
 
 ## 构建目标
 
@@ -45,7 +46,7 @@ base 是 **TarsCloud K8SFramework** 项目中基础镜像的集合名,具体包�
 base: cppbase javabase nodejsbase php74base
 ```
 
-您也可以执行 make cppbase , make javabase 构建指定基础镜像
+您也可以执行 make cppbase , make javabase , make nodejsbase , make php74base 构建指定基础镜像
 
 > 您需要提供 REGISTRY_URL, BUILD_VERSION 参数
 > 如果 REGISTRY_URL 需要客户端提供账号,密码才能上传镜像，您还需要提供 REGISTRY_USER, REGISTRY_PASSWORD 参数

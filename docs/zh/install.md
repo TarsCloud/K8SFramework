@@ -65,30 +65,46 @@
 
 ## 执行
 
-### 1. 下载Chart
+### 1. 获取 Helm Chart
 
-**TarsCloud K8SFramework**  会发布 tarscontroller 和 tarsframework 两种 Helm Chart.
-您可以 "直接下载" 或者 使用 "Helm Repo" 来获取已发布版本.
-需要注意的是 tarscontroller, tarsframework 可能有不同的版本号. 只要"主板本.次版本" 相同即可匹配
+**TarsCloud K8SFrameWork** 的正式发布版本包含 Controller 和 Framework 两种 Helm Chart
+
+其包名分别为 tarscontroller-${Vesion}.tgz , tarsframework-${Version}.tgz
+
+您可以选择如下任意一种方式获取 **TarsCloud K8SFramework** 正式发布的 Helm Chart:
 
 + 直接下载
 
-  您可以在 [github](https://github.com/TarsCloud/K8SFramework/tree/master/charts) 查看并下载 **TarsCloud K8SFramework** 已经发布的 Helm Chart
+  > 您可以在 [github](https://github.com/TarsCloud/K8SFramework/tree/master/charts) 查看并下载 **TarsCloud K8SFramework** 正式发布的 Helm Chart
 
-+ 添加 Helm repo
++ Helm Repo
 
-  ```shell
-  helm repo add tars-k8s https://tarscloud.github.io/K8SFramework/charts
-  helm search repo tars-k8s
-  ```
+  > 您可以 添加 tars-k8s repo, 然后在需要时通过 helm 指令来获取 **TarsCloud K8SFramework** 正式发布的 Helm Chart
+  >
+  > ```shell
+  > helm repo add tars-k8s https://tarscloud.github.io/K8SFramework/charts # 添加 tars-k8s repo
+  > helm repo update tars-k8s                                              # 更新 tars-k8s repo 索引
+  > helm search repo tars-k8s -l                                           # 查看 tars-k8s repo 索引
+  > ```
+
+您也可以参考 <<[构建](make.md)>>文档的 构建目标.Chart 节, 自行从源码构建 Chart 包
+
+默认情况下构建出的 Helm Chart 包位于 charts 目录
 
 ### 2. 安装 Controller
 
-您可以使用如下命令安装 Controller:
+如果您是通过  "直接下载" 或者 "源码构建" 方式获取的 Helm Chart, 执行如下命令:
 
 ```shell
-helm install tarscontroller tarscontroller-${version}.tgz            #本地包模式
-helm install tarscontroller tars-k8s/tarscontroller-${version}       #helm repo 模式
+# 您需要将 ${Version} 替换成实际 版本号
+helm install tarscontroller tarscontroller-${Version}.tgz
+```
+
+如果您是通过 Helm Repo 方式获取 Helm Chart, 执行如下命令:
+
+```shell 
+helm update repo tars-k8s
+helm install tarscontroller tars-k8s/tarscontroller
 ```
 
 ### 3. 等待 Controller 启动
@@ -117,11 +133,20 @@ web: ""
 
 ### 5. 安装 Framework
 
-执行命令安装 Framework:
+如果您是通过  "直接下载" 或者 "源码构建" 方式获取的 Helm Chart, 请执行如下命令:
 
 ```shell
-helm install tarsframework -n ${namespace} --create-namespace -f tarsframework.yaml tarsframework-${version}.tgz #本地包模式
-helm install tarsframework -n ${namespace} --create-namespace -f tarsframework.yaml tars-k8s/tarsframework-${version} #helm repo模式
+# 您需要将 ${Namespace} 替换成实际 命名空间
+# 您需要将 ${Version} 替换成实际 版本号
+helm install tarsframework -n ${Namespace} --create-namespace -f tarsframework.yaml tarsframework-${Version}.tgz
+```
+
+如果您是通过 Helm Repo 方式获取 Helm Chart, 请执行如下命令:
+
+```shell 
+# 您需要将 ${Namespace} 替换成实际 命名空间
+helm update repo tars-k8s
+helm install tarsframework -n ${Namespace} --create-namespace -f tarsframework.yaml tars-k8s/tarsframework
 ```
 
 ### 6. 等待 Framework 启动
