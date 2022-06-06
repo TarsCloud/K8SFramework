@@ -11,12 +11,6 @@ RUN apt update                                                                  
     && rm -rf /var/cache/*.dat-old                                                      \
     && rm -rf /var/log/*.log /var/log/*/*.log
 
-ARG DOCKERFILE_MD5
-LABEL DOCKERFILE_MD5=$DOCKERFILE_MD5
-
-ARG TARS_CPP_GIT_ADDRESS
-ARG TARS_CPP_GIT_BRANCH_OR_TAG
-LABEL TARS_CPP_GIT_BRANCH_OR_TAG=$TARS_CPP_GIT_BRANCH_OR_TAG
 
 RUN cd /root/TarsCpp                                                                    \
     && mkdir -p build                                                                   \
