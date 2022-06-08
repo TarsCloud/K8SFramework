@@ -138,8 +138,9 @@ helm upgrade tarscontroller tarscontroller-${Version}.tgz
 
 ```shell
 # 您需要将 ${Version} 替换成实际 版本号
-helm update repo tars-k8s
-helm upgread tarscontroller tars-k8s/tarscontroller --version=${Version}
+helm repo update tars-k8s                                              # 更新 tars-k8s repo 索引
+helm search repo tars-k8s -l                                           # 查看 tars-k8s repo 索引
+helm upgrade tarscontroller tars-k8s/tarscontroller --version=${Version}
 ```
 
 ### 等待Controller启动
@@ -202,7 +203,8 @@ helm upgrade tarsframework -n ${Namespace} --create-namespace -f tarsframework.y
 ```shell 
 # 您需要将 ${Namespace} 替换成实际 命名空间
 # 您需要将 ${Version} 替换成实际 版本号
-helm update repo tars-k8s
+helm repo update tars-k8s                                              # 更新 tars-k8s repo 索引
+helm search repo tars-k8s -l                                           # 查看 tars-k8s repo 索引
 helm upgrade tarsframework -n ${Namespace} --create-namespace -f tarsframework.yaml tars-k8s/tarsframework --version=${Version}
 ```
 

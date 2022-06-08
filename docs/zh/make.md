@@ -116,8 +116,8 @@ all 是 base, controller, framework, chart 四个构建目标的集合名
 分别用于安装和升级 framework
 > 您需要提供 CHART 参数，表示 Framework Chart 的路径
 > 您需要提供 NAMESPACE 参数, 表示 Framework Chart 安装的命名空间
-> 您需要提供 UPLOAD_REGISTRY 参数, 如果UPLOAD_REGISTRY 指向私有仓库, 您需要在待安装的命名空间内新建 Kubernetes Docker-Registry Sercret 并且指定 UPLOAD_SECRET=${secret}  
-> 如果您在构建 Chart 包时使用的是私有仓库, 您需要在待安装的命名空间内新建 Kubernetes Docker-Registry Sercret 并且指定 FRAMEWORK_SECRET=${secret}
+> 您需要提供 UPLOAD_REGISTRY 参数, 如果UPLOAD_REGISTRY 指向私有仓库, 您需要在待安装的命名空间内新建 Kubernetes Docker-Registry Secret 并且指定 UPLOAD_SECRET=${secret}  
+> 如果您在构建 Chart 包时使用的是私有仓库, 您需要在待安装的命名空间内新建 Kubernetes Docker-Registry Secret 并且指定 FRAMEWORK_SECRET=${secret}
 
 ### help
 
