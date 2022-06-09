@@ -1,15 +1,15 @@
 # 目录
-- [TarsCloud K8SFramework](#tars-k8sframework)
-  * [设计](#设计)
-    + [CRD](#crd)
-    + [Controller](#controller)
-    + [Framework](#framework)
-  * [特性](#特性)
-  * [安装与升级](#安装与升级)
-  * [运维](#运维)
-  * [开发者](#开发者)
-  * [Todo](#todo)
 
+- [TarsCloud K8SFramework](#tars-k8sframework)
+    * [设计](#设计)
+        + [CRD](#crd)
+        + [Controller](#controller)
+        + [Framework](#framework)
+    * [特性](#特性)
+    * [安装与升级](#安装与升级)
+    * [运维](#运维)
+    * [开发者](#开发者)
+    * [Todo](#todo)
 
 # TarsCloud K8SFramework
 
@@ -82,7 +82,14 @@ Kubernetes 集群管理员可以通过<<[云原生运维](docs/zh/kubectl.md)>> 
 
 ## 开发者
 
-做为开发者,您可以参考 <<[构建](docs/zh/make.md)>> 从源码开始构建项目
+做为开发者  
+您可以参考 <<[构建](docs/zh/make.md)>> 进行构建
+您可以参考 <<[开发](docs/zh/develop.md)>> 进行开发
+
+## 贡献
+
+我们欢迎任何形式的贡献,包括但不限于代码,文档,建议等  
+您可以通过 Tars社区, Issue, Pr 等任意可用方式与我们沟通交流
 
 ## Todo
 

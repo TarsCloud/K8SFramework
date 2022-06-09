@@ -13,7 +13,7 @@
 
 ---
 
-> Q: 修改 framewor 程序使用的 elasticsearch 节点地址
+> Q: 修改 framework 程序使用的 elasticsearch 节点地址
 > A:  在安装完成后, elasticsearch 节点地址配置在 tars ttemplate tars.elk 中, 您可以执行如下命令
 >
 > ```shell
@@ -47,8 +47,4 @@
 >kubectl edit -n $(namespace) taccount 21232f297a57a5a743894a0e4a801fc3
 >```
 
-
-
-更多操作方式, 您可以参看 <<[CRD 定义](crd.md) >>或 Kubernetes 官方文档获取更多信息
-
- 
+更多操作方式, 您可以参看 <<[特性](property.md) >>或 Kubernetes 官方文档获取更多信息

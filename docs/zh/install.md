@@ -19,7 +19,7 @@
 > kubeclt get nodes -o wide
 > ```
 >
-> 作为选定节点的参考指标, 我们希望您能理解  **TarsCloud K8SFramework** 的磁盘管理策略, 具体请参考 <<[特性](property.sh)>> 文档的 "磁盘管理" 一节
+> 作为选定节点的参考指标, 我们希望您能理解  **TarsCloud K8SFramework** 的磁盘管理策略, 具体请参考 <<[特性](property.md)>> 文档的 "磁盘管理" 一节
 
 ### 3. 添加节点标签
 
