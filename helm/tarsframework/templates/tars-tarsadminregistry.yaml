@@ -41,7 +41,7 @@ metadata:
   namespace: {{.Release.Namespace}}
   labels:
     tars.io/ServerApp: tars
-    tars.io/ServerName: tarsadminregistry
+    tars.io/ServerName: tarsAdminRegistry
 imageType: server
 releases:
   - id: {{.Values.framework.tag | quote }}
@@ -62,7 +62,7 @@ metadata:
     tars.io/MinReplicas: "1"
   labels:
     tars.io/ServerApp: tars
-    tars.io/ServerName: tarsadminregistry
+    tars.io/ServerName: tarsAdminRegistry
     tars.io/SubType: tars
     tars.io/Template: tars.default
 spec:
