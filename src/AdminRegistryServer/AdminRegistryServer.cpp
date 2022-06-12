@@ -27,6 +27,8 @@ void AdminRegistryServer::initialize()
 {
     TLOG_DEBUG("AdminRegistryServer::initialize..." << endl);
 
+    addServant<AdminRegistryImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".AdminRegObj");
+
     try
     {
 		NodeManager::getInstance()->start();
