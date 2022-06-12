@@ -85,7 +85,7 @@ override $1_repo :=$4
 endef
 $(foreach server, tarscontroller tarsagent, $(eval $(call func_expand_server_param,$(server), $(server), context/$(server)/root/usr/local/app/tars/$(server)/bin,$(server))))
 $(foreach server, tarsimage tarsregistry, $(eval $(call func_expand_server_param,$(server), $(server), context/$(server)/root/usr/local/app/tars/$(server)/bin,tars.$(server))))
-$(foreach server, tarsconfig tarslog tarsnotify tarsstat tarsproperty tarsquerystat tarsqueryproperty tarskevent, $(eval $(call func_expand_server_param, $(server), $(server), context/$(server)/root/usr/local/server/bin,tars.$(server))))
+$(foreach server, tarsadminregistry tarsconfig tarslog tarsnotify tarsstat tarsproperty tarsquerystat tarsqueryproperty tarskevent, $(eval $(call func_expand_server_param, $(server), $(server), context/$(server)/root/usr/local/server/bin,tars.$(server))))
 $(foreach server, tarsnode, $(eval $(call func_expand_server_param, $(server), $(server), context/$(server)/root/tarsnode/bin,tars.$(server))))
 $(foreach server, tarskaniko, $(eval $(call func_expand_server_param, $(server), $(server), context/$(server)/root/kaniko,tars.$(server))))
 $(foreach server, tarsweb, $(eval $(call func_expand_server_param, $(server), tars2case, context/$(server)/root/root/usr/local/tars/cpp/tools,tars.$(server))))
