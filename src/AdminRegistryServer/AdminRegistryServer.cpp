@@ -41,7 +41,7 @@ void AdminRegistryServer::initialize()
     }
 
     TLOG_DEBUG("AdminRegistryServer::initialize OK!" << endl);
-	// TARS_ADD_ADMIN_CMD_PREFIX("nodelist", AdminRegistryServer::cmdNodeList);
+	TARS_ADD_ADMIN_CMD_PREFIX("nodelist", AdminRegistryServer::cmdNodeList);
 }
 
 void AdminRegistryServer::destroyApp()
@@ -50,6 +50,17 @@ void AdminRegistryServer::destroyApp()
 	NodeManager::getInstance()->join();
 
 	TLOG_DEBUG("AdminRegistryServer::destroyApp ok" << endl);
+}
+
+bool AdminRegistryServer::cmdNodeList(const string &command, const string &params, string &result)
+{
+	auto data = NodeManager::getInstance()->getNodeList();
+
+	for(auto e: data)
+	{
+		result += e.first + "     " + e.second.timeStr + "\r\n";
+	}
+	return true;
 }
 
 int main(int argc, char *argv[])

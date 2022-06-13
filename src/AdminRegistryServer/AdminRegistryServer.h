@@ -33,6 +33,15 @@ protected:
      * 析构, 每个进程都会调用一次
      */
     virtual void destroyApp();
+    
+	/**
+	 * tarsnode list
+	 * @param command
+	 * @param params
+	 * @param result
+	 * @return
+	 */
+	bool cmdNodeList(const string &command, const string &params, string &result);
 
 };
 
