@@ -10,7 +10,7 @@ _CHART_VERSION_=1.3.0-master
 _CHART_APPVERSION_=v1beta3
 _CHART_DST_=charts
 
-_BUILD_VERSION_=1.3.0-master
+_BUILD_VERSION_=v1.3.0-master
 
 #########################################################################################################################
 ### Please Do Not Edit This Block Unless You Know What You Are Doing ###
@@ -21,7 +21,7 @@ _BASES_="cppbase javabase nodejsbase php74base"
 
 _CONTROLLER_SERVERS_="tarscontroller tarsagent"
 
-_FRAMEWORK_SERVERS_="tarskaniko tarsimage tarsnode tarsadminregistry tarsregistry tarsconfig tarslog tarsnotify tarsstat tarsproperty \
+_FRAMEWORK_SERVERS_="tarskaniko tarsimage tarsnode tarsAdminRegistry tarsregistry tarsconfig tarslog tarsnotify tarsstat tarsproperty \
                      tarsquerystat tarsqueryproperty tarskevent tarsweb elasticsearch"
 
 _CRD_SERVED_VERSIONS_="v1beta1 v1beta2 v1beta3"
