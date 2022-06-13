@@ -5,7 +5,7 @@ BUILD_DIR   := /tarscpp
 cmake:
 	@cd $(BUILD_DIR) && cmake $(SRC_DIR)
 
-override SERVER_TARGETS := tarscontroller tarsagent tarskaniko tarsimage tarsnode tarsadminregistry tarsregistry tarsconfig tarslog tarsnotify tarsstat tarsproperty tarsquerystat tarsqueryproperty tarskevent
+override SERVER_TARGETS := tarscontroller tarsagent tarskaniko tarsimage tarsnode tarsAdminRegistry tarsregistry tarsconfig tarslog tarsnotify tarsstat tarsproperty tarsquerystat tarsqueryproperty tarskevent
 define func_expand_server_targets
 ifeq ($1,tarskaniko)
 $1: export CGO_ENABLED=0
