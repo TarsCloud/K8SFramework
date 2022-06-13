@@ -60,6 +60,7 @@ metadata:
   namespace: {{.Release.Namespace}}
   annotations:
     tars.io/MinReplicas: "1"
+    tars.io/MaxReplicas: "1"
   labels:
     tars.io/ServerApp: tars
     tars.io/ServerName: tarsAdminRegistry
@@ -67,7 +68,7 @@ metadata:
     tars.io/Template: tars.default
 spec:
   app: tars
-  server: tarsadminregistry
+  server: tarsAdminRegistry
   subType: tars
   tars:
     template: tars.cpp

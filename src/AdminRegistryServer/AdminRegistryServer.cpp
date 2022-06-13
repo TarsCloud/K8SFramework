@@ -40,8 +40,7 @@ void AdminRegistryServer::initialize()
         exit(-1);
     }
 
-    TLOG_DEBUG("RegistryServer::initialize OK!" << endl);
-
+    TLOG_DEBUG("AdminRegistryServer::initialize OK!" << endl);
 	// TARS_ADD_ADMIN_CMD_PREFIX("nodelist", AdminRegistryServer::cmdNodeList);
 }
 
