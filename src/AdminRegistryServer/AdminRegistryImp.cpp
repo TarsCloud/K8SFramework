@@ -192,12 +192,17 @@ int AdminRegistryImp::registerPlugin(const PluginConf &conf, CurrentPtr current)
 	{
 		TC_HttpRequest stHttpReq;
 		stHttpReq.setHeader("Connection", "Close");
+		stHttpReq.setHeader("Content-Type", "application/json");
 
 		string url ="http://tars-tarsweb:3000/pages/plugin/api/install";
 
-		stHttpReq.setPostRequest(url, conf.writeToJsonString(), true);
+		auto tmpConf = conf;
+		tmpConf.k8s = true;
 
-		TLOG_DEBUG("name: " << conf.name << ", obj:" << conf.obj << ", url:" << url << endl);
+		stHttpReq.setPostRequest(url, tmpConf.writeToJsonString(), true);
+
+		TLOG_DEBUG(stHttpReq.encode() << endl);
+		TLOG_DEBUG("name: " << conf.name << ", obj:" << conf.obj << ", url:" << url << ", " << tmpConf.writeToJsonString() << endl);
 
 		current->sendResponse(false);
 
@@ -527,7 +532,7 @@ int AdminRegistryImp::checkTicket(const string & ticket, string &uid, CurrentPtr
 		TC_HttpRequest stHttpReq;
 		stHttpReq.setHeader("Connection", "Close");
 
-		string url = "http://tars-tarsweb:3000/pages/server/api/ticket";
+		string url = "http://tars-tarsweb:3000/pages/server/api/ticket?ticket=" + ticket;
 
 		stHttpReq.setGetRequest(url, true);
 		TLOG_DEBUG("ticket:" << ticket << ", url:" << url << endl);
