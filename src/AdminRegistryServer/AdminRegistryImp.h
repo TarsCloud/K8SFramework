@@ -42,39 +42,7 @@ public:
      */
     virtual void destroy() {};
 
-	/**
-	 * 连接关闭
-	 * @param current
-	 * @return
-	 */
-	virtual int doClose(CurrentPtr current);
-
 public:
-
-	/**
-	 * 上报
-	 * @param nodeName
-	 * @param current
-	 * @return
-	 */
-	virtual int reportNode(const ReportNode &rn, CurrentPtr current);
-
-	/**
-	 * 下线(长连接, 有代理的模式下, 代理主动通知)
-	 * @param rn
-	 * @param current
-	 * @return
-	 */
-	virtual int deleteNode(const ReportNode &rn, CurrentPtr current);
-
-	/**
-	 * 上报结果
-	 * @param funcName
-	 * @param result
-	 * @param current
-	 * @return
-	 */
-	virtual int reportResult(int requestId, const string &funcName, int ret, const string &result, CurrentPtr current);
 
     /**
      * ping node
@@ -174,9 +142,8 @@ public:
 	 */
 	virtual int checkTicket(const string & ticket, string &uid, CurrentPtr current);
 
-
 protected:
-
+	string nodeNameToDns(const string &nodeName);
 };
 
 

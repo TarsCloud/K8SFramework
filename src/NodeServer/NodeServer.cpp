@@ -4,7 +4,6 @@
 #include "ServerObject.h"
 #include "ProxyManger.h"
 #include "Container.h"
-#include "ServerManager.h"
 
 void NodeServer::initialize()
 {
@@ -65,8 +64,6 @@ void NodeServer::initialize()
         addServant<ServerImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".ServerObj");
         ServerObject::startBackgroundPatrol();
 
-        ServerManager::getInstance()->initialize("tars.tarsAdminRegistry.AdminRegObj");
-
         return;
     }
     catch (const TC_Exception& e)
@@ -79,7 +76,5 @@ void NodeServer::initialize()
 
 void NodeServer::destroyApp()
 {
-	ServerManager::getInstance()->terminate();
-
     std::cout << "NodeServer::destroyApp ok" << std::endl;
 }

@@ -50,13 +50,6 @@ module tars
         //成功
         EM_TARS_SUCCESS = 0
     };
-    
-    //上报节点
-    struct ReportNode
-    {
-        0 require string nodeName;
-        1 require string sid;           //进程唯一
-    };
 
 	struct PluginConf
 	{
@@ -67,35 +60,23 @@ module tars
 	    4 optional string path;     //转发路径
 	};
 
+    struct AuthConf
+    {
+        0 optional string flag;
+        1 optional string role;
+        2 optional string uid;
+    };
+
+    struct AuthConfList
+    {
+        0 optional vector<AuthConf> auths;
+    };
+
     /**
      * admin 管理接口
      */
     interface AdminReg
     {
-		/**
-		 * 长连接模式下, tarsnode上报自身
-		 *
-		 * @param nodeName   node名称(通常是IP, 要能被其他节点解析的地址)
-		 * @param sid, sessionId, 客户端生成的唯一字符串
-		 * @return 注册是否成功
-		 */
-		int reportNode(ReportNode rn);
-
-		/**
-		 * 长连接模式, 有代理的模式下, 同时tarsnode下线
-		 *
-		 * @param nodeName   node名称(通常是IP, 要能被其他节点解析的地址)
-		 * @param sid, sessionId, 客户端生成的唯一字符串
-		 * @return
-		 */
-		int deleteNode(ReportNode rn);
-
-		/**
-		 * tarsnode上报执行命令的结果
-		 *
-		 */
-		int reportResult(int requestId, string funcName, int ret, string result);
-
         /**
          * ping node
          *
@@ -189,8 +170,6 @@ module tars
 		 * @return : 返回值详见tarsErrCode枚举值
 		 */
 		int checkTicket(string ticket, out string uid);
-
-
     };
 };
 
