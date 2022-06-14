@@ -21,7 +21,8 @@ endef
 override TARS_COMPILER_CONTEXT_DIR := context/compiler
 override TARS_COMPILER_DOCKERFILE := context/compiler/Dockerfile
 define func_create_compiler
-	mkdir -p $(TARS_CPP_DIR) && cd $(TARS_CPP_DIR) && git submodule update --init --recursive
+	git submodule update --init --recursive
+	rm -rf $(TARS_COMPILER_CONTEXT_DIR)/root/root/$(TARS_CPP_DIR)
 	cp -rf $(PWD)/$(TARS_CPP_DIR) $(TARS_COMPILER_CONTEXT_DIR)/root/root
 	$(ENV_DOCKER) build -t tarscompiler:$(BUILD_VERSION) --build-arg BUILD_VERSION=$(BUILD_VERSION) $(TARS_COMPILER_CONTEXT_DIR)
 endef
@@ -35,7 +36,7 @@ define func_build_image
 	$(call func_check_params, REGISTRY_URL BUILD_VERSION)
 	$(if $(findstring $1,tars.tarsweb),\
 		$(call func_check_params, TARS_WEB_DIR) \
-		mkdir -p $(TARS_WEB_DIR) && rm -rf $3/root/root/tars-web && cp -rf $(PWD)/$(TARS_WEB_DIR) $3/root/root/tars-web && git submodule update --init --recursive \
+		git submodule update --init --recursive && rm -rf $3/root/root/tars-web && cp -rf $(PWD)/$(TARS_WEB_DIR) $3/root/root/tars-web \
 		&& $(ENV_DOCKER) build -t $(REGISTRY_URL)/$1:$(BUILD_VERSION) -f $2 $3,\
 		$(ENV_DOCKER) build -t $(REGISTRY_URL)/$1:$(BUILD_VERSION) -f $2 --build-arg REGISTRY_URL=$(REGISTRY_URL) --build-arg BUILD_VERSION=$(BUILD_VERSION) $3 \
 	)
@@ -81,7 +82,7 @@ elasticsearch:
 define func_expand_server_param
 override $1_exec :=$2
 override $1_dir :=$3
-override $1_repo :=$4
+override $1_repo :=$(shell echo $4 | tr '[:upper:]' '[:lower:]')
 endef
 $(foreach server, tarscontroller tarsagent, $(eval $(call func_expand_server_param,$(server), $(server), context/$(server)/root/usr/local/app/tars/$(server)/bin,$(server))))
 $(foreach server, tarsimage tarsregistry, $(eval $(call func_expand_server_param,$(server), $(server), context/$(server)/root/usr/local/app/tars/$(server)/bin,tars.$(server))))
