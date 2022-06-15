@@ -32,10 +32,14 @@ void AdminRegistryImp::initialize()
 string AdminRegistryImp::nodeNameToDns(const string &nodeName)
 {
 	string dns = nodeName;
-	string::size_type pos = nodeName.rfind("-");
-	if(pos != string::npos)
+	if(nodeName.find(".") == string::npos)
 	{
-		dns = nodeName + "." + nodeName.substr(0, pos) + "." + TC_Port::getEnv("Namespace");
+		string::size_type pos = nodeName.rfind("-");
+
+		if (pos != string::npos)
+		{
+			dns = nodeName + "." + nodeName.substr(0, pos) + "." + TC_Port::getEnv("Namespace");
+		}
 	}
 
 	TLOG_DEBUG("nodeName:" << nodeName << ", dns:" << dns <<endl);
@@ -204,7 +208,7 @@ int AdminRegistryImp::registerPlugin(const PluginConf &conf, CurrentPtr current)
 		TLOG_DEBUG(stHttpReq.encode() << endl);
 		TLOG_DEBUG("name: " << conf.name << ", obj:" << conf.obj << ", url:" << url << ", " << tmpConf.writeToJsonString() << endl);
 
-		current->sendResponse(false);
+		current->setResponse(false);
 
 		PluginHttpCallback *callback = new PluginHttpCallback(current);
 
@@ -407,7 +411,7 @@ int AdminRegistryImp::hasDevAuth(const string &application, const string & serve
 
 		TLOG_DEBUG("application: " << application << ", serverName:" << serverName << ", uid:" << uid << ", url:" << url << endl);
 
-		current->sendResponse(false);
+		current->setResponse(false);
 
 		AuthHttpCallback *callback = new AuthHttpCallback(application, serverName, "developer", current);
 
@@ -438,7 +442,7 @@ int AdminRegistryImp::hasOpeAuth(const string & application, const string & serv
 
 		TLOG_DEBUG("application: " << application << ", serverName:" << serverName << ", uid:" << uid << ", url:" << url << endl);
 
-		current->sendResponse(false);
+		current->setResponse(false);
 
 		AuthHttpCallback *callback = new AuthHttpCallback(application, serverName, "operator", current);
 
@@ -469,7 +473,7 @@ int AdminRegistryImp::hasAdminAuth(const string & uid, bool &has, CurrentPtr cur
 
 		TLOG_DEBUG("uid:" << uid << ", url:" << url << endl);
 
-		current->sendResponse(false);
+		current->setResponse(false);
 
 		AuthHttpCallback *callback = new AuthHttpCallback("", "", "admin", current);
 
@@ -495,6 +499,7 @@ public:
 	TicketHttpCallback(const CurrentPtr &current) : _current(current)
 	{
 	}
+
 	virtual void onSucc(TC_HttpResponse &stHttpResponse)
 	{
 		_rsp = stHttpResponse;
@@ -502,12 +507,33 @@ public:
 		TLOG_DEBUG(_rsp.getStatus() << ", " << _rsp.getContent() << endl);
 
 		JsonValueObjPtr oPtr = JsonValueObjPtr::dynamicCast(TC_Json::getValue(_rsp.getContent()));
+		JsonValueNumPtr rPtr = JsonValueNumPtr::dynamicCast(oPtr->value["ret_code"]);
 
-		JsonValueStringPtr sPtr = JsonValueStringPtr::dynamicCast(oPtr->value["uid"]);
+		if(rPtr->lvalue == 200)
+		{
+			TLOG_DEBUG("ret_code:" << rPtr->lvalue << endl);
 
-		string uid = sPtr->value;
+			JsonValueObjPtr sPtr = JsonValueObjPtr::dynamicCast(oPtr->value["data"]);
 
-		AdminReg::async_response_checkTicket(_current, 0, uid);
+			for(auto e : sPtr->value)
+			{
+				TLOG_DEBUG("data key:" << e.first << endl);
+			}
+
+			JsonValueStringPtr vPtr = JsonValueStringPtr::dynamicCast(sPtr->value["uid"]);
+
+			string uid = vPtr->value;
+
+			TLOG_DEBUG("uid:" << uid << endl);
+
+			AdminReg::async_response_checkTicket(_current, 0, uid);
+		}
+		else
+		{
+			TLOG_ERROR("ret_code:" << rPtr->lvalue << endl);
+
+			AdminReg::async_response_checkTicket(_current, -1, "");
+		}
 	}
 
 	virtual void onFailed(FAILED_CODE ret, const string &info)
@@ -537,7 +563,7 @@ int AdminRegistryImp::checkTicket(const string & ticket, string &uid, CurrentPtr
 		stHttpReq.setGetRequest(url, true);
 		TLOG_DEBUG("ticket:" << ticket << ", url:" << url << endl);
 
-		current->sendResponse(false);
+		current->setResponse(false);
 
 		TicketHttpCallback *callback = new TicketHttpCallback( current);
 

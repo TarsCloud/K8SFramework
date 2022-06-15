@@ -1,8 +1,6 @@
 FROM golang:1.16-bullseye
 RUN go env -w GOPROXY=https://goproxy.io,direct
 
-COPY root /
-
 RUN apt update                                                                          \
     && apt install make cmake flex bison libssl-dev zlib1g-dev -y                       \
     && apt purge -y                                                                     \
@@ -11,6 +9,7 @@ RUN apt update                                                                  
     && rm -rf /var/cache/*.dat-old                                                      \
     && rm -rf /var/log/*.log /var/log/*/*.log
 
+COPY root /
 
 RUN cd /root/TarsCpp                                                                    \
     && mkdir -p build                                                                   \
