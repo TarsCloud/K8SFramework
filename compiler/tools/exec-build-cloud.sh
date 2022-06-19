@@ -111,7 +111,7 @@ echo "ASSETS:               "$ASSETS
 echo "CHANGELIST:           "$CHANGELIST
 echo "----------------------Build docker--------------------------------"
 
-NewDockerfile=${Dockerfiile}.new
+NewDockerfile=${Dockerfile}.new
 
 cp -rf ${Dockerfile} ${NewDockerfile}
 
@@ -163,9 +163,9 @@ for KEY in ${ASSETS}; do
 done
 
 if [ "$SERVERTYPE" == "nodejs" ]; then
-    mkdir -p tars_nodejs
+    mkdir -p $BIN/tars_nodejs
     npm install @tars/node-agent -g
-    mv /usr/local/lib/node_modules/@tars/node-agent tars_nodejs/
+    mv /usr/local/lib/node_modules/@tars/node-agent $BIN/tars_nodejs/
 fi
 
 # echo "RUN cd /usr/local/server/bin && tar czfv ${GROUP}.${NAME}.tgz bin && mv ${GROUP}.${NAME}.tgz /usr/local/cloud/data/" >> ${NewDockerfile}

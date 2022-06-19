@@ -88,7 +88,7 @@ echo "ASSETS:               "$ASSETS
 echo "CHANGELIST:           "$CHANGELIST
 echo "----------------------Build docker--------------------------------"
 
-NewDockerfile="Dockerfiile.tmp"
+NewDockerfile="Dockerfile.tmp"
 
 echo "FROM ubuntu:20.04" > ${NewDockerfile}
 echo "COPY $VALUES /usr/local/cloud/cloud.yaml" >> ${NewDockerfile}
