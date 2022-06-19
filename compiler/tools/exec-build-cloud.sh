@@ -166,7 +166,7 @@ if [ "$SERVERTYPE" == "nodejs" ]; then
     mkdir -p tars_nodejs
     npm install @tars/node-agent -g
     mv /usr/local/lib/node_modules/@tars/node-agent tars_nodejs/
-if
+fi
 
 # echo "RUN cd /usr/local/server/bin && tar czfv ${GROUP}.${NAME}.tgz bin && mv ${GROUP}.${NAME}.tgz /usr/local/cloud/data/" >> ${NewDockerfile}
 
