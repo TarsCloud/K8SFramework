@@ -22,7 +22,7 @@ RUN rm -rf /bin/ls                                                              
 # /etc/localtime will block container mount /etc/localtime from host
 
 COPY root/root /
-RUN chmod +x /usr/local/tars/cpp/tools/tars2case
+# RUN chmod +x /usr/local/tars/cpp/tools/tars2case
 RUN chmod +x /bin/entrypoint.sh
 RUN cd /tars-web &&rm -rf .git && rm -rf package-lock.json && npm install
 

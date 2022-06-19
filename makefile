@@ -89,7 +89,7 @@ $(foreach server, tarsimage tarsregistry, $(eval $(call func_expand_server_param
 $(foreach server, tarsAdminRegistry tarsconfig tarslog tarsnotify tarsstat tarsproperty tarsquerystat tarsqueryproperty tarskevent, $(eval $(call func_expand_server_param, $(server), $(server), context/$(server)/root/usr/local/server/bin,tars.$(server))))
 $(foreach server, tarsnode, $(eval $(call func_expand_server_param, $(server), $(server), context/$(server)/root/tarsnode/bin,tars.$(server))))
 $(foreach server, tarskaniko, $(eval $(call func_expand_server_param, $(server), $(server), context/$(server)/root/kaniko,tars.$(server))))
-$(foreach server, tarsweb, $(eval $(call func_expand_server_param, $(server), tars2case, context/$(server)/root/root/usr/local/tars/cpp/tools,tars.$(server))))
+# $(foreach server, tarsweb, $(eval $(call func_expand_server_param, $(server), tars2case, context/$(server)/root/root/usr/local/tars/cpp/tools,tars.$(server))))
 
 ### [server name] : build and push specified server image to registry
 .PHONY: tars%
@@ -105,6 +105,13 @@ tars%: $(if $(findstring $(WITHOUT_DEPENDS_CHECK),1),,compiler cppbase)
 	$(call func_push_image,$($@_repo), context/$@)
 	@echo "$@ -> [ Done ]"
 
+.PHONY: tarsweb
+tarsweb:
+	@echo "$@ -> [ Start ]"
+	$(call func_build_image,tars.tarsweb,context/$@/Dockerfile, context/$@)
+	$(call func_push_image,tars.tarsweb, context/$@)
+	@echo "$@ -> [ Done ]"
+	
 ### controller : build and push controller servers image to registry
 .PHONY: controller
 override CONTROLLER_SUB_TARGETS :=$(CONTROLLER_SERVERS)

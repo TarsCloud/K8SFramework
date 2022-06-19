@@ -235,26 +235,30 @@ public:
 	{
 	}
 
-	void onDev(const AuthConfList &acl)
+	void onDev(const JsonValueArrayPtr &aPtr)
 	{
-
 		bool has = false;
-		for(auto flag: acl.auths)
+		for(auto value: aPtr->value)
 		{
-			if (flag.role == "admin")
+			JsonValueObjPtr oPtr = JsonValueObjPtr::dynamicCast(value);
+
+			JsonValueStringPtr role = JsonValueStringPtr::dynamicCast(oPtr->value["role"]);
+			JsonValueStringPtr flag = JsonValueStringPtr::dynamicCast(oPtr->value["flag"]);
+
+			if (role->value == "admin")
 			{
 				has = true;
 				break;
 			}
 
-			if (flag.flag == "*" && (flag.role == "developer" || flag.role == "operator"))
+			if (flag->value == "*" && (role->value == "developer" || role->value == "operator"))
 			{
 				has = true;
 				break;
 			}
 
-			if ((flag.flag == _application || flag.flag == (_application + ".*")) &&
-				(flag.role == "developer" || flag.role == "operator"))
+			if ((flag->value == _application || flag->value == (_application + ".*")) &&
+				(role->value == "developer" || role->value == "operator"))
 			{
 				has = true;
 				break;
@@ -262,8 +266,8 @@ public:
 
 			if (!_serverName.empty())
 			{
-				if (flag.flag == (_application + "." + _serverName) &&
-					(flag.role == "developer" || flag.role == "operator"))
+				if (flag->value == (_application + "." + _serverName) &&
+					(role->value == "developer" || role->value == "operator"))
 				{
 					has = true;
 					break;
@@ -274,26 +278,31 @@ public:
 		AdminReg::async_response_hasDevAuth(_current, 0, has);
 	}
 
-	void onOpe(const AuthConfList &acl)
+	void onOpe(const JsonValueArrayPtr &aPtr)
 	{
 
 		bool has = false;
-		for(auto flag: acl.auths)
+		for(auto value: aPtr->value)
 		{
-			if (flag.role == "admin")
+			JsonValueObjPtr oPtr = JsonValueObjPtr::dynamicCast(value);
+
+			JsonValueStringPtr role = JsonValueStringPtr::dynamicCast(oPtr->value["role"]);
+			JsonValueStringPtr flag = JsonValueStringPtr::dynamicCast(oPtr->value["flag"]);
+
+			if (role->value == "admin")
 			{
 				has = true;
 				break;
 			}
 
-			if (flag.flag == "*" && (flag.role == "operator"))
+			if (flag->value == "*" && (role->value == "operator"))
 			{
 				has = true;
 				break;
 			}
 
-			if ((flag.flag == _application || flag.flag == (_application + ".*")) &&
-				(flag.role == "operator"))
+			if ((flag->value == _application || flag->value == (_application + ".*")) &&
+				(role->value == "operator"))
 			{
 				has = true;
 				break;
@@ -301,8 +310,8 @@ public:
 
 			if (!_serverName.empty())
 			{
-				if (flag.flag == (_application + "." + _serverName) &&
-					(flag.role == "operator"))
+				if (flag->value == (_application + "." + _serverName) &&
+					(role->value == "operator"))
 				{
 					has = true;
 					break;
@@ -313,12 +322,17 @@ public:
 		AdminReg::async_response_hasOpeAuth(_current, 0, has);
 	}
 
-	void onAdmin(const AuthConfList &acl)
+	void onAdmin(const JsonValueArrayPtr &aPtr)
 	{
 		bool has = false;
-		for(auto flag: acl.auths)
+		for(auto value: aPtr->value)
 		{
-			if (flag.role == "admin")
+			JsonValueObjPtr oPtr = JsonValueObjPtr::dynamicCast(value);
+
+			JsonValueStringPtr role = JsonValueStringPtr::dynamicCast(oPtr->value["role"]);
+			JsonValueStringPtr flag = JsonValueStringPtr::dynamicCast(oPtr->value["flag"]);
+
+			if (role->value == "admin")
 			{
 				has = true;
 				break;
@@ -336,38 +350,57 @@ public:
 
 		if(_rsp.getStatus() == 200)
 		{
+			JsonValueObjPtr oPtr = JsonValueObjPtr::dynamicCast(TC_Json::getValue(_rsp.getContent()));
+			JsonValueNumPtr rPtr = JsonValueNumPtr::dynamicCast(oPtr->value["ret_code"]);
+			if(rPtr->lvalue == 200)
+			{
+				JsonValueArrayPtr aPtr = JsonValueArrayPtr::dynamicCast(oPtr->value["data"]);
+				if (_role == "developer")
+				{
+					onDev(aPtr);
+				}
+				else if (_role == "operator")
+				{
+					onOpe(aPtr);
+				}
+				else
+				{
+					onAdmin(aPtr);
+				}
+				return;
+			}
 
-			AuthConfList acl;
-			acl.readFromJsonString(_rsp.getContent());
+//
+//			AuthConfList acl;
+//			acl.readFromJsonString(_rsp.getContent());
+//
+//			if (_role == "developer")
+//			{
+//				onDev(acl);
+//			}
+//			else if (_role == "operator")
+//			{
+//				onOpe(acl);
+//			}
+//			else
+//			{
+//				onAdmin(acl);
+//			}
+		}
 
-			if (_role == "developer")
-			{
-				onDev(acl);
-			}
-			else if (_role == "operator")
-			{
-				onOpe(acl);
-			}
-			else
-			{
-				onAdmin(acl);
-			}
+		if (_role == "developer")
+		{
+			AdminReg::async_response_hasDevAuth(_current, -1, false);
+		}
+		else if (_role == "operator")
+		{
+			AdminReg::async_response_hasOpeAuth(_current, -1, false);
 		}
 		else
 		{
-			if (_role == "developer")
-			{
-				AdminReg::async_response_hasDevAuth(_current, -1, false);
-			}
-			else if (_role == "operator")
-			{
-				AdminReg::async_response_hasOpeAuth(_current, -1, false);
-			}
-			else
-			{
-				AdminReg::async_response_hasAdminAuth(_current, -1, false);
-			}
+			AdminReg::async_response_hasAdminAuth(_current, -1, false);
 		}
+
 	}
 
 	virtual void onFailed(FAILED_CODE ret, const string &info)

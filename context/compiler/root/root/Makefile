@@ -21,9 +21,9 @@ endif
 endef
 $(foreach server,$(SERVER_TARGETS),$(eval $(call func_expand_server_targets,$(server))))
 
-.PHONY: tars2case
-tars2case :
-	@cp /usr/local/tars/cpp/tools/tars2case $(BUILD_DIR)/bin/tars2case
+# .PHONY: tars2case
+# tars2case :
+# 	@cp /usr/local/tars/cpp/tools/tars2case $(BUILD_DIR)/bin/tars2case
 
 .PHONY: test.controller
 test.controller :
