@@ -162,6 +162,12 @@ for KEY in ${ASSETS}; do
     echo "COPY $KEY /usr/local/cloud/data/$KEY" >> ${NewDockerfile}
 done
 
+if [ "$SERVERTYPE" == "nodejs" ]; then
+    mkdir -p tars_nodejs
+    npm install @tars/node-agent -g
+    mv /usr/local/lib/node_modules/@tars/node-agent tars_nodejs/
+if
+
 # echo "RUN cd /usr/local/server/bin && tar czfv ${GROUP}.${NAME}.tgz bin && mv ${GROUP}.${NAME}.tgz /usr/local/cloud/data/" >> ${NewDockerfile}
 
 echo "docker build . -f ${NewDockerfile} -t $IMAGE --build-arg BIN=$BIN --build-arg BaseImage=$BASEIMAGE --build-arg ServerType=$SERVERTYPE"
