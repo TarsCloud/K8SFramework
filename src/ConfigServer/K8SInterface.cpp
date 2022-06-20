@@ -53,7 +53,7 @@ void K8SInterface::listConfig(const std::string& app, const std::string& server,
 {
     std::ostringstream stream;
     stream << "/apis/k8s.tars.io/v1beta2/namespaces/" << K8SParams::Namespace()
-           << "/tconfigs?labelSelector=tars.io/ServerApp=" << app
+           << "/tconfigs?resourceVersion=0&labelSelector=tars.io/ServerApp=" << app
            << ",tars.io/ServerName=" << server
            << ",tars.io/Activated=true"
            << ",!tars.io/Deleting"
@@ -85,7 +85,7 @@ K8SInterface::loadConfig(const std::string& app, const std::string& server, cons
     int podSeq = getHostSeq(host);
     std::ostringstream stream;
     stream << "/apis/k8s.tars.io/v1beta2/namespaces/" << K8SParams::Namespace()
-           << "/tconfigs?labelSelector="
+           << "/tconfigs?resourceVersion=0&labelSelector="
            << "tars.io/ServerApp=" << app
            << ",tars.io/ServerName=" << server
            << ",tars.io/ConfigName=" << fileName
