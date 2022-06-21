@@ -156,6 +156,7 @@ static std::shared_ptr<UPChain> buildUPChain(const rapidjson::Value& pDocument)
             f.host = std::string(hostRef.GetString(), hostRef.GetStringLength());
             f.port = portRef.GetInt();
             f.timeout = timeoutRef.GetInt();
+			f.istcp = true;
             epv.emplace_back(f);
         }
 
