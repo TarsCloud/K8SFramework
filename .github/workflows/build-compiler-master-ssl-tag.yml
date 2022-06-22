@@ -24,4 +24,4 @@ jobs:
           docker buildx inspect builder --bootstrap
           docker run --rm --privileged docker/binfmt:a7996909642ee92942dcd6cff44b9b95f08dad64
       - name: Build ssl docker
-        run: cd compiler && docker buildx build . -f base-compiler-ssl.Dockerfile -t tarscloud/base-compiler-ssl:${{ steps.get_version.outputs.VERSION }} --build-arg BRANCH=master --platform=linux/amd64,linux/arm64  -o type=docker --push
+        run: cd compiler && docker buildx build . -f base-compiler-ssl.Dockerfile -t tarscloud/base-compiler-ssl:${{ steps.get_version.outputs.VERSION }} --build-arg BRANCH=master --platform=linux/amd64,linux/arm64 --push
