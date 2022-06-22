@@ -171,6 +171,7 @@ fi
 # echo "RUN cd /usr/local/server/bin && tar czfv ${GROUP}.${NAME}.tgz bin && mv ${GROUP}.${NAME}.tgz /usr/local/cloud/data/" >> ${NewDockerfile}
 
 echo "docker build . -f ${NewDockerfile} -t $IMAGE --build-arg BIN=$BIN --build-arg BaseImage=$BASEIMAGE --build-arg ServerType=$SERVERTYPE"
+
 docker build . -f ${NewDockerfile} -t $IMAGE --build-arg BIN=$BIN --build-arg BaseImage=$BASEIMAGE --build-arg ServerType=$SERVERTYPE
 
 rm -rf ${NewDockerfile}
