@@ -32,11 +32,18 @@ jobs:
       - uses: actions/checkout@v1
       - name: login docker hub
         run: docker login -u ${{ secrets.name }} -p ${{ secrets.pass }}
-      - name: prepare docker
-        run: |
-          export DOCKER_CLI_EXPERIMENTAL=enabled 
-          docker buildx create --use --name builder
-          docker buildx inspect builder --bootstrap
-          docker run --rm --privileged docker/binfmt:a7996909642ee92942dcd6cff44b9b95f08dad64
-      - name: Build docker
-        run: cd compiler && docker buildx build . -f base-compiler.Dockerfile -t tarscloud/base-compiler:v3.0 --build-arg BRANCH=release/3.0 --platform=linux/amd64,linux/arm64 --push
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Build and push
+        uses: docker/build-push-action@v3
+        with:
+          context: "{{defaultContext}}:compiler"
+          push: true
+          tags: tarscloud/base-compiler:v3.0
+          file: base-compiler.Dockerfile
+          build-args: BRANCH=release/3.0
+          platforms: linux/amd64,linux/arm64
+      # - name: Build docker
+      #   run: cd compiler && docker buildx build . -f base-compiler.Dockerfile -t tarscloud/base-compiler:v3.0 --build-arg BRANCH=release/3.0 --platform=linux/amd64,linux/arm64 --push

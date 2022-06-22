@@ -1,19 +1,19 @@
 name: build
 on:
   push:
-    branches: [ master ]
-    paths-ignore: [ docs/**,charts/** ]
+    branches: [master]
+    paths-ignore: [docs/**, charts/**, .github/workflows/build-compiler**]
   pull_request:
-    branches: [ master ]
-    paths-ignore: [ docs/**,charts/** ]
+    branches: [master]
+    paths-ignore: [docs/**, charts/**, .github/workflows/build-compiler**]
 
 jobs:
   build:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ ubuntu-18.04,ubuntu-20.04 ]
-        cli: [ docker ]
+        platform: [ubuntu-18.04, ubuntu-20.04]
+        cli: [docker]
     runs-on: ${{matrix.platform}}
     timeout-minutes: 90
     env:

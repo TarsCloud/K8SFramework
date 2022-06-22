@@ -19,11 +19,18 @@ jobs:
       #   continue-on-error: true
       - name: login docker hub
         run: docker login -u ${{ secrets.name }} -p ${{ secrets.pass }}
-      - name: prepare docker
-        run: |
-          export DOCKER_CLI_EXPERIMENTAL=enabled 
-          docker buildx create --use --name builder
-          docker buildx inspect builder --bootstrap
-          docker run --rm --privileged docker/binfmt:a7996909642ee92942dcd6cff44b9b95f08dad64
-      - name: Build docker
-        run: cd compiler && docker buildx build . -f base-deploy.Dockerfile -t tarscloud/base-deploy:${{ steps.get_version.outputs.VERSION }} --platform=linux/amd64,linux/arm64  -o type=docker --push
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Build and push
+        uses: docker/build-push-action@v3
+        with:
+          context: "{{defaultContext}}:compiler"
+          push: true
+          tags: tarscloud/base-deploy:${{ steps.get_version.outputs.VERSION }}
+          file: base-deploy.Dockerfile
+          platforms: linux/amd64,linux/arm64
+
+      # - name: Build docker
+      #   run: cd compiler && docker buildx build . -f base-deploy.Dockerfile -t tarscloud/base-deploy:${{ steps.get_version.outputs.VERSION }} --platform=linux/amd64,linux/arm64  --push

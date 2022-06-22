@@ -2,10 +2,10 @@ name: e2e
 on:
   push:
     branches: [master]
-    paths-ignore: [docs/**, charts/**, .github/workflows/build-compiler*]
+    paths-ignore: [docs/**, charts/**, .github/workflows/build-compiler**]
   pull_request:
     branches: [master]
-    paths-ignore: [docs/**, charts/**, .github/workflows/build-compiler*]
+    paths-ignore: [docs/**, charts/**, .github/workflows/build-compiler**]
 
 jobs:
   e2e:
