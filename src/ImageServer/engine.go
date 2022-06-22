@@ -231,7 +231,7 @@ func submit(task *Task) error {
 	log.Printf("task|%s: submitting...\n", task.id)
 	task.kanikoPodName = fmt.Sprintf("timage-builder-%s", task.id)
 
-	hostPathDirectory := k8sCoreV1.HostPathDirectory
+	hostPathDirectory := k8sCoreV1.HostPathDirectoryOrCreate
 	podLayout := &k8sCoreV1.Pod{
 		ObjectMeta: k8sMetaV1.ObjectMeta{
 			Name:      task.kanikoPodName,
