@@ -1,6 +1,5 @@
 name: build-base-compiler-master
 
-
 on:
   push:
     branches:
@@ -24,16 +23,18 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04 
+    runs-on: ubuntu-20.04
     steps:
       - name: env
         run: env
       - uses: actions/checkout@v1
       - name: login docker hub
         run: docker login -u ${{ secrets.name }} -p ${{ secrets.pass }}
+      - name: prepare docker
+        run: |
+          export DOCKER_CLI_EXPERIMENTAL=enabled 
+          docker buildx create --use --name builder
+          docker buildx inspect builder --bootstrap
+          docker run --rm --privileged docker/binfmt:a7996909642ee92942dcd6cff44b9b95f08dad64
       - name: Build docker
-        run: cd compiler && docker build . -f base-compiler.Dockerfile -t tarscloud/base-compiler:master --build-arg BRANCH=master
-      - name: push master docker
-        run: docker push tarscloud/base-compiler:master
-      - name: push latest docker
-        run: docker tag tarscloud/base-compiler:master tarscloud/base-compiler:latest && docker push tarscloud/base-compiler:latest
+        run: cd compiler && docker buildx build . -f base-compiler.Dockerfile -t tarscloud/base-compiler:latest --build-arg BRANCH=master --platform=linux/amd64,linux/arm64  -o type=docker --push
