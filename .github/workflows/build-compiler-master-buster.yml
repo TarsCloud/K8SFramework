@@ -1,25 +1,25 @@
-name: build-base-compiler-master-stretch
+name: build-base-compiler-master-buster
 
 on:
   push:
     branches:
       - master
     paths:
-      - ".github/workflows/build-compiler-master-stretch.yml"
+      - ".github/workflows/build-compiler-master-buster.yml"
       - "compiler/tools/*"
       - "compiler/tools/yaml-tools/*"
       - "compiler/tools/helm-template/*"
       - "compiler/tools/helm-lib/*"
-      - "compiler/base-compiler-stretch.Dockerfile"
+      - "compiler/base-compiler-buster.Dockerfile"
   pull_request:
     branches:
       - master
     paths:
-      - ".github/workflows/build-compiler-master-stretch.yml"
+      - ".github/workflows/build-compiler-master-buster.yml"
       - "compiler/tools/*"
       - "compiler/tools/helm-template/*"
       - "compiler/tools/helm-lib/*"
-      - "compiler/base-compiler-stretch.Dockerfile"
+      - "compiler/base-compiler-buster.Dockerfile"
 
 jobs:
   build:
@@ -39,9 +39,9 @@ jobs:
         with:
           context: "{{defaultContext}}:compiler"
           push: true
-          tags: tarscloud/base-compiler-stretch:latest
-          file: base-compiler-stretch.Dockerfile
+          tags: tarscloud/base-compiler-buster:latest
+          file: base-compiler-buster.Dockerfile
           build-args: BRANCH=master
           platforms: linux/amd64,linux/arm64
       # - name: Build docker
-      #   run: cd compiler && docker buildx build . -f base-compiler-stretch.Dockerfile -t tarscloud/base-compiler-stretch:latest --build-arg BRANCH=master --platform=linux/amd64 --push
+      #   run: cd compiler && docker buildx build . -f base-compiler-buster.Dockerfile -t tarscloud/base-compiler-buster:latest --build-arg BRANCH=master --platform=linux/amd64 --push
