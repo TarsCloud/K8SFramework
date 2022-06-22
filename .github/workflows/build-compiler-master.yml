@@ -37,7 +37,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
-          context: "compiler"
+          context: "{{defaultContext}}:compiler"
           push: true
           tags: tarscloud/base-compiler:latest
           file: base-compiler.Dockerfile
