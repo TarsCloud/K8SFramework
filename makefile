@@ -13,6 +13,15 @@ endef
 $(foreach param,$(PARAMS),$(eval $(call func_read_params,$(param))))
 $(foreach param,$(PARAMS),$(info read [ $(param) ]  =  $($(param))))
 
+define create_buildx
+	docker run --rm --privileged tonistiigi/binfmt:latest --install all
+	export DOCKER_CLI_EXPERIMENTAL=enabled
+    docker buildx create --name k8s-framework-builder --driver docker-container  --buildkitd-flags '--allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host' --use
+    docker buildx inspect --bootstrap --builder k8s-framework-builder
+endef
+
+$(call create_buildx)
+
 define func_check_params
 	$(foreach param, $1, $(if $($(param)),,\
 	$(error should set $(param) param, you can set $(param) as environment, or use 'make [target] $(param)=[value]' pattern execute make command)))
@@ -24,7 +33,7 @@ define func_create_compiler
 	git submodule update --init --recursive
 	rm -rf $(TARS_COMPILER_CONTEXT_DIR)/root/root/$(TARS_CPP_DIR)
 	cp -rf $(PWD)/$(TARS_CPP_DIR) $(TARS_COMPILER_CONTEXT_DIR)/root/root
-	$(ENV_DOCKER) build -t tarscompiler:$(BUILD_VERSION) --build-arg BUILD_VERSION=$(BUILD_VERSION) $(TARS_COMPILER_CONTEXT_DIR)
+	$(ENV_DOCKER) buildx build -t tarscompiler:$(BUILD_VERSION) --build-arg BUILD_VERSION=$(BUILD_VERSION) $(TARS_COMPILER_CONTEXT_DIR) --platform=linux/amd64,linux/arm64 --push
 endef
 
 define func_get_compiler
@@ -37,16 +46,16 @@ define func_build_image
 	$(if $(findstring $1,tars.tarsweb),\
 		$(call func_check_params, TARS_WEB_DIR) \
 		git submodule update --init --recursive && rm -rf $3/root/root/tars-web && cp -rf $(PWD)/$(TARS_WEB_DIR) $3/root/root/tars-web \
-		&& $(ENV_DOCKER) build -t $(REGISTRY_URL)/$1:$(BUILD_VERSION) -f $2 $3,\
-		$(ENV_DOCKER) build -t $(REGISTRY_URL)/$1:$(BUILD_VERSION) -f $2 --build-arg REGISTRY_URL=$(REGISTRY_URL) --build-arg BUILD_VERSION=$(BUILD_VERSION) $3 \
+		&& $(ENV_DOCKER) buildx build -t $(REGISTRY_URL)/$1:$(BUILD_VERSION) -f $2 $3 --platform=linux/amd64,linux/arm64 --push,\
+		$(ENV_DOCKER) buildx build -t $(REGISTRY_URL)/$1:$(BUILD_VERSION) -f $2 --build-arg REGISTRY_URL=$(REGISTRY_URL) --build-arg BUILD_VERSION=$(BUILD_VERSION) $3 --platform=linux/amd64,linux/arm64 --push\
 	)
 endef
 
-define func_push_image
-	$(call func_check_params, REGISTRY_URL BUILD_VERSION)
-	$(if $(REGISTRY_USER), @($(ENV_DOCKER) login -u $(REGISTRY_USER) -p $(REGISTRY_PASSWORD) $(REGISTRY_URL:docker.io/%=docker.io)))
-	$(ENV_DOCKER) push $(REGISTRY_URL)/$1:$(BUILD_VERSION)
-endef
+# define func_push_image
+# 	$(call func_check_params, REGISTRY_URL BUILD_VERSION)
+# 	$(if $(REGISTRY_USER), @($(ENV_DOCKER) login -u $(REGISTRY_USER) -p $(REGISTRY_PASSWORD) $(REGISTRY_URL:docker.io/%=docker.io)))
+# 	$(ENV_DOCKER) push $(REGISTRY_URL)/$1:$(BUILD_VERSION)
+# endef
 
 ### compiler : build and push compiler image to registry
 .PHONY: compiler
@@ -62,7 +71,7 @@ override BASES_CONTEXT_DIR := context/bases
 %base:
 	@echo "$@ -> [ Start ]"
 	@$(call func_build_image,tars.$@, $(BASES_CONTEXT_DIR)/$@.Dockerfile, $(BASES_CONTEXT_DIR))
-	@$(call func_push_image,tars.$@)
+###	@$(call func_push_image,tars.$@)
 	@echo "$@ -> [ Done ]"
 
 ### base : build and push base images to registry
@@ -76,7 +85,7 @@ base: $(BASE_SUB_TARGETS)
 elasticsearch:
 	@echo "$@ -> [ Start ]"
 	@$(call func_build_image,tars.$@,context/$@/Dockerfile, context/$@)
-	@$(call func_push_image,tars.$@, context/$@)
+###	@$(call func_push_image,tars.$@, context/$@)
 	@echo "$@ -> [ Done ]"
 
 define func_expand_server_param
@@ -102,7 +111,7 @@ tars%: $(if $(findstring $(WITHOUT_DEPENDS_CHECK),1),,compiler cppbase)
 	mkdir -p $($@_dir)
 	cp cache/tarscpp/bin/$($@_exec) $($@_dir)
 	$(call func_build_image,$($@_repo),context/$@/Dockerfile, context/$@)
-	$(call func_push_image,$($@_repo), context/$@)
+###	$(call func_push_image,$($@_repo), context/$@)
 	@echo "$@ -> [ Done ]"
 
 ### controller : build and push controller servers image to registry
