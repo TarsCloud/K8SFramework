@@ -6,6 +6,8 @@ RUN mv $(command -v  helm) /tmp/helm
 FROM bitnami/kubectl:1.20 AS ikubectl
 RUN cp -rf $(command -v  kubectl) /tmp/kubectl
 
+FROM node:lts-bullseye AS inode
+
 FROM debian:bullseye
 
 # image debian:bullseye had "ls bug", we use busybox ls instead
@@ -25,6 +27,7 @@ RUN apt purge -y                                                                
 
 COPY --from=ihelm /tmp/helm /usr/bin/helm
 COPY --from=ikubectl /tmp/kubectl /usr/bin/kubectl
+COPY --from=inode /usr/local /usr/local
 
 RUN helm plugin install https://github.com/chartmuseum/helm-push
 
@@ -32,7 +35,6 @@ COPY tools/yaml-tools /root/yaml-tools
 COPY tools/helm-lib /root/helm-lib
 COPY tools/helm-template /root/helm-template
 COPY tools/Dockerfile /root/Dockerfile
-
 
 COPY tools/exec-build-cloud.sh /usr/bin/
 COPY tools/exec-build-cloud-product.sh /usr/bin/
@@ -49,7 +51,6 @@ RUN chmod a+x /usr/bin/exec-build.sh
 RUN chmod a+x /usr/bin/exec-helm.sh
 RUN chmod a+x /usr/bin/create-buildx-dockerfile.sh
 RUN chmod a+x /usr/bin/create-buildx-dockerfile-product.sh
-
 
 RUN cd /root/yaml-tools && npm install 
 
