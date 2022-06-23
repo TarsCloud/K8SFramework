@@ -16,7 +16,7 @@ $(foreach param,$(PARAMS),$(info read [ $(param) ]  =  $($(param))))
 define create_buildx
 	docker run --rm --privileged tonistiigi/binfmt:latest --install all
 	export DOCKER_CLI_EXPERIMENTAL=enabled
-    docker buildx create --name k8s-framework-builder --driver docker-container  --buildkitd-flags '--allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host' --use
+    docker buildx create --name k8s-framework-builder --use
     docker buildx inspect --bootstrap --builder k8s-framework-builder
 endef
 
