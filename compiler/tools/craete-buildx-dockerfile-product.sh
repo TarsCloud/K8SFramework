@@ -133,11 +133,11 @@ for KEY in ${ASSETS}; do
     echo "COPY $KEY /usr/local/cloud/data/$KEY" >> ${NewDockerfile}
 done
 
-echo "docker build . -f ${NewDockerfile} -t $IMAGE "
-docker buildx . -f ${NewDockerfile} -t $IMAGE 
+# echo "docker buildx build . -f ${NewDockerfile} -t $IMAGE --platform=linux/amd64,linux/arm64 --push"
+# docker buildx build . -f ${NewDockerfile} -t $IMAGE --platform=linux/amd64,linux/arm64 --push
 
-rm -rf ${NewDockerfile}
+# rm -rf ${NewDockerfile}
 
-docker push $IMAGE
+# docker push $IMAGE
 
 

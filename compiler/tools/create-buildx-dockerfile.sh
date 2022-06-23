@@ -142,10 +142,12 @@ for KEY in ${ASSETS}; do
 done
 
 
-echo "docker buildx build . -f ${NewDockerfile} -t $IMAGE -platform=linux/amd64,linux/arm64"
+# echo "docker buildx build . -f ${NewDockerfile} -t $IMAGE -platform=linux/amd64,linux/arm64"
 
-docker buildx build . -f ${NewDockerfile} -t $IMAGE --platform=linux/amd64,linux/arm64 --push
+# docker buildx build . -f ${NewDockerfile} -t $IMAGE --platform=linux/amd64,linux/arm64 --push
 
-rm -rf ${NewDockerfile}
+# rm -rf ${NewDockerfile}
+
+
 
 
