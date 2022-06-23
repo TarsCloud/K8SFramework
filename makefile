@@ -42,6 +42,7 @@ endef
 
 define func_build_image
 	$(call func_check_params, REGISTRY_URL BUILD_VERSION)
+	$(call create_buildx)
 	$(if $(findstring $1,tars.tarsweb),\
 		$(call func_check_params, TARS_WEB_DIR) \
 		git submodule update --init --recursive && rm -rf $3/root/root/tars-web && cp -rf $(PWD)/$(TARS_WEB_DIR) $3/root/root/tars-web \
