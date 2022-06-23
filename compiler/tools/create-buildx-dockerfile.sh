@@ -148,6 +148,9 @@ done
 
 # rm -rf ${NewDockerfile}
 
+echo "docker buildx build . -f ${NewDockerfile} -t $IMAGE --platform=linux/amd64,linux/arm64 --push" > docker-buildx-cloud.sh
+chmod a+x docker-buildx-cloud.sh
+
 
 
 
