@@ -1,4 +1,4 @@
-name: build-base-compiler-release-3.0
+name: build-compiler-release-3.0
 
 on:
   push:
@@ -27,8 +27,6 @@ jobs:
     steps:
       - name: env
         run: env
-      # - uses: satackey/action-docker-layer-caching@v0.0.11
-      #   continue-on-error: true
       - uses: actions/checkout@v1
       - name: login docker hub
         run: docker login -u ${{ secrets.name }} -p ${{ secrets.pass }}
@@ -41,9 +39,31 @@ jobs:
         with:
           context: "{{defaultContext}}:compiler"
           push: true
-          tags: tarscloud/base-compiler:v3.0
-          file: base-compiler.Dockerfile
-          build-args: BRANCH=release/3.0
+          tags: tarscloud/base-compiler-bullseye:v3.0
+          file: base-compiler-bullseye.Dockerfile
+          build-args: BRANCH=release/3.0,TARS_SSL=ON
           platforms: linux/amd64,linux/arm64
+  build-ssl:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: env
+        run: env
+      - uses: actions/checkout@v1
+      - name: login docker hub
+        run: docker login -u ${{ secrets.name }} -p ${{ secrets.pass }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Build and push
+        uses: docker/build-push-action@v3
+        with:
+          context: "{{defaultContext}}:compiler"
+          push: true
+          tags: tarscloud/base-compiler-bullseye-ssl:v3.0
+          file: base-compiler-bullseye.Dockerfile
+          build-args: BRANCH=release/3.0,TARS_SSL=ON
+          platforms: linux/amd64,linux/arm64
+
       # - name: Build docker
       #   run: cd compiler && docker buildx build . -f base-compiler.Dockerfile -t tarscloud/base-compiler:v3.0 --build-arg BRANCH=release/3.0 --platform=linux/amd64,linux/arm64 --push

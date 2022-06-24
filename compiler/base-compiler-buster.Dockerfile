@@ -72,6 +72,7 @@ ENV PATH=/usr/local/openjdk-8/bin:/usr/local/go/bin:/usr/local/sbin:/usr/local/b
 ENV GOPATH=/go
 
 ARG BRANCH
+ARG TARS_SSL
 # image debian:buster had "ls bug", we use busybox ls instead
 
 RUN rm -rf /bin/ls
@@ -97,7 +98,7 @@ RUN cd /root                                                                    
     && git checkout $BRANCH && git submodule update --remote --recursive               \
     && mkdir -p build                                                                  \
     && cd build                                                                        \
-    && cmake ..                                                                        \
+    && cmake .. -DTARS_SSL=$TARS_SSL                                                   \
     && make -j4                                                                        \
     && make install                                                                    \
     && cd /                                                                            \
@@ -115,6 +116,10 @@ RUN curl -sS https://getcomposer.org/installer | php \
 
 RUN npm install -g @tars/deploy
 
+COPY tools/yaml-tools /root/yaml-tools
+COPY tools/helm-lib /root/helm-lib
+COPY tools/helm-template /root/helm-template
+COPY tools/Dockerfile /root/Dockerfile
 
 COPY tools/exec-build-cloud.sh /usr/bin/
 COPY tools/exec-build-cloud-product.sh /usr/bin/
