@@ -1,4 +1,4 @@
-name: build-base-deploy
+name: build-deploy
 
 on:
   push:
@@ -6,19 +6,14 @@ on:
       - master
     paths:
       - ".github/workflows/build-deploy.yml"
-      - "compiler/tools/*"
-      - "compiler/tools/yaml-tools/*"
-      - "compiler/tools/helm-template/*"
-      - "compiler/tools/helm-lib/*"
+      - "compiler/tools/**"
       - "compiler/base-deploy.Dockerfile"
   pull_request:
     branches:
       - master
     paths:
       - ".github/workflows/build-deploy.yml"
-      - "compiler/tools/helm-template/*"
-      - "compiler/tools/helm-lib/*"
-      - "compiler/tools/*"
+      - "compiler/tools/**"
       - "compiler/base-deploy.Dockerfile"
 
 jobs:

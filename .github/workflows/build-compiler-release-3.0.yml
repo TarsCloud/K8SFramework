@@ -6,20 +6,15 @@ on:
       - master
     paths:
       - ".github/workflows/build-compiler-release-3.0.yml"
-      - "compiler/tools/*"
-      - "compiler/tools/yaml-tools/*"
-      - "compiler/tools/helm-template/*"
-      - "compiler/tools/helm-lib/*"
-      - "compiler/base-compiler.Dockerfile"
+      - "compiler/tools/**"
+      - "compiler/base-compiler-bullseye.Dockerfile"
   pull_request:
     branches:
       - master
     paths:
       - ".github/workflows/build-compiler-release-3.0.yml"
-      - "compiler/tools/*"
-      - "compiler/tools/helm-template/*"
-      - "compiler/tools/helm-lib/*"
-      - "compiler/base-compiler.Dockerfile"
+      - "compiler/tools/**"
+      - "compiler/base-compiler-bullseye.Dockerfile"
 
 jobs:
   build:
@@ -41,7 +36,9 @@ jobs:
           push: true
           tags: tarscloud/base-compiler-bullseye:v3.0
           file: base-compiler-bullseye.Dockerfile
-          build-args: BRANCH=release/3.0,TARS_SSL=ON
+          build-args: |
+            BRANCH=release/3.0
+            TARS_SSL=OFF
           platforms: linux/amd64,linux/arm64
   build-ssl:
     runs-on: ubuntu-20.04
@@ -62,7 +59,9 @@ jobs:
           push: true
           tags: tarscloud/base-compiler-bullseye-ssl:v3.0
           file: base-compiler-bullseye.Dockerfile
-          build-args: BRANCH=release/3.0,TARS_SSL=ON
+          build-args: |
+            BRANCH=release/3.0
+            TARS_SSL=ON
           platforms: linux/amd64,linux/arm64
 
       # - name: Build docker

@@ -1,4 +1,3 @@
-# docker build . -f base-compiler.Dockerfile -t tarscloud/base-compiler:master --build-arg BRANCH=master
 
 FROM golang:1.17-bullseye AS igolang
 

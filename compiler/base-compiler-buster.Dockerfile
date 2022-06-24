@@ -1,17 +1,4 @@
 # docker build . -f base-compiler-buster.Dockerfile -t tarscloud/base-compiler-buster:master --build-arg BRANCH=master
-# FROM debian:buster AS itars
-# RUN apt update && apt install -y                                                       \
-#     g++ make cmake flex bison git ca-certificates curl wget libssl-dev zlib1g-dev
-
-# RUN cd /root                                                                           \
-#     && git clone https://github.com/TarsCloud/TarsCpp.git --recursive                  \
-#     && cd /root/TarsCpp                                                                \
-#     && git checkout $BRANCH && git submodule update --remote --recursive               \
-#     && mkdir -p build                                                                  \
-#     && cd build                                                                        \
-#     && cmake ..                                                                        \
-#     && make -j4                                                                        \
-#     && make install
 
 FROM golang:1.17-buster AS igolang
 # RUN apt update && apt install git -y

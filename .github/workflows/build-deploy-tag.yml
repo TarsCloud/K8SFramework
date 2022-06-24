@@ -1,9 +1,13 @@
-name: build-base-deploy-tag
+name: build-deploy-tag
 
 on:
   push:
     tags:
       - v*
+    paths:
+      - ".github/workflows/build-deploy.yml"
+      - "compiler/tools/**"
+      - "compiler/base-deploy.Dockerfile"
 
 jobs:
   build:
@@ -15,8 +19,6 @@ jobs:
       - name: Get version
         id: get_version
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
-      # - uses: satackey/action-docker-layer-caching@v0.0.11
-      #   continue-on-error: true
       - name: login docker hub
         run: docker login -u ${{ secrets.name }} -p ${{ secrets.pass }}
       - name: Set up QEMU
@@ -31,6 +33,3 @@ jobs:
           tags: tarscloud/base-deploy:${{ steps.get_version.outputs.VERSION }}
           file: base-deploy.Dockerfile
           platforms: linux/amd64,linux/arm64
-
-      # - name: Build docker
-      #   run: cd compiler && docker buildx build . -f base-deploy.Dockerfile -t tarscloud/base-deploy:${{ steps.get_version.outputs.VERSION }} --platform=linux/amd64,linux/arm64  --push

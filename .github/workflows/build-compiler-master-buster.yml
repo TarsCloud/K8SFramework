@@ -1,4 +1,4 @@
-name: build-base-compiler-master-buster
+name: build-compiler-master-buster
 
 on:
   push:
@@ -6,19 +6,14 @@ on:
       - master
     paths:
       - ".github/workflows/build-compiler-master-buster.yml"
-      - "compiler/tools/*"
-      - "compiler/tools/yaml-tools/*"
-      - "compiler/tools/helm-template/*"
-      - "compiler/tools/helm-lib/*"
+      - "compiler/tools/**"
       - "compiler/base-compiler-buster.Dockerfile"
   pull_request:
     branches:
       - master
     paths:
       - ".github/workflows/build-compiler-master-buster.yml"
-      - "compiler/tools/*"
-      - "compiler/tools/helm-template/*"
-      - "compiler/tools/helm-lib/*"
+      - "compiler/tools/**"
       - "compiler/base-compiler-buster.Dockerfile"
 
 jobs:
@@ -41,7 +36,9 @@ jobs:
           push: true
           tags: tarscloud/base-compiler-buster:latest
           file: base-compiler-buster.Dockerfile
-          build-args: BRANCH=master,TARS_SSL=OFF
+          build-args: |
+            BRANCH=master
+            TARS_SSL=OFF
           platforms: linux/amd64,linux/arm64
 
   build-ssl:
@@ -63,5 +60,7 @@ jobs:
           push: true
           tags: tarscloud/base-compiler-buster-ssl:latest
           file: base-compiler-buster.Dockerfile
-          build-args: BRANCH=master,TARS_SSL=ON
+          build-args: |
+            BRANCH=master
+            TARS_SSL=ON
           platforms: linux/amd64,linux/arm64
