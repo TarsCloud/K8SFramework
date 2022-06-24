@@ -32,6 +32,7 @@ define func_create_compiler
 	rm -rf $(TARS_COMPILER_CONTEXT_DIR)/root/root/$(TARS_CPP_DIR)
 	cp -rf $(PWD)/$(TARS_CPP_DIR) $(TARS_COMPILER_CONTEXT_DIR)/root/root
 	$(call create_buildx)
+	@$(if $(REGISTRY_USER), @($(ENV_DOCKER) login -u $(REGISTRY_USER) -p $(REGISTRY_PASSWORD) $(REGISTRY_URL:docker.io/%=docker.io)))
 	$(ENV_DOCKER) buildx build -t tarscompiler:$(BUILD_VERSION) --build-arg BUILD_VERSION=$(BUILD_VERSION) $(TARS_COMPILER_CONTEXT_DIR) --platform=linux/amd64,linux/arm64 --push
 endef
 
@@ -43,6 +44,7 @@ endef
 define func_build_image
 	$(call func_check_params, REGISTRY_URL BUILD_VERSION)
 	$(call create_buildx)
+	@$(if $(REGISTRY_USER), @($(ENV_DOCKER) login -u $(REGISTRY_USER) -p $(REGISTRY_PASSWORD) $(REGISTRY_URL:docker.io/%=docker.io)))
 	$(if $(findstring $1,tars.tarsweb),\
 		$(call func_check_params, TARS_WEB_DIR) \
 		git submodule update --init --recursive && rm -rf $3/root/root/tars-web && cp -rf $(PWD)/$(TARS_WEB_DIR) $3/root/root/tars-web \
@@ -50,6 +52,12 @@ define func_build_image
 		$(ENV_DOCKER) buildx build -t $(REGISTRY_URL)/$1:$(BUILD_VERSION) -f $2 --build-arg REGISTRY_URL=$(REGISTRY_URL) --build-arg BUILD_VERSION=$(BUILD_VERSION) $3 --platform=linux/amd64,linux/arm64 --push\
 	)
 endef
+
+# define func_push_image
+# 	$(call func_check_params, REGISTRY_URL BUILD_VERSION)
+# 	$(if $(REGISTRY_USER), @($(ENV_DOCKER) login -u $(REGISTRY_USER) -p $(REGISTRY_PASSWORD) $(REGISTRY_URL:docker.io/%=docker.io)))
+# 	$(ENV_DOCKER) push $(REGISTRY_URL)/$1:$(BUILD_VERSION)
+# endef
 
 ### compiler : build and push compiler image to registry
 .PHONY: compiler
