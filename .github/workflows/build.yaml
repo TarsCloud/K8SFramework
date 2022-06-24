@@ -2,10 +2,22 @@ name: build
 on:
   push:
     branches: [master]
-    paths-ignore: [docs/**, charts/**, .github/workflows/build-compiler**]
+    paths-ignore:
+      [
+        docs/**,
+        charts/**,
+        .github/workflows/build-compiler-*.yml,
+        .github/workflows/build-deploy-*.yml,
+      ]
   pull_request:
     branches: [master]
-    paths-ignore: [docs/**, charts/**, .github/workflows/build-compiler**]
+    paths-ignore:
+      [
+        docs/**,
+        charts/**,
+        .github/workflows/build-compiler-*.yml,
+        .github/workflows/build-deploy-*.yml,
+      ]
 
 jobs:
   build:

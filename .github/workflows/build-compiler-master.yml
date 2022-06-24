@@ -63,7 +63,7 @@ jobs:
           push: true
           tags: tarscloud/base-compiler-bullseye-ssl:latest
           file: base-compiler-bullseye.Dockerfile
-          build-args: BRANCH=master,TARS_SSL_ON
+          build-args: BRANCH=master,TARS_SSL=ON
           platforms: linux/amd64,linux/arm64
       # - name: Build docker
       #   run: cd compiler && docker buildx build . -f base-compiler.Dockerfile -t tarscloud/base-compiler:latest --build-arg BRANCH=master --platform=linux/amd64,linux/arm64 --push

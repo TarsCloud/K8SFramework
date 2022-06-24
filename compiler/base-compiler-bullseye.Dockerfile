@@ -57,6 +57,7 @@ ENV PATH=/usr/local/openjdk-8/bin:/usr/local/go/bin:/usr/local/sbin:/usr/local/b
 ENV GOPATH=/go
 
 ARG BRANCH
+ARG TARS_SSL
 
 # image debian:bullseye had "ls bug", we use busybox ls instead
 
@@ -84,7 +85,7 @@ RUN cd /root                                                                    
     && git checkout $BRANCH && git submodule update --remote --recursive               \
     && mkdir -p build                                                                  \
     && cd build                                                                        \
-    && cmake ..                                                                        \
+    && cmake ..  -DTARS_SSL=$TARS_SSL                                                  \
     && make -j4                                                                        \
     && make install                                                                    \
     && cd /                                                                            \
