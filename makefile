@@ -1,7 +1,9 @@
 .DEFAULT_GOAL := help
 SHELL := /bin/bash -o pipefail
+ENV_PLATFORM           ?= linux/amd64
 ENV_DOCKER             ?= docker
-ENV_DOCKER_RUN         ?= $(ENV_DOCKER) run $(if $(findstring $(DOCKER_RUN_WITHOUT_IT),1),,-it)
+ENV_DOCKER_BUILD       ?= docker buildx build --platform ${ENV_PLATFORM}
+ENV_DOCKER_RUN         ?= $(ENV_DOCKER) run --platform $(ENV_PLATFORM) $(if $(findstring $(DOCKER_RUN_WITHOUT_IT),1),,-it)
 ENV_HELM               ?= helm
 ENV_KUBECTL            ?= kubectl
 ENV_OS_NAME            ?= $(shell uname -s | tr '[:upper:]' '[:lower:]')
@@ -13,13 +15,6 @@ endef
 $(foreach param,$(PARAMS),$(eval $(call func_read_params,$(param))))
 $(foreach param,$(PARAMS),$(info read [ $(param) ]  =  $($(param))))
 
-define create_buildx
-	docker run --rm --privileged tonistiigi/binfmt:latest --install all
-	export DOCKER_CLI_EXPERIMENTAL=enabled
-    docker buildx create --name k8s-framework-builder --use
-    docker buildx inspect --bootstrap --builder k8s-framework-builder
-endef
-
 define func_check_params
 	$(foreach param, $1, $(if $($(param)),,\
 	$(error should set $(param) param, you can set $(param) as environment, or use 'make [target] $(param)=[value]' pattern execute make command)))
@@ -27,44 +22,38 @@ endef
 
 override TARS_COMPILER_CONTEXT_DIR := context/compiler
 override TARS_COMPILER_DOCKERFILE := context/compiler/Dockerfile
+COMPILER_IMAGE += $(ENV_PLATFORM)/tarscompiler:$(BUILD_VERSION)
 define func_create_compiler
-	git submodule update --init --recursive
+	git submodule update --init --recursive submodule/TarsCpp
 	rm -rf $(TARS_COMPILER_CONTEXT_DIR)/root/root/$(TARS_CPP_DIR)
 	cp -rf $(PWD)/$(TARS_CPP_DIR) $(TARS_COMPILER_CONTEXT_DIR)/root/root
-	$(call create_buildx)
-	@$(if $(REGISTRY_USER), @($(ENV_DOCKER) login -u $(REGISTRY_USER) -p $(REGISTRY_PASSWORD) $(REGISTRY_URL:docker.io/%=docker.io)))
-	$(ENV_DOCKER) buildx build -t tarscompiler:$(BUILD_VERSION) --build-arg BUILD_VERSION=$(BUILD_VERSION) $(TARS_COMPILER_CONTEXT_DIR) --platform=linux/amd64,linux/arm64 --push
+	$(ENV_DOCKER_BUILD) --load -t $(COMPILER_IMAGE) --build-arg BUILD_VERSION=$(BUILD_VERSION) $(TARS_COMPILER_CONTEXT_DIR)
 endef
 
 define func_get_compiler
 	@$(call func_check_params,BUILD_VERSION)
-	$(eval COMPILER := $(shell $(ENV_DOCKER) images tarscompiler:$(BUILD_VERSION) -q))
+	$(eval COMPILER := $(shell $(ENV_DOCKER) images $(COMPILER_IMAGE) -q))
 endef
 
+CONTROLLER_CHART_PARAMS += $(if $(CONTROLLER_SECRET), --set controller.secret=$(CONTROLLER_SECRET))
 define func_build_image
 	$(call func_check_params, REGISTRY_URL BUILD_VERSION)
 	$(call create_buildx)
 	@$(if $(REGISTRY_USER), @($(ENV_DOCKER) login -u $(REGISTRY_USER) -p $(REGISTRY_PASSWORD) $(REGISTRY_URL:docker.io/%=docker.io)))
 	$(if $(findstring $1,tars.tarsweb),\
 		$(call func_check_params, TARS_WEB_DIR) \
-		git submodule update --init --recursive && rm -rf $3/root/root/tars-web && cp -rf $(PWD)/$(TARS_WEB_DIR) $3/root/root/tars-web \
-		&& $(ENV_DOCKER) buildx build -t $(REGISTRY_URL)/$1:$(BUILD_VERSION) -f $2 $3 --platform=linux/amd64,linux/arm64 --push,\
-		$(ENV_DOCKER) buildx build -t $(REGISTRY_URL)/$1:$(BUILD_VERSION) -f $2 --build-arg REGISTRY_URL=$(REGISTRY_URL) --build-arg BUILD_VERSION=$(BUILD_VERSION) $3 --platform=linux/amd64,linux/arm64 --push\
+		git submodule update --init --recursive submodule/TarsWeb && rm -rf $3/root/root/tars-web && cp -rf $(PWD)/$(TARS_WEB_DIR) $3/root/root/tars-web \
+		&& $(ENV_DOCKER_BUILD) -t $(REGISTRY_URL)/$1:$(BUILD_VERSION) -f $2 $3 --push,\
+		$(ENV_DOCKER_BUILD) -t $(REGISTRY_URL)/$1:$(BUILD_VERSION) -f $2 --build-arg REGISTRY_URL=$(REGISTRY_URL) --build-arg BUILD_VERSION=$(BUILD_VERSION) $3 --push\
 	)
 endef
-
-# define func_push_image
-# 	$(call func_check_params, REGISTRY_URL BUILD_VERSION)
-# 	$(if $(REGISTRY_USER), @($(ENV_DOCKER) login -u $(REGISTRY_USER) -p $(REGISTRY_PASSWORD) $(REGISTRY_URL:docker.io/%=docker.io)))
-# 	$(ENV_DOCKER) push $(REGISTRY_URL)/$1:$(BUILD_VERSION)
-# endef
 
 ### compiler : build and push compiler image to registry
 .PHONY: compiler
 compiler:
 	@echo "$@ -> [ Start ]"
 	@$(call func_check_params, TARS_CPP_DIR)
-	@$(call func_create_compiler)
+	$(call func_create_compiler)
 	@echo "$@ -> [ Done ]"
 
 ### [base name] : build and push specified base image to registry
@@ -72,7 +61,7 @@ override BASES_CONTEXT_DIR := context/bases
 .PHONY: %base
 %base:
 	@echo "$@ -> [ Start ]"
-	@$(call func_build_image,tars.$@, $(BASES_CONTEXT_DIR)/$@.Dockerfile, $(BASES_CONTEXT_DIR))
+	$(call func_build_image,tars.$@, $(BASES_CONTEXT_DIR)/$@.Dockerfile, $(BASES_CONTEXT_DIR))
 ###	@$(call func_push_image,tars.$@)
 	@echo "$@ -> [ Done ]"
 

@@ -134,7 +134,7 @@ for KEY in ${ASSETS}; do
 done
 
 echo "docker build . -f ${NewDockerfile} -t $IMAGE "
-docker buildx . -f ${NewDockerfile} -t $IMAGE 
+docker build . -f ${NewDockerfile} -t $IMAGE
 
 rm -rf ${NewDockerfile}
 
