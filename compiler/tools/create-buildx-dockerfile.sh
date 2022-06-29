@@ -141,12 +141,11 @@ for KEY in ${ASSETS}; do
     echo "COPY $KEY /usr/local/cloud/data/$KEY" >> ${NewDockerfile}
 done
 
-
-# echo "docker buildx build . -f ${NewDockerfile} -t $IMAGE -platform=linux/amd64,linux/arm64"
-
-# docker buildx build . -f ${NewDockerfile} -t $IMAGE --platform=linux/amd64,linux/arm64 --push
-
-# rm -rf ${NewDockerfile}
+if [ "$SERVERTYPE" == "nodejs" ]; then
+    echo "mkdir -p /usr/local/server/bin/tars_nodejs" >> ${NewDockerfile}
+    echo "npm install @tars/node-agent -g" >> ${NewDockerfile}
+    echo "mv /usr/local/lib/node_modules/@tars/node-agent /usr/local/server/bin/tars_nodejs/" >> ${NewDockerfile}
+fi
 
 echo "docker buildx build . -f ${NewDockerfile} -t $IMAGE --platform=linux/amd64,linux/arm64 --push" > docker-buildx-cloud.sh
 chmod a+x docker-buildx-cloud.sh
