@@ -142,9 +142,9 @@ for KEY in ${ASSETS}; do
 done
 
 if [ "$SERVERTYPE" == "nodejs" ]; then
-    echo "mkdir -p /usr/local/server/bin/tars_nodejs" >> ${NewDockerfile}
-    echo "npm install @tars/node-agent -g" >> ${NewDockerfile}
-    echo "mv /usr/local/lib/node_modules/@tars/node-agent /usr/local/server/bin/tars_nodejs/" >> ${NewDockerfile}
+    echo "RUN mkdir -p /usr/local/server/bin/tars_nodejs" >> ${NewDockerfile}
+    echo "RUN npm install @tars/node-agent -g" >> ${NewDockerfile}
+    echo "RUN mv /usr/local/lib/node_modules/@tars/node-agent /usr/local/server/bin/tars_nodejs/" >> ${NewDockerfile}
 fi
 
 echo "docker buildx build . -f ${NewDockerfile} -t $IMAGE --platform=linux/amd64,linux/arm64 --push" > docker-buildx-cloud.sh
