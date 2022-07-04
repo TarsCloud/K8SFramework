@@ -1,3 +1,7 @@
 FROM scratch
-COPY root /
+ARG BINARY
+ARG TARGETOS
+ARG TARGETARCH
+COPY /root /
+COPY /binary/${BINARY}_${TARGETOS}_${TARGETARCH} /kaniko/${BINARY}
 ENTRYPOINT ["/kaniko/tarskaniko"]

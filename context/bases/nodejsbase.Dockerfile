@@ -1,5 +1,4 @@
 FROM node:lts-bullseye
-COPY root /
 
 ENV LANG C.UTF-8
 ENV LANGUAGE C.UTF-8
@@ -29,5 +28,6 @@ RUN mkdir -p /usr/local/app/tars                                                
 
 ENV NODE_AGENT_BIN=/usr/local/app/tars/node-agent/bin/node-agent
 
+COPY root /
 RUN chmod +x /bin/entrypoint.sh
 CMD ["/bin/entrypoint.sh"]

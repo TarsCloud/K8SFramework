@@ -1,19 +1,23 @@
 .DEFAULT_GOAL := help
 SHELL := /bin/bash -o pipefail
-ENV_PLATFORM           ?= linux/amd64
 ENV_DOCKER             ?= docker
-ENV_DOCKER_BUILD       ?= docker buildx build --platform ${ENV_PLATFORM}
-ENV_DOCKER_RUN         ?= $(ENV_DOCKER) run --platform $(ENV_PLATFORM) $(if $(findstring $(DOCKER_RUN_WITHOUT_IT),1),,-it)
+ENV_DOCKER_RUN         ?= $(ENV_DOCKER) run $(if $(findstring $(DOCKER_RUN_WITHOUT_IT),1),,-it)
 ENV_HELM               ?= helm
 ENV_KUBECTL            ?= kubectl
 ENV_OS_NAME            ?= $(shell uname -s | tr '[:upper:]' '[:lower:]')
 
 override PARAMS:= $(shell sh ./params.sh PARAMS)
 define func_read_params
-$1 ?= $(shell sh ./params.sh $1)
+$1 ?= $(strip $(shell sh ./params.sh $1))
 endef
 $(foreach param,$(PARAMS),$(eval $(call func_read_params,$(param))))
 $(foreach param,$(PARAMS),$(info read [ $(param) ]  =  $($(param))))
+
+PLATFORMS ?= $(strip,$(sort $(PLATFORMS)))
+override DOCKER_ENABLE_BUILDX := $(shell if [[ '$(PLATFORMS)' =~ ^(linux/amd64)?$$ ]];then echo 0; else echo 1; fi )
+override DOCKER_BUILD_CMD := $(ENV_DOCKER) $(if $(findstring $(DOCKER_ENABLE_BUILDX),1),buildx) build
+override DOCKER_BUILD_PLATFORMS := $(if $(findstring $(DOCKER_ENABLE_BUILDX),1),--platform=$(shell echo $(PLATFORMS)| sed "s/ \+/,/g"))
+override DOCKER_BUILD_PUSH := $(if $(findstring $(DOCKER_ENABLE_BUILDX),1),--push)
 
 define func_check_params
 	$(foreach param, $1, $(if $($(param)),,\
@@ -22,31 +26,34 @@ endef
 
 override TARS_COMPILER_CONTEXT_DIR := context/compiler
 override TARS_COMPILER_DOCKERFILE := context/compiler/Dockerfile
-COMPILER_IMAGE += $(ENV_PLATFORM)/tarscompiler:$(BUILD_VERSION)
 define func_create_compiler
 	git submodule update --init --recursive submodule/TarsCpp
 	rm -rf $(TARS_COMPILER_CONTEXT_DIR)/root/root/$(TARS_CPP_DIR)
 	cp -rf $(PWD)/$(TARS_CPP_DIR) $(TARS_COMPILER_CONTEXT_DIR)/root/root
-	$(ENV_DOCKER_BUILD) --load -t $(COMPILER_IMAGE) --build-arg BUILD_VERSION=$(BUILD_VERSION) $(TARS_COMPILER_CONTEXT_DIR)
-endef
-
-define func_get_compiler
-	@$(call func_check_params,BUILD_VERSION)
-	$(eval COMPILER := $(shell $(ENV_DOCKER) images $(COMPILER_IMAGE) -q))
-endef
-
-CONTROLLER_CHART_PARAMS += $(if $(CONTROLLER_SECRET), --set controller.secret=$(CONTROLLER_SECRET))
-define func_build_image
-	$(call func_check_params, REGISTRY_URL BUILD_VERSION)
-	$(call create_buildx)
-	@$(if $(REGISTRY_USER), @($(ENV_DOCKER) login -u $(REGISTRY_USER) -p $(REGISTRY_PASSWORD) $(REGISTRY_URL:docker.io/%=docker.io)))
-	$(if $(findstring $1,tars.tarsweb),\
-		$(call func_check_params, TARS_WEB_DIR) \
-		git submodule update --init --recursive submodule/TarsWeb && rm -rf $3/root/root/tars-web && cp -rf $(PWD)/$(TARS_WEB_DIR) $3/root/root/tars-web \
-		&& $(ENV_DOCKER_BUILD) -t $(REGISTRY_URL)/$1:$(BUILD_VERSION) -f $2 $3 --push,\
-		$(ENV_DOCKER_BUILD) -t $(REGISTRY_URL)/$1:$(BUILD_VERSION) -f $2 --build-arg REGISTRY_URL=$(REGISTRY_URL) --build-arg BUILD_VERSION=$(BUILD_VERSION) $3 --push\
+	$(foreach platform,$(PLATFORMS), \
+      $(ENV_DOCKER) build --platform ${platform} --load -t $(platform)/tarscompiler:$(BUILD_VERSION) --build-arg BUILD_VERSION=$(BUILD_VERSION) $(TARS_COMPILER_CONTEXT_DIR); \
 	)
 endef
+
+define func_enable_buildx
+	docker run --privileged --rm tonistiigi/binfmt --install all
+	-docker buildx create --name tars-builx-builder
+	docker buildx use tars-builx-builder
+endef
+
+### enable.buildx : enable docker buildx for build multi-platform images
+.PHONY: enable.buildx
+enable.buildx:
+	@echo "$@ -> [ Start ]"
+	$(call func_enable_buildx)
+	@echo "$@ -> [ Done ]"
+
+### disable.buildx : disable docker buildx
+.PHONY: disable.buildx
+disable.buildx:
+	@echo "$@ -> [ Start ]"
+	$(ENV_DOCKER) buildx use default
+	@echo "$@ -> [ Done ]"
 
 ### compiler : build and push compiler image to registry
 .PHONY: compiler
@@ -56,13 +63,17 @@ compiler:
 	$(call func_create_compiler)
 	@echo "$@ -> [ Done ]"
 
+define func_build_base
+	$(call func_check_params, REGISTRY_URL BUILD_VERSION)
+	$(DOCKER_BUILD_CMD) $(DOCKER_BUILD_PLATFORMS) -t $(REGISTRY_URL)/$1:$(BUILD_VERSION) -f $2 --build-arg REGISTRY_URL=$(REGISTRY_URL) --build-arg BUILD_VERSION=$(BUILD_VERSION) $3 $(DOCKER_BUILD_PUSH)
+endef
+
 ### [base name] : build and push specified base image to registry
 override BASES_CONTEXT_DIR := context/bases
 .PHONY: %base
-%base:
+%base: $(if $(findstring $(DOCKER_ENABLE_BUILDX),1),enable.buildx,disable.buildx)
 	@echo "$@ -> [ Start ]"
-	$(call func_build_image,tars.$@, $(BASES_CONTEXT_DIR)/$@.Dockerfile, $(BASES_CONTEXT_DIR))
-###	@$(call func_push_image,tars.$@)
+	$(call func_build_base,tars.$@, $(BASES_CONTEXT_DIR)/$@.Dockerfile, $(BASES_CONTEXT_DIR))
 	@echo "$@ -> [ Done ]"
 
 ### base : build and push base images to registry
@@ -76,43 +87,55 @@ base: $(BASE_SUB_TARGETS)
 elasticsearch:
 	@echo "$@ -> [ Start ]"
 	@$(call func_build_image,tars.$@,context/$@/Dockerfile, context/$@)
-###	@$(call func_push_image,tars.$@, context/$@)
 	@echo "$@ -> [ Done ]"
 
 define func_expand_server_param
-override $1_exec :=$2
-override $1_dir :=$3
-override $1_repo :=$(shell echo $4 | tr '[:upper:]' '[:lower:]')
+override $1_repo :=$(shell echo $2 | tr '[:upper:]' '[:lower:]')
 endef
-$(foreach server, tarscontroller tarsagent, $(eval $(call func_expand_server_param,$(server), $(server), context/$(server)/root/usr/local/app/tars/$(server)/bin,$(server))))
-$(foreach server, tarsimage tarsregistry, $(eval $(call func_expand_server_param,$(server), $(server), context/$(server)/root/usr/local/app/tars/$(server)/bin,tars.$(server))))
-$(foreach server, tarsconfig tarslog tarsnotify tarsstat tarsproperty tarsquerystat tarsqueryproperty tarskevent, $(eval $(call func_expand_server_param, $(server), $(server), context/$(server)/root/usr/local/server/bin,tars.$(server))))
-$(foreach server, tarsnode, $(eval $(call func_expand_server_param, $(server), $(server), context/$(server)/root/tarsnode/bin,tars.$(server))))
-$(foreach server, tarskaniko, $(eval $(call func_expand_server_param, $(server), $(server), context/$(server)/root/kaniko,tars.$(server))))
-$(foreach server, tarsweb, $(eval $(call func_expand_server_param, $(server), tars2case, context/$(server)/root/root/usr/local/tars/cpp/tools,tars.$(server))))
+$(foreach server, $(CONTROLLER_SERVERS), $(eval $(call func_expand_server_param,$(server),$(server))))
+$(foreach server, $(FRAMEWORK_SERVERS), $(eval $(call func_expand_server_param,$(server),tars.$(server))))
+define func_build_binary
+	$(call func_check_params, REGISTRY_URL BUILD_VERSION)
+	@mkdir -p cache/$1/go
+	@mkdir -p cache/$1/tarscpp
+	$(ENV_DOCKER_RUN) --platform $1 --rm -v $(PWD)/src:/src -v $(PWD)/cache/$1/tarscpp:/tarscpp -v $(PWD)/cache/$1/go:/go $(platform)/tarscompiler:$(BUILD_VERSION) $@
+	mkdir -p cache/context/$@/binary
+	cp cache/$1/tarscpp/bin/$@ cache/context/$@/binary/$@_$(subst /,_,$1)
+endef
+
+define func_build_image
+	$(call func_check_params, REGISTRY_URL BUILD_VERSION)
+	@$(if $(REGISTRY_USER), @($(ENV_DOCKER) login -u $(REGISTRY_USER) -p $(REGISTRY_PASSWORD) $(REGISTRY_URL:docker.io/%=docker.io)))
+	cp -rf $3 cache/context
+	$(DOCKER_BUILD_CMD) $(DOCKER_BUILD_PLATFORMS) -t $(REGISTRY_URL)/$1:$(BUILD_VERSION) -f cache/$2 --build-arg BINARY=$@ --build-arg REGISTRY_URL=$(REGISTRY_URL) --build-arg BUILD_VERSION=$(BUILD_VERSION) cache/$(strip $3) $(DOCKER_BUILD_PUSH)
+endef
 
 ### [server name] : build and push specified server image to registry
 .PHONY: tars%
-tars%: $(if $(findstring $(WITHOUT_DEPENDS_CHECK),1),,compiler cppbase)
+tars%: $(if $(findstring $(DOCKER_ENABLE_BUILDX),1),enable.buildx,disable.buildx) $(if $(findstring $(WITHOUT_DEPENDS_CHECK),1),,compiler cppbase)
 	@echo "$@ -> [ Start ]"
-	@$(call func_get_compiler)
-	@mkdir -p cache/go
-	@mkdir -p cache/tarscpp
-	$(ENV_DOCKER_RUN) --rm -v $(PWD)/src:/src -v $(PWD)/cache/tarscpp:/tarscpp -v $(PWD)/cache/go:/go $(COMPILER) $($@_exec)
-	mkdir -p $($@_dir)
-	cp cache/tarscpp/bin/$($@_exec) $($@_dir)
+	$(foreach platform,$(PLATFORMS), $(call func_build_binary,$(platform)))
 	$(call func_build_image,$($@_repo),context/$@/Dockerfile, context/$@)
-###	$(call func_push_image,$($@_repo), context/$@)
+	@echo "$@ -> [ Done ]"
+
+.PHONY: tarsweb
+tarsweb: $(if $(findstring $(DOCKER_ENABLE_BUILDX),1),enable.buildx,disable.buildx)
+	@echo "$@ -> [ Start ]"
+	git submodule update --init --recursive submodule/TarsWeb
+	rm -rf cache/context/tarsweb/root/tars-web
+	mkdir -p cache/context/tarsweb/root
+	cp -rf $(TARS_WEB_DIR) cache/context/tarsweb/root/tars-web
+	$(call func_build_image,tars.tarsweb,context/$@/Dockerfile, context/$@)
 	@echo "$@ -> [ Done ]"
 
 ### controller : build and push controller servers image to registry
-.PHONY: controller
+.PHONY: controller $(if $(findstring $(DOCKER_ENABLE_BUILDX),1),enable.buildx,disable.buildx)
 override CONTROLLER_SUB_TARGETS :=$(CONTROLLER_SERVERS)
 controller: $(CONTROLLER_SUB_TARGETS)
 	@echo "$@ -> [ Done ]"
 
 ### framework : build and push framework servers image to registry
-.PHONY: framework
+.PHONY: framework $(if $(findstring $(DOCKER_ENABLE_BUILDX),1),enable.buildx,disable.buildx)
 override FRAMEWORK_SUB_TARGETS :=$(FRAMEWORK_SERVERS)
 framework: $(FRAMEWORK_SUB_TARGETS)
 	@echo "$@ -> [ Done ]"

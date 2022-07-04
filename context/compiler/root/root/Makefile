@@ -21,10 +21,6 @@ endif
 endef
 $(foreach server,$(SERVER_TARGETS),$(eval $(call func_expand_server_targets,$(server))))
 
-.PHONY: tars2case
-tars2case :
-	@cp /usr/local/tars/cpp/tools/tars2case $(BUILD_DIR)/bin/tars2case
-
 .PHONY: test.controller
 test.controller :
 	cd $(TEST_DIR)/controller/e2e && go test --timeout 90m

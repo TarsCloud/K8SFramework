@@ -31,9 +31,12 @@ _PARAMS_="TARS_CPP_DIR TARS_WEB_DIR                                             
           REGISTRY_URL REGISTRY_USER REGISTRY_PASSWORD                                                               \
           BASES CONTROLLER_SERVERS FRAMEWORK_SERVERS                                                                 \
           CRD_SERVED_VERSIONS CRD_STORAGE_VERSION                                                                    \
-          BUILD_VERSION                                                                                              \
+          BUILD_VERSION PLATFORMS                                                                                    \
           CHART_VERSION CHART_APPVERSION CHART_DST                                                                    
           "
+
+_PLATFORMS_="linux/amd64"
+_SUPPORT_PLATFORMS_="linux/amd64 linux/386 linux/arm64 linux/riscv64 linux/ppc64le linux/s390x"
 
 PARAM=$(echo "$1" | tr "[:lower:]" "[:upper:]")
 eval "VALUE=\$_${PARAM}_"

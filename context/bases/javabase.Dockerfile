@@ -1,5 +1,4 @@
 FROM openjdk:8-bullseye
-COPY root /
 
 ENV LANG C.UTF-8
 ENV LANGUAGE C.UTF-8
@@ -21,5 +20,6 @@ RUN rm -rf /bin/ls                                                              
     && rm -rf /etc/localtime
 # /etc/localtime will block container mount /etc/localtime from host
 
+COPY root /
 RUN chmod +x /bin/entrypoint.sh
 CMD ["/bin/entrypoint.sh"]
