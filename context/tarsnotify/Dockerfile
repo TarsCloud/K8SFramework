@@ -1,9 +1,18 @@
 ARG REGISTRY_URL
 ARG BUILD_VERSION
+
+FROM debian:bullseye
+ARG TARGETPLATFORM
+ARG BINARY
+COPY /binary /binary
+RUN case ${TARGETPLATFORM} in \
+         "linux/amd64")  EXECUTE=${BINARY}_linux_amd64  ;; \
+         "linux/arm64")  EXECUTE=${BINARY}_linux_arm64  ;; \
+    esac \
+    && mv /binary/${EXECUTE} /binary/${BINARY}
+
 FROM $REGISTRY_URL/tars.cppbase:$BUILD_VERSION
 ENV ServerType=cpp
 ARG BINARY
-ARG TARGETOS
-ARG TARGETARCH
-COPY /binary/${BINARY}_${TARGETOS}_${TARGETARCH} /usr/local/server/bin/${BINARY}
+COPY --from=0 /binary/${BINARY} /usr/local/server/bin/${BINARY}
 RUN chmod +x /bin/entrypoint.sh

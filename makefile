@@ -18,6 +18,7 @@ override DOCKER_ENABLE_BUILDX := $(shell if [[ '$(PLATFORMS)' =~ ^(linux/amd64)?
 override DOCKER_BUILD_CMD := $(ENV_DOCKER) $(if $(findstring $(DOCKER_ENABLE_BUILDX),1),buildx) build
 override DOCKER_BUILD_LOAD := $(if $(findstring $(DOCKER_ENABLE_BUILDX),1),--load)
 override DOCKER_BUILD_PLATFORMS := --platform=$(shell echo $(PLATFORMS)| sed "s/ \+/,/g")
+override DOCKER_BUILD_TARGETPLATFORM := $(if $(findstring $(DOCKER_ENABLE_BUILDX),1),,--build-arg TARGETPLATFORM=linux/amd64)
 override DOCKER_BUILD_PUSH := $(if $(findstring $(DOCKER_ENABLE_BUILDX),1),--push)
 
 define func_check_params
@@ -108,7 +109,8 @@ define func_build_image
 	$(call func_check_params, REGISTRY_URL BUILD_VERSION)
 	@$(if $(REGISTRY_USER), @($(ENV_DOCKER) login -u $(REGISTRY_USER) -p $(REGISTRY_PASSWORD) $(REGISTRY_URL:docker.io/%=docker.io)))
 	cp -rf $3 cache/context
-	$(DOCKER_BUILD_CMD) $(DOCKER_BUILD_PLATFORMS) -t $(REGISTRY_URL)/$1:$(BUILD_VERSION) -f cache/$2 --build-arg BINARY=$@ --build-arg REGISTRY_URL=$(REGISTRY_URL) --build-arg BUILD_VERSION=$(BUILD_VERSION) cache/$(strip $3) $(DOCKER_BUILD_PUSH)
+	$(DOCKER_BUILD_CMD) $(DOCKER_BUILD_PLATFORMS) -t $(REGISTRY_URL)/$1:$(BUILD_VERSION) -f cache/$2 $(DOCKER_BUILD_TARGETPLATFORM) --build-arg BINARY=$@ --build-arg REGISTRY_URL=$(REGISTRY_URL) --build-arg BUILD_VERSION=$(BUILD_VERSION) cache/$(strip $3) $(DOCKER_BUILD_PUSH)
+	$(if $(findstring $(DOCKER_ENABLE_BUILDX),1),,$(ENV_DOCKER) push $(REGISTRY_URL)/$1:$(BUILD_VERSION))
 endef
 
 ### [server name] : build and push specified server image to registry
@@ -246,9 +248,8 @@ clean:
 .PHONY: test.controller
 test.controller:
 	@echo "$@ -> [ Start ]"
-	@$(call func_get_compiler)
 	@mkdir -p cache/go
-	$(ENV_DOCKER_RUN) --rm -v $(PWD)/src:/src -v $(PWD)/t:/t -v $(HOME)/.kube/config:/root/.kube/config -v $(PWD)/cache/go:/go --net=host $(COMPILER) test.controller
+	$(ENV_DOCKER_RUN) --rm -v $(PWD)/src:/src -v $(PWD)/t:/t -v $(HOME)/.kube/config:/root/.kube/config -v $(PWD)/cache/go:/go --net=host linux/amd64/tarscompiler:$(BUILD_VERSION) test.controller
 	@echo "$@ -> [ Done ]"
 
 ### help : show make rules
