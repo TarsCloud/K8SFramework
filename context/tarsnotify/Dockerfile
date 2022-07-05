@@ -15,4 +15,3 @@ FROM $REGISTRY_URL/tars.cppbase:$BUILD_VERSION
 ENV ServerType=cpp
 ARG BINARY
 COPY --from=0 /binary/${BINARY} /usr/local/server/bin/${BINARY}
-RUN chmod +x /bin/entrypoint.sh
