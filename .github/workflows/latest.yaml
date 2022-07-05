@@ -1,4 +1,4 @@
-name: build
+name: latest
 on:
   push:
     branches: [ master ]
@@ -29,8 +29,8 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v3
 
-      - name: Build TarsController Chart
-        run: make chart.controller BUILD_VERSION=latest
+      - name: Build And Push Controller Server Image
+        run: make controller BUILD_VERSION=latest
 
-      - name: Build TarsFramework Chart
-        run: make chart.framework BUILD_VERSION=latest
+      - name: Build And Push Framework Server Image
+        run: make framework BUILD_VERSION=latest
