@@ -14,8 +14,9 @@ $(foreach param,$(PARAMS),$(eval $(call func_read_params,$(param))))
 $(foreach param,$(PARAMS),$(info read [ $(param) ]  =  $($(param))))
 
 PLATFORMS ?= $(strip,$(sort $(PLATFORMS)))
-override DOCKER_ENABLE_BUILDX := $(shell if [[ '$(PLATFORMS)' =~ ^(linux/amd64)?$$ ]];then echo 0; else echo 1; fi )
+override DOCKER_ENABLE_BUILDX := $(shell if [[ '$(PLATFORMS)' =~ ^(linux/amd64)?$$ ]];then echo 0; else echo 1; fi)
 override DOCKER_BUILD_CMD := $(ENV_DOCKER) $(if $(findstring $(DOCKER_ENABLE_BUILDX),1),buildx) build
+override DOCKER_BUILD_LOAD := $(if $(findstring $(DOCKER_ENABLE_BUILDX),1),--load)
 override DOCKER_BUILD_PLATFORMS := $(if $(findstring $(DOCKER_ENABLE_BUILDX),1),--platform=$(shell echo $(PLATFORMS)| sed "s/ \+/,/g"))
 override DOCKER_BUILD_PUSH := $(if $(findstring $(DOCKER_ENABLE_BUILDX),1),--push)
 
@@ -31,7 +32,7 @@ define func_create_compiler
 	rm -rf $(TARS_COMPILER_CONTEXT_DIR)/root/root/$(TARS_CPP_DIR)
 	cp -rf $(PWD)/$(TARS_CPP_DIR) $(TARS_COMPILER_CONTEXT_DIR)/root/root
 	$(foreach platform,$(PLATFORMS), \
-      $(ENV_DOCKER) build --platform ${platform} --load -t $(platform)/tarscompiler:$(BUILD_VERSION) --build-arg BUILD_VERSION=$(BUILD_VERSION) $(TARS_COMPILER_CONTEXT_DIR); \
+      $(ENV_DOCKER) build --platform $(platform) $(DOCKER_BUILD_LOAD) -t $(platform)/tarscompiler:$(BUILD_VERSION) --build-arg BUILD_VERSION=$(BUILD_VERSION) $(TARS_COMPILER_CONTEXT_DIR); \
 	)
 endef
 
@@ -147,9 +148,9 @@ chart.controller: $(if $(findstring $(WITHOUT_DEPENDS_CHECK),1),,controller)
 	@echo "$@ -> [ Start ]"
 	$(call func_check_params, CHART_VERSION CHART_APPVERSION CHART_DST CRD_SERVED_VERSIONS CRD_STORAGE_VERSION REGISTRY_URL BUILD_VERSION)
 	@mkdir -p cache/helm
-	@rm -rf ${CONTROLLER_CHART_CACHE_DIR}
-	@cp -rf "${CONTROLLER_CHART_TEMPLATE_DIR}" "${CONTROLLER_CHART_CACHE_DIR}"
-	@./util/render-conroller-chart.sh "$(CONTROLLER_CHART_CACHE_DIR)" "$(CHART_VERSION)" "$(CHART_APPVERSION)" "${CRD_SERVED_VERSIONS}" "$(CRD_STORAGE_VERSION)" "$(REGISTRY_URL)" "$(BUILD_VERSION)"
+	@rm -rf $(CONTROLLER_CHART_CACHE_DIR)
+	@cp -rf "$(CONTROLLER_CHART_TEMPLATE_DIR)" "$(CONTROLLER_CHART_CACHE_DIR)"
+	@./util/render-conroller-chart.sh "$(CONTROLLER_CHART_CACHE_DIR)" "$(CHART_VERSION)" "$(CHART_APPVERSION)" "$(CRD_SERVED_VERSIONS)" "$(CRD_STORAGE_VERSION)" "$(REGISTRY_URL)" "$(BUILD_VERSION)"
 	$(ENV_HELM) package -d "$(CHART_DST)" --version "$(CHART_VERSION)" --app-version "$(CHART_APPVERSION)"  "$(CONTROLLER_CHART_CACHE_DIR)"
 	@echo "$@ -> [ Done ]"
 
@@ -160,8 +161,8 @@ chart.framework: $(if $(findstring $(WITHOUT_DEPENDS_CHECK),1),,framework)
 	@echo "$@ -> [ Start ]"
 	$(call func_check_params, CHART_VERSION CHART_APPVERSION CHART_DST REGISTRY_URL BUILD_VERSION)
 	@mkdir -p cache/helm
-	@rm -rf ${FRAMEWORK_CHART_CACHE_DIR}
-	@cp -rf "${FRAMEWORK_CHART_TEMPLATE_DIR}" "${FRAMEWORK_CHART_CACHE_DIR}"
+	@rm -rf $(FRAMEWORK_CHART_CACHE_DIR)
+	@cp -rf "$(FRAMEWORK_CHART_TEMPLATE_DIR)" "$(FRAMEWORK_CHART_CACHE_DIR)"
 	@./util/render-framework-chart.sh "$(FRAMEWORK_CHART_CACHE_DIR)" "$(CHART_VERSION)" "$(CHART_APPVERSION)" "$(REGISTRY_URL)" "$(BUILD_VERSION)"
 	$(ENV_HELM) package -d "$(CHART_DST)" --version "$(CHART_VERSION)" --app-version "$(CHART_APPVERSION)"  "$(FRAMEWORK_CHART_CACHE_DIR)"
 	@echo "$@ -> [ Done ]"
