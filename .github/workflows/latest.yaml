@@ -1,0 +1,36 @@
+name: build
+on:
+  push:
+    branches: [ master ]
+    paths-ignore:
+      - "docs/**"
+      - "charts/**"
+      - ".github/workflows/build-compiler-*.yml"
+      - ".github/workflows/build-deploy*.yml"
+  pull_request:
+    branches: [ master ]
+    paths-ignore:
+      - "docs/**"
+      - "charts/**"
+      - ".github/workflows/build-compiler-*.yml"
+      - ".github/workflows/build-deploy*.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+
+    env:
+      DOCKER_RUN_WITHOUT_IT: 1
+      REGISTRY_URL: docker.io/tarscloud
+      REGISTRY_USER: ${{ secrets.name }}
+      REGISTRY_PASSWORD: ${{ secrets.pass }}
+
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v3
+
+      - name: Build TarsController Chart
+        run: make chart.controller BUILD_VERSION=latest
+
+      - name: Build TarsFramework Chart
+        run: make chart.framework BUILD_VERSION=latest
