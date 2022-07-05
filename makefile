@@ -17,7 +17,7 @@ PLATFORMS ?= $(strip,$(sort $(PLATFORMS)))
 override DOCKER_ENABLE_BUILDX := $(shell if [[ '$(PLATFORMS)' =~ ^(linux/amd64)?$$ ]];then echo 0; else echo 1; fi)
 override DOCKER_BUILD_CMD := $(ENV_DOCKER) $(if $(findstring $(DOCKER_ENABLE_BUILDX),1),buildx) build
 override DOCKER_BUILD_LOAD := $(if $(findstring $(DOCKER_ENABLE_BUILDX),1),--load)
-override DOCKER_BUILD_PLATFORMS := $(if $(findstring $(DOCKER_ENABLE_BUILDX),1),--platform=$(shell echo $(PLATFORMS)| sed "s/ \+/,/g"))
+override DOCKER_BUILD_PLATFORMS := --platform=$(shell echo $(PLATFORMS)| sed "s/ \+/,/g")
 override DOCKER_BUILD_PUSH := $(if $(findstring $(DOCKER_ENABLE_BUILDX),1),--push)
 
 define func_check_params
