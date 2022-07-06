@@ -67,6 +67,7 @@ compiler:
 
 define func_build_base
 	$(call func_check_params, REGISTRY_URL BUILD_VERSION)
+	@$(if $(REGISTRY_USER), @($(ENV_DOCKER) login -u $(REGISTRY_USER) -p $(REGISTRY_PASSWORD) $(REGISTRY_URL:docker.io/%=docker.io)))
 	$(DOCKER_BUILD_CMD) $(DOCKER_BUILD_PLATFORMS) -t $(REGISTRY_URL)/$1:$(BUILD_VERSION) -f $2 --build-arg REGISTRY_URL=$(REGISTRY_URL) --build-arg BUILD_VERSION=$(BUILD_VERSION) $3 $(DOCKER_BUILD_PUSH)
 endef
 
