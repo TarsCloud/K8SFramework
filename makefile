@@ -33,7 +33,7 @@ define func_create_compiler
 	rm -rf $(TARS_COMPILER_CONTEXT_DIR)/root/root/$(TARS_CPP_DIR)
 	cp -rf $(PWD)/$(TARS_CPP_DIR) $(TARS_COMPILER_CONTEXT_DIR)/root/root
 	$(foreach platform,$(PLATFORMS), \
-      $(ENV_DOCKER) build --platform $(platform) $(DOCKER_BUILD_LOAD) -t $(platform)/tarscompiler:$(BUILD_VERSION) --build-arg BUILD_VERSION=$(BUILD_VERSION) $(TARS_COMPILER_CONTEXT_DIR); \
+      $(DOCKER_BUILD_CMD) --platform $(platform) $(DOCKER_BUILD_LOAD) -t $(platform)/tarscompiler:$(BUILD_VERSION) --build-arg BUILD_VERSION=$(BUILD_VERSION) $(TARS_COMPILER_CONTEXT_DIR); \
 	)
 endef
 
