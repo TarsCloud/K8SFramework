@@ -30,7 +30,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Build And Push Controller Server Image
-        run: make controller BUILD_VERSION=latest
+        run: make controller BUILD_VERSION=latest PLATFORMS='linux/amd64 linux/arm64'
 
       - name: Build And Push Framework Server Image
-        run: make framework BUILD_VERSION=latest
+        run: make framework BUILD_VERSION='linux/amd64 linux/arm64'
