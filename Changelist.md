@@ -1,3 +1,16 @@
+
+## 1.3.3 20220706
+## en
+- support arm64/amd64
+- update tarsweb(v3.0.3)
+- delete TGateway crd, add TPlugin crd
+- tarsnode use static link
+
+## cn
+- 支持arm64/amd64
+- 更新tarsweb(v3.0.3), 支持服务市场
+- 去掉TGateway crd, 增加TPlugin crd
+- tarsnode使用静态连接
 ## 1.3.2 20220528
 
 ### en
