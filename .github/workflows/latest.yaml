@@ -18,7 +18,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-20.04
-
+    timeout-minutes: 120
     env:
       DOCKER_RUN_WITHOUT_IT: 1
       REGISTRY_URL: docker.io/tarscloud
@@ -33,4 +33,4 @@ jobs:
         run: make controller BUILD_VERSION=latest PLATFORMS='linux/amd64 linux/arm64'
 
       - name: Build And Push Framework Server Image
-        run: make framework BUILD_VERSION='linux/amd64 linux/arm64'
+        run: make framework BUILD_VERSION=latest PLATFORMS='linux/amd64 linux/arm64'
