@@ -13,10 +13,10 @@ endif
 .PHONY: $1
 $1 : cmake
 ifeq ($1,$(findstring $1,tarsquerystat tarsqueryproperty))
-	@cd $(BUILD_DIR) && make tarsqueryserver -j4
+	@cd $(BUILD_DIR) && make tarsqueryserver -j1
 	@cp $(BUILD_DIR)/bin/tarsqueryserver $(BUILD_DIR)/bin/$1
 else
-	@cd $(BUILD_DIR) && make $1 -j4
+	@cd $(BUILD_DIR) && make $1 -j1
 endif
 endef
 $(foreach server,$(SERVER_TARGETS),$(eval $(call func_expand_server_targets,$(server))))

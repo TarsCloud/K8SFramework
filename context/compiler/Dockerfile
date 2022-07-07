@@ -16,7 +16,7 @@ RUN cd /root/TarsCpp                                                            
     && mkdir -p build                                                                   \
     && cd build                                                                         \
     && cmake ..                                                                         \
-    && make -j4                                                                         \
+    && make -j1                                                                         \
     && make install                                                                     \
     && rm -rf /root/Tarscpp
 
