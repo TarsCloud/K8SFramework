@@ -18,7 +18,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-20.04
-    timeout-minutes: 120
+    timeout-minutes: 360
     env:
       DOCKER_RUN_WITHOUT_IT: 1
       REGISTRY_URL: docker.io/tarscloud
