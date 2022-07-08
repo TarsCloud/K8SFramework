@@ -35,7 +35,7 @@ RUN rm -rf /bin/ls                                                              
     && apt update                                                                         \
     && apt install                                                                        \
        ca-certificates openssl telnet curl wget default-mysql-client                      \
-       iputils-ping vim tcpdump net-tools binutils procps tree                            \
+       gnupg iputils-ping vim tcpdump net-tools binutils procps tree                      \
        libssl-dev zlib1g-dev                                                              \
        tzdata locales busybox -y                                                          \
     && busybox --install                                                                  \
