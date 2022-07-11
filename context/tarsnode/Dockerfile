@@ -14,5 +14,5 @@ RUN case ${TARGETPLATFORM} in \
 FROM $REGISTRY_URL/tars.cppbase:$BUILD_VERSION
 ARG BINARY
 COPY /root /
-COPY --from=0 /binary/${BINARY} /usr/local/app/tars/${BINARY}/bin/${BINARY}
+COPY --from=0 /binary/${BINARY} /${BINARY}/bin/${BINARY}
 RUN chmod +x /bin/entrypoint.sh
