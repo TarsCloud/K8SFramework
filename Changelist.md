@@ -1,4 +1,12 @@
 
+
+## 1.3.4 20220712
+## en
+- update tarsweb(v3.0.4), fix k8s edit tserver bug
+
+## cn
+- 更新tarsweb(v3.0.3), 修复编辑tserver的bug
+
 ## 1.3.3 20220706
 ## en
 - support arm64/amd64
