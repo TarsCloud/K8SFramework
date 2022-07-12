@@ -1,4 +1,4 @@
-:wq#!/usr/bin/env sh
+#!/usr/bin/env sh
 
 # shellcheck disable=SC2034
 
