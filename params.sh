@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+:wq#!/usr/bin/env sh
 
 # shellcheck disable=SC2034
 
@@ -21,7 +21,7 @@ _BASES_="cppbase javabase nodejsbase php74base"
 
 _CONTROLLER_SERVERS_="tarscontroller tarsagent"
 
-_FRAMEWORK_SERVERS_="tarskaniko tarsimage tarsAdminRegistry tarsnode tarsregistry tarsconfig tarslog tarsnotify tarsstat tarsproperty \
+_FRAMEWORK_SERVERS_="tarskaniko tarsimage  tarsnode tarsAdminRegistry tarsregistry tarsconfig tarslog tarsnotify tarsstat tarsproperty \
                      tarsquerystat tarsqueryproperty tarskevent tarsweb elasticsearch"
 
 _CRD_SERVED_VERSIONS_="v1beta1 v1beta2 v1beta3"
