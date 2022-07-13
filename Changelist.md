@@ -1,11 +1,12 @@
 
 
-## 1.3.4 20220712
+## 1.3.4 20220713
 ## en
 - update tarsweb(v3.0.4), fix k8s edit tserver bug
-
+- Fix: lost tarsAdminRegistry bug 
 ## cn
 - 更新tarsweb(v3.0.3), 修复编辑tserver的bug
+- 修复tarsAdminRegistry 遗漏的问题
 
 ## 1.3.3 20220706
 ## en
