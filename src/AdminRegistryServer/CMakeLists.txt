@@ -4,6 +4,6 @@ include_directories(../ThirdParty/rapidjson/include)
 include_directories(../NodeServer)
 include_directories(../RegistryServer)
 
-gen_server(tars tarsadminregistry)
+gen_server(tars tarsAdminRegistry)
 
-add_dependencies(tarsadminregistry tarsnode)
+add_dependencies(tarsAdminRegistry tarsnode)

@@ -63,7 +63,7 @@ metadata:
     tars.io/Template: tars.es
 spec:
   app: tars
-  server: tarsadminregistry
+  server: tarsAdminRegistry
   subType: tars
   tars:
     template: tars.cpp
