@@ -3,8 +3,8 @@ entries:
   tarscontroller:
   - apiVersion: v2
     appVersion: v1beta3
-    created: "2022-07-12T06:55:57.532626341Z"
-    digest: b969cbc606979dafa7003bb6f0db57d67988ce3412bba7d12841d3d7eb56620f
+    created: "2022-07-13T04:54:24.596445727Z"
+    digest: 4eb6cb196678b9633f6610e0b364f5566ee91eaaa54a08167f5c9e4203262e1e
     keywords:
     - tars
     - tarscontroller
@@ -16,7 +16,7 @@ entries:
     version: 1.3.4
   - apiVersion: v2
     appVersion: v1beta3
-    created: "2022-07-12T06:55:57.530894117Z"
+    created: "2022-07-13T04:54:24.595266044Z"
     digest: 4c1be9958fa5c6591d1fa7cbb2cb3dc9afed8d9fb2696483a0f25ba34ace22e4
     keywords:
     - tars
@@ -29,7 +29,7 @@ entries:
     version: 1.3.3
   - apiVersion: v2
     appVersion: v1beta3
-    created: "2022-07-12T06:55:57.529626899Z"
+    created: "2022-07-13T04:54:24.592998782Z"
     digest: 62d0725601c838620193e66d238939f1661bd93a459e8a745b5909b87834c827
     keywords:
     - tars
@@ -42,7 +42,7 @@ entries:
     version: 1.3.2
   - apiVersion: v2
     appVersion: v1beta2
-    created: "2022-07-12T06:55:57.52823838Z"
+    created: "2022-07-13T04:54:24.591064545Z"
     digest: 30f45aded38ca37f50750e8611d8031e1b7fe58ba226fb0422eeaf36e6809581
     keywords:
     - tars
@@ -54,7 +54,7 @@ entries:
     version: 1.2.0
   - apiVersion: v2
     appVersion: v1beta2
-    created: "2022-07-12T06:55:57.527278166Z"
+    created: "2022-07-13T04:54:24.5890249Z"
     digest: b5e0da7ec8cb5ca4b1ea31f665bd9f4b44757a1b6ac67babdef1d74c0ac879e3
     keywords:
     - tars
@@ -66,7 +66,7 @@ entries:
     version: 1.1.0
   - apiVersion: v2
     appVersion: v1beta1
-    created: "2022-07-12T06:55:57.52611515Z"
+    created: "2022-07-13T04:54:24.587816514Z"
     digest: e83c042e190f730471942d3c2f4d62bd0ea165321c28ed180c205ebb152de506
     keywords:
     - tars
@@ -79,8 +79,8 @@ entries:
   tarsframework:
   - apiVersion: v2
     appVersion: v1beta3
-    created: "2022-07-12T06:55:57.53905883Z"
-    digest: d6e8a3a849023850aa1dc3fe60887c7f87c4848b0df7433a93ce1b194d6d8f57
+    created: "2022-07-13T04:54:24.604713215Z"
+    digest: 1fee5c81ecf6c0ac20dcb41c1bdf18f97df1acd425a53299fb7feb5faf3d483b
     keywords:
     - tars
     kubeVersion: '>= 1.17.0 <= 1.24.0'
@@ -91,7 +91,7 @@ entries:
     version: 1.3.4
   - apiVersion: v2
     appVersion: v1beta3
-    created: "2022-07-12T06:55:57.538510422Z"
+    created: "2022-07-13T04:54:24.604195978Z"
     digest: 1d3292f45436ba50411530e35dd42faa487175c750b77b522d10ef88e06878f1
     keywords:
     - tars
@@ -103,7 +103,7 @@ entries:
     version: 1.3.3
   - apiVersion: v2
     appVersion: v1beta3
-    created: "2022-07-12T06:55:57.537813612Z"
+    created: "2022-07-13T04:54:24.603405822Z"
     digest: e431c5e436fd42655b5270832381f06fc27b84e44adedc2448124d5a0dc0bce0
     keywords:
     - tars
@@ -115,7 +115,7 @@ entries:
     version: 1.3.2
   - apiVersion: v2
     appVersion: v1beta2
-    created: "2022-07-12T06:55:57.537107503Z"
+    created: "2022-07-13T04:54:24.602600065Z"
     digest: 6922ceecc24b8df37eb27cfe0de3f3fd48ff74b6fb695692c48109b2e3f0289d
     keywords:
     - tars
@@ -126,7 +126,7 @@ entries:
     version: 1.3.1
   - apiVersion: v2
     appVersion: v1beta2
-    created: "2022-07-12T06:55:57.536383493Z"
+    created: "2022-07-13T04:54:24.600976849Z"
     digest: 5444e653ad245693484a94b1c96eaafdaa4b09b5ccbab7396bb6503d7385d713
     keywords:
     - tars
@@ -137,7 +137,7 @@ entries:
     version: 1.3.0
   - apiVersion: v2
     appVersion: v1beta2
-    created: "2022-07-12T06:55:57.535743184Z"
+    created: "2022-07-13T04:54:24.600157691Z"
     digest: 67bce194c7a4ba1efc388adda10d9a83eabfe3ed1069d16e24298b99ecafcb43
     keywords:
     - tars
@@ -148,7 +148,7 @@ entries:
     version: 1.2.0
   - apiVersion: v2
     appVersion: v1beta1
-    created: "2022-07-12T06:55:57.535063074Z"
+    created: "2022-07-13T04:54:24.599091915Z"
     digest: 99d01cb720301639afc95a71654d27ee3b7adec19786bc9bf377e492147aa1ec
     keywords:
     - tars
@@ -159,7 +159,7 @@ entries:
     version: 1.1.0
   - apiVersion: v2
     appVersion: v1beta1
-    created: "2022-07-12T06:55:57.534238663Z"
+    created: "2022-07-13T04:54:24.597817525Z"
     digest: e0169864c07d68c7f0dc529e71c2bc9aac5718dc64b714770d875dbd624e85eb
     keywords:
     - tars
@@ -168,4 +168,4 @@ entries:
     urls:
     - https://tarscloud.github.io/K8SFramework/charts/tarsframework-1.0.0.tgz
     version: 1.0.0
-generated: "2022-07-12T06:55:57.52467153Z"
+generated: "2022-07-13T04:54:24.585882477Z"
