@@ -12,7 +12,6 @@ RUN case ${TARGETPLATFORM} in \
     && mv /binary/${EXECUTE} /binary/${BINARY}
 
 FROM $REGISTRY_URL/tars.cppbase:$BUILD_VERSION
+ENV ServerType=cpp
 ARG BINARY
-COPY /root /
-COPY --from=0 /binary/${BINARY} /usr/local/app/tars/${BINARY}/bin/${BINARY}
-RUN chmod +x /bin/entrypoint.sh
+COPY --from=0 /binary/${BINARY} /usr/local/server/bin/${BINARY}
