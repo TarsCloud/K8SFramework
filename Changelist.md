@@ -1,11 +1,20 @@
 
 
+
+## 1.3.5 20220714
+## en
+- update tarsweb(v3.0.5)
+- Fix: tarsadmin use podId to stop/start/sendcommand
+## cn
+- 更新tarsweb(v3.0.5), 修复编辑tserver的bug
+- 修复: tarsadmin 使用 podId : stop/start/sendcommand
+
 ## 1.3.4 20220713
 ## en
 - update tarsweb(v3.0.4), fix k8s edit tserver bug
 - Fix: lost tarsAdminRegistry bug 
 ## cn
-- 更新tarsweb(v3.0.3), 修复编辑tserver的bug
+- 更新tarsweb(v3.0.4), 修复编辑tserver的bug
 - 修复tarsAdminRegistry 遗漏的问题
 
 ## 1.3.3 20220706
