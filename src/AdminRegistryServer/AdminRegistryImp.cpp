@@ -75,7 +75,7 @@ int AdminRegistryImp::startServer(const string & application, const string & ser
     int iRet = EM_TARS_UNKNOWN_ERR;
     try
     {
-		NodePrx nodePrx = Application::getCommunicator()->stringToProxy<NodePrx>("tars.tarsnode.NodeObj@tcp -h " + nodeNameToDns(nodeName) + " -p 19385");
+		NodePrx nodePrx = Application::getCommunicator()->stringToProxy<NodePrx>("tars.tarsnode.NodeObj@tcp -h " + nodeName + " -p 19385");
 		return nodePrx->startServer(application, serverName, result);
     }
     catch(TarsException & ex)
@@ -104,7 +104,7 @@ int AdminRegistryImp::stopServer(const string & application, const string & serv
     int iRet = EM_TARS_UNKNOWN_ERR;
     try
     {
-		NodePrx nodePrx = Application::getCommunicator()->stringToProxy<NodePrx>("tars.tarsnode.NodeObj@tcp -h " + nodeNameToDns(nodeName) + " -p 19385");
+		NodePrx nodePrx = Application::getCommunicator()->stringToProxy<NodePrx>("tars.tarsnode.NodeObj@tcp -h " + nodeName + " -p 19385");
 		return nodePrx->stopServer(application, serverName, result);
     }
     catch(TarsException & ex)
@@ -125,7 +125,7 @@ int AdminRegistryImp::restartServer(const string & application, const string & s
     int iRet = EM_TARS_SUCCESS;
     try
     {
-		NodePrx nodePrx = Application::getCommunicator()->stringToProxy<NodePrx>("tars.tarsnode.NodeObj@tcp -h " + nodeNameToDns(nodeName) + " -p 19385");
+		NodePrx nodePrx = Application::getCommunicator()->stringToProxy<NodePrx>("tars.tarsnode.NodeObj@tcp -h " + nodeName + " -p 19385");
 		return nodePrx->restartServer(application, serverName, result);
     }
     catch(TarsException & ex)
@@ -147,7 +147,7 @@ int AdminRegistryImp::notifyServer(const string & application, const string & se
     int iRet = EM_TARS_UNKNOWN_ERR;
     try
     {
-		NodePrx nodePrx = Application::getCommunicator()->stringToProxy<NodePrx>("tars.tarsnode.NodeObj@tcp -h " + nodeNameToDns(nodeName) + " -p 19385");
+		NodePrx nodePrx = Application::getCommunicator()->stringToProxy<NodePrx>("tars.tarsnode.NodeObj@tcp -h " + nodeName + " -p 19385");
 		return nodePrx->notifyServer(application, serverName, command, result);
     }
     catch(TarsException & ex)
