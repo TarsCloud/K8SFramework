@@ -1,6 +1,12 @@
 
 
 
+## 1.3.6 20220731
+## en
+- Fix: helm yaml: kubeVersion: ">= 1.17.0-alpha <= 1.24.0-alpha" to support tencent TKE
+## cn
+- Fix: 修改helm yaml: kubeVersion: ">= 1.17.0-alpha <= 1.24.0-alpha" 以支持tencent TKE
+
 ## 1.3.5 20220714
 ## en
 - update tarsweb(v3.0.5)
