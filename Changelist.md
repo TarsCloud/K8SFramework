@@ -1,7 +1,13 @@
 
 
 
-## 1.3.6 20220731
+## 1.3.7 20220723
+## en
+- fix: tars-tarsweb tplugins auth
+## cn
+- fix: tars-tarsweb增加tplugins的读写权限
+
+## 1.3.6 20220721
 ## en
 - Fix: helm yaml: kubeVersion: ">= 1.17.0-alpha <= 1.24.0-alpha" to support tencent TKE
 ## cn
