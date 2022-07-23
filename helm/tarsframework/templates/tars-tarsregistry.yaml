@@ -18,7 +18,7 @@ rules:
     resources: [ configmaps ]
     verbs: [ get,list,watch ]
   - apiGroups: [ k8s.tars.io ]
-    resources: [ ttemplates,tendpoints,tframeworkconfigs ]
+    resources: [ ttemplates,tendpoints,tframeworkconfigs,tplugins ]
     verbs: [ get ,list, watch ]
 ---
 

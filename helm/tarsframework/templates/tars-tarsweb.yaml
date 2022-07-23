@@ -24,7 +24,7 @@ rules:
     resources: [ ttrees,tframeworkconfigs ]
     verbs: [ get ,list,watch,patch,update ]
   - apiGroups: [ k8s.tars.io ]
-    resources: [ tdeploys, tservers, ttemplates, treleases,tconfigs,taccounts, tgateways, timages, tframeworkkey ]
+    resources: [ tdeploys, tservers, ttemplates, treleases,tconfigs,taccounts, tgateways, timages, tframeworkkey, tplugins ]
     verbs: [ create, get ,list,delete,watch ,patch, update ]
   - apiGroups: [ k8s.tars.io ]
     resources: [ tendpoints,tendpoints/status,texitedrecords ]
