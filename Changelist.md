@@ -1,11 +1,14 @@
 
 
 
+
 ## 1.3.7 20220723
 ## en
 - fix: tars-tarsweb tplugins auth
+- update: update tarsweb v3.0.7
 ## cn
 - fix: tars-tarsweb增加tplugins的读写权限
+- update: 升级 tarsweb v3.0.7
 
 ## 1.3.6 20220721
 ## en
