@@ -364,7 +364,7 @@ func buildPodAffinity(tserver *tarsCrdV1beta3.TServer) *k8sCoreV1.Affinity {
 							},
 						},
 						Namespaces:  []string{tserver.Namespace},
-						TopologyKey: tarsMetaV1beta3.TServerNameLabel,
+						TopologyKey: tarsMetaV1beta3.K8SHostNameLabel,
 					},
 				},
 			}
