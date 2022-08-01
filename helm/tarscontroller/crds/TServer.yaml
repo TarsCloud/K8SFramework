@@ -62,7 +62,7 @@ spec:
                         properties:
                           name:
                             type: string
-                            pattern: ^[A-Za-z][0-9A-Za-z]{0,59}Obj$
+                            pattern: ^[A-Za-z][0-9A-Za-z]{0,62}$
                           port:
                             type: integer
                             minimum: 1
@@ -651,7 +651,7 @@ spec:
                         properties:
                           name:
                             type: string
-                            pattern: ^[A-Za-z][0-9A-Za-z]{0,59}Obj$
+                            pattern: ^[A-Za-z][0-9A-Za-z]{0,62}$
                           port:
                             type: integer
                             minimum: 1
@@ -1271,7 +1271,7 @@ spec:
                         properties:
                           name:
                             type: string
-                            pattern: ^[A-Za-z][0-9A-Za-z]{0,59}Obj$
+                            pattern: ^[A-Za-z][0-9A-Za-z]{0,62}$
                           port:
                             type: integer
                             minimum: 1
