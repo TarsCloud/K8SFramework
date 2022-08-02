@@ -1,6 +1,6 @@
 SRC_DIR     := /src
 TEST_DIR    := /t
-BUILD_DIR   := /tarscpp
+BUILD_DIR   := /build
 
 cmake:
 	@cd $(BUILD_DIR) && cmake $(SRC_DIR)
@@ -21,9 +21,17 @@ endif
 endef
 $(foreach server,$(SERVER_TARGETS),$(eval $(call func_expand_server_targets,$(server))))
 
-.PHONY: test.controller
-test.controller :
-	cd $(TEST_DIR)/controller/e2e && go test --timeout 90m
+.PHONY: e2e.controller
+e2e.controller :
+	cd $(TEST_DIR)/controller/e2e && go test -c
+	mkdir -p $(BUILD_DIR)/bin
+	mv $(TEST_DIR)/controller/e2e/e2e.test $(BUILD_DIR)/bin/e2e.controller
+
+.PHONY: e2e.framework
+e2e.framework :
+	cd $(TEST_DIR)/framework/e2e && go test -c
+	mkdir -p $(BUILD_DIR)/bin
+	mv $(TEST_DIR)/framework/e2e/e2e.test $(BUILD_DIR)/bin/e2e.framework
 
 clean:
 	@rm -rf $(BUILD_DIR)

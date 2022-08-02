@@ -1,4 +1,4 @@
-FROM golang:1.16-bullseye
+FROM golang:1.17-bullseye
 RUN go env -w GOPROXY=https://goproxy.io,direct
 
 COPY root /
