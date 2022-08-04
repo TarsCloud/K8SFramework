@@ -94,6 +94,8 @@ spec:
   release:
     id: {{.Values.framework.tag }}
     image: "{{.Values.framework.registry }}/tars.tarsadminregistry:{{.Values.framework.tag}}"
+    nodeImage: "{{.Values.framework.registry }}/tars.tarsnode:{{.Values.framework.tag}}"
     {{- if.Values.framework.secret}}
     secret: {{.Values.framework.secret |quote }}
+    nodeSecret: {{.Values.framework.secret |quote }}
     {{- end}}
