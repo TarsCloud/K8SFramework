@@ -123,6 +123,11 @@ spec:
           fieldRef:
             fieldPath: metadata.name
     replicas: 1
+    resources:
+      limits:
+        memory: 2G
+      requests:
+        memory: 2G
     mounts:
       - name: host-log-dir
         source:
