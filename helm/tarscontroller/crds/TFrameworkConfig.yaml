@@ -117,8 +117,6 @@ spec:
     - name: v1beta3
       served: _V1BETA3_SERVED_
       storage: _V1BETA3_STORAGE_
-      deprecated: true
-      deprecationWarning: "k8s.tars.io/v1beta2 TFrameworkConfig is deprecated; please migrate to k8s.tars.io/v1beta3 TFrameworkConfig"
       schema:
         openAPIV3Schema:
           type: object
