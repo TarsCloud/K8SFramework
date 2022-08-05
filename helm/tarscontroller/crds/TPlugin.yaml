@@ -18,6 +18,8 @@ spec:
     - name: v1beta1
       served: true
       storage: false
+      deprecated: true
+      deprecationWarning: "k8s.tars.io/v1beta1 TPlugin is deprecated; please migrate to k8s.tars.io/v1beta3 TPlugin"
       schema:
         openAPIV3Schema:
           type: object
@@ -38,6 +40,8 @@ spec:
     - name: v1beta2
       served: true
       storage: false
+      deprecated: true
+      deprecationWarning: "k8s.tars.io/v1beta2 TPlugin is deprecated; please migrate to k8s.tars.io/v1beta3 TPlugin"
       schema:
         openAPIV3Schema:
           type: object

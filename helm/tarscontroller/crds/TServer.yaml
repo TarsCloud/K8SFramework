@@ -27,6 +27,8 @@ spec:
     - name: v1beta1
       served: _V1BETA1_SERVED_
       storage: _V1BETA1_STORAGE_
+      deprecated: true
+      deprecationWarning: "k8s.tars.io/v1beta1 TServer is deprecated; please migrate to k8s.tars.io/v1beta3 TServer"
       schema:
         openAPIV3Schema:
           type: object
@@ -615,6 +617,8 @@ spec:
     - name: v1beta2
       served: _V1BETA2_SERVED_
       storage: _V1BETA2_STORAGE_
+      deprecated: true
+      deprecationWarning: "k8s.tars.io/v1beta2 TServer is deprecated; please migrate to k8s.tars.io/v1beta3 TServer"
       schema:
         openAPIV3Schema:
           type: object
@@ -1181,7 +1185,6 @@ spec:
                       type: string
                       pattern: ^([0-9a-z][-0-9a-z]*)?[0-9a-z]?(\.([0-9a-z][-0-9a-z]*)?[0-9a-z])*$
                       maxLength: 253
-
                     time:
                       type: string
                       format: date-time

@@ -17,6 +17,8 @@ spec:
     - name: v1beta2
       served: true
       storage: false
+      deprecated: true
+      deprecationWarning: "k8s.tars.io/v1beta2 TFrameworkKey is deprecated; please migrate to k8s.tars.io/v1beta3 TFrameworkKey"
       schema:
         openAPIV3Schema:
           type: object

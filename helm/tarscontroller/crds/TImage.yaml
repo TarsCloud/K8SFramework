@@ -17,6 +17,8 @@ spec:
     - name: v1beta1
       served: _V1BETA1_SERVED_
       storage: _V1BETA1_STORAGE_
+      deprecated: true
+      deprecationWarning: "k8s.tars.io/v1beta1 TImage is deprecated; please migrate to k8s.tars.io/v1beta3 TImage"
       schema:
         openAPIV3Schema:
           type: object
@@ -155,6 +157,8 @@ spec:
     - name: v1beta2
       served: _V1BETA2_SERVED_
       storage: _V1BETA2_STORAGE_
+      deprecated: true
+      deprecationWarning: "k8s.tars.io/v1beta2 TImage is deprecated; please migrate to k8s.tars.io/v1beta3 TImage"
       schema:
         openAPIV3Schema:
           type: object

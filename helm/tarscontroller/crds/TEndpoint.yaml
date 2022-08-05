@@ -18,6 +18,8 @@ spec:
     - name: v1beta1
       served: _V1BETA1_SERVED_
       storage: _V1BETA1_STORAGE_
+      deprecated: true
+      deprecationWarning: "k8s.tars.io/v1beta1 TEndpoint is deprecated; please migrate to k8s.tars.io/v1beta3 TEndpoint"
       schema:
         openAPIV3Schema:
           properties:
@@ -230,6 +232,8 @@ spec:
     - name: v1beta2
       served: _V1BETA2_SERVED_
       storage: _V1BETA2_STORAGE_
+      deprecated: true
+      deprecationWarning: "k8s.tars.io/v1beta2 TEndpoint is deprecated; please migrate to k8s.tars.io/v1beta3 TEndpoint"
       schema:
         openAPIV3Schema:
           properties:
@@ -651,4 +655,3 @@ spec:
           type: object
       subresources:
         status: { }
-
