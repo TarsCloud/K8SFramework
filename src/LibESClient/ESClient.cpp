@@ -64,9 +64,11 @@ int ESClient::doRequest(ESClientRequestMethod method, const std::string& url, co
     }
     catch (const std::exception& e)
     {
+         TLOG_ERROR("write to es error: " << e.what() << endl);
         response = e.what();
         return -1;
     }
     response = pResponse->getContent();
+    TLOG_DEBUG("write to es succ, status:" << pResponse->getStatus() << ", " << response << endl);
     return pResponse->getStatus();
 }

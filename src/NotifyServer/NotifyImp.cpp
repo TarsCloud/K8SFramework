@@ -20,19 +20,36 @@ static std::string getDomainName(const std::string& ip)
 	return sDomainName.empty() ? ip : sDomainName;
 }
 
+std::string Alarm = "[alarm]";
+std::string Error = "[error]";
+std::string Warn = "[warn]";
+std::string Fail = "[fail]";
+std::string Normal = "[normal]";
+
 static std::string getNotifyLevel(const std::string& sNotifyMessage)
 {
-	std::string Alarm = "[alarm]";
-	std::string Error = "[error]";
-	std::string Warn = "[warn]";
-	std::string Fail = "[fail]";
 
 	if (sNotifyMessage.find(Alarm) != std::string::npos) return Alarm;
 	if (sNotifyMessage.find(Error) != std::string::npos) return Error;
 	if (sNotifyMessage.find(Warn) != std::string::npos) return Warn;
 	if (sNotifyMessage.find(Fail) != std::string::npos) return Error;
 
-	return "[normal]";
+	return Normal;
+}
+static std::string getNotifyLevel(int level)
+{
+    switch(level)
+    {
+        case NOTIFYERROR:
+            return Error;
+        case NOTIFYWARN:
+            return Warn;
+        default:
+        case NOTIFYNORMAL:
+            return Normal;
+        }
+
+    return Normal;
 }
 
 void NotifyImp::reportServer(const string& sServerName, const string& sThreadId, const string& sResult, tars::TarsCurrentPtr current)
@@ -63,7 +80,7 @@ void NotifyImp::notifyServer(const string& sServerName, NOTIFYLEVEL level, const
 	notifyRecord.server = v.size() < 2 ? "" : v[1];
 	notifyRecord.podName = getDomainName(sPodIP);
 	notifyRecord.impThread = "";
-	notifyRecord.level = etos(level);
+	notifyRecord.level = getNotifyLevel(level);
 	notifyRecord.message = sMessage;
 	notifyRecord.notifyTime = TC_Common::tm2str(TNOW, "%FT%T%z");
 	notifyRecord.source = "program";
@@ -74,14 +91,23 @@ void NotifyImp::reportNotifyInfo(const tars::ReportInfo& info, tars::TarsCurrent
 {
 	LOG->debug() << "reportNotifyInfo|" << info.sApp << "|" << info.sServer << "|" << info.sNodeName << "|" << info.sMessage << endl;
 
+    string sNodeName = info.sNodeName;
+    if (info.sNodeName.empty())
+    {
+        sNodeName = current->getIp();
+    }
+
 	NotifyRecord notifyRecord;
 	notifyRecord.app = info.sApp;
 	notifyRecord.server = info.sServer;
-	notifyRecord.podName = getDomainName(info.sNodeName);
+	notifyRecord.podName = getDomainName(sNodeName);
 	notifyRecord.impThread = info.sThreadId;
-	notifyRecord.level = etos(info.eLevel);
+	notifyRecord.level = getNotifyLevel(info.eLevel);
 	notifyRecord.message = info.sMessage;
 	notifyRecord.notifyTime = TC_Common::tm2str(TNOW, "%FT%T%z");
 	notifyRecord.source = "server";
-	NotifyMsgQueue::getInstance()->add(notifyRecord);
+
+    TLOG_DEBUG(notifyRecord.writeToJsonString() << endl);
+  
+    NotifyMsgQueue::getInstance()->add(notifyRecord);
 }

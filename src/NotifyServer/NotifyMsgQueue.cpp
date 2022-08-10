@@ -58,14 +58,16 @@ void NotifyMsgQueue::run()
 		do
 		{
 			NotifyRecord data;
-			_qMsg.pop_front(data, -1);
-			if (!checkLimit(data.app + "." + data.server))
-			{
-				TLOG_ERROR("limit fail|" << data.app << "." << data.server << "|" << data.podName << "|" << data.level << "|" << data.message
-										<< endl);
-				continue;
-			}
-			vQData.push_back(data);
+		    if(_qMsg.pop_front(data, -1))
+            {
+                if (!checkLimit(data.app + "." + data.server))
+                {
+                    TLOG_ERROR("limit fail|" << data.app << "." << data.server << "|" << data.podName << "|" << data.level << "|" << data.message
+                                            << endl);
+                    continue;
+                }
+                vQData.push_back(data);
+            }
 		} while ((!_qMsg.empty()) && (vQData.size() < 500));
 		writeToES(vQData);
 	}
