@@ -1,24 +1,15 @@
 #include "NotifyMsgQueue.h"
 #include "servant/Application.h"
 #include "ESHelper.h"
-#include "JsonTr.h"
 #include "util/tc_timer.h"
 
 static void buildESPushContent(const NotifyRecord& record, std::ostringstream& stream)
 {
-	stream << R"({"create": {}})" << "\n";
-	stream << "{";
-	stream << jsonTr("@timestamp") << ":" << jsonTr(TNOW);
-	stream << "," << jsonTr("notifyTime") << ":" << jsonTr(TC_Common::tm2str(record.notifyTime, "%FT%T%z"));
-	stream << "," << jsonTr("app") << ":" << jsonTr(record.app);
-	stream << "," << jsonTr("server") << ":" << jsonTr(record.server);
-	stream << "," << jsonTr("podName") << ":" << jsonTr(record.podName);
-	stream << "," << jsonTr("impThread") << ":" << jsonTr(record.impThread);
-	stream << "," << jsonTr("level") << ":" << jsonTr(record.level);
-	stream << "," << jsonTr("message") << ":" << jsonTr(record.message);
-	stream << "," << jsonTr("source") << ":" << jsonTr(record.source);
-	stream << "}";
-	stream << "\n";
+    stream << R"({"create": {}})" << "\n";
+    auto str = record.writeToJsonString();
+    str.resize(str.size() - 1);
+    stream << str;
+    stream << "," << R"("@timestamp")"<<":"<< TNOW << "}" << "\n";
 }
 
 void NotifyMsgQueue::init(const TC_Config& config)

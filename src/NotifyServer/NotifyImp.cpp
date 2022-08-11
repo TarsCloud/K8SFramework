@@ -49,7 +49,7 @@ void NotifyImp::reportServer(const string& sServerName, const string& sThreadId,
 	notifyRecord.impThread = sThreadId;
 	notifyRecord.level = getNotifyLevel(sResult);
 	notifyRecord.message = sResult;
-	notifyRecord.notifyTime = TNOW;
+	notifyRecord.notifyTime = TC_Common::tm2str(TNOW, "%FT%T%z");
 	notifyRecord.source = "program";
 	NotifyMsgQueue::getInstance()->add(notifyRecord);
 }
@@ -65,7 +65,7 @@ void NotifyImp::notifyServer(const string& sServerName, NOTIFYLEVEL level, const
 	notifyRecord.impThread = "";
 	notifyRecord.level = etos(level);
 	notifyRecord.message = sMessage;
-	notifyRecord.notifyTime = TNOW;
+	notifyRecord.notifyTime = TC_Common::tm2str(TNOW, "%FT%T%z");
 	notifyRecord.source = "program";
 	NotifyMsgQueue::getInstance()->add(notifyRecord);
 }
@@ -81,7 +81,7 @@ void NotifyImp::reportNotifyInfo(const tars::ReportInfo& info, tars::TarsCurrent
 	notifyRecord.impThread = info.sThreadId;
 	notifyRecord.level = etos(info.eLevel);
 	notifyRecord.message = info.sMessage;
-	notifyRecord.notifyTime = TNOW;
+	notifyRecord.notifyTime = TC_Common::tm2str(TNOW, "%FT%T%z");
 	notifyRecord.source = "server";
 	NotifyMsgQueue::getInstance()->add(notifyRecord);
 }
