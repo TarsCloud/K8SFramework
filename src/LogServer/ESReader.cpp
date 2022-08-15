@@ -1,4 +1,4 @@
-﻿#include "ESReader.h"
+#include "ESReader.h"
 #include "TraceData.h"
 #include "ESIndex.h"
 #include <iostream>
@@ -6,11 +6,11 @@
 #include "ESClient.h"
 #include "servant/RemoteLogger.h"
 
-static int readESResponse(const std::string& response, const std::function<int(const TC_AutoPtr<JsonValueObj>&)>& f)
+static int readESResponse(const std::string& response, const std::function<int(const TC_AutoPtr <JsonValueObj>&)>& f)
 {
     auto jsonPtr = TC_Json::getValue(response);
     auto&& jsonValuePtr = JsonValueObjPtr::dynamicCast(jsonPtr);
-    const auto& jsonValue = jsonValuePtr->value;
+//	const auto& jsonValue = jsonValuePtr->value;
     auto&& firstHitsPtr = jsonValuePtr->get("hits");
     if (firstHitsPtr.get() == nullptr)
     {
@@ -42,7 +42,7 @@ static int readESResponse(const std::string& response, const std::function<int(c
     return 0;
 }
 
-int ESReader::listTrace(const string& date, int64_t beginTime, int64_t endTime, const string& serverName, vector<string>& ts)
+int ESReader::listTrace(const string& date, int64_t beginTime, int64_t endTime, const string& serverName, vector <string>& ts)
 {
     constexpr char ListTraceTemplate[] = R"(
 {
@@ -73,10 +73,10 @@ int ESReader::listTrace(const string& date, int64_t beginTime, int64_t endTime, 
 }
 )";
     string body = ListTraceTemplate;
-    map<string, string> replaceMap = {
-        { "BEGIN_TIME", to_string(beginTime) },
-        { "END_TIME", to_string(endTime) },
-        { "SERVER", serverName }
+    map <string, string> replaceMap = {
+            { "BEGIN_TIME", to_string(beginTime) },
+            { "END_TIME",   to_string(endTime) },
+            { "SERVER",     serverName }
     };
     body = TC_Common::replace(body, replaceMap);
     auto url = "/" + buildTraceIndexByDate(date) + "/_search";
@@ -87,7 +87,7 @@ int ESReader::listTrace(const string& date, int64_t beginTime, int64_t endTime, 
         TLOGERROR("do elk request error\n, \tRequest: " << body.substr(0, 2048) << "\n, \t" << response << endl);
         return -1;
     }
-    if (readESResponse(response, [&ts, &serverName](const TC_AutoPtr<JsonValueObj>& ptr)mutable -> int
+    if (readESResponse(response, [&ts](const TC_AutoPtr <JsonValueObj>& ptr)mutable -> int
     {
         auto v = JsonValueStringPtr::dynamicCast(ptr->get("trace"))->value;
         ts.emplace_back(v);
@@ -100,7 +100,7 @@ int ESReader::listTrace(const string& date, int64_t beginTime, int64_t endTime, 
     return 0;
 }
 
-int ESReader::listFunction(const string& date, const string& serverName, set<string>& fs)
+int ESReader::listFunction(const string& date, const string& serverName, set <string>& fs)
 {
     constexpr char ListFunctionTemplate[] = R"(
 {
@@ -122,7 +122,7 @@ int ESReader::listFunction(const string& date, const string& serverName, set<str
                 "must": [
                   {
                     "prefix": {
-                      "vertexes.vertex": "SERVER."
+                      "vertexes.vertex.keyword": "SERVER."
                     }
                   }
                 ]
@@ -135,8 +135,8 @@ int ESReader::listFunction(const string& date, const string& serverName, set<str
   }
 })";
     string body = ListFunctionTemplate;
-    map<string, string> replaceMap = {
-        { "SERVER", serverName }
+    map <string, string> replaceMap = {
+            { "SERVER", serverName }
     };
     body = TC_Common::replace(body, replaceMap);
     auto url = "/" + buildGraphIndexByDate(date) + "/_search";
@@ -144,10 +144,10 @@ int ESReader::listFunction(const string& date, const string& serverName, set<str
     int res = ESClient::instance().doRequest(ESClientRequestMethod::Get, url, body, response);
     if (res != 200)
     {
-        TLOGERROR("do elk request error\n, \tRequest: " << body.substr(0, 2048) << "\n, \t" << response << endl);
+        TLOGERROR("do es request error\n, \tRequest: " << body.substr(0, 2048) << "\n, \t" << response << endl);
         return -1;
     }
-    if (readESResponse(response, [&fs, &serverName](const TC_AutoPtr<JsonValueObj>& ptr)mutable -> int
+    if (readESResponse(response, [&fs, &serverName](const TC_AutoPtr <JsonValueObj>& ptr)mutable -> int
     {
         auto jsonObj = JsonValueObjPtr::dynamicCast(ptr);
         auto vertexes = jsonObj->get("vertexes");
@@ -175,7 +175,7 @@ int ESReader::listFunction(const string& date, const string& serverName, set<str
     return 0;
 }
 
-int ESReader::listTraceSummary(const string& date, int64_t beginTime, int64_t endTime, const string& serverName, vector<Summary>& ss)
+int ESReader::listTraceSummary(const string& date, int64_t beginTime, int64_t endTime, const string& serverName, vector <Summary>& ss)
 {
 //fixme trace may had no tsTime.
     constexpr char ListTraceSummaryTemplate[] = R"(
@@ -194,10 +194,10 @@ int ESReader::listTraceSummary(const string& date, int64_t beginTime, int64_t en
 }
 )";
     string body = ListTraceSummaryTemplate;
-    map<string, string> replaceMap = {
-        { "BEGIN_TIME", to_string(beginTime) },
-        { "END_TIME", to_string(endTime) },
-        { "SERVER", serverName }
+    map <string, string> replaceMap = {
+            { "BEGIN_TIME", to_string(beginTime) },
+            { "END_TIME",   to_string(endTime) },
+            { "SERVER",     serverName }
     };
     body = TC_Common::replace(body, replaceMap);
     auto url = "/" + buildTraceIndexByDate(date) + "/_search";
@@ -205,10 +205,10 @@ int ESReader::listTraceSummary(const string& date, int64_t beginTime, int64_t en
     int res = ESClient::instance().doRequest(ESClientRequestMethod::Get, url, body, response);
     if (res != 200)
     {
-        TLOGERROR("do elk request error\n, \tRequest: " << body.substr(0, 2048) << "\n, \t" << response << endl);
+        TLOGERROR("do es request error\n, \tRequest: " << body.substr(0, 2048) << "\n, \t" << response << endl);
         return -1;
     }
-    if (readESResponse(response, [&ss, &serverName](const TC_AutoPtr<JsonValueObj>& ptr)mutable -> int
+    if (readESResponse(response, [&ss](const TC_AutoPtr <JsonValueObj>& ptr)mutable -> int
     {
         auto traceName = JsonValueStringPtr::dynamicCast(ptr->get("trace"))->value;
         auto tsTimeNum = JsonValueNumPtr::dynamicCast(ptr->get("tsTime"))->value;
@@ -235,7 +235,7 @@ int ESReader::listTraceSummary(const string& date, int64_t beginTime, int64_t en
     return 0;
 }
 
-int ESReader::getServerGraph(const string& date, const string& serverName, vector<IGraph>& graphs)
+int ESReader::getServerGraph(const string& date, const string& serverName, vector <IGraph>& graphs)
 {
     constexpr char GetServerGraphTemplate[] = R"(
 {
@@ -244,15 +244,15 @@ int ESReader::getServerGraph(const string& date, const string& serverName, vecto
         "bool":{
             "filter":[
                 {"term":{"type":"server"}},
-                {"nested":{"path":"vertexes","query":{"bool":{"must":[{"term":{"vertexes.vertex":"SERVER"}}]}}}}
+                {"nested":{"path":"vertexes","query":{"bool":{"must":[{"term":{"vertexes.vertex.keyword":"SERVER"}}]}}}}
             ]
         }
     }
 }
 )";
     string body = GetServerGraphTemplate;
-    map<string, string> replaceMap = {
-        { "SERVER", serverName }
+    map <string, string> replaceMap = {
+            { "SERVER", serverName }
     };
     body = TC_Common::replace(body, replaceMap);
     auto url = "/" + buildGraphIndexByDate(date) + "/_search";
@@ -260,10 +260,10 @@ int ESReader::getServerGraph(const string& date, const string& serverName, vecto
     int res = ESClient::instance().doRequest(ESClientRequestMethod::Get, url, body, response);
     if (res != 200)
     {
-        TLOGERROR("do elk request error\n, \tRequest: " << body.substr(0, 2048) << "\n, \t" << response << endl);
+        TLOGERROR("do es request error\n, \tRequest: " << body.substr(0, 2048) << "\n, \t" << response << endl);
         return -1;
     }
-    if (readESResponse(response, [&graphs](const TC_AutoPtr<JsonValueObj>& ptr)mutable -> int
+    if (readESResponse(response, [&graphs](const TC_AutoPtr <JsonValueObj>& ptr)mutable -> int
     {
         graphs.emplace_back();
         graphs.rbegin()->readFromJson(ptr);
@@ -276,7 +276,7 @@ int ESReader::getServerGraph(const string& date, const string& serverName, vecto
     return 0;
 }
 
-int ESReader::getFunctionGraph(const string& date, const string& functionName, vector<IGraph>& graphs)
+int ESReader::getFunctionGraph(const string& date, const string& functionName, vector <IGraph>& graphs)
 {
     constexpr char GetFunctionGraphTemplate[] = R"(
 {
@@ -285,15 +285,15 @@ int ESReader::getFunctionGraph(const string& date, const string& functionName, v
         "bool":{
             "filter":[
                 {"term":{"type":"function"}},
-                {"nested":{"path":"vertexes","query":{"bool":{"must":[{"term":{"vertexes.vertex":"FUNCTION"}}]}}}}
+                {"nested":{"path":"vertexes","query":{"bool":{"must":[{"term":{"vertexes.vertex.keyword":"FUNCTION"}}]}}}}
             ]
         }
     }
 }
 )";
     string body = GetFunctionGraphTemplate;
-    map<string, string> replaceMap = {
-        { "FUNCTION", functionName }
+    map <string, string> replaceMap = {
+            { "FUNCTION", functionName }
     };
     body = TC_Common::replace(body, replaceMap);
     auto url = "/" + buildGraphIndexByDate(date) + "/_search";
@@ -301,10 +301,10 @@ int ESReader::getFunctionGraph(const string& date, const string& functionName, v
     int res = ESClient::instance().doRequest(ESClientRequestMethod::Get, url, body, response);
     if (res != 200)
     {
-        TLOGERROR("do elk request error\n, \tRequest: " << body.substr(0, 2048) << "\n, \t" << response << endl);
+        TLOGERROR("do es request error\n, \tRequest: " << body.substr(0, 2048) << "\n, \t" << response << endl);
         return -1;
     }
-    if (readESResponse(response, [&graphs](const TC_AutoPtr<JsonValueObj>& ptr)mutable -> int
+    if (readESResponse(response, [&graphs](const TC_AutoPtr <JsonValueObj>& ptr)mutable -> int
     {
         graphs.emplace_back();
         graphs.rbegin()->readFromJson(ptr);
@@ -324,15 +324,15 @@ int ESReader::getTrace(const string& date, const string& traceName, ITrace& trac
     "query":{
         "bool":{
             "filter":[
-                {"term":{"trace":"TRACE"}}
+                {"term":{"trace.keyword":"TRACE"}}
             ]
         }
     }
 }
 )";
     string body = GetTraceGraphTemplate;
-    map<string, string> replaceMap = {
-        { "TRACE", traceName }
+    map <string, string> replaceMap = {
+            { "TRACE", traceName }
     };
     body = TC_Common::replace(body, replaceMap);
     auto url = "/" + buildTraceIndexByDate(date) + "/_search";
@@ -340,10 +340,10 @@ int ESReader::getTrace(const string& date, const string& traceName, ITrace& trac
     int res = ESClient::instance().doRequest(ESClientRequestMethod::Get, url, body, response);
     if (res != 200)
     {
-        TLOGERROR("do elk request error\n, \tRequest: " << body.substr(0, 2048) << "\n, \t" << response << endl);
+        TLOGERROR("do es request error\n, \tRequest: " << body.substr(0, 2048) << "\n, \t" << response << endl);
         return -1;
     }
-    if (readESResponse(response, [&trace](const TC_AutoPtr<JsonValue>& ptr)mutable -> int
+    if (readESResponse(response, [&trace](const TC_AutoPtr <JsonValue>& ptr)mutable -> int
     {
         trace.readFromJson(ptr);
         return 0;

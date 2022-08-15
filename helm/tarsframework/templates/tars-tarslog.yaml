@@ -26,13 +26,13 @@ metadata:
     tars.io/ServerApp: tars
     tars.io/ServerName: tarslog
     tars.io/SubType: tars
-    tars.io/Template: tars.es
+    tars.io/Template: tars.cpp
 spec:
   app: tars
   server: tarslog
   subType: tars
   tars:
-    template: tars.es
+    template: tars.cpp
     profile: |
       <tars>
       	<log>
