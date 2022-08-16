@@ -1,5 +1,33 @@
 
 
+## 1.3.8 20220816
+## en
+- fix: compatible with multiple versions of es
+- fix: adapt notification messages that contain special characters
+- feat: set tarsnode log level to debug
+- feat: add resource limit for tarsweb
+- fix: set the target version(tarsphp.yaml) of lookup to dynamic
+- fix: set nodeImage&nodeSecret value in helm template
+- fix: tarsnode add: static link libgcc and libstdc++
+- feat: upgrade crd storage version to v1beta3
+- fix: stacked topology key
+- feat: the pattern of servant name
+- update: update tarsweb v3.0.8
+- update: update tarscpp v3.0.12
+
+## cn
+- fix: tarslog 对于es兼容性的问题
+- fix: tarsnotify对特殊字符的适配问题
+- feat: 设置 tarsnode 日志等级为debug
+- feat: 增加tarsweb的资源限制
+- fix: tarsphp.yaml中动态设置chart版本
+- fix: 框架服务模板中增加 nodeImage&nodeSecret
+- feat: tarsnode 使用静态连接, 以支持不同gcc
+- feat: crd 存储版本更新为 v1beta3
+- fix: 修复tserver堆叠模式下topology key的bug
+- feat: 修改servant 名称限制(不一定非要obj结尾)
+- update: 升级 tarsweb v3.0.8
+- update: 升级 tarscpp v3.0.12
 
 
 ## 1.3.7 20220723
