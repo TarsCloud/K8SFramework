@@ -3,7 +3,20 @@ entries:
   tarscontroller:
   - apiVersion: v2
     appVersion: v1beta3
-    created: "2022-08-16T06:13:17.333679008Z"
+    created: "2022-08-19T19:07:36.386831754Z"
+    digest: a3ad2931f6f34b194c4bad077c54c863325f76b4cc0cab5e69c365227d1bf1b9
+    keywords:
+    - tars
+    - tarscontroller
+    kubeVersion: '>= 1.17.0-alpha <= 1.24.0-alpha'
+    name: tarscontroller
+    type: application
+    urls:
+    - https://tarscloud.github.io/K8SFramework/charts/tarscontroller-1.3.9.tgz
+    version: 1.3.9
+  - apiVersion: v2
+    appVersion: v1beta3
+    created: "2022-08-19T19:07:36.384913368Z"
     digest: c2ed407cfef5d53d26b686e8ca79bcec0da539af3f2ae53d8a15750011779f55
     keywords:
     - tars
@@ -16,7 +29,7 @@ entries:
     version: 1.3.8
   - apiVersion: v2
     appVersion: v1beta3
-    created: "2022-08-16T06:13:17.332619914Z"
+    created: "2022-08-19T19:07:36.383689314Z"
     digest: 4d72958e1a1a22077093e52b6b6a6983f2cb5704b2736d0d5fde4671bbd26f2b
     keywords:
     - tars
@@ -29,7 +42,7 @@ entries:
     version: 1.3.7
   - apiVersion: v2
     appVersion: v1beta3
-    created: "2022-08-16T06:13:17.330568033Z"
+    created: "2022-08-19T19:07:36.382227248Z"
     digest: e495067fce5aaa670a71a0cd8d8bd173b46e20794a7c11eba1628e8502d9742c
     keywords:
     - tars
@@ -42,7 +55,7 @@ entries:
     version: 1.3.6
   - apiVersion: v2
     appVersion: v1beta3
-    created: "2022-08-16T06:13:17.328794476Z"
+    created: "2022-08-19T19:07:36.380560973Z"
     digest: 2e455c36963fd8b6194dc3dfe7d8c4f9c10ec1916831509cdedd0f122833e6c9
     keywords:
     - tars
@@ -55,7 +68,7 @@ entries:
     version: 1.3.5
   - apiVersion: v2
     appVersion: v1beta3
-    created: "2022-08-16T06:13:17.327067124Z"
+    created: "2022-08-19T19:07:36.3789202Z"
     digest: 0c804c29a2114bb80285eff8260f1a2bd7a93610844b7d7298191714a998c162
     keywords:
     - tars
@@ -68,7 +81,7 @@ entries:
     version: 1.3.4
   - apiVersion: v2
     appVersion: v1beta3
-    created: "2022-08-16T06:13:17.325888219Z"
+    created: "2022-08-19T19:07:36.376513992Z"
     digest: 4c1be9958fa5c6591d1fa7cbb2cb3dc9afed8d9fb2696483a0f25ba34ace22e4
     keywords:
     - tars
@@ -81,7 +94,7 @@ entries:
     version: 1.3.3
   - apiVersion: v2
     appVersion: v1beta3
-    created: "2022-08-16T06:13:17.324692914Z"
+    created: "2022-08-19T19:07:36.373752668Z"
     digest: 62d0725601c838620193e66d238939f1661bd93a459e8a745b5909b87834c827
     keywords:
     - tars
@@ -94,7 +107,7 @@ entries:
     version: 1.3.2
   - apiVersion: v2
     appVersion: v1beta2
-    created: "2022-08-16T06:13:17.323547613Z"
+    created: "2022-08-19T19:07:36.372111295Z"
     digest: 30f45aded38ca37f50750e8611d8031e1b7fe58ba226fb0422eeaf36e6809581
     keywords:
     - tars
@@ -106,7 +119,7 @@ entries:
     version: 1.2.0
   - apiVersion: v2
     appVersion: v1beta2
-    created: "2022-08-16T06:13:17.322353707Z"
+    created: "2022-08-19T19:07:36.36241076Z"
     digest: b5e0da7ec8cb5ca4b1ea31f665bd9f4b44757a1b6ac67babdef1d74c0ac879e3
     keywords:
     - tars
@@ -118,7 +131,7 @@ entries:
     version: 1.1.0
   - apiVersion: v2
     appVersion: v1beta1
-    created: "2022-08-16T06:13:17.321119598Z"
+    created: "2022-08-19T19:07:36.360959995Z"
     digest: e83c042e190f730471942d3c2f4d62bd0ea165321c28ed180c205ebb152de506
     keywords:
     - tars
@@ -131,7 +144,19 @@ entries:
   tarsframework:
   - apiVersion: v2
     appVersion: v1beta3
-    created: "2022-08-16T06:13:17.346392931Z"
+    created: "2022-08-19T19:07:36.402446954Z"
+    digest: 2b34c2161299e0d8028afe86e309162a30dc0a0228746ff7c284c2cc041aec24
+    keywords:
+    - tars
+    kubeVersion: '>= 1.17.0-alpha <= 1.24.0-alpha'
+    name: tarsframework
+    type: application
+    urls:
+    - https://tarscloud.github.io/K8SFramework/charts/tarsframework-1.3.9.tgz
+    version: 1.3.9
+  - apiVersion: v2
+    appVersion: v1beta3
+    created: "2022-08-19T19:07:36.401827826Z"
     digest: 56c6fc0901851114606b8770b6e732aca7916157d46aec627f1261f18dfee7d8
     keywords:
     - tars
@@ -143,7 +168,7 @@ entries:
     version: 1.3.8
   - apiVersion: v2
     appVersion: v1beta3
-    created: "2022-08-16T06:13:17.345612062Z"
+    created: "2022-08-19T19:07:36.400827881Z"
     digest: c07aa90c83f717d36b2b000f19b89155c1bf3bd97fe12072af96280dd41ee8b0
     keywords:
     - tars
@@ -155,7 +180,7 @@ entries:
     version: 1.3.7
   - apiVersion: v2
     appVersion: v1beta3
-    created: "2022-08-16T06:13:17.342003943Z"
+    created: "2022-08-19T19:07:36.399811736Z"
     digest: f9cdda6617ac2bdee52ff28c0e1291d786e168404c1c7a7dbd2303e7e5289268
     keywords:
     - tars
@@ -167,7 +192,7 @@ entries:
     version: 1.3.6
   - apiVersion: v2
     appVersion: v1beta3
-    created: "2022-08-16T06:13:17.341120365Z"
+    created: "2022-08-19T19:07:36.39878469Z"
     digest: dd3e5ba4604886a38f4d6f76057c729a730fccc61c3ad644bd8e39474008b9f8
     keywords:
     - tars
@@ -179,7 +204,7 @@ entries:
     version: 1.3.5
   - apiVersion: v2
     appVersion: v1beta3
-    created: "2022-08-16T06:13:17.340311694Z"
+    created: "2022-08-19T19:07:36.397726943Z"
     digest: fc8cdbab2f27951828a7652c145acadbf31cb96fa622a4491afdfd997294987c
     keywords:
     - tars
@@ -191,7 +216,7 @@ entries:
     version: 1.3.4
   - apiVersion: v2
     appVersion: v1beta3
-    created: "2022-08-16T06:13:17.339354809Z"
+    created: "2022-08-19T19:07:36.3967772Z"
     digest: 1d3292f45436ba50411530e35dd42faa487175c750b77b522d10ef88e06878f1
     keywords:
     - tars
@@ -203,7 +228,7 @@ entries:
     version: 1.3.3
   - apiVersion: v2
     appVersion: v1beta3
-    created: "2022-08-16T06:13:17.338384024Z"
+    created: "2022-08-19T19:07:36.395636949Z"
     digest: e431c5e436fd42655b5270832381f06fc27b84e44adedc2448124d5a0dc0bce0
     keywords:
     - tars
@@ -215,7 +240,7 @@ entries:
     version: 1.3.2
   - apiVersion: v2
     appVersion: v1beta2
-    created: "2022-08-16T06:13:17.33754705Z"
+    created: "2022-08-19T19:07:36.394677906Z"
     digest: 6922ceecc24b8df37eb27cfe0de3f3fd48ff74b6fb695692c48109b2e3f0289d
     keywords:
     - tars
@@ -226,7 +251,7 @@ entries:
     version: 1.3.1
   - apiVersion: v2
     appVersion: v1beta2
-    created: "2022-08-16T06:13:17.336719576Z"
+    created: "2022-08-19T19:07:36.393596457Z"
     digest: 5444e653ad245693484a94b1c96eaafdaa4b09b5ccbab7396bb6503d7385d713
     keywords:
     - tars
@@ -237,7 +262,7 @@ entries:
     version: 1.3.0
   - apiVersion: v2
     appVersion: v1beta2
-    created: "2022-08-16T06:13:17.33596421Z"
+    created: "2022-08-19T19:07:36.391736174Z"
     digest: 67bce194c7a4ba1efc388adda10d9a83eabfe3ed1069d16e24298b99ecafcb43
     keywords:
     - tars
@@ -248,7 +273,7 @@ entries:
     version: 1.2.0
   - apiVersion: v2
     appVersion: v1beta1
-    created: "2022-08-16T06:13:17.335203143Z"
+    created: "2022-08-19T19:07:36.389298765Z"
     digest: 99d01cb720301639afc95a71654d27ee3b7adec19786bc9bf377e492147aa1ec
     keywords:
     - tars
@@ -259,7 +284,7 @@ entries:
     version: 1.1.0
   - apiVersion: v2
     appVersion: v1beta1
-    created: "2022-08-16T06:13:17.334425174Z"
+    created: "2022-08-19T19:07:36.388019808Z"
     digest: e0169864c07d68c7f0dc529e71c2bc9aac5718dc64b714770d875dbd624e85eb
     keywords:
     - tars
@@ -268,4 +293,4 @@ entries:
     urls:
     - https://tarscloud.github.io/K8SFramework/charts/tarsframework-1.0.0.tgz
     version: 1.0.0
-generated: "2022-08-16T06:13:17.318457063Z"
+generated: "2022-08-19T19:07:36.359098712Z"
