@@ -1,4 +1,15 @@
 
+## 1.3.9 20220817
+## en
+- feat: tarsnotify limit 300:300(300min/300msgs)
+- feat: cppbase.Dockerfile add gdb
+- update: update tarsweb v3.0.9
+
+## cn
+- feat: tarsnotify 调整上报限制为limit 300:300(300min/300msgs)
+- feat: cppbase.Dockerfile 安装 gdb
+- update: 升级 tarsweb v3.0.9
+
 
 ## 1.3.8 20220816
 ## en
