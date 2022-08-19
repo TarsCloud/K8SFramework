@@ -88,7 +88,7 @@ void NotifyMsgQueue::writeToES(const vector<NotifyRecord>& data)
 
 void FreqLimit::initLimit(const TC_Config& conf)
 {
-	string limitConf = conf.get("/tars/server<notify_limit>", "300:10");
+	string limitConf = conf.get("/tars/server<notify_limit>", "300:300");
 	vector<int> vi = TC_Common::sepstr<int>(limitConf, ":,|");
 	if (vi.size() != 2)
 	{
