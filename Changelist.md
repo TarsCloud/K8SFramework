@@ -1,4 +1,15 @@
 
+
+## 1.3.10 20220823
+## en
+- feat: base image add .vimrc to support chinese
+- update: update tarsweb v3.0.10
+
+## cn
+- feat: base image 添加 .vimrc支持中文
+- update: 升级 tarsweb v3.0.10
+
+
 ## 1.3.9 20220817
 ## en
 - feat: tarsAdminRegistry support extern plugins
