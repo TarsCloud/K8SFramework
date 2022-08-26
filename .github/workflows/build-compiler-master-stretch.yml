@@ -1,20 +1,20 @@
-name: build-compiler-master-stretch-slim
+name: build-compiler-master-stretch
 
 on:
   push:
     branches:
       - master
     paths:
-      - ".github/workflows/build-compiler-master-stretch-slim.yml"
+      - ".github/workflows/build-compiler-master-stretch.yml"
       - "compiler/tools/**"
-      - "compiler/base-compiler-stretch-slim.Dockerfile"
+      - "compiler/base-compiler-stretch.Dockerfile"
   pull_request:
     branches:
       - master
     paths:
-      - ".github/workflows/build-compiler-master-stretch-slim.yml"
+      - ".github/workflows/build-compiler-master-stretch.yml"
       - "compiler/tools/**"
-      - "compiler/base-compiler-stretch-slim.Dockerfile"
+      - "compiler/base-compiler-stretch.Dockerfile"
 
 jobs:
   build:
@@ -34,8 +34,8 @@ jobs:
         with:
           context: "{{defaultContext}}:compiler"
           push: true
-          tags: tarscloud/base-compiler-stretch-slim:latest
-          file: base-compiler-stretch-slim.Dockerfile
+          tags: tarscloud/base-compiler-stretch:latest
+          file: base-compiler-stretch.Dockerfile
           build-args: |
             BRANCH=master
             TARS_SSL=OFF
@@ -58,8 +58,8 @@ jobs:
         with:
           context: "{{defaultContext}}:compiler"
           push: true
-          tags: tarscloud/base-compiler-stretch-slim-ssl:latest
-          file: base-compiler-stretch-slim.Dockerfile
+          tags: tarscloud/base-compiler-stretch-ssl:latest
+          file: base-compiler-stretch.Dockerfile
           build-args: |
             BRANCH=master
             TARS_SSL=ON
