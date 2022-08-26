@@ -1,0 +1,66 @@
+name: build-compiler-master-stretch-slim
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - ".github/workflows/build-compiler-master-stretch-slim.yml"
+      - "compiler/tools/**"
+      - "compiler/base-compiler-stretch-slim.Dockerfile"
+  pull_request:
+    branches:
+      - master
+    paths:
+      - ".github/workflows/build-compiler-master-stretch-slim.yml"
+      - "compiler/tools/**"
+      - "compiler/base-compiler-stretch-slim.Dockerfile"
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: env
+        run: env
+      - uses: actions/checkout@v1
+      - name: login docker hub
+        run: docker login -u ${{ secrets.name }} -p ${{ secrets.pass }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Build and push
+        uses: docker/build-push-action@v3
+        with:
+          context: "{{defaultContext}}:compiler"
+          push: true
+          tags: tarscloud/base-compiler-stretch-slim:latest
+          file: base-compiler-stretch-slim.Dockerfile
+          build-args: |
+            BRANCH=master
+            TARS_SSL=OFF
+          platforms: linux/amd64,linux/arm64
+
+  build-ssl:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: env
+        run: env
+      - uses: actions/checkout@v1
+      - name: login docker hub
+        run: docker login -u ${{ secrets.name }} -p ${{ secrets.pass }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Build and push
+        uses: docker/build-push-action@v3
+        with:
+          context: "{{defaultContext}}:compiler"
+          push: true
+          tags: tarscloud/base-compiler-stretch-slim-ssl:latest
+          file: base-compiler-stretch-slim.Dockerfile
+          build-args: |
+            BRANCH=master
+            TARS_SSL=ON
+          platforms: linux/amd64,linux/arm64
