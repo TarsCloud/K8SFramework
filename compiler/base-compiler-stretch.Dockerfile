@@ -51,7 +51,7 @@ RUN apt update && apt install -y openjdk-8-jdk
 COPY --from=igolang /usr/local /usr/local
 COPY --from=igolang /go /go
 COPY --from=iphp /usr/local /usr/local
-COPY --from=ijava /usr/local /usr/local
+# COPY --from=ijava /usr/local /usr/local
 COPY --from=inode /usr/local /usr/local
 COPY --from=idocker /tmp/docker /usr/local/bin/docker
 COPY --from=ihelm /tmp/helm /usr/local/bin/helm
