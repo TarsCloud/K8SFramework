@@ -38,6 +38,7 @@ RUN cd /root && wget https://cdn.npm.taobao.org/dist/node/v12.16.2/node-v12.16.2
     && tar -xf node-v12.16.2-linux-x64.tar.xz \
     && ln -s /root/node-v12.16.2-linux-x64/bin/node /usr/bin/node \
     && ln -s /root/node-v12.16.2-linux-x64/bin/npm /usr/bin/npm
+RUN npm install -g @tars/deploy
 
 # 编译安装tarscpp
 RUN cd /root                                                               \
@@ -55,7 +56,6 @@ RUN cd /root/TarsCpp && mkdir build && cd build                            \
 RUN yum install -y glibc-static libstdc++-static
 
 # deploy tools
-RUN npm install -g @tars/deploy
 
 COPY tools/yaml-tools /root/yaml-tools
 COPY tools/helm-lib /root/helm-lib
