@@ -8,6 +8,7 @@ on:
       - ".github/workflows/build-cpp-compiler-centos.yml"
       - "compiler/tools/**"
       - "compiler/cpp-compiler-centos.Dockerfile"
+      - "submodule/TarsCpp/**"
   pull_request:
     branches:
       - master
@@ -15,6 +16,7 @@ on:
       - ".github/workflows/build-cpp-compiler-centos.yml"
       - "compiler/tools/**"
       - "compiler/cpp-compiler-centos.Dockerfile"
+      - "submodule/TarsCpp/**"
 
 jobs:
   build:

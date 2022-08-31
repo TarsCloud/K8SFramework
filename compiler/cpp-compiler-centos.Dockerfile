@@ -1,8 +1,22 @@
 # docker build . -f cpp-compiler-centos.Dockerfile -t jaminzou/cpp-compiler-centos --build-arg BRANCH=master
 
+FROM docker:19.03 AS idocker
+RUN mv $(command -v  docker) /tmp/docker
+
+FROM devth/helm:v3.7.1 AS ihelm
+RUN mv $(command -v  helm) /tmp/helm
+
+FROM bitnami/kubectl:1.20 AS ikubectl
+RUN cp -rf $(command -v  kubectl) /tmp/kubectl
+
+
 FROM centos:centos7.9.2009
 
 ARG BRANCH
+
+COPY --from=idocker /tmp/docker /usr/local/bin/docker
+COPY --from=ihelm /tmp/helm /usr/local/bin/helm
+COPY --from=ikubectl /tmp/kubectl /usr/local/bin/kubectl
 
 RUN yum update -y
 
@@ -20,6 +34,11 @@ RUN cd /opt/cmake/cmake-3.16.6 && ./configure --prefix=/usr/local/cmake
 RUN cd /opt/cmake/cmake-3.16.6 && make -j4 && make install \
     && ln -s /usr/local/cmake/bin/cmake /usr/bin/cmake && cmake -version
 
+RUN cd /root && wget https://cdn.npm.taobao.org/dist/node/v12.16.2/node-v12.16.2-linux-x64.tar.xz \
+    tar -xf node-v12.16.2-linux-x64.tar.xz \
+    ln -s /root/node-v12.16.2-linux-x64/bin/node /usr/bin/node \
+    ln -s /root/node-v12.16.2-linux-x64/bin/npm /usr/bin/npm
+
 # 编译安装tarscpp
 RUN cd /root                                                               \
     && git clone https://github.com/TarsCloud/TarsCpp.git --recursive
@@ -34,6 +53,32 @@ RUN cd /root/TarsCpp && mkdir build && cd build                            \
 
 # 静态编译安装静态库
 RUN yum install -y glibc-static libstdc++-static
+
+# deploy tools
+RUN npm install -g @tars/deploy
+
+COPY tools/yaml-tools /root/yaml-tools
+COPY tools/helm-lib /root/helm-lib
+COPY tools/helm-template /root/helm-template
+COPY tools/Dockerfile /root/Dockerfile
+
+COPY tools/exec-build-cloud.sh /usr/bin/
+COPY tools/exec-build-cloud-product.sh /usr/bin/
+COPY tools/exec-deploy.sh /usr/bin/
+COPY tools/exec-build.sh /usr/bin/
+COPY tools/exec-helm.sh /usr/bin/
+COPY tools/create-buildx-dockerfile.sh /usr/bin/
+COPY tools/create-buildx-dockerfile-product.sh /usr/bin/
+
+RUN chmod a+x /usr/bin/exec-build-cloud.sh
+RUN chmod a+x /usr/bin/exec-build-cloud-product.sh
+RUN chmod a+x /usr/bin/exec-deploy.sh
+RUN chmod a+x /usr/bin/exec-build.sh
+RUN chmod a+x /usr/bin/exec-helm.sh
+RUN chmod a+x /usr/bin/create-buildx-dockerfile.sh
+RUN chmod a+x /usr/bin/create-buildx-dockerfile-product.sh
+
+RUN cd /root/yaml-tools && npm install 
 
 RUN echo "#!/bin/bash" > /bin/start.sh && echo "while true; do sleep 10; done" >> /bin/start.sh && chmod a+x /bin/start.sh
 

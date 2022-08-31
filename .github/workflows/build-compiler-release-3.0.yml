@@ -8,6 +8,7 @@ on:
       - ".github/workflows/build-compiler-release-3.0.yml"
       - "compiler/tools/**"
       - "compiler/base-compiler-bullseye.Dockerfile"
+      - "submodule/TarsCpp/**"
   pull_request:
     branches:
       - master
@@ -15,6 +16,7 @@ on:
       - ".github/workflows/build-compiler-release-3.0.yml"
       - "compiler/tools/**"
       - "compiler/base-compiler-bullseye.Dockerfile"
+      - "submodule/TarsCpp/**"
 
 jobs:
   build:
