@@ -35,9 +35,9 @@ RUN cd /opt/cmake/cmake-3.16.6 && make -j4 && make install \
     && ln -s /usr/local/cmake/bin/cmake /usr/bin/cmake && cmake -version
 
 RUN cd /root && wget https://cdn.npm.taobao.org/dist/node/v12.16.2/node-v12.16.2-linux-x64.tar.xz \
-    tar -xf node-v12.16.2-linux-x64.tar.xz \
-    ln -s /root/node-v12.16.2-linux-x64/bin/node /usr/bin/node \
-    ln -s /root/node-v12.16.2-linux-x64/bin/npm /usr/bin/npm
+    && tar -xf node-v12.16.2-linux-x64.tar.xz \
+    && ln -s /root/node-v12.16.2-linux-x64/bin/node /usr/bin/node \
+    && ln -s /root/node-v12.16.2-linux-x64/bin/npm /usr/bin/npm
 
 # 编译安装tarscpp
 RUN cd /root                                                               \
