@@ -27,18 +27,19 @@ RUN yum install -y git make maven gdb bison flex                              \
 
 # centos7的cmake版本太低，需要移除后重新安装
 RUN yum install -y gcc gcc-c++ openssl-devel
-RUN yum remove -y cmake                   \
-    && mkdir /opt/cmake && cd /opt/cmake/ \
-    && wget https://cmake.org/files/v3.16/cmake-3.16.6.tar.gz && tar -zxvf cmake-3.16.6.tar.gz
-RUN cd /opt/cmake/cmake-3.16.6 && ./configure --prefix=/usr/local/cmake
-RUN cd /opt/cmake/cmake-3.16.6 && make -j4 && make install \
-    && ln -s /usr/local/cmake/bin/cmake /usr/bin/cmake && cmake -version
 
 RUN cd /root && wget https://cdn.npm.taobao.org/dist/node/v12.16.2/node-v12.16.2-linux-x64.tar.xz \
     && tar -xf node-v12.16.2-linux-x64.tar.xz \
     && ln -s /root/node-v12.16.2-linux-x64/bin/node /usr/bin/node \
     && ln -s /root/node-v12.16.2-linux-x64/bin/npm /usr/bin/npm
 RUN npm install -g @tars/deploy
+
+RUN yum remove -y cmake                   \
+    && mkdir /opt/cmake && cd /opt/cmake/ \
+    && wget https://cmake.org/files/v3.16/cmake-3.16.6.tar.gz && tar -zxvf cmake-3.16.6.tar.gz
+RUN cd /opt/cmake/cmake-3.16.6 && ./configure --prefix=/usr/local/cmake
+RUN cd /opt/cmake/cmake-3.16.6 && make -j4 && make install \
+    && ln -s /usr/local/cmake/bin/cmake /usr/bin/cmake && cmake -version
 
 # 编译安装tarscpp
 RUN cd /root                                                               \
