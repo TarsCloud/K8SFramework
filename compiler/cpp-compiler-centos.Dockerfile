@@ -12,6 +12,11 @@ RUN cp -rf $(command -v  kubectl) /tmp/kubectl
 
 FROM centos:centos7.9.2009
 
+ARG TARGETARCH
+RUN echo ${TARGETARCH}
+
+ENV VERSION="v16.17.0"
+
 ARG BRANCH
 
 COPY --from=idocker /tmp/docker /usr/local/bin/docker
@@ -28,7 +33,10 @@ RUN yum install -y git make maven gdb bison flex                              \
 # centos7的cmake版本太低，需要移除后重新安装
 RUN yum install -y gcc gcc-c++ openssl-devel
 
-RUN cd /root && wget https://cdn.npm.taobao.org/dist/node/v12.16.2/node-v12.16.2-linux-x64.tar.xz \
+RUN if [ "${TARGETARCH}" == "amd64" ]; then SUFFIX="x64"; else SUFFIX="arm64"; fi \
+    && echo ${VERSION} \
+    && echo ${SUFFIX} \
+    && cd /root && curl -O https://nodejs.org/dist/${VERSION}/node-${VERSION}-linux-${SUFFIX}.tar.xz \
     && tar -xf node-v12.16.2-linux-x64.tar.xz \
     && ln -s /root/node-v12.16.2-linux-x64/bin/node /usr/bin/node \
     && ln -s /root/node-v12.16.2-linux-x64/bin/npm /usr/bin/npm \
