@@ -37,9 +37,9 @@ RUN if [ "${TARGETARCH}" == "amd64" ]; then SUFFIX="x64"; else SUFFIX="arm64"; f
     && echo ${VERSION} \
     && echo ${SUFFIX} \
     && cd /root && curl -O https://nodejs.org/dist/${VERSION}/node-${VERSION}-linux-${SUFFIX}.tar.xz \
-    && tar -xf node-v12.16.2-linux-x64.tar.xz \
-    && ln -s /root/node-v12.16.2-linux-x64/bin/node /usr/bin/node \
-    && ln -s /root/node-v12.16.2-linux-x64/bin/npm /usr/bin/npm \
+    && tar -xf node-${VERSION}-linux-${SUFFIX}.tar.xz \
+    && ln -s /root/node-${VERSION}-linux-${SUFFIX}/bin/node /usr/bin/node \
+    && ln -s /root/node-${VERSION}-linux-${SUFFIX}/bin/npm /usr/bin/npm \
     && ls -l /usr/bin/node && ls -l /usr/bin/npm \
     && /usr/bin/node --version && /usr/bin/npm --version
 
