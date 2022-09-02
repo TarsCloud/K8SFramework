@@ -31,7 +31,10 @@ RUN yum install -y gcc gcc-c++ openssl-devel
 RUN cd /root && wget https://cdn.npm.taobao.org/dist/node/v12.16.2/node-v12.16.2-linux-x64.tar.xz \
     && tar -xf node-v12.16.2-linux-x64.tar.xz \
     && ln -s /root/node-v12.16.2-linux-x64/bin/node /usr/bin/node \
-    && ln -s /root/node-v12.16.2-linux-x64/bin/npm /usr/bin/npm
+    && ln -s /root/node-v12.16.2-linux-x64/bin/npm /usr/bin/npm \
+    && ls -l /usr/bin/node && ls -l /usr/bin/npm \
+    && /usr/bin/node --version && /usr/bin/npm --version
+
 RUN npm install -g @tars/deploy
 
 RUN yum remove -y cmake                   \
