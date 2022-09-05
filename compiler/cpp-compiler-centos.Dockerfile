@@ -25,7 +25,7 @@ COPY --from=ikubectl /tmp/kubectl /usr/local/bin/kubectl
 
 RUN yum update -y
 
-RUN yum install -y git make maven gdb bison flex                              \
+RUN yum install -y make maven gdb bison flex                              \
     ca-certificates openssl telnet curl wget default-mysql-client                      \
     iputils-ping vim tcpdump net-tools binutils procps tree python python3             \
     libssl-dev zlib1g-dev libzip-dev  tzdata localepurge
@@ -48,9 +48,17 @@ RUN npm install -g @tars/deploy
 RUN yum remove -y cmake                   \
     && mkdir /opt/cmake && cd /opt/cmake/ \
     && wget https://cmake.org/files/v3.16/cmake-3.16.6.tar.gz && tar -zxvf cmake-3.16.6.tar.gz
+
 RUN cd /opt/cmake/cmake-3.16.6 && ./configure --prefix=/usr/local/cmake
 RUN cd /opt/cmake/cmake-3.16.6 && make -j4 && make install \
     && ln -s /usr/local/cmake/bin/cmake /usr/bin/cmake && cmake -version
+
+RUN yum install -y perl-devel curl-devel expat-devel gettext-devel
+RUN wget https://www.kernel.org/pub/software/scm/git/git-2.19.2.tar.gz \
+    && tar xzf git-2.19.2.tar.gz \
+    && cd git-2.19.2 \
+    && make -j4 \
+    && make install
 
 # 编译安装tarscpp
 RUN cd /root                                                               \
