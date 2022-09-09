@@ -58,9 +58,9 @@ func (h *Webhook) Start(stopCh chan struct{}) {
 		srv := &http.Server{
 			Addr:              ":443",
 			Handler:           mux,
-			ReadTimeout:       2 * time.Second,
-			ReadHeaderTimeout: 1 * time.Second,
-			WriteTimeout:      5 * time.Second,
+			ReadTimeout:       5 * time.Second,
+			ReadHeaderTimeout: 5 * time.Second,
+			WriteTimeout:      12 * time.Second,
 		}
 		// ListenAndServe always returns a non-nil error. After Shutdown or Close,
 		// the returned error is ErrServerClosed.

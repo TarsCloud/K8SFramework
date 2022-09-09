@@ -537,7 +537,8 @@ type TFrameworkNodeImage struct {
 type TFrameworkTarsEndpoint struct {
 	Host    string `json:"host"`
 	Port    int    `json:"port"`
-	Timeout int    `json:"timeout"`
+	Timeout int    `json:"timeout,omitempty"`
+	IsTcp   *bool  `json:"isTcp,omitempty"`
 }
 
 // +genclient

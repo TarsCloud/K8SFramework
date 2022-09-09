@@ -10,9 +10,8 @@ on:
       - 'v[1-9][0-9]?.[1-9][0-9]?.[1-9][0-9]?-[a-z]'
       - 'v[1-9][0-9]?.[1-9][0-9]?.[1-9][0-9]?-[a-z][a-z0-9]+'
 jobs:
-  build:
+  charts:
     runs-on: ubuntu-20.04
-
     env:
       DOCKER_RUN_WITHOUT_IT: 1
       REGISTRY_URL: docker.io/tarscloud

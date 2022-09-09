@@ -4,13 +4,13 @@ ENV LANG C.UTF-8
 ENV LANGUAGE C.UTF-8
 
 RUN rm -rf /bin/ls                                                                        \
-    # image debian:bullseye had "ls bug", we use busybox ls instead                           \
+    # image debian:bullseye had "ls bug", we use busybox ls instead                       \
     && apt update                                                                         \
     && apt install                                                                        \
-    ca-certificates openssl gdb telnet curl wget default-mysql-client                      \
-    gnupg iputils-ping vim tcpdump net-tools binutils procps tree                      \
-    libssl1.1 zlib1g-dev                                                               \
-    tzdata locales busybox -y                                                          \
+    ca-certificates openssl gdb telnet curl wget default-mysql-client                     \
+    gnupg iputils-ping vim tcpdump net-tools binutils procps tree                         \
+    libssl1.1 zlib1g-dev                                                                  \
+    tzdata locales busybox -y                                                             \
     && busybox --install                                                                  \
     && apt purge -y                                                                       \
     && apt clean all                                                                      \

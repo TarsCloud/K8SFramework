@@ -1,0 +1,7 @@
+apiVersion: v2
+name: crds
+version: _CHART_VERSION_
+kubeVersion: ">= 1.18.0 < 2.0.0"
+type: application
+keywords: [tars, tarscontroller, crds]
+appVersion: _CHART_APPVERSION_

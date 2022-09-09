@@ -1,14 +1,14 @@
 name: e2e
 on:
   push:
-    branches: [master]
+    branches: [ master ]
     paths-ignore:
       - "docs/**"
       - "charts/**"
       - ".github/workflows/build-compiler-*.yml"
       - ".github/workflows/build-deploy*.yml"
   pull_request:
-    branches: [master]
+    branches: [ master ]
     paths-ignore:
       - "docs/**"
       - "charts/**"
@@ -16,49 +16,213 @@ on:
       - ".github/workflows/build-deploy*.yml"
 
 jobs:
-  e2e:
+  prepare-controller:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      LocalRegistryName: local-registry
+      LocalRegistryPort: 5000
+      LocalRegistryShared: shared/registry
+
+      DOCKER_RUN_WITHOUT_IT: 1
+      REGISTRY_URL: localhost:5000/e2e
+      BUILD_VERSION: 1.3.0-e2e
+      CHART_VERSION: 1.3.0-e2e
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Create Shared
+        run: mkdir -p shared/compiler && mkdir -p shared/registry
+
+      - name: Build Compiler
+        run: make compiler
+
+      - name: Save Compiler
+        run: docker images | grep "tarscompiler" | awk '{system("docker save "$1":"$2 " >shared/compiler/"$3".tgz")}'
+
+      - name: Create Local Registry With Shared
+        run: ./util/create-local-registry.sh ${{env.LocalRegistryName}} ${{env.LocalRegistryPort}} ${PWD}/${{env.LocalRegistryShared}}
+
+      - name: Build Controller Images
+        run: make controller
+
+      - name: Display Images
+        run: docker images | grep ${{env.BUILD_VERSION}}
+
+      - name: Upload Shared
+        uses: actions/upload-artifact@v3
+        with:
+          name: e2e-controller-shared
+          path: shared
+
+  e2e-controller:
+    needs: [ prepare-controller ]
     strategy:
       fail-fast: false
       matrix:
-        platform: [ubuntu-20.04]
-        storage_crd_version: [v1beta1, v1beta2, v1beta3]
-    runs-on: ${{matrix.platform}}
+        kindest: [ v1.18.20,v1.19.16,v1.20.15,v1.21.12,v1.22.7,v1.23.6,v1.24.3 ]
+        storage: [ v1beta1,v1beta2,v1beta3 ]
+    runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
-      DOCKER_RUN_WITHOUT_IT: 1
       LocalRegistryName: local-registry
       LocalRegistryPort: 5000
+      LocalRegistryShared: shared/registry
       KindClusterName: e2e
 
-      REGISTRY_URL: localhost:5000/build
+      DOCKER_RUN_WITHOUT_IT: 1
+      WITHOUT_DEPENDS_CHECK: 1
+
+      REGISTRY_URL: localhost:5000/e2e
       BUILD_VERSION: 1.3.0-e2e
       CHART_VERSION: 1.3.0-e2e
-      CRD_STORAGE_VERSION: ${{matrix.storage_crd_version}}
 
     steps:
-      - name: Check out the repo
+      - name: Checkout Repo
         uses: actions/checkout@v3
 
-      - name: Build Compiler Images
-        run: make compiler
+      - name: Download Shared
+        uses: actions/download-artifact@v3
+        with:
+          name: e2e-controller-shared
+          path: shared
 
-      - name: Create Local Registry
-        run: ./util/create-local-registry.sh ${{env.LocalRegistryName}} ${{env.LocalRegistryPort}}
+      - name: Load Compiler
+        run: ls shared/compiler | awk '{system("docker load <shared/compiler/"$1)}'
 
-      - name: Build And Push Controller Images To Registry
-        run: make controller
+      - name: Create Local Registry With Shared
+        run: ./util/create-local-registry.sh ${{env.LocalRegistryName}} ${{env.LocalRegistryPort}} ${PWD}/${{env.LocalRegistryShared}}
 
       - name: Build TarsController Chart
-        run: make chart.controller
+        run: make chart.controller CRD_STORAGE_VERSION=${{matrix.storage}}
 
       - name: Create Kind With Local Registry
-        run: ./util/create-kind-with-local-registry.sh ${{env.KindClusterName}} ${{env.LocalRegistryName}} ${{env.LocalRegistryPort}}
+        run: ./util/create-kind-with-local-registry.sh ${{env.KindClusterName}} ${{env.LocalRegistryName}} ${{env.LocalRegistryPort}} kindest/node:${{matrix.kindest}}
+
+      - name: WaitFor Cluster Ready
+        run: sleep 10 && kubectl wait --for=condition=Ready nodes --all --timeout=180s
 
       - name: Install Controller Chart
         run: make install.controller CHART=charts/tarscontroller-${{env.CHART_VERSION}}.tgz
 
-      - name: Wait Controller Pods Running
-        run: kubectl wait --for=condition=Ready nodes --all --timeout=180s
+      - name: WaitFor Controller Pods Ready
+        run: sleep 10 && kubectl wait --for=condition=Ready pods --all -n tars-system
 
-      - name: Run Controller Test
-        run: make test.controller
+      - name: Run e2e.controller test
+        run: make e2e.controller
+
+  prepare-framework:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      LocalRegistryName: local-registry
+      LocalRegistryPort: 5000
+      LocalRegistryShared: shared/registry
+
+      DOCKER_RUN_WITHOUT_IT: 1
+      REGISTRY_URL: localhost:5000/e2e
+      BUILD_VERSION: 1.3.0-e2e
+      CHART_VERSION: 1.3.0-e2e
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Create Shared
+        run: mkdir -p shared/compiler && mkdir -p shared/registry
+
+      - name: Build Compiler
+        run: make compiler
+
+      - name: Save Compiler
+        run: docker images | grep "tarscompiler" | awk '{system("docker save "$1":"$2 " >shared/compiler/"$3".tgz")}'
+
+      - name: Create Local Registry With Shared
+        run: ./util/create-local-registry.sh ${{env.LocalRegistryName}} ${{env.LocalRegistryPort}} ${PWD}/${{env.LocalRegistryShared}}
+
+      - name: Build Controller Images
+        run: make controller
+
+      - name: Build Framework Images
+        run: make framework
+
+      - name: Display Images
+        run: docker images | grep ${{env.BUILD_VERSION}}
+
+      - name: Upload Shared
+        uses: actions/upload-artifact@v3
+        with:
+          name: e2e-framework-shared
+          path: shared
+
+  e2e-framework:
+    needs: [ prepare-framework ]
+    strategy:
+      fail-fast: false
+      matrix:
+        kindest: [ v1.18.20,v1.19.16,v1.20.15,v1.21.12,v1.22.7,v1.23.6,v1.24.3 ]
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      LocalRegistryName: local-registry
+      LocalRegistryPort: 5000
+      LocalRegistryShared: shared/registry
+      KindClusterName: e2e
+
+      DOCKER_RUN_WITHOUT_IT: 1
+      WITHOUT_DEPENDS_CHECK: 1
+
+      REGISTRY_URL: localhost:5000/e2e
+      BUILD_VERSION: 1.3.0-e2e
+      CHART_VERSION: 1.3.0-e2e
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Download Shared
+        uses: actions/download-artifact@v3
+        with:
+          name: e2e-framework-shared
+          path: shared
+
+      - name: Load Compiler
+        run: ls shared/compiler | awk '{system("docker load <shared/compiler/"$1)}'
+
+      - name: Create Local Registry With Shared
+        run: ./util/create-local-registry.sh ${{env.LocalRegistryName}} ${{env.LocalRegistryPort}} ${PWD}/${{env.LocalRegistryShared}}
+
+      - name: Build TarsController Chart
+        run: make chart.controller
+
+      - name: Build TarsFramework Chart
+        run: make chart.framework
+
+      - name: Create Kind With Local Registry
+        run: ./util/create-kind-with-local-registry.sh ${{env.KindClusterName}} ${{env.LocalRegistryName}} ${{env.LocalRegistryPort}} kindest/node:${{matrix.kindest}}
+
+      - name: WaitFor Cluster Ready
+        run: sleep 10 && kubectl wait --for=condition=Ready nodes --all --timeout=180s
+
+      - name: Label nodes
+        run: kubectl label nodes e2e-control-plane tars.io/node.tars= && kubectl label nodes e2e-control-plane tars.io/SupportLocalVolume=
+
+      - name: Install Controller Chart
+        run: make install.controller CHART=charts/tarscontroller-${{env.CHART_VERSION}}.tgz
+
+      - name: WaitFor Controller Pods Ready
+        run: sleep 10 && kubectl wait --for=condition=Ready pods --all -n tars-system
+
+      - name: Install Framework Chart
+        run: make install.framework CHART=charts/tarsframework-${{env.CHART_VERSION}}.tgz NAMESPACE=tars UPLOAD_REGISTRY=localhost:${{env.LocalRegistryPort}}/upload
+
+      - name: Skip Test TarsWeb
+        run: kubectl delete ts -n tars tars-tarsweb --ignore-not-found=true && kubectl delete sts -n tars tars-tarsweb --ignore-not-found=true && kubectl delete pod -n tars tars-tarsweb-0 --ignore-not-found=true --wait=true
+
+      - name: WaitFor Framework Pods Ready
+        run: sleep 10 && kubectl wait --for=condition=Ready pods --all -n tars --timeout=300s
+
+      - name: Run e2e.framework test
+        run: make e2e.framework NAMESPACE=tars

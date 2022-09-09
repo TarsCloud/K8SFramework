@@ -2,6 +2,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: tservers.k8s.tars.io
+  annotations:
+    "helm.sh/resource-policy": keep
 spec:
   conversion:
     strategy: Webhook
@@ -25,10 +27,20 @@ spec:
   scope: Namespaced
   versions:
     - name: v1beta1
-      served: _V1BETA1_SERVED_
-      storage: _V1BETA1_STORAGE_
+      {{- if has "v1beta1" .Values.servers}}
+      served: true
+      {{- else }}
+      served: false
+      {{- end }}
+      {{- if eq "v1beta1" .Values.storage}}
+      storage: true
+      {{- else }}
+      storage: false
+      {{- end }}
+      {{- if semverCompare ">=1.19.x" $.Capabilities.KubeVersion.Version }}
       deprecated: true
       deprecationWarning: "k8s.tars.io/v1beta1 TServer is deprecated; please migrate to k8s.tars.io/v1beta3 TServer"
+      {{- end}}
       schema:
         openAPIV3Schema:
           type: object
@@ -615,10 +627,20 @@ spec:
           type: integer
           jsonPath: .status.readyReplicas
     - name: v1beta2
-      served: _V1BETA2_SERVED_
-      storage: _V1BETA2_STORAGE_
+      {{- if has "v1beta2" .Values.servers}}
+      served: true
+      {{- else }}
+      served: false
+      {{- end }}
+      {{- if eq "v1beta2" .Values.storage}}
+      storage: true
+      {{- else }}
+      storage: false
+      {{- end }}
+      {{- if semverCompare ">=1.19.x" $.Capabilities.KubeVersion.Version }}
       deprecated: true
       deprecationWarning: "k8s.tars.io/v1beta2 TServer is deprecated; please migrate to k8s.tars.io/v1beta3 TServer"
+      {{- end}}
       schema:
         openAPIV3Schema:
           type: object
@@ -647,7 +669,6 @@ spec:
                   properties:
                     profile:
                       type: string
-
                     servants:
                       type: array
                       items:
@@ -1237,8 +1258,16 @@ spec:
           type: integer
           jsonPath: .status.readyReplicas
     - name: v1beta3
-      served: _V1BETA3_SERVED_
-      storage: _V1BETA3_STORAGE_
+      {{- if has "v1beta3" .Values.servers}}
+      served: true
+      {{- else }}
+      served: false
+      {{- end }}
+      {{- if eq "v1beta3" .Values.storage}}
+      storage: true
+      {{- else }}
+      storage: false
+      {{- end }}
       schema:
         openAPIV3Schema:
           type: object
@@ -1305,9 +1334,6 @@ spec:
                             minimum: -1
                             maximum: 6000000
                             default: 60000
-                          ssl:
-                            type: boolean
-                            default: false
                         required: [ name,port ]
                       default: [ ]
                     ports:
@@ -1829,36 +1855,6 @@ spec:
                       pattern: ^([0-9a-z][-0-9a-z]*)?[0-9a-z]?(\.([0-9a-z][-0-9a-z]*)?[0-9a-z])*$
                       maxLength: 253
                   required: [ id,image ]
-                certificates:
-                  type: object
-                  properties:
-                    secretName:
-                      type: string
-                    items:
-                      type: array
-                      items:
-                        type: object
-                        properties:
-                          key:
-                            type: string
-                            pattern: ^[-._0-9A-Za-z]{1,253}$
-                          path:
-                            type: string
-                          mode:
-                            type: integer
-                            minimum: 0
-                            maximum: 0777
-                            default: 0644
-                      required: [ key,path ]
-                    defaultMode:
-                      type: integer
-                      minimum: 0
-                      maximum: 0777
-                      default: 0644
-                    optional:
-                      type: boolean
-                      default: true
-                  required: [ secretName ]
               required: [ app ,server,subType ]
               oneOf:
                 - required: [ tars,k8s ]
@@ -1892,7 +1888,16 @@ spec:
         - name: SubType
           type: string
           jsonPath: .spec.subType
-        - name: Repicas
+        - name: ReleaseImage
+          type: string
+          jsonPath: .spec.release.image
+        - name: NodeImage
+          type: string
+          jsonPath: .spec.release.nodeImage
+        - name: Template
+          type: string
+          jsonPath: .spec.tars.template
+        - name: Replicas
           type: integer
           jsonPath: .spec.k8s.replicas
         - name: Ready

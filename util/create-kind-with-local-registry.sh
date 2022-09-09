@@ -4,17 +4,21 @@ set -o errexit
 cluster_name=$1
 reg_name=$2
 reg_port=$3
+node_image=$4
 
-# create a cluster with the local registry enabled in containerd
-kind_node_image='kindest/node:v1.21.1@sha256:69860bda5563ac81e3c0057d654b5253219618a22ec3a346306239bba8cfa1a6'
-cat <<EOF | kind create cluster --name "${cluster_name}" --image ${kind_node_image} --config=-
+if [ -z "${node_image}" ]; then
+  #  node_image="kindest/node:v1.18.20"
+  #  node_image="kindest/node:v1.19.16"
+  #  node_image="kindest/node:v1.20.15"
+  #  node_image="kindest/node:v1.21.12"
+  #  node_image="kindest/node:v1.22.7"
+  #  node_image="kindest/node:v1.23.6"
+  node_image="kindest/node:v1.24.3"
+fi
+
+cat <<EOF | kind create cluster --name "${cluster_name}" --image ${node_image} --config=-
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
-nodes:
-- role: control-plane
-- role: worker
-- role: worker
-- role: worker
 containerdConfigPatches:
 - |-
   [plugins."io.containerd.grpc.v1.cri".registry.mirrors."localhost:${reg_port}"]

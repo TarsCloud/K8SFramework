@@ -1,3 +1,6 @@
+crds:
+  servers: [ _CRD_SERVED_VERSIONS_ ]
+  storage: _CRD_STORAGE_VERSION_
 controller:
   registry: _CONTROLLER_REGISTRY_
   tag: _CONTROLLER_TAG_

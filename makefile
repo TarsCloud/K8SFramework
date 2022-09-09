@@ -69,6 +69,7 @@ define func_build_base
 	$(call func_check_params, REGISTRY_URL BUILD_VERSION)
 	@$(if $(REGISTRY_USER), @($(ENV_DOCKER) login -u $(REGISTRY_USER) -p $(REGISTRY_PASSWORD) $(REGISTRY_URL:docker.io/%=docker.io)))
 	$(DOCKER_BUILD_CMD) $(DOCKER_BUILD_PLATFORMS) -t $(REGISTRY_URL)/$1:$(BUILD_VERSION) -f $2 --build-arg REGISTRY_URL=$(REGISTRY_URL) --build-arg BUILD_VERSION=$(BUILD_VERSION) $3 $(DOCKER_BUILD_PUSH)
+	$(if $(findstring $(DOCKER_ENABLE_BUILDX),1),,$(ENV_DOCKER) push $(REGISTRY_URL)/$1:$(BUILD_VERSION))
 endef
 
 ### [base name] : build and push specified base image to registry
@@ -98,16 +99,14 @@ endef
 $(foreach server, $(CONTROLLER_SERVERS), $(eval $(call func_expand_server_param,$(server),$(server))))
 $(foreach server, $(FRAMEWORK_SERVERS), $(eval $(call func_expand_server_param,$(server),tars.$(server))))
 define func_build_binary
-	$(call func_check_params, REGISTRY_URL BUILD_VERSION)
 	@mkdir -p cache/$1/go
-	@mkdir -p cache/$1/tarscpp
-	$(ENV_DOCKER_RUN) --platform $1 --rm -v $(PWD)/src:/src -v $(PWD)/cache/$1/tarscpp:/tarscpp -v $(PWD)/cache/$1/go:/go $(platform)/tarscompiler:$(BUILD_VERSION) $@
+	@mkdir -p cache/$1/build
+	$(ENV_DOCKER_RUN) --platform $1 --rm -v $(PWD)/src:/src -v $(PWD)/cache/$1/build:/build -v $(PWD)/cache/$1/go:/go $(platform)/tarscompiler:$(BUILD_VERSION) $@
 	mkdir -p cache/context/$@/binary
-	cp cache/$1/tarscpp/bin/$@ cache/context/$@/binary/$@_$(subst /,_,$1)
+	cp cache/$1/build/bin/$@ cache/context/$@/binary/$@_$(subst /,_,$1)
 endef
 
 define func_build_image
-	$(call func_check_params, REGISTRY_URL BUILD_VERSION)
 	@$(if $(REGISTRY_USER), @($(ENV_DOCKER) login -u $(REGISTRY_USER) -p $(REGISTRY_PASSWORD) $(REGISTRY_URL:docker.io/%=docker.io)))
 	cp -rf $3 cache/context
 	$(DOCKER_BUILD_CMD) $(DOCKER_BUILD_PLATFORMS) -t $(REGISTRY_URL)/$1:$(BUILD_VERSION) -f cache/$2 $(DOCKER_BUILD_TARGETPLATFORM) --build-arg BINARY=$@ --build-arg REGISTRY_URL=$(REGISTRY_URL) --build-arg BUILD_VERSION=$(BUILD_VERSION) cache/$(strip $3) $(DOCKER_BUILD_PUSH)
@@ -118,6 +117,7 @@ endef
 .PHONY: tars%
 tars%: $(if $(findstring $(DOCKER_ENABLE_BUILDX),1),enable.buildx,disable.buildx) $(if $(findstring $(WITHOUT_DEPENDS_CHECK),1),,compiler cppbase)
 	@echo "$@ -> [ Start ]"
+	$(call func_check_params, REGISTRY_URL BUILD_VERSION)
 	$(foreach platform,$(PLATFORMS), $(call func_build_binary,$(platform)))
 	$(call func_build_image,$($@_repo),context/$@/Dockerfile, context/$@)
 	@echo "$@ -> [ Done ]"
@@ -245,12 +245,31 @@ clean:
 	@echo "$@ -> [ Start ]"
 	@echo "$@ -> [ Done ]"
 
-### test.controller : controller servers
-.PHONY: test.controller
-test.controller:
+### e2e.controller : controller servers e2e test
+.PHONY: e2e.controller
+e2e.controller:
 	@echo "$@ -> [ Start ]"
-	@mkdir -p cache/go
-	$(ENV_DOCKER_RUN) --rm -v $(PWD)/src:/src -v $(PWD)/t:/t -v $(HOME)/.kube/config:/root/.kube/config -v $(PWD)/cache/go:/go --net=host linux/amd64/tarscompiler:$(BUILD_VERSION) test.controller
+	@mkdir -p cache/linux/amd64/go
+	$(ENV_DOCKER_RUN) --rm -v $(PWD)/src:/src -v $(PWD)/t:/t -v $(PWD)/cache/linux/amd64/build:/build -v $(PWD)/cache/linux/amd64/go:/go linux/amd64/tarscompiler:$(BUILD_VERSION) e2e.controller
+	cache/linux/amd64/build/bin/e2e.controller
+	@echo "$@ -> [ Done ]"
+
+### e2e.framework : framework servers e2e test
+.PHONY: e2e.framework
+e2e.framework:
+	@echo "$@ -> [ Start ]"
+	$(call func_check_params, NAMESPACE REGISTRY_URL)
+	@mkdir -p cache/linux/amd64/go
+	$(ENV_DOCKER_RUN) --rm -v $(PWD)/src:/src -v $(PWD)/t:/t -v $(PWD)/cache/linux/amd64/build:/build -v $(PWD)/cache/linux/amd64/go:/go linux/amd64/tarscompiler:$(BUILD_VERSION) e2e.framework
+	mkdir -p cache/context/e2e.framework/root
+	cp -rf context/e2e.framework cache/context
+	cp cache/linux/amd64/build/bin/e2e.framework cache/context/e2e.framework/root
+	@$(if $(REGISTRY_USER), @($(ENV_DOCKER) login -u $(REGISTRY_USER) -p $(REGISTRY_PASSWORD) $(REGISTRY_URL:docker.io/%=docker.io)))
+	$(DOCKER_BUILD_CMD) $(DOCKER_BUILD_PLATFORMS) -t $(REGISTRY_URL)/e2e.framework -f cache/context/e2e.framework/Dockerfile $(DOCKER_BUILD_TARGETPLATFORM) cache/context/e2e.framework $(DOCKER_BUILD_PUSH)
+	$(if $(findstring $(DOCKER_ENABLE_BUILDX),1),,$(ENV_DOCKER) push $(REGISTRY_URL)/e2e.framework)
+	@-$(ENV_KUBECTL) delete pod -n $(NAMESPACE) e2e-framework
+	$(ENV_KUBECTL) apply -f context/e2e.framework/ServiceAccount.yaml -n $(NAMESPACE)
+	$(ENV_KUBECTL) run -i -n $(NAMESPACE) e2e-framework --overrides='{"spec":{"serviceAccount" : "e2e-framework"}}' --image=$(REGISTRY_URL)/e2e.framework --restart=Never
 	@echo "$@ -> [ Done ]"
 
 ### help : show make rules

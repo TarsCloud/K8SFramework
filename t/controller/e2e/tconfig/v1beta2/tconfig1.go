@@ -43,6 +43,7 @@ var _ = ginkgo.Describe("test app level config", func() {
 		}
 		_, err := s.CRDClient.CrdV1beta2().TConfigs(s.Namespace).Create(context.TODO(), appConfig, k8sMetaV1.CreateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
+		time.Sleep(s.Opts.SyncTime)
 	})
 
 	ginkgo.It("valid labels ", func() {
@@ -285,34 +286,10 @@ var _ = ginkgo.Describe("test app level config", func() {
 			time.Sleep(s.Opts.SyncTime)
 		})
 
-		ginkgo.It("no master config", func() {
-			slaveTConfigLayout.ConfigName = "NoMasterTConfig"
+		ginkgo.It("create slave tconfig", func() {
+			slaveTConfigLayout.ConfigName = ConfigName
 			_, err := s.CRDClient.CrdV1beta2().TConfigs(s.Namespace).Create(context.TODO(), slaveTConfigLayout, k8sMetaV1.CreateOptions{})
 			assert.NotNil(ginkgo.GinkgoT(), err)
-		})
-
-		ginkgo.It("create/delete slave tconfig", func() {
-			slaveTConfigLayout.ConfigName = ConfigName
-			slaveTConfig, err := s.CRDClient.CrdV1beta2().TConfigs(s.Namespace).Create(context.TODO(), slaveTConfigLayout, k8sMetaV1.CreateOptions{})
-			assert.Nil(ginkgo.GinkgoT(), err)
-			assert.NotNil(ginkgo.GinkgoT(), slaveTConfig)
-			slaveConfigExceptedLabels := map[string]string{
-				tarsMetaV1beta2.TServerAppLabel:       ServerApp,
-				tarsMetaV1beta2.TServerNameLabel:      "",
-				tarsMetaV1beta2.TConfigPodSeqLabel:    "1",
-				tarsMetaV1beta2.TConfigActivatedLabel: "true",
-			}
-			assert.True(ginkgo.GinkgoT(), scaffold.CheckLeftInRight(slaveConfigExceptedLabels, slaveTConfig.Labels))
-
-			err = s.CRDClient.CrdV1beta2().TConfigs(s.Namespace).Delete(context.TODO(), ResourceName, k8sMetaV1.DeleteOptions{})
-			assert.NotNil(ginkgo.GinkgoT(), err)
-
-			err = s.CRDClient.CrdV1beta2().TConfigs(s.Namespace).Delete(context.TODO(), slaveResourceName, k8sMetaV1.DeleteOptions{})
-			assert.Nil(ginkgo.GinkgoT(), err)
-			time.Sleep(s.Opts.SyncTime)
-
-			err = s.CRDClient.CrdV1beta2().TConfigs(s.Namespace).Delete(context.TODO(), ResourceName, k8sMetaV1.DeleteOptions{})
-			assert.Nil(ginkgo.GinkgoT(), err)
 		})
 	})
 })

@@ -38,7 +38,7 @@ metadata:
 rules:
   - apiGroups: [ "" ]
     resources: [ services ,persistentvolumeclaims ]
-    verbs: [ create, get, list, delete, watch, patch, update , deletecollection ]
+    verbs: [ create, get, list, delete, watch, patch, update, deletecollection ]
   - apiGroups: [ "" ]
     resources: [ pods,pods/status ]
     verbs: [ list,get,watch ]
@@ -50,12 +50,12 @@ rules:
     verbs: [ get, list, watch, patch, update ]
   - apiGroups: [ apps ]
     resources: [ statefulsets,daemonsets ]
-    verbs: [ create, get, list, delete, watch, patch, update , deletecollection ]
+    verbs: [ create, get, list, delete, watch, patch, update, deletecollection ]
   - apiGroups: [ k8s.tars.io ]
-    resources: [ ttrees, ttemplates, tdeploys, timages, tframeworkconfigs ]
+    resources: [ ttrees, ttemplates, timages, tframeworkconfigs ]
     verbs: [ get, list, watch ,patch, update ]
   - apiGroups: [ k8s.tars.io ]
-    resources: [ taccounts,tconfigs,tservers,tservers/status,texitedrecords,tgateways,tendpoints,tendpoints/status ]
+    resources: [ taccounts,tconfigs,tservers,tservers/status,texitedrecords,tendpoints,tendpoints/status ]
     verbs: [ create, get, list, delete, watch, patch, update , deletecollection ]
 ---
 

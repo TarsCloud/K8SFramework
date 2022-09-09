@@ -137,7 +137,7 @@ static void findObjectById_(const std::string& id, vector<EndpointF>& activeEp, 
         return;
     }
 
-    Storage::instance().getUnChain([&id, &activeEp](const std::shared_ptr<UPChain>& upChain)mutable
+    Storage::instance().getUnChain([&id, &activeEp](const std::shared_ptr <UPChain>& upChain)mutable
     {
         if (upChain == nullptr)
         {
@@ -146,9 +146,7 @@ static void findObjectById_(const std::string& id, vector<EndpointF>& activeEp, 
         auto iterator = upChain->customs.find(id);
         if (iterator != upChain->customs.end())
         {
-            activeEp.emplace_back(
-
-            );
+            activeEp = iterator->second;
             return;
         }
         if (!upChain->defaults.empty())

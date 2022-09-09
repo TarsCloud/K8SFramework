@@ -2,6 +2,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: tplugins.k8s.tars.io
+  annotations:
+    "helm.sh/resource-policy": keep
 spec:
   conversion:
     strategy: None
@@ -16,10 +18,20 @@ spec:
   scope: Namespaced
   versions:
     - name: v1beta1
+      {{- if has "v1beta1" .Values.servers}}
       served: true
+      {{- else }}
+      served: false
+      {{- end }}
+      {{- if eq "v1beta1" .Values.storage}}
+      storage: true
+      {{- else }}
       storage: false
+      {{- end }}
+      {{- if semverCompare ">=1.19.x" $.Capabilities.KubeVersion.Version }}
       deprecated: true
       deprecationWarning: "k8s.tars.io/v1beta1 TPlugin is deprecated; please migrate to k8s.tars.io/v1beta3 TPlugin"
+      {{- end}}
       schema:
         openAPIV3Schema:
           type: object
@@ -38,10 +50,20 @@ spec:
                 path:
                   type: string
     - name: v1beta2
+      {{- if has "v1beta2" .Values.servers}}
       served: true
+      {{- else }}
+      served: false
+      {{- end }}
+      {{- if eq "v1beta2" .Values.storage}}
+      storage: true
+      {{- else }}
       storage: false
+      {{- end }}
+      {{- if semverCompare ">=1.19.x" $.Capabilities.KubeVersion.Version }}
       deprecated: true
       deprecationWarning: "k8s.tars.io/v1beta2 TPlugin is deprecated; please migrate to k8s.tars.io/v1beta3 TPlugin"
+      {{- end}}
       schema:
         openAPIV3Schema:
           type: object
@@ -62,8 +84,16 @@ spec:
                 extern:
                   type: integer
     - name: v1beta3
+      {{- if has "v1beta3" .Values.servers}}
       served: true
+      {{- else }}
+      served: false
+      {{- end }}
+      {{- if eq "v1beta3" .Values.storage}}
       storage: true
+      {{- else }}
+      storage: false
+      {{- end }}
       schema:
         openAPIV3Schema:
           type: object

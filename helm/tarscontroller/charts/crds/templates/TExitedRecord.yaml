@@ -2,6 +2,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: texitedrecords.k8s.tars.io
+  annotations:
+    "helm.sh/resource-policy": keep
 spec:
   conversion:
     strategy: None
@@ -14,10 +16,20 @@ spec:
   scope: Namespaced
   versions:
     - name: v1beta1
-      served: _V1BETA1_SERVED_
-      storage: _V1BETA1_STORAGE_
+      {{- if has "v1beta1" .Values.servers}}
+      served: true
+      {{- else }}
+      served: false
+      {{- end }}
+      {{- if eq "v1beta1" .Values.storage}}
+      storage: true
+      {{- else }}
+      storage: false
+      {{- end }}
+      {{- if semverCompare ">=1.19.x" $.Capabilities.KubeVersion.Version }}
       deprecated: true
       deprecationWarning: "k8s.tars.io/v1beta1 TExitedRecord is deprecated; please migrate to k8s.tars.io/v1beta3 TExitedRecord"
+      {{- end}}
       schema:
         openAPIV3Schema:
           type: object
@@ -48,10 +60,20 @@ spec:
               maxItems: 150
           required: [ app,server,pods ]
     - name: v1beta2
-      served: _V1BETA2_SERVED_
-      storage: _V1BETA2_STORAGE_
+      {{- if has "v1beta2" .Values.servers}}
+      served: true
+      {{- else }}
+      served: false
+      {{- end }}
+      {{- if eq "v1beta2" .Values.storage}}
+      storage: true
+      {{- else }}
+      storage: false
+      {{- end }}
+      {{- if semverCompare ">=1.19.x" $.Capabilities.KubeVersion.Version }}
       deprecated: true
       deprecationWarning: "k8s.tars.io/v1beta2 TExitedRecord is deprecated; please migrate to k8s.tars.io/v1beta3 TExitedRecord"
+      {{- end}}
       schema:
         openAPIV3Schema:
           type: object
@@ -82,8 +104,16 @@ spec:
               maxItems: 150
           required: [ app,server,pods ]
     - name: v1beta3
-      served: _V1BETA3_SERVED_
-      storage: _V1BETA3_STORAGE_
+      {{- if has "v1beta3" .Values.servers}}
+      served: true
+      {{- else }}
+      served: false
+      {{- end }}
+      {{- if eq "v1beta3" .Values.storage}}
+      storage: true
+      {{- else }}
+      storage: false
+      {{- end }}
       schema:
         openAPIV3Schema:
           type: object

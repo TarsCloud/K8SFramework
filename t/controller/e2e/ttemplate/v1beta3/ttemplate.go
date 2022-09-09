@@ -54,6 +54,7 @@ var _ = ginkgo.Describe("ttemplate", func() {
 		cppTT, err := s.CRDClient.CrdV1beta3().TTemplates(s.Namespace).Create(context.TODO(), cppTTLayout, k8sMetaV1.CreateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), cppTT)
+		time.Sleep(s.Opts.SyncTime)
 	})
 
 	ginkgo.It("check labels", func() {

@@ -46,6 +46,7 @@ var _ = ginkgo.Describe("try update tars server and check filed", func() {
 		}
 		_, err := s.CRDClient.CrdV1beta3().TTemplates(s.Namespace).Create(context.TODO(), ttLayout, k8sMetaV1.CreateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
+		time.Sleep(s.Opts.SyncTime)
 
 		tsLayout = &tarsCrdV1Beta3.TServer{
 			ObjectMeta: k8sMetaV1.ObjectMeta{
@@ -140,6 +141,7 @@ var _ = ginkgo.Describe("try update tars server and check filed", func() {
 			}
 			_, err := s.CRDClient.CrdV1beta3().TTemplates(s.Namespace).Create(context.TODO(), ttLayout, k8sMetaV1.CreateOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
+			time.Sleep(s.Opts.SyncTime)
 		})
 
 		ginkgo.It("not exist template", func() {

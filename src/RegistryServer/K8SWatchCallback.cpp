@@ -20,13 +20,13 @@ static void PrintJsonText(const rapidjson::Value& v)
 
     buffer.Clear();
 
-    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    rapidjson::Writer <rapidjson::StringBuffer> writer(buffer);
     v.Accept(writer);
 
     std::cout << buffer.GetString() << std::endl;
 }
 
-static std::shared_ptr<TEndpoint> buildTE(const rapidjson::Value& pDocument)
+static std::shared_ptr <TEndpoint> buildTE(const rapidjson::Value& pDocument)
 {
     auto pTEndpoint = std::make_shared<TEndpoint>();
     auto pAsyncThread = rapidjson::GetValueByPointer(pDocument, "/asyncThread");
@@ -104,7 +104,7 @@ static std::shared_ptr<TEndpoint> buildTE(const rapidjson::Value& pDocument)
 }
 
 
-static std::shared_ptr<UPChain> buildUPChain(const rapidjson::Value& pDocument)
+static std::shared_ptr <UPChain> buildUPChain(const rapidjson::Value& pDocument)
 {
     auto pUPChain = rapidjson::GetValueByPointer(pDocument, "/upChain");
     if (pUPChain == nullptr)
@@ -121,7 +121,7 @@ static std::shared_ptr<UPChain> buildUPChain(const rapidjson::Value& pDocument)
 
     for (auto&& item: pUPChain->GetObject())
     {
-        std::vector<tars::EndpointF> epv;
+        std::vector <tars::EndpointF> epv;
 
         auto&& value = item.value;
         if (!value.IsArray())
@@ -156,7 +156,13 @@ static std::shared_ptr<UPChain> buildUPChain(const rapidjson::Value& pDocument)
             f.host = std::string(hostRef.GetString(), hostRef.GetStringLength());
             f.port = portRef.GetInt();
             f.timeout = timeoutRef.GetInt();
-			f.istcp = true;
+
+            auto pIsTcp = rapidjson::GetValueByPointer(ep, "/isTcp");
+            if (pIsTcp == nullptr || !pIsTcp->IsBool() || pIsTcp->GetBool())
+            {
+                f.istcp = 1;
+            }
+
             epv.emplace_back(f);
         }
 

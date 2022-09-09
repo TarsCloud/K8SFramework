@@ -46,6 +46,7 @@ var _ = ginkgo.Describe("test server level config", func() {
 		tconfig, err := s.CRDClient.CrdV1beta2().TConfigs(s.Namespace).Create(context.TODO(), tconfigLayout, k8sMetaV1.CreateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), tconfig)
+		time.Sleep(s.Opts.SyncTime)
 	})
 
 	ginkgo.It("valid labels ", func() {
