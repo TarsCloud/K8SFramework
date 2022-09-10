@@ -71,7 +71,7 @@ func prepareDeleteTConfig(tconfig *tarsCrdV1beta3.TConfig, clients *controller.C
 	labelSelector := labels.NewSelector().Add(*appRequirement).Add(*serverRequirement).Add(*configNameRequirement)
 	if tconfig.PodSeq != "m" {
 		podSeqRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TConfigPodSeqLabel, selection.DoubleEquals, []string{tconfig.PodSeq})
-		labelSelector.Add(*podSeqRequirement)
+		labelSelector = labelSelector.Add(*podSeqRequirement)
 	}
 
 	namespace := tconfig.Namespace
