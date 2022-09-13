@@ -99,8 +99,8 @@ endef
 $(foreach server, $(CONTROLLER_SERVERS), $(eval $(call func_expand_server_param,$(server),$(server))))
 $(foreach server, $(FRAMEWORK_SERVERS), $(eval $(call func_expand_server_param,$(server),tars.$(server))))
 define func_build_binary
-	@mkdir -p cache/$1/go
-	@mkdir -p cache/$1/build
+	mkdir -p cache/$1/go
+	mkdir -p cache/$1/build
 	$(ENV_DOCKER_RUN) --platform $1 --rm -v $(PWD)/src:/src -v $(PWD)/cache/$1/build:/build -v $(PWD)/cache/$1/go:/go $(platform)/tarscompiler:$(BUILD_VERSION) $@
 	mkdir -p cache/context/$@/binary
 	cp cache/$1/build/bin/$@ cache/context/$@/binary/$@_$(subst /,_,$1)
@@ -118,7 +118,7 @@ endef
 tars%: $(if $(findstring $(DOCKER_ENABLE_BUILDX),1),enable.buildx,disable.buildx) $(if $(findstring $(WITHOUT_DEPENDS_CHECK),1),,compiler cppbase)
 	@echo "$@ -> [ Start ]"
 	$(call func_check_params, REGISTRY_URL BUILD_VERSION)
-	$(foreach platform,$(PLATFORMS), $(call func_build_binary,$(platform)))
+	$(foreach platform,$(PLATFORMS), $(call func_build_binary,$(platform));)
 	$(call func_build_image,$($@_repo),context/$@/Dockerfile, context/$@)
 	@echo "$@ -> [ Done ]"
 
