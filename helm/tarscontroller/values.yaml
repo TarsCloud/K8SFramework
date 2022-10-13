@@ -5,3 +5,5 @@ controller:
   registry: _CONTROLLER_REGISTRY_
   tag: _CONTROLLER_TAG_
   secret: ""
+agent:
+  tlv_in_host: /usr/local/app/tars/host-mount

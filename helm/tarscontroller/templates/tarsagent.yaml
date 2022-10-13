@@ -8,17 +8,26 @@ metadata:
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: tars-system:tars-agent-node
+  name: tars-system:tars-agent
 rules:
   - apiGroups: [ "" ]
+    resources: [ persistentvolumeclaims ]
+    verbs: [ get,list,watch,update ]
+  - apiGroups: [ "" ]
+    resources: [ persistentvolumes ]
+    verbs: [ get,list,watch,update,create ]
+  - apiGroups: [ "" ]
     resources: [ nodes ]
+    verbs: [ get,list,watch ]
+  - apiGroups: [ "storage.k8s.io" ]
+    resources: [ storageclasses ]
     verbs: [ get,list,watch ]
 ---
 
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: tars-system:tars-agent-node
+  name: tars-system:tars-agent
 subjects:
   - kind: ServiceAccount
     name: tars-agent
@@ -26,22 +35,9 @@ subjects:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: tars-system:tars-agent-node
+  name: tars-system:tars-agent
 ---
 
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: tars-system:tars-agent-pv
-subjects:
-  - kind: ServiceAccount
-    name: tars-agent
-    namespace: tars-system
-roleRef:
-  kind: ClusterRole
-  name: system:persistent-volume-provisioner
-  apiGroup: rbac.authorization.k8s.io
----
 
 apiVersion: v1
 kind: ConfigMap
@@ -50,9 +46,8 @@ metadata:
   namespace: tars-system
 data:
   crontab.config: |-
-    05 0 * * * ? find /usr/local/app/tars/app_log/ -mtime +5 -name "*.log" | xargs rm -f
-    05 0 * * * ? find /usr/local/app/tars/app_log/ -mtime +5 -name "core.*" | xargs rm -f
-    05 0 * * * ? find /usr/local/app/tars/app_log/tars-agent -mtime +5 | xargs rm -f
+    0 3 * * * ? find /usr/local/app/tars/app_log/ -mtime +5 -name "*.log" | xargs rm -f
+    0 3 * * * ? find /usr/local/app/tars/app_log/ -mtime +5 -name "core.*" | xargs rm -f
 ---
 
 apiVersion: apps/v1
@@ -84,10 +79,6 @@ spec:
         - image: "{{.Values.controller.registry}}/tarsagent:{{.Values.controller.tag}}"
           imagePullPolicy: "Always"
           name: tars-agent
-          #command: ["/bin/bash"]
-          #args: ["-c", "while true; do sleep 10;done"]
-          #securityContext:
-          #  privileged: true
           env:
             - name: NodeName
               valueFrom:
@@ -118,7 +109,7 @@ spec:
             type: DirectoryOrCreate
           name: host-log-dir
         - hostPath:
-            path: /usr/local/app/tars/host-mount
+            path: {{.Values.agent.tlv_in_host}}
             type: DirectoryOrCreate
           name: host-mount-dir
     {{if.Values.controller.secret}}
