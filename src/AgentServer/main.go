@@ -1,26 +1,32 @@
 package main
 
 import (
-	"github.com/golang/glog"
-	"tarsagent/controller"
-	"tarsagent/controller/common"
-	"tarsagent/crontabtask"
+	"tarsagent/runner"
+	"tarsagent/runner/cron"
+	"tarsagent/runner/storage"
+	"time"
 )
 
 func main() {
-	// Glog log
-	common.InitGlog()
 
-	// Run env
-	k8sNamespace, k8sConfig, err := common.LoadEnv()
-	if err != nil {
-		glog.Errorf("load controller error: %s\n", err)
-		return
+	stopCh := make(chan struct{})
+
+	runners := []runner.Runner{
+		cron.NewRunner(),
+		storage.NewRunner(),
 	}
 
-	// CrontabTask: delete logs and core dumps periodically
-	crontabtask.StartCronTabTask()
+	for _, r := range runners {
+		if err := r.Init(); err != nil {
+			return
+		}
+	}
 
-	// Controller: image downloader and local pv creator/deleter
-	controller.StartController(k8sNamespace, k8sConfig)
+	for _, r := range runners {
+		r.Start(stopCh)
+	}
+
+	for {
+		time.Sleep(time.Second * 3)
+	}
 }
