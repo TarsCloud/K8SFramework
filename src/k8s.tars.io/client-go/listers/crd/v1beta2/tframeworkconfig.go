@@ -26,8 +26,10 @@ import (
 )
 
 // TFrameworkConfigLister helps list TFrameworkConfigs.
+// All objects returned here must be treated as read-only.
 type TFrameworkConfigLister interface {
 	// List lists all TFrameworkConfigs in the indexer.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1beta2.TFrameworkConfig, err error)
 	// TFrameworkConfigs returns an object that can list and get TFrameworkConfigs.
 	TFrameworkConfigs(namespace string) TFrameworkConfigNamespaceLister
@@ -58,10 +60,13 @@ func (s *tFrameworkConfigLister) TFrameworkConfigs(namespace string) TFrameworkC
 }
 
 // TFrameworkConfigNamespaceLister helps list and get TFrameworkConfigs.
+// All objects returned here must be treated as read-only.
 type TFrameworkConfigNamespaceLister interface {
 	// List lists all TFrameworkConfigs in the indexer for a given namespace.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1beta2.TFrameworkConfig, err error)
 	// Get retrieves the TFrameworkConfig from the indexer for a given namespace and name.
+	// Objects returned here must be treated as read-only.
 	Get(name string) (*v1beta2.TFrameworkConfig, error)
 	TFrameworkConfigNamespaceListerExpansion
 }

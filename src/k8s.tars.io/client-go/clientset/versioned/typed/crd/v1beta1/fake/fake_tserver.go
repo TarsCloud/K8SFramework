@@ -36,9 +36,9 @@ type FakeTServers struct {
 	ns   string
 }
 
-var tserversResource = schema.GroupVersionResource{Group: "crd", Version: "v1beta1", Resource: "tservers"}
+var tserversResource = schema.GroupVersionResource{Group: "k8s.tars.io", Version: "v1beta1", Resource: "tservers"}
 
-var tserversKind = schema.GroupVersionKind{Group: "crd", Version: "v1beta1", Kind: "TServer"}
+var tserversKind = schema.GroupVersionKind{Group: "k8s.tars.io", Version: "v1beta1", Kind: "TServer"}
 
 // Get takes name of the tServer, and returns the corresponding tServer object, and an error if there is any.
 func (c *FakeTServers) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1beta1.TServer, err error) {

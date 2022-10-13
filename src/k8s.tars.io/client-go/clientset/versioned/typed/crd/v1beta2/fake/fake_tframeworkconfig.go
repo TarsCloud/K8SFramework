@@ -36,9 +36,9 @@ type FakeTFrameworkConfigs struct {
 	ns   string
 }
 
-var tframeworkconfigsResource = schema.GroupVersionResource{Group: "crd", Version: "v1beta2", Resource: "tframeworkconfigs"}
+var tframeworkconfigsResource = schema.GroupVersionResource{Group: "k8s.tars.io", Version: "v1beta2", Resource: "tframeworkconfigs"}
 
-var tframeworkconfigsKind = schema.GroupVersionKind{Group: "crd", Version: "v1beta2", Kind: "TFrameworkConfig"}
+var tframeworkconfigsKind = schema.GroupVersionKind{Group: "k8s.tars.io", Version: "v1beta2", Kind: "TFrameworkConfig"}
 
 // Get takes name of the tFrameworkConfig, and returns the corresponding tFrameworkConfig object, and an error if there is any.
 func (c *FakeTFrameworkConfigs) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1beta2.TFrameworkConfig, err error) {

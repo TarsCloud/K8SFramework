@@ -36,7 +36,7 @@ type CrdV1beta1Interface interface {
 	TTreesGetter
 }
 
-// CrdV1beta1Client is used to interact with features provided by the crd group.
+// CrdV1beta1Client is used to interact with features provided by the k8s.tars.io group.
 type CrdV1beta1Client struct {
 	restClient rest.Interface
 }

@@ -26,8 +26,10 @@ import (
 )
 
 // TConfigLister helps list TConfigs.
+// All objects returned here must be treated as read-only.
 type TConfigLister interface {
 	// List lists all TConfigs in the indexer.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1beta2.TConfig, err error)
 	// TConfigs returns an object that can list and get TConfigs.
 	TConfigs(namespace string) TConfigNamespaceLister
@@ -58,10 +60,13 @@ func (s *tConfigLister) TConfigs(namespace string) TConfigNamespaceLister {
 }
 
 // TConfigNamespaceLister helps list and get TConfigs.
+// All objects returned here must be treated as read-only.
 type TConfigNamespaceLister interface {
 	// List lists all TConfigs in the indexer for a given namespace.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1beta2.TConfig, err error)
 	// Get retrieves the TConfig from the indexer for a given namespace and name.
+	// Objects returned here must be treated as read-only.
 	Get(name string) (*v1beta2.TConfig, error)
 	TConfigNamespaceListerExpansion
 }

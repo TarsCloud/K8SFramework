@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// +k8s:openapi-gen=true
 // +k8s:deepcopy-gen=package
-// +k8s:protobuf-gen=package
+// +groupName=k8s.tars.io
+// +groupGoName=crd
 
-package v1beta1 // import "k8s.tars.io/api/core/v1beta1"
+package v1beta1

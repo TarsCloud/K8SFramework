@@ -36,9 +36,9 @@ type FakeTExitedRecords struct {
 	ns   string
 }
 
-var texitedrecordsResource = schema.GroupVersionResource{Group: "crd", Version: "v1beta2", Resource: "texitedrecords"}
+var texitedrecordsResource = schema.GroupVersionResource{Group: "k8s.tars.io", Version: "v1beta2", Resource: "texitedrecords"}
 
-var texitedrecordsKind = schema.GroupVersionKind{Group: "crd", Version: "v1beta2", Kind: "TExitedRecord"}
+var texitedrecordsKind = schema.GroupVersionKind{Group: "k8s.tars.io", Version: "v1beta2", Kind: "TExitedRecord"}
 
 // Get takes name of the tExitedRecord, and returns the corresponding tExitedRecord object, and an error if there is any.
 func (c *FakeTExitedRecords) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1beta2.TExitedRecord, err error) {

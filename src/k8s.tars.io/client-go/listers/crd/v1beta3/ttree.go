@@ -26,8 +26,10 @@ import (
 )
 
 // TTreeLister helps list TTrees.
+// All objects returned here must be treated as read-only.
 type TTreeLister interface {
 	// List lists all TTrees in the indexer.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1beta3.TTree, err error)
 	// TTrees returns an object that can list and get TTrees.
 	TTrees(namespace string) TTreeNamespaceLister
@@ -58,10 +60,13 @@ func (s *tTreeLister) TTrees(namespace string) TTreeNamespaceLister {
 }
 
 // TTreeNamespaceLister helps list and get TTrees.
+// All objects returned here must be treated as read-only.
 type TTreeNamespaceLister interface {
 	// List lists all TTrees in the indexer for a given namespace.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1beta3.TTree, err error)
 	// Get retrieves the TTree from the indexer for a given namespace and name.
+	// Objects returned here must be treated as read-only.
 	Get(name string) (*v1beta3.TTree, error)
 	TTreeNamespaceListerExpansion
 }

@@ -26,8 +26,10 @@ import (
 )
 
 // TEndpointLister helps list TEndpoints.
+// All objects returned here must be treated as read-only.
 type TEndpointLister interface {
 	// List lists all TEndpoints in the indexer.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1beta3.TEndpoint, err error)
 	// TEndpoints returns an object that can list and get TEndpoints.
 	TEndpoints(namespace string) TEndpointNamespaceLister
@@ -58,10 +60,13 @@ func (s *tEndpointLister) TEndpoints(namespace string) TEndpointNamespaceLister 
 }
 
 // TEndpointNamespaceLister helps list and get TEndpoints.
+// All objects returned here must be treated as read-only.
 type TEndpointNamespaceLister interface {
 	// List lists all TEndpoints in the indexer for a given namespace.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1beta3.TEndpoint, err error)
 	// Get retrieves the TEndpoint from the indexer for a given namespace and name.
+	// Objects returned here must be treated as read-only.
 	Get(name string) (*v1beta3.TEndpoint, error)
 	TEndpointNamespaceListerExpansion
 }

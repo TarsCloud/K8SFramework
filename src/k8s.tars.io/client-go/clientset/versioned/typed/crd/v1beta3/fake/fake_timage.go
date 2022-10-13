@@ -36,9 +36,9 @@ type FakeTImages struct {
 	ns   string
 }
 
-var timagesResource = schema.GroupVersionResource{Group: "crd", Version: "v1beta3", Resource: "timages"}
+var timagesResource = schema.GroupVersionResource{Group: "k8s.tars.io", Version: "v1beta3", Resource: "timages"}
 
-var timagesKind = schema.GroupVersionKind{Group: "crd", Version: "v1beta3", Kind: "TImage"}
+var timagesKind = schema.GroupVersionKind{Group: "k8s.tars.io", Version: "v1beta3", Kind: "TImage"}
 
 // Get takes name of the tImage, and returns the corresponding tImage object, and an error if there is any.
 func (c *FakeTImages) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1beta3.TImage, err error) {

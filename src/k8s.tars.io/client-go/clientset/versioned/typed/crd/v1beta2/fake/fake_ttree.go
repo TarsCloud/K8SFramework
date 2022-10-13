@@ -36,9 +36,9 @@ type FakeTTrees struct {
 	ns   string
 }
 
-var ttreesResource = schema.GroupVersionResource{Group: "crd", Version: "v1beta2", Resource: "ttrees"}
+var ttreesResource = schema.GroupVersionResource{Group: "k8s.tars.io", Version: "v1beta2", Resource: "ttrees"}
 
-var ttreesKind = schema.GroupVersionKind{Group: "crd", Version: "v1beta2", Kind: "TTree"}
+var ttreesKind = schema.GroupVersionKind{Group: "k8s.tars.io", Version: "v1beta2", Kind: "TTree"}
 
 // Get takes name of the tTree, and returns the corresponding tTree object, and an error if there is any.
 func (c *FakeTTrees) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1beta2.TTree, err error) {

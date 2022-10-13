@@ -36,9 +36,9 @@ type FakeTConfigs struct {
 	ns   string
 }
 
-var tconfigsResource = schema.GroupVersionResource{Group: "crd", Version: "v1beta2", Resource: "tconfigs"}
+var tconfigsResource = schema.GroupVersionResource{Group: "k8s.tars.io", Version: "v1beta2", Resource: "tconfigs"}
 
-var tconfigsKind = schema.GroupVersionKind{Group: "crd", Version: "v1beta2", Kind: "TConfig"}
+var tconfigsKind = schema.GroupVersionKind{Group: "k8s.tars.io", Version: "v1beta2", Kind: "TConfig"}
 
 // Get takes name of the tConfig, and returns the corresponding tConfig object, and an error if there is any.
 func (c *FakeTConfigs) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1beta2.TConfig, err error) {

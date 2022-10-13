@@ -36,9 +36,9 @@ type FakeTEndpoints struct {
 	ns   string
 }
 
-var tendpointsResource = schema.GroupVersionResource{Group: "crd", Version: "v1beta2", Resource: "tendpoints"}
+var tendpointsResource = schema.GroupVersionResource{Group: "k8s.tars.io", Version: "v1beta2", Resource: "tendpoints"}
 
-var tendpointsKind = schema.GroupVersionKind{Group: "crd", Version: "v1beta2", Kind: "TEndpoint"}
+var tendpointsKind = schema.GroupVersionKind{Group: "k8s.tars.io", Version: "v1beta2", Kind: "TEndpoint"}
 
 // Get takes name of the tEndpoint, and returns the corresponding tEndpoint object, and an error if there is any.
 func (c *FakeTEndpoints) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1beta2.TEndpoint, err error) {

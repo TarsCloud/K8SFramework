@@ -26,8 +26,10 @@ import (
 )
 
 // TExitedRecordLister helps list TExitedRecords.
+// All objects returned here must be treated as read-only.
 type TExitedRecordLister interface {
 	// List lists all TExitedRecords in the indexer.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1beta1.TExitedRecord, err error)
 	// TExitedRecords returns an object that can list and get TExitedRecords.
 	TExitedRecords(namespace string) TExitedRecordNamespaceLister
@@ -58,10 +60,13 @@ func (s *tExitedRecordLister) TExitedRecords(namespace string) TExitedRecordName
 }
 
 // TExitedRecordNamespaceLister helps list and get TExitedRecords.
+// All objects returned here must be treated as read-only.
 type TExitedRecordNamespaceLister interface {
 	// List lists all TExitedRecords in the indexer for a given namespace.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1beta1.TExitedRecord, err error)
 	// Get retrieves the TExitedRecord from the indexer for a given namespace and name.
+	// Objects returned here must be treated as read-only.
 	Get(name string) (*v1beta1.TExitedRecord, error)
 	TExitedRecordNamespaceListerExpansion
 }

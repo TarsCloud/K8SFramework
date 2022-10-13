@@ -28,6 +28,8 @@ import (
 	"k8s.io/gengo/generator"
 	"k8s.io/gengo/namer"
 	"k8s.io/gengo/types"
+
+	"k8s.io/klog/v2"
 )
 
 // CustomArgs is used tby the go2idl framework to pass args specific to this generator.

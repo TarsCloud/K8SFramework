@@ -26,8 +26,10 @@ import (
 )
 
 // TServerLister helps list TServers.
+// All objects returned here must be treated as read-only.
 type TServerLister interface {
 	// List lists all TServers in the indexer.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1beta3.TServer, err error)
 	// TServers returns an object that can list and get TServers.
 	TServers(namespace string) TServerNamespaceLister
@@ -58,10 +60,13 @@ func (s *tServerLister) TServers(namespace string) TServerNamespaceLister {
 }
 
 // TServerNamespaceLister helps list and get TServers.
+// All objects returned here must be treated as read-only.
 type TServerNamespaceLister interface {
 	// List lists all TServers in the indexer for a given namespace.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1beta3.TServer, err error)
 	// Get retrieves the TServer from the indexer for a given namespace and name.
+	// Objects returned here must be treated as read-only.
 	Get(name string) (*v1beta3.TServer, error)
 	TServerNamespaceListerExpansion
 }

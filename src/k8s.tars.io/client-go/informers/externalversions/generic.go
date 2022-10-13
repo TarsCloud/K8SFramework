@@ -54,7 +54,7 @@ func (f *genericInformer) Lister() cache.GenericLister {
 // TODO extend this to unknown resources with a client pool
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
-	// Group=crd, Version=v1beta1
+	// Group=k8s.tars.io, Version=v1beta1
 	case v1beta1.SchemeGroupVersion.WithResource("taccounts"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Crd().V1beta1().TAccounts().Informer()}, nil
 	case v1beta1.SchemeGroupVersion.WithResource("tconfigs"):
@@ -72,7 +72,7 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	case v1beta1.SchemeGroupVersion.WithResource("ttrees"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Crd().V1beta1().TTrees().Informer()}, nil
 
-		// Group=crd, Version=v1beta2
+		// Group=k8s.tars.io, Version=v1beta2
 	case v1beta2.SchemeGroupVersion.WithResource("taccounts"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Crd().V1beta2().TAccounts().Informer()}, nil
 	case v1beta2.SchemeGroupVersion.WithResource("tconfigs"):
@@ -92,7 +92,7 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	case v1beta2.SchemeGroupVersion.WithResource("ttrees"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Crd().V1beta2().TTrees().Informer()}, nil
 
-		// Group=crd, Version=v1beta3
+		// Group=k8s.tars.io, Version=v1beta3
 	case v1beta3.SchemeGroupVersion.WithResource("taccounts"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Crd().V1beta3().TAccounts().Informer()}, nil
 	case v1beta3.SchemeGroupVersion.WithResource("tconfigs"):

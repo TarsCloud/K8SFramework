@@ -26,8 +26,10 @@ import (
 )
 
 // TImageLister helps list TImages.
+// All objects returned here must be treated as read-only.
 type TImageLister interface {
 	// List lists all TImages in the indexer.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1beta3.TImage, err error)
 	// TImages returns an object that can list and get TImages.
 	TImages(namespace string) TImageNamespaceLister
@@ -58,10 +60,13 @@ func (s *tImageLister) TImages(namespace string) TImageNamespaceLister {
 }
 
 // TImageNamespaceLister helps list and get TImages.
+// All objects returned here must be treated as read-only.
 type TImageNamespaceLister interface {
 	// List lists all TImages in the indexer for a given namespace.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1beta3.TImage, err error)
 	// Get retrieves the TImage from the indexer for a given namespace and name.
+	// Objects returned here must be treated as read-only.
 	Get(name string) (*v1beta3.TImage, error)
 	TImageNamespaceListerExpansion
 }

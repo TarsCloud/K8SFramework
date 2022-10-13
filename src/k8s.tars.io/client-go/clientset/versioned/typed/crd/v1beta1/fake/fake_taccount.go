@@ -36,9 +36,9 @@ type FakeTAccounts struct {
 	ns   string
 }
 
-var taccountsResource = schema.GroupVersionResource{Group: "crd", Version: "v1beta1", Resource: "taccounts"}
+var taccountsResource = schema.GroupVersionResource{Group: "k8s.tars.io", Version: "v1beta1", Resource: "taccounts"}
 
-var taccountsKind = schema.GroupVersionKind{Group: "crd", Version: "v1beta1", Kind: "TAccount"}
+var taccountsKind = schema.GroupVersionKind{Group: "k8s.tars.io", Version: "v1beta1", Kind: "TAccount"}
 
 // Get takes name of the tAccount, and returns the corresponding tAccount object, and an error if there is any.
 func (c *FakeTAccounts) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1beta1.TAccount, err error) {

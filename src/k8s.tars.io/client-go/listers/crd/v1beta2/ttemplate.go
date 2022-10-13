@@ -26,8 +26,10 @@ import (
 )
 
 // TTemplateLister helps list TTemplates.
+// All objects returned here must be treated as read-only.
 type TTemplateLister interface {
 	// List lists all TTemplates in the indexer.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1beta2.TTemplate, err error)
 	// TTemplates returns an object that can list and get TTemplates.
 	TTemplates(namespace string) TTemplateNamespaceLister
@@ -58,10 +60,13 @@ func (s *tTemplateLister) TTemplates(namespace string) TTemplateNamespaceLister 
 }
 
 // TTemplateNamespaceLister helps list and get TTemplates.
+// All objects returned here must be treated as read-only.
 type TTemplateNamespaceLister interface {
 	// List lists all TTemplates in the indexer for a given namespace.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1beta2.TTemplate, err error)
 	// Get retrieves the TTemplate from the indexer for a given namespace and name.
+	// Objects returned here must be treated as read-only.
 	Get(name string) (*v1beta2.TTemplate, error)
 	TTemplateNamespaceListerExpansion
 }

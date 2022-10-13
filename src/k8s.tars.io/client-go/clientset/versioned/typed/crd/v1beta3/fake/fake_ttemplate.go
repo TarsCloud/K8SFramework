@@ -36,9 +36,9 @@ type FakeTTemplates struct {
 	ns   string
 }
 
-var ttemplatesResource = schema.GroupVersionResource{Group: "crd", Version: "v1beta3", Resource: "ttemplates"}
+var ttemplatesResource = schema.GroupVersionResource{Group: "k8s.tars.io", Version: "v1beta3", Resource: "ttemplates"}
 
-var ttemplatesKind = schema.GroupVersionKind{Group: "crd", Version: "v1beta3", Kind: "TTemplate"}
+var ttemplatesKind = schema.GroupVersionKind{Group: "k8s.tars.io", Version: "v1beta3", Kind: "TTemplate"}
 
 // Get takes name of the tTemplate, and returns the corresponding tTemplate object, and an error if there is any.
 func (c *FakeTTemplates) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1beta3.TTemplate, err error) {
