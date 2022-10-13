@@ -1,5 +1,7 @@
 #! /bin/bash
 
-TARSIMAGE_EXECUTION_FILE="/usr/local/app/tars/tarsagent/bin/tarsagent"
-chmod +x ${TARSIMAGE_EXECUTION_FILE}
-exec ${TARSIMAGE_EXECUTION_FILE}
+.. /bin/timezone.sh
+
+EXECUTION_FILE="/usr/local/app/tars/tarsagent/bin/tarsagent"
+chmod +x ${EXECUTION_FILE}
+exec ${EXECUTION_FILE}

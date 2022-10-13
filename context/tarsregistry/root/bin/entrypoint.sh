@@ -1,5 +1,7 @@
 #!/bin/bash
 
+.. /bin/timezone.sh
+
 _K8S_POD_NAME_=${PodName}
 if [ -z "$_K8S_POD_NAME_" ]; then
   echo "got empty [PodName] env value"
@@ -38,4 +40,3 @@ done
 
 chmod +x ${REGISTRY_EXECUTION_FILE}
 exec ${REGISTRY_EXECUTION_FILE} --config=${REGISTRY_CONFIG_FILE}
-# exec /bin/guard
