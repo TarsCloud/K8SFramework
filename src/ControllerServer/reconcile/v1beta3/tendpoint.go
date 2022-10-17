@@ -14,7 +14,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
-	tarsMetaV1beta3 "k8s.tars.io/meta/v1beta3"
+	tarsMeta "k8s.tars.io/meta"
 	"strings"
 	"tarscontroller/controller"
 	"tarscontroller/reconcile"
@@ -104,9 +104,9 @@ func (r *TEndpointReconciler) EnqueueObj(resourceName string, resourceEvent k8sW
 	case *k8sCoreV1.Pod:
 		pod := resourceObj.(*k8sCoreV1.Pod)
 		if pod.Labels != nil {
-			app, appExist := pod.Labels[tarsMetaV1beta3.TServerAppLabel]
-			server, serverExist := pod.Labels[tarsMetaV1beta3.TServerNameLabel]
-			if appExist && serverExist {
+			app := pod.Labels[tarsMeta.TServerAppLabel]
+			server := pod.Labels[tarsMeta.TServerNameLabel]
+			if app != "" && server != "" {
 				key := fmt.Sprintf("%s/%s-%s", pod.Namespace, strings.ToLower(app), strings.ToLower(server))
 				r.workQueue.Add(key)
 				return
@@ -139,12 +139,12 @@ func (r *TEndpointReconciler) reconcile(key string) reconcile.Result {
 	tserver, err := r.informers.TServerInformer.Lister().TServers(namespace).Get(name)
 	if err != nil {
 		if !errors.IsNotFound(err) {
-			utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceGetError, "tserver", namespace, name, err.Error()))
+			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "tserver", namespace, name, err.Error()))
 			return reconcile.RateLimit
 		}
 		err = r.clients.CrdClient.CrdV1beta3().TEndpoints(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
 		if err != nil && !errors.IsNotFound(err) {
-			utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceDeleteError, "tendpoint", namespace, name, err.Error()))
+			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceDeleteError, "tendpoint", namespace, name, err.Error()))
 			return reconcile.RateLimit
 		}
 		return reconcile.AllOk
@@ -153,7 +153,7 @@ func (r *TEndpointReconciler) reconcile(key string) reconcile.Result {
 	if tserver.DeletionTimestamp != nil {
 		err = r.clients.CrdClient.CrdV1beta3().TEndpoints(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
 		if err != nil && !errors.IsNotFound(err) {
-			utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceDeleteError, "tendpoint", namespace, name, err.Error()))
+			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceDeleteError, "tendpoint", namespace, name, err.Error()))
 			return reconcile.RateLimit
 		}
 		return reconcile.AllOk
@@ -162,13 +162,13 @@ func (r *TEndpointReconciler) reconcile(key string) reconcile.Result {
 	tendpoint, err := r.informers.TEndpointInformer.Lister().TEndpoints(namespace).Get(name)
 	if err != nil {
 		if !errors.IsNotFound(err) {
-			utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceGetError, "tendpoint", namespace, name, err.Error()))
+			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "tendpoint", namespace, name, err.Error()))
 			return reconcile.RateLimit
 		}
 		tendpoint = buildTEndpoint(tserver)
 		tendpointInterface := r.clients.CrdClient.CrdV1beta3().TEndpoints(namespace)
 		if _, err = tendpointInterface.Create(context.TODO(), tendpoint, k8sMetaV1.CreateOptions{}); err != nil && !errors.IsAlreadyExists(err) {
-			utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceCreateError, "tendpoint", namespace, name, err.Error()))
+			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceCreateError, "tendpoint", namespace, name, err.Error()))
 			return reconcile.RateLimit
 		}
 		return reconcile.AllOk
@@ -177,7 +177,7 @@ func (r *TEndpointReconciler) reconcile(key string) reconcile.Result {
 	if !k8sMetaV1.IsControlledBy(tendpoint, tserver) {
 		tendpointInterface := r.clients.CrdClient.CrdV1beta3().TEndpoints(namespace)
 		if err = tendpointInterface.Delete(context.TODO(), tendpoint.Name, k8sMetaV1.DeleteOptions{}); err != nil {
-			utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceUpdateError, "tendpoint", namespace, name, err.Error()))
+			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceUpdateError, "tendpoint", namespace, name, err.Error()))
 		}
 		return reconcile.RateLimit
 	}
@@ -189,7 +189,7 @@ func (r *TEndpointReconciler) reconcile(key string) reconcile.Result {
 		syncTEndpoint(tserver, tendpointCopy)
 		tendpointInterface := r.clients.CrdClient.CrdV1beta3().TEndpoints(namespace)
 		if _, err = tendpointInterface.Update(context.TODO(), tendpointCopy, k8sMetaV1.UpdateOptions{}); err != nil {
-			utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceUpdateError, "tendpoint", namespace, name, err.Error()))
+			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceUpdateError, "tendpoint", namespace, name, err.Error()))
 			return reconcile.RateLimit
 		}
 	}
@@ -208,7 +208,7 @@ func (r *TEndpointReconciler) buildPodStatus(pod *k8sCoreV1.Pod) *tarsCrdV1beta3
 		SettingState:      "Active",
 		PresentState:      "",
 		PresentMessage:    "",
-		ID:                pod.Labels[tarsMetaV1beta3.TServerIdLabel],
+		ID:                pod.Labels[tarsMeta.TServerIdLabel],
 	}
 
 	if pod.DeletionTimestamp != nil {
@@ -232,7 +232,7 @@ func (r *TEndpointReconciler) buildPodStatus(pod *k8sCoreV1.Pod) *tarsCrdV1beta3
 			podConditions[2] = condition.DeepCopy()
 		case k8sCoreV1.PodReady:
 			readyConditions = condition.DeepCopy()
-		case tarsMetaV1beta3.TPodReadinessGate:
+		case tarsMeta.TPodReadinessGate:
 			tarsReadinessGatesCondition = condition.DeepCopy()
 		default:
 			podConditions = append(podConditions, condition.DeepCopy())
@@ -278,12 +278,12 @@ func (r *TEndpointReconciler) buildPodStatus(pod *k8sCoreV1.Pod) *tarsCrdV1beta3
 
 func (r *TEndpointReconciler) updateStatus(tendpoint *tarsCrdV1beta3.TEndpoint) reconcile.Result {
 	namespace := tendpoint.Namespace
-	appRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TServerAppLabel, selection.DoubleEquals, []string{tendpoint.Spec.App})
-	serverRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TServerNameLabel, selection.DoubleEquals, []string{tendpoint.Spec.Server})
+	appRequirement, _ := labels.NewRequirement(tarsMeta.TServerAppLabel, selection.DoubleEquals, []string{tendpoint.Spec.App})
+	serverRequirement, _ := labels.NewRequirement(tarsMeta.TServerNameLabel, selection.DoubleEquals, []string{tendpoint.Spec.Server})
 
 	pods, err := r.informers.PodInformer.Lister().Pods(namespace).List(labels.NewSelector().Add(*appRequirement).Add(*serverRequirement))
 	if err != nil {
-		utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceSelectorError, namespace, "tendpoint", err.Error()))
+		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceSelectorError, namespace, "tendpoint", err.Error()))
 		return reconcile.RateLimit
 	}
 
@@ -298,7 +298,7 @@ func (r *TEndpointReconciler) updateStatus(tendpoint *tarsCrdV1beta3.TEndpoint) 
 	_, err = r.clients.CrdClient.CrdV1beta3().TEndpoints(namespace).UpdateStatus(context.TODO(), tendpointCopy, k8sMetaV1.UpdateOptions{})
 
 	if err != nil {
-		utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceUpdateError, "tendpoint", namespace, tendpoint.Name, err.Error()))
+		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceUpdateError, "tendpoint", namespace, tendpoint.Name, err.Error()))
 		return reconcile.RateLimit
 	}
 

@@ -14,7 +14,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
-	tarsMetaV1beta3 "k8s.tars.io/meta/v1beta3"
+	tarsMeta "k8s.tars.io/meta"
 	"strings"
 	"tarscontroller/controller"
 	"tarscontroller/reconcile"
@@ -90,8 +90,8 @@ func (r *PVCReconciler) EnqueueObj(resourceName string, resourceEvent k8sWatchV1
 		}
 		pvc := resourceObj.(*k8sCoreV1.PersistentVolumeClaim)
 		if pvc.Labels != nil {
-			app, appExist := pvc.Labels[tarsMetaV1beta3.TServerAppLabel]
-			server, serverExist := pvc.Labels[tarsMetaV1beta3.TServerNameLabel]
+			app, appExist := pvc.Labels[tarsMeta.TServerAppLabel]
+			server, serverExist := pvc.Labels[tarsMeta.TServerNameLabel]
 			if appExist && serverExist {
 				key := fmt.Sprintf("%s/%s-%s", pvc.Namespace, strings.ToLower(app), strings.ToLower(server))
 				r.workQueue.Add(key)
@@ -118,9 +118,9 @@ func buildPVCAnnotations(tserver *tarsCrdV1beta3.TServer) map[string]map[string]
 		for _, mount := range tserver.Spec.K8S.Mounts {
 			if mount.Source.TLocalVolume != nil {
 				annotations[mount.Name] = map[string]string{
-					tarsMetaV1beta3.TLocalVolumeUIDLabel:  mount.Source.TLocalVolume.UID,
-					tarsMetaV1beta3.TLocalVolumeGIDLabel:  mount.Source.TLocalVolume.GID,
-					tarsMetaV1beta3.TLocalVolumeModeLabel: mount.Source.TLocalVolume.Mode,
+					tarsMeta.TLocalVolumeUIDLabel:  mount.Source.TLocalVolume.UID,
+					tarsMeta.TLocalVolumeGIDLabel:  mount.Source.TLocalVolume.GID,
+					tarsMeta.TLocalVolumeModeLabel: mount.Source.TLocalVolume.Mode,
 				}
 			}
 		}
@@ -138,7 +138,7 @@ func (r *PVCReconciler) reconcile(key string) reconcile.Result {
 	tserver, err := r.informers.TServerInformer.Lister().TServers(namespace).Get(name)
 	if err != nil {
 		if !errors.IsNotFound(err) {
-			utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceGetError, "tserver", namespace, name, err.Error()))
+			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "tserver", namespace, name, err.Error()))
 			return reconcile.RateLimit
 		}
 		return reconcile.AllOk
@@ -149,18 +149,19 @@ func (r *PVCReconciler) reconcile(key string) reconcile.Result {
 	}
 
 	annotations := buildPVCAnnotations(tserver)
+	retry := false
 
 	for volumeName, volumeProperties := range annotations {
-		appRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TServerAppLabel, selection.DoubleEquals, []string{tserver.Spec.App})
-		serverRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TServerNameLabel, selection.DoubleEquals, []string{tserver.Spec.Server})
-		localVolumeRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TLocalVolumeLabel, selection.DoubleEquals, []string{volumeName})
-		labelSelector := labels.NewSelector().Add(*appRequirement, *serverRequirement, *localVolumeRequirement)
+		appRequirement, _ := labels.NewRequirement(tarsMeta.TServerAppLabel, selection.DoubleEquals, []string{tserver.Spec.App})
+		serverRequirement, _ := labels.NewRequirement(tarsMeta.TServerNameLabel, selection.DoubleEquals, []string{tserver.Spec.Server})
+		localVolumeRequirement, _ := labels.NewRequirement(tarsMeta.TLocalVolumeLabel, selection.DoubleEquals, []string{volumeName})
+		labelSelector := labels.NewSelector().Add(*appRequirement).Add(*serverRequirement).Add(*localVolumeRequirement)
 		pvcs, err := r.informers.PersistentVolumeClaimInformer.Lister().PersistentVolumeClaims(namespace).List(labelSelector)
 		if err != nil {
 			if errors.IsNotFound(err) {
 				continue
 			}
-			utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceSelectorError, namespace, "persistentVolumeclaims", err.Error()))
+			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceSelectorError, namespace, "persistentVolumeclaims", err.Error()))
 			return reconcile.RateLimit
 		}
 
@@ -180,9 +181,12 @@ func (r *PVCReconciler) reconcile(key string) reconcile.Result {
 			if err == nil {
 				continue
 			}
-			utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceUpdateError, "PersistentVolumeClaims", namespace, pvc.Name, err.Error()))
-			return reconcile.RateLimit
+			retry = true
+			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceUpdateError, "PersistentVolumeClaims", namespace, pvc.Name, err.Error()))
 		}
+	}
+	if retry {
+		return reconcile.RateLimit
 	}
 	return reconcile.AllOk
 }
