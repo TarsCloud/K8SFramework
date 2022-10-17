@@ -55,7 +55,7 @@ func (r *TConfigReconciler) EnqueueObj(resourceName string, resourceEvent k8sWat
 		configName, _ := objLabels[tarsMetaV1beta3.TConfigNameLabel]
 		podSeq, _ := objLabels[tarsMetaV1beta3.TConfigPodSeqLabel]
 		key = fmt.Sprintf("%s/%s/%s.%s.%s.%s", namespace, k8sWatchV1.Added, app, server, configName, podSeq)
-		key = fmt.Sprintf("%s/%s/%s", namespace, k8sWatchV1.Modified, "")
+		key = fmt.Sprintf("%s/%s/%s", namespace, k8sWatchV1.Modified, key)
 	case k8sWatchV1.Modified, k8sWatchV1.Deleted:
 		key = fmt.Sprintf("%s/%s/%s", namespace, resourceEvent, "")
 	}
@@ -181,7 +181,6 @@ func (r *TConfigReconciler) reconcile(key string) reconcile.Result {
 			utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceDeleteCollectionError, "tconfig", labelSelector.String(), err.Error()))
 			return reconcile.RateLimit
 		}
-
 	case string(k8sWatchV1.Modified):
 		deactivateRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TConfigDeactivateLabel, selection.Exists, nil)
 		deactivateLabelSelector := labels.NewSelector().Add(*deactivateRequirement)
@@ -230,6 +229,5 @@ func (r *TConfigReconciler) reconcile(key string) reconcile.Result {
 			return reconcile.RateLimit
 		}
 	}
-
 	return reconcile.AllOk
 }

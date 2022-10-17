@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	k8sAdmissionV1 "k8s.io/api/admission/v1"
-	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/api/errors"
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -169,7 +168,7 @@ func validCreateTConfig(clients *controller.Clients, informers *controller.Infor
 	}
 
 	if len(newTConfig.Server) == 0 && newTConfig.PodSeq != "m" {
-		return fmt.Errorf("app level tconfig does not support pod differences")
+		return fmt.Errorf("app level tconfig does not support master/slave")
 	}
 
 	if newTConfig.PodSeq != "m" {
@@ -180,7 +179,8 @@ func validCreateTConfig(clients *controller.Clients, informers *controller.Infor
 		activatedRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TConfigActivatedLabel, selection.DoubleEquals, []string{"true"})
 		deactivatingRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TConfigDeactivateLabel, selection.DoesNotExist, []string{})
 		deletingRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TConfigDeletingLabel, selection.DoesNotExist, []string{})
-		labelSelector := labels.NewSelector().Add(*appRequirement, *serverRequirement, *configNameRequirement, *podSeqRequirement, *activatedRequirement, *deactivatingRequirement, *deletingRequirement)
+		labelSelector := labels.NewSelector().Add(*appRequirement).Add(*serverRequirement).Add(*configNameRequirement).Add(*podSeqRequirement).
+			Add(*activatedRequirement).Add(*deactivatingRequirement).Add(*deletingRequirement)
 		namespace := newTConfig.Namespace
 		tconfigRuntimeObjects, err := informers.TConfigInformer.Lister().ByNamespace(namespace).List(labelSelector)
 
@@ -214,7 +214,7 @@ func validUpdateTConfig(clients *controller.Clients, informers *controller.Infor
 	oldTConfig := &tarsCrdV1beta3.TConfig{}
 	_ = json.Unmarshal(view.Request.OldObject.Raw, oldTConfig)
 
-	if _, ok := oldTConfig.Labels["tars.io/Deleting"]; ok {
+	if _, ok := oldTConfig.Labels[tarsMetaV1beta3.TConfigDeletingLabel]; ok {
 		return fmt.Errorf("can not update deleting tconfig")
 	}
 
@@ -224,7 +224,7 @@ func validUpdateTConfig(clients *controller.Clients, informers *controller.Infor
 	if newTConfig.Server != oldTConfig.Server {
 		return fmt.Errorf(tarsMetaV1beta3.FiledImmutableError, "tconfig", "/server")
 	}
-	if !equality.Semantic.DeepEqual(newTConfig.PodSeq, oldTConfig.PodSeq) {
+	if newTConfig.PodSeq != oldTConfig.PodSeq {
 		return fmt.Errorf(tarsMetaV1beta3.FiledImmutableError, "tconfig", "/podSeq")
 	}
 	if newTConfig.ConfigName != oldTConfig.ConfigName {
@@ -280,7 +280,7 @@ func validDeleteTConfig(clients *controller.Clients, informers *controller.Infor
 		return nil
 	}
 
-	if _, ok := tconfig.Labels["tars.io/Deleting"]; ok {
+	if _, ok := tconfig.Labels[tarsMetaV1beta3.TConfigDeletingLabel]; ok {
 		return nil
 	}
 
