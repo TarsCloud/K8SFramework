@@ -48,14 +48,13 @@ func (r *TConfigReconciler) EnqueueObj(resourceName string, resourceEvent k8sWat
 	case k8sWatchV1.Deleted:
 		r.deleteQueue.Add(namespace)
 	case k8sWatchV1.Added:
-		objLabels := tconfigMetadataObj.GetLabels()
-		app, _ := objLabels[tarsMetaV1beta3.TServerAppLabel]
-		server, _ := objLabels[tarsMetaV1beta3.TServerNameLabel]
-		configName, _ := objLabels[tarsMetaV1beta3.TConfigNameLabel]
-		podSeq, _ := objLabels[tarsMetaV1beta3.TConfigPodSeqLabel]
+		labels := tconfigMetadataObj.GetLabels()
+		app, _ := labels[tarsMetaV1beta3.TServerAppLabel]
+		server, _ := labels[tarsMetaV1beta3.TServerNameLabel]
+		configName, _ := labels[tarsMetaV1beta3.TConfigNameLabel]
+		podSeq, _ := labels[tarsMetaV1beta3.TConfigPodSeqLabel]
 		key = fmt.Sprintf("%s/%s/%s/%s/%s", namespace, app, server, configName, podSeq)
 		r.addQueue.Add(key)
-		r.addQueue.Add(namespace)
 	}
 	return
 }
@@ -148,15 +147,19 @@ func (r *TConfigReconciler) reconcileModify(key string) reconcile.Result {
 		},
 	}
 	patchContent, _ := json.Marshal(jsonPatch)
-
+	retry := false
 	for _, tconfig := range tconfigs {
 		v := tconfig.(k8sMetaV1.Object)
 		name := v.GetName()
 		_, err = r.clients.CrdClient.CrdV1beta3().TConfigs(namespace).Patch(context.TODO(), name, patchTypes.JSONPatchType, patchContent, k8sMetaV1.PatchOptions{})
 		if err != nil {
 			utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourcePatchError, "tconfig", namespace, name, err.Error()))
-			return reconcile.RateLimit
+			retry = true
+			continue
 		}
+	}
+	if retry {
+		return reconcile.RateLimit
 	}
 	return reconcile.AllOk
 }
