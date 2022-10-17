@@ -218,13 +218,13 @@ func (r *TConfigReconciler) processItem(queue workqueue.RateLimitingInterface, r
 	}
 }
 
-func NewTConfigReconciler(clients *controller.Clients, informers *controller.Informers, threads int) *TConfigReconciler {
+func NewTConfigReconciler(clients *controller.Clients, informers *controller.Informers, _ int) *TConfigReconciler {
 	reconciler := &TConfigReconciler{
 		clients:     clients,
 		informers:   informers,
-		addQueue:    workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), ""),
-		modifyQueue: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), ""),
-		deleteQueue: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), ""),
+		addQueue:    workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "add"),
+		modifyQueue: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "modify"),
+		deleteQueue: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "delete"),
 	}
 	informers.Register(reconciler)
 	return reconciler
