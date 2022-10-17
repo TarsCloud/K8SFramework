@@ -10,8 +10,8 @@ import (
 	patchTypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
 	tarsCrdV1Beta3 "k8s.tars.io/crd/v1beta3"
-	crdMetaTools "k8s.tars.io/meta/tools"
-	tarsMetaV1Beta3 "k8s.tars.io/meta/v1beta3"
+	crdMetaTools "k8s.tars.io/meta"
+	tarsMeta "k8s.tars.io/meta"
 	"time"
 )
 
@@ -88,7 +88,7 @@ var _ = ginkgo.Describe("try create tars server and check filed", func() {
 					AbilityAffinity: tarsCrdV1Beta3.None,
 					NodeSelector:    []k8sCoreV1.NodeSelectorRequirement{},
 					ImagePullPolicy: k8sCoreV1.PullAlways,
-					LauncherType:    tarsCrdV1Beta3.Background,
+					LauncherType:    tarsMeta.Background,
 				},
 			},
 		}
@@ -103,10 +103,10 @@ var _ = ginkgo.Describe("try create tars server and check filed", func() {
 		assert.NotNil(ginkgo.GinkgoT(), tserver)
 
 		expectedLabels := map[string]string{
-			tarsMetaV1Beta3.TServerAppLabel:  App,
-			tarsMetaV1Beta3.TServerNameLabel: Server,
-			tarsMetaV1Beta3.TemplateLabel:    Template,
-			tarsMetaV1Beta3.TSubTypeLabel:    string(tarsCrdV1Beta3.TARS),
+			tarsMeta.TServerAppLabel:  App,
+			tarsMeta.TServerNameLabel: Server,
+			tarsMeta.TTemplateLabel:   Template,
+			tarsMeta.TSubTypeLabel:    string(tarsCrdV1Beta3.TARS),
 		}
 		assert.True(ginkgo.GinkgoT(), scaffold.CheckLeftInRight(expectedLabels, tserver.Labels))
 		assert.NotNil(ginkgo.GinkgoT(), tserver.Spec.Important)
@@ -125,7 +125,7 @@ var _ = ginkgo.Describe("try create tars server and check filed", func() {
 		assert.NotNil(ginkgo.GinkgoT(), tserver.Spec.K8S.NodeSelector)
 		assert.NotNil(ginkgo.GinkgoT(), tserver.Spec.K8S.ImagePullPolicy)
 
-		expectedReadinessGates := []string{tarsMetaV1Beta3.TPodReadinessGate}
+		expectedReadinessGates := []string{tarsMeta.TPodReadinessGate}
 		assert.Equal(ginkgo.GinkgoT(), expectedReadinessGates, tserver.Spec.K8S.ReadinessGates)
 	})
 

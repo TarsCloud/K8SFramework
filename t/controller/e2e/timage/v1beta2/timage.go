@@ -9,7 +9,7 @@ import (
 	patchTypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
 	tarsCrdV1Beta2 "k8s.tars.io/crd/v1beta2"
-	tarsMetaTools "k8s.tars.io/meta/tools"
+	tarsMeta "k8s.tars.io/meta"
 	"time"
 )
 
@@ -85,14 +85,14 @@ var _ = ginkgo.Describe("test timage", func() {
 		assert.Equal(ginkgo.GinkgoT(), "testserver:v2", timage.Releases[1].Image)
 		assert.Equal(ginkgo.GinkgoT(), "testserver:v3", timage.Releases[2].Image)
 
-		jsonPatch := tarsMetaTools.JsonPatch{
+		jsonPatch := tarsMeta.JsonPatch{
 			{
-				OP:    tarsMetaTools.JsonPatchReplace,
+				OP:    tarsMeta.JsonPatchReplace,
 				Path:  "/releases/1/id",
 				Value: "202201",
 			},
 			{
-				OP:    tarsMetaTools.JsonPatchReplace,
+				OP:    tarsMeta.JsonPatchReplace,
 				Path:  "/releases/2/id",
 				Value: "202201",
 			},

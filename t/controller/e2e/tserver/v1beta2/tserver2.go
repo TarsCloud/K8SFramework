@@ -9,7 +9,8 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	tarsCrdV1Beta2 "k8s.tars.io/crd/v1beta2"
-	tarsMetaV1Beta2 "k8s.tars.io/meta/v1beta2"
+	tarsMeta "k8s.tars.io/meta"
+
 	"strings"
 	"time"
 )
@@ -40,7 +41,7 @@ var _ = ginkgo.Describe("try create normal server with unexpected filed value", 
 					AbilityAffinity: tarsCrdV1Beta2.None,
 					NodeSelector:    []k8sCoreV1.NodeSelectorRequirement{},
 					ImagePullPolicy: k8sCoreV1.PullAlways,
-					LauncherType:    tarsCrdV1Beta2.Background,
+					LauncherType:    tarsMeta.Background,
 				},
 			},
 		}
@@ -74,7 +75,7 @@ var _ = ginkgo.Describe("try create normal server with unexpected filed value", 
 
 		ginkgo.It("reserved port value", func() {
 			tsLayout.Spec.Normal.Ports[0].Name = "first"
-			tsLayout.Spec.Normal.Ports[0].Port = tarsMetaV1Beta2.NodeServantPort
+			tsLayout.Spec.Normal.Ports[0].Port = tarsMeta.NodeServantPort
 
 			tsLayout.Spec.Normal.Ports[1].Name = "second"
 			tsLayout.Spec.Normal.Ports[1].Port = 3001

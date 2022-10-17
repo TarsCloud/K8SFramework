@@ -9,8 +9,8 @@ import (
 	patchTypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
 	tarsCrdV1beta2 "k8s.tars.io/crd/v1beta2"
-	tarsMetaTools "k8s.tars.io/meta/tools"
-	tarsMetaV1beta2 "k8s.tars.io/meta/v1beta2"
+	tarsMeta "k8s.tars.io/meta"
+
 	"strings"
 	"time"
 )
@@ -55,10 +55,10 @@ var _ = ginkgo.Describe("test server level config", func() {
 		assert.NotNil(ginkgo.GinkgoT(), tconfig)
 
 		expectedLabels := map[string]string{
-			tarsMetaV1beta2.TServerAppLabel:       ServerApp,
-			tarsMetaV1beta2.TServerNameLabel:      ServerName,
-			tarsMetaV1beta2.TConfigPodSeqLabel:    "m",
-			tarsMetaV1beta2.TConfigActivatedLabel: "false",
+			tarsMeta.TServerAppLabel:       ServerApp,
+			tarsMeta.TServerNameLabel:      ServerName,
+			tarsMeta.TConfigPodSeqLabel:    "m",
+			tarsMeta.TConfigActivatedLabel: "false",
 		}
 		assert.True(ginkgo.GinkgoT(), scaffold.CheckLeftInRight(expectedLabels, tconfig.Labels))
 	})
@@ -69,18 +69,18 @@ var _ = ginkgo.Describe("test server level config", func() {
 		assert.NotNil(ginkgo.GinkgoT(), tconfig)
 
 		expectedLabels := map[string]string{
-			tarsMetaV1beta2.TServerAppLabel:       ServerApp,
-			tarsMetaV1beta2.TServerNameLabel:      ServerName,
-			tarsMetaV1beta2.TConfigPodSeqLabel:    "m",
-			tarsMetaV1beta2.TConfigActivatedLabel: "false",
+			tarsMeta.TServerAppLabel:       ServerApp,
+			tarsMeta.TServerNameLabel:      ServerName,
+			tarsMeta.TConfigPodSeqLabel:    "m",
+			tarsMeta.TConfigActivatedLabel: "false",
 		}
 		assert.True(ginkgo.GinkgoT(), scaffold.CheckLeftInRight(expectedLabels, tconfig.Labels))
 
-		tryRemoveLabels := []string{tarsMetaV1beta2.TServerAppLabel, tarsMetaV1beta2.TServerNameLabel, tarsMetaV1beta2.TConfigPodSeqLabel, tarsMetaV1beta2.TConfigVersionLabel}
+		tryRemoveLabels := []string{tarsMeta.TServerAppLabel, tarsMeta.TServerNameLabel, tarsMeta.TConfigPodSeqLabel, tarsMeta.TConfigVersionLabel}
 		for _, v := range tryRemoveLabels {
-			jsonPath := tarsMetaTools.JsonPatch{
+			jsonPath := tarsMeta.JsonPatch{
 				{
-					OP:   tarsMetaTools.JsonPatchRemove,
+					OP:   tarsMeta.JsonPatchRemove,
 					Path: "/metadata/labels/" + strings.Replace(v, "/", "~1", 1),
 				},
 			}
@@ -97,19 +97,19 @@ var _ = ginkgo.Describe("test server level config", func() {
 		assert.NotNil(ginkgo.GinkgoT(), tconfig)
 
 		expectedLabels := map[string]string{
-			tarsMetaV1beta2.TServerAppLabel:       ServerApp,
-			tarsMetaV1beta2.TServerNameLabel:      ServerName,
-			tarsMetaV1beta2.TConfigPodSeqLabel:    "m",
-			tarsMetaV1beta2.TConfigActivatedLabel: "false",
+			tarsMeta.TServerAppLabel:       ServerApp,
+			tarsMeta.TServerNameLabel:      ServerName,
+			tarsMeta.TConfigPodSeqLabel:    "m",
+			tarsMeta.TConfigActivatedLabel: "false",
 		}
 
 		assert.True(ginkgo.GinkgoT(), scaffold.CheckLeftInRight(expectedLabels, tconfig.Labels))
 
-		tryUpdateLabels := []string{tarsMetaV1beta2.TServerAppLabel, tarsMetaV1beta2.TServerNameLabel, tarsMetaV1beta2.TConfigPodSeqLabel, tarsMetaV1beta2.TConfigVersionLabel}
+		tryUpdateLabels := []string{tarsMeta.TServerAppLabel, tarsMeta.TServerNameLabel, tarsMeta.TConfigPodSeqLabel, tarsMeta.TConfigVersionLabel}
 		for _, v := range tryUpdateLabels {
-			jsonPath := tarsMetaTools.JsonPatch{
+			jsonPath := tarsMeta.JsonPatch{
 				{
-					OP:    tarsMetaTools.JsonPatchReplace,
+					OP:    tarsMeta.JsonPatchReplace,
 					Path:  "/metadata/labels/" + strings.Replace(v, "/", "~1", 1),
 					Value: scaffold.RandStringRunes(5),
 				},
@@ -134,9 +134,9 @@ var _ = ginkgo.Describe("test server level config", func() {
 			"/configContent": "NewContent",
 		}
 		for k, v := range immutableFields {
-			jsonPath := tarsMetaTools.JsonPatch{
+			jsonPath := tarsMeta.JsonPatch{
 				{
-					OP:    tarsMetaTools.JsonPatchReplace,
+					OP:    tarsMeta.JsonPatchReplace,
 					Path:  k,
 					Value: v,
 				},
@@ -148,9 +148,9 @@ var _ = ginkgo.Describe("test server level config", func() {
 	})
 
 	ginkgo.It("activated/inactivated tconfig", func() {
-		jsonPath := tarsMetaTools.JsonPatch{
+		jsonPath := tarsMeta.JsonPatch{
 			{
-				OP:    tarsMetaTools.JsonPatchReplace,
+				OP:    tarsMeta.JsonPatchReplace,
 				Path:  "/activated",
 				Value: true,
 			},
@@ -161,16 +161,16 @@ var _ = ginkgo.Describe("test server level config", func() {
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), tconfig)
 		expectedLabels := map[string]string{
-			tarsMetaV1beta2.TServerAppLabel:       ServerApp,
-			tarsMetaV1beta2.TServerNameLabel:      ServerName,
-			tarsMetaV1beta2.TConfigPodSeqLabel:    "m",
-			tarsMetaV1beta2.TConfigActivatedLabel: "true",
+			tarsMeta.TServerAppLabel:       ServerApp,
+			tarsMeta.TServerNameLabel:      ServerName,
+			tarsMeta.TConfigPodSeqLabel:    "m",
+			tarsMeta.TConfigActivatedLabel: "true",
 		}
 		assert.True(ginkgo.GinkgoT(), scaffold.CheckLeftInRight(expectedLabels, tconfig.Labels))
 
-		jsonPath = tarsMetaTools.JsonPatch{
+		jsonPath = tarsMeta.JsonPatch{
 			{
-				OP:    tarsMetaTools.JsonPatchReplace,
+				OP:    tarsMeta.JsonPatchReplace,
 				Path:  "/activated",
 				Value: false,
 			},
@@ -198,9 +198,9 @@ var _ = ginkgo.Describe("test server level config", func() {
 		}
 
 		ginkgo.BeforeEach(func() {
-			jsonPath := tarsMetaTools.JsonPatch{
+			jsonPath := tarsMeta.JsonPatch{
 				{
-					OP:    tarsMetaTools.JsonPatchReplace,
+					OP:    tarsMeta.JsonPatchReplace,
 					Path:  "/activated",
 					Value: true,
 				},
@@ -211,10 +211,10 @@ var _ = ginkgo.Describe("test server level config", func() {
 			assert.NotNil(ginkgo.GinkgoT(), tconfig)
 
 			exceptedBeforeCreateNewLabels := map[string]string{
-				tarsMetaV1beta2.TServerAppLabel:       ServerApp,
-				tarsMetaV1beta2.TServerNameLabel:      ServerName,
-				tarsMetaV1beta2.TConfigPodSeqLabel:    "m",
-				tarsMetaV1beta2.TConfigActivatedLabel: "true",
+				tarsMeta.TServerAppLabel:       ServerApp,
+				tarsMeta.TServerNameLabel:      ServerName,
+				tarsMeta.TConfigPodSeqLabel:    "m",
+				tarsMeta.TConfigActivatedLabel: "true",
 			}
 			assert.True(ginkgo.GinkgoT(), scaffold.CheckLeftInRight(exceptedBeforeCreateNewLabels, tconfig.Labels))
 		})
@@ -224,19 +224,19 @@ var _ = ginkgo.Describe("test server level config", func() {
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.NotNil(ginkgo.GinkgoT(), newTConfig)
 			exceptedNewTConfigLabels := map[string]string{
-				tarsMetaV1beta2.TServerAppLabel:       ServerApp,
-				tarsMetaV1beta2.TServerNameLabel:      ServerName,
-				tarsMetaV1beta2.TConfigPodSeqLabel:    "m",
-				tarsMetaV1beta2.TConfigActivatedLabel: "true",
+				tarsMeta.TServerAppLabel:       ServerApp,
+				tarsMeta.TServerNameLabel:      ServerName,
+				tarsMeta.TConfigPodSeqLabel:    "m",
+				tarsMeta.TConfigActivatedLabel: "true",
 			}
 			assert.True(ginkgo.GinkgoT(), scaffold.CheckLeftInRight(exceptedNewTConfigLabels, newTConfig.Labels))
 
 			time.Sleep(s.Opts.SyncTime)
 			exceptedAfterCreateNewLabels := map[string]string{
-				tarsMetaV1beta2.TServerAppLabel:       ServerApp,
-				tarsMetaV1beta2.TServerNameLabel:      ServerName,
-				tarsMetaV1beta2.TConfigPodSeqLabel:    "m",
-				tarsMetaV1beta2.TConfigActivatedLabel: "false",
+				tarsMeta.TServerAppLabel:       ServerApp,
+				tarsMeta.TServerNameLabel:      ServerName,
+				tarsMeta.TConfigPodSeqLabel:    "m",
+				tarsMeta.TConfigActivatedLabel: "false",
 			}
 			oldTConfig, err := s.CRDClient.CrdV1beta2().TConfigs(s.Namespace).Get(context.TODO(), ResourceName, k8sMetaV1.GetOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
@@ -271,9 +271,9 @@ var _ = ginkgo.Describe("test server level config", func() {
 		}
 
 		ginkgo.BeforeEach(func() {
-			jsonPath := tarsMetaTools.JsonPatch{
+			jsonPath := tarsMeta.JsonPatch{
 				{
-					OP:    tarsMetaTools.JsonPatchReplace,
+					OP:    tarsMeta.JsonPatchReplace,
 					Path:  "/activated",
 					Value: true,
 				},
@@ -284,10 +284,10 @@ var _ = ginkgo.Describe("test server level config", func() {
 			assert.NotNil(ginkgo.GinkgoT(), oldTConfig)
 
 			exceptedBeforeCreateNewLabels := map[string]string{
-				tarsMetaV1beta2.TServerAppLabel:       ServerApp,
-				tarsMetaV1beta2.TServerNameLabel:      ServerName,
-				tarsMetaV1beta2.TConfigPodSeqLabel:    "m",
-				tarsMetaV1beta2.TConfigActivatedLabel: "true",
+				tarsMeta.TServerAppLabel:       ServerApp,
+				tarsMeta.TServerNameLabel:      ServerName,
+				tarsMeta.TConfigPodSeqLabel:    "m",
+				tarsMeta.TConfigActivatedLabel: "true",
 			}
 			assert.True(ginkgo.GinkgoT(), scaffold.CheckLeftInRight(exceptedBeforeCreateNewLabels, oldTConfig.Labels))
 			time.Sleep(s.Opts.SyncTime)
@@ -306,10 +306,10 @@ var _ = ginkgo.Describe("test server level config", func() {
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.NotNil(ginkgo.GinkgoT(), slaveTConfig)
 			slaveConfigExceptedLabels := map[string]string{
-				tarsMetaV1beta2.TServerAppLabel:       ServerApp,
-				tarsMetaV1beta2.TServerNameLabel:      ServerName,
-				tarsMetaV1beta2.TConfigPodSeqLabel:    "1",
-				tarsMetaV1beta2.TConfigActivatedLabel: "true",
+				tarsMeta.TServerAppLabel:       ServerApp,
+				tarsMeta.TServerNameLabel:      ServerName,
+				tarsMeta.TConfigPodSeqLabel:    "1",
+				tarsMeta.TConfigActivatedLabel: "true",
 			}
 			assert.True(ginkgo.GinkgoT(), scaffold.CheckLeftInRight(slaveConfigExceptedLabels, slaveTConfig.Labels))
 

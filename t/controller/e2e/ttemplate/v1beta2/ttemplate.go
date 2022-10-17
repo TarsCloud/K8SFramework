@@ -11,8 +11,7 @@ import (
 	patchTypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
 	tarsCrdV1beta2 "k8s.tars.io/crd/v1beta2"
-	tarsMetaTools "k8s.tars.io/meta/tools"
-	tarsMetaV1beta2 "k8s.tars.io/meta/v1beta2"
+	tarsMeta "k8s.tars.io/meta"
 	"time"
 )
 
@@ -63,7 +62,7 @@ var _ = ginkgo.Describe("ttemplate", func() {
 		assert.NotNil(ginkgo.GinkgoT(), defaultTT)
 
 		if defaultTT.Labels != nil {
-			_, ok := defaultTT.Labels[tarsMetaV1beta2.ParentLabel]
+			_, ok := defaultTT.Labels[tarsMeta.TTemplateParentLabel]
 			assert.False(ginkgo.GinkgoT(), ok)
 		}
 
@@ -71,7 +70,7 @@ var _ = ginkgo.Describe("ttemplate", func() {
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), defaultTT)
 		exceptedCppTTLabels := map[string]string{
-			tarsMetaV1beta2.ParentLabel: "tt.default",
+			tarsMeta.TTemplateParentLabel: "tt.default",
 		}
 		assert.True(ginkgo.GinkgoT(), scaffold.CheckLeftInRight(exceptedCppTTLabels, cppTT.Labels))
 	})
@@ -92,9 +91,9 @@ var _ = ginkgo.Describe("ttemplate", func() {
 	})
 
 	ginkgo.It("update ttemplate content", func() {
-		jsonPatch := tarsMetaTools.JsonPatch{
+		jsonPatch := tarsMeta.JsonPatch{
 			{
-				OP:    tarsMetaTools.JsonPatchReplace,
+				OP:    tarsMeta.JsonPatchReplace,
 				Path:  "/spec/content",
 				Value: "new content",
 			},
@@ -151,7 +150,7 @@ var _ = ginkgo.Describe("ttemplate", func() {
 						Resources:       k8sCoreV1.ResourceRequirements{},
 						UpdateStrategy:  k8sAppsV1.StatefulSetUpdateStrategy{},
 						ImagePullPolicy: k8sCoreV1.PullAlways,
-						LauncherType:    tarsCrdV1beta2.Background,
+						LauncherType:    tarsMeta.Background,
 					},
 					Release: &tarsCrdV1beta2.TServerRelease{
 						ID:    "202201",

@@ -14,8 +14,7 @@ import (
 	patchTypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
 	tarsCrdV1Beta3 "k8s.tars.io/crd/v1beta3"
-	tarsMetaTools "k8s.tars.io/meta/tools"
-	tarsMetaV1Beta3 "k8s.tars.io/meta/v1beta3"
+	tarsMeta "k8s.tars.io/meta"
 	"time"
 )
 
@@ -91,7 +90,7 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 					AbilityAffinity: tarsCrdV1Beta3.None,
 					NodeSelector:    []k8sCoreV1.NodeSelectorRequirement{},
 					ImagePullPolicy: k8sCoreV1.PullAlways,
-					LauncherType:    tarsCrdV1Beta3.Background,
+					LauncherType:    tarsMeta.Background,
 				},
 			},
 		}
@@ -106,8 +105,8 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 		assert.NotNil(ginkgo.GinkgoT(), statefulset)
 
 		expectedLabels := map[string]string{
-			tarsMetaV1Beta3.TServerAppLabel:  App,
-			tarsMetaV1Beta3.TServerNameLabel: Server,
+			tarsMeta.TServerAppLabel:  App,
+			tarsMeta.TServerNameLabel: Server,
 		}
 		assert.True(ginkgo.GinkgoT(), scaffold.CheckLeftInRight(expectedLabels, statefulset.Labels))
 		assert.True(ginkgo.GinkgoT(), scaffold.CheckLeftInRight(expectedLabels, statefulset.Spec.Template.Labels))
@@ -121,9 +120,9 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 
 	ginkgo.It("args", func() {
 		args := []string{scaffold.RandStringRunes(5), scaffold.RandStringRunes(5), scaffold.RandStringRunes(5)}
-		jsonPatch := tarsMetaTools.JsonPatch{
+		jsonPatch := tarsMeta.JsonPatch{
 			{
-				OP:    tarsMetaTools.JsonPatchAdd,
+				OP:    tarsMeta.JsonPatchAdd,
 				Path:  "/spec/k8s/args",
 				Value: args,
 			},
@@ -144,9 +143,9 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 
 	ginkgo.It("command", func() {
 		command := []string{scaffold.RandStringRunes(5), scaffold.RandStringRunes(5), scaffold.RandStringRunes(5)}
-		jsonPatch := tarsMetaTools.JsonPatch{
+		jsonPatch := tarsMeta.JsonPatch{
 			{
-				OP:    tarsMetaTools.JsonPatchAdd,
+				OP:    tarsMeta.JsonPatchAdd,
 				Path:  "/spec/k8s/command",
 				Value: command,
 			},
@@ -167,9 +166,9 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 
 	ginkgo.Context("abilityAffinity", func() {
 		ginkgo.It("None", func() {
-			jsonPatch := tarsMetaTools.JsonPatch{
+			jsonPatch := tarsMeta.JsonPatch{
 				{
-					OP:    tarsMetaTools.JsonPatchReplace,
+					OP:    tarsMeta.JsonPatchReplace,
 					Path:  "/spec/k8s/abilityAffinity",
 					Value: tarsCrdV1Beta3.None,
 				},
@@ -193,7 +192,7 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 					{
 						MatchExpressions: []k8sCoreV1.NodeSelectorRequirement{
 							{
-								Key:      fmt.Sprintf("%s.%s", tarsMetaV1Beta3.TarsNodeLabel, s.Namespace),
+								Key:      fmt.Sprintf("%s.%s", tarsMeta.TarsNodeLabel, s.Namespace),
 								Operator: k8sCoreV1.NodeSelectorOpExists,
 							},
 						},
@@ -204,9 +203,9 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 		})
 
 		ginkgo.It("AppRequired", func() {
-			jsonPatch := tarsMetaTools.JsonPatch{
+			jsonPatch := tarsMeta.JsonPatch{
 				{
-					OP:    tarsMetaTools.JsonPatchReplace,
+					OP:    tarsMeta.JsonPatchReplace,
 					Path:  "/spec/k8s/abilityAffinity",
 					Value: tarsCrdV1Beta3.AppRequired,
 				},
@@ -231,11 +230,11 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 						{
 							MatchExpressions: []k8sCoreV1.NodeSelectorRequirement{
 								{
-									Key:      fmt.Sprintf("%s.%s", tarsMetaV1Beta3.TarsNodeLabel, s.Namespace),
+									Key:      fmt.Sprintf("%s.%s", tarsMeta.TarsNodeLabel, s.Namespace),
 									Operator: k8sCoreV1.NodeSelectorOpExists,
 								},
 								{
-									Key:      fmt.Sprintf("%s.%s.%s", tarsMetaV1Beta3.TarsAbilityLabelPrefix, s.Namespace, App),
+									Key:      fmt.Sprintf("%s.%s.%s", tarsMeta.TarsAbilityLabelPrefix, s.Namespace, App),
 									Operator: k8sCoreV1.NodeSelectorOpExists,
 								},
 							},
@@ -247,9 +246,9 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 		})
 
 		ginkgo.It("ServerRequired", func() {
-			jsonPatch := tarsMetaTools.JsonPatch{
+			jsonPatch := tarsMeta.JsonPatch{
 				{
-					OP:    tarsMetaTools.JsonPatchReplace,
+					OP:    tarsMeta.JsonPatchReplace,
 					Path:  "/spec/k8s/abilityAffinity",
 					Value: tarsCrdV1Beta3.ServerRequired,
 				},
@@ -273,11 +272,11 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 					{
 						MatchExpressions: []k8sCoreV1.NodeSelectorRequirement{
 							{
-								Key:      fmt.Sprintf("%s.%s", tarsMetaV1Beta3.TarsNodeLabel, s.Namespace),
+								Key:      fmt.Sprintf("%s.%s", tarsMeta.TarsNodeLabel, s.Namespace),
 								Operator: k8sCoreV1.NodeSelectorOpExists,
 							},
 							{
-								Key:      fmt.Sprintf("%s.%s.%s-%s", tarsMetaV1Beta3.TarsAbilityLabelPrefix, s.Namespace, App, Server),
+								Key:      fmt.Sprintf("%s.%s.%s-%s", tarsMeta.TarsAbilityLabelPrefix, s.Namespace, App, Server),
 								Operator: k8sCoreV1.NodeSelectorOpExists,
 							},
 						},
@@ -288,9 +287,9 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 		})
 
 		ginkgo.It("AppOrServerPreferred", func() {
-			jsonPatch := tarsMetaTools.JsonPatch{
+			jsonPatch := tarsMeta.JsonPatch{
 				{
-					OP:    tarsMetaTools.JsonPatchReplace,
+					OP:    tarsMeta.JsonPatchReplace,
 					Path:  "/spec/k8s/abilityAffinity",
 					Value: tarsCrdV1Beta3.AppOrServerPreferred,
 				},
@@ -315,7 +314,7 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 						{
 							MatchExpressions: []k8sCoreV1.NodeSelectorRequirement{
 								{
-									Key:      fmt.Sprintf("%s.%s", tarsMetaV1Beta3.TarsNodeLabel, s.Namespace),
+									Key:      fmt.Sprintf("%s.%s", tarsMeta.TarsNodeLabel, s.Namespace),
 									Operator: k8sCoreV1.NodeSelectorOpExists,
 								},
 							},
@@ -328,7 +327,7 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 						Preference: k8sCoreV1.NodeSelectorTerm{
 							MatchExpressions: []k8sCoreV1.NodeSelectorRequirement{
 								{
-									Key:      fmt.Sprintf("%s.%s.%s-%s", tarsMetaV1Beta3.TarsAbilityLabelPrefix, s.Namespace, App, Server),
+									Key:      fmt.Sprintf("%s.%s.%s-%s", tarsMeta.TarsAbilityLabelPrefix, s.Namespace, App, Server),
 									Operator: k8sCoreV1.NodeSelectorOpExists,
 								},
 							},
@@ -339,7 +338,7 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 						Preference: k8sCoreV1.NodeSelectorTerm{
 							MatchExpressions: []k8sCoreV1.NodeSelectorRequirement{
 								{
-									Key:      fmt.Sprintf("%s.%s.%s", tarsMetaV1Beta3.TarsAbilityLabelPrefix, s.Namespace, App),
+									Key:      fmt.Sprintf("%s.%s.%s", tarsMeta.TarsAbilityLabelPrefix, s.Namespace, App),
 									Operator: k8sCoreV1.NodeSelectorOpExists,
 								},
 							},
@@ -352,9 +351,9 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 	})
 
 	ginkgo.It("daemonSet", func() {
-		jsonPatch := tarsMetaTools.JsonPatch{
+		jsonPatch := tarsMeta.JsonPatch{
 			{
-				OP:    tarsMetaTools.JsonPatchAdd,
+				OP:    tarsMeta.JsonPatchAdd,
 				Path:  "/spec/k8s/daemonSet",
 				Value: true,
 			},
@@ -377,9 +376,9 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 		var thirdEnvName = scaffold.RandStringRunes(5)
 
 		var keyRefOptional = true
-		jsonPatch := tarsMetaTools.JsonPatch{
+		jsonPatch := tarsMeta.JsonPatch{
 			{
-				OP:   tarsMetaTools.JsonPatchAdd,
+				OP:   tarsMeta.JsonPatchAdd,
 				Path: "/spec/k8s/env",
 				Value: []k8sCoreV1.EnvVar{
 					{
@@ -456,9 +455,9 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 
 	ginkgo.It("envFrom", func() {
 		keyRefOptional := true
-		jsonPatch := tarsMetaTools.JsonPatch{
+		jsonPatch := tarsMeta.JsonPatch{
 			{
-				OP:   tarsMetaTools.JsonPatchAdd,
+				OP:   tarsMeta.JsonPatchAdd,
 				Path: "/spec/k8s/envFrom",
 				Value: []k8sCoreV1.EnvFromSource{
 					{
@@ -516,9 +515,9 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 	})
 
 	ginkgo.It("hostNetWork", func() {
-		jsonPatch := tarsMetaTools.JsonPatch{
+		jsonPatch := tarsMeta.JsonPatch{
 			{
-				OP:    tarsMetaTools.JsonPatchReplace,
+				OP:    tarsMeta.JsonPatchReplace,
 				Path:  "/spec/k8s/hostNetwork",
 				Value: true,
 			},
@@ -538,9 +537,9 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 	})
 
 	ginkgo.It("hostIPC", func() {
-		jsonPatch := tarsMetaTools.JsonPatch{
+		jsonPatch := tarsMeta.JsonPatch{
 			{
-				OP:    tarsMetaTools.JsonPatchReplace,
+				OP:    tarsMeta.JsonPatchReplace,
 				Path:  "/spec/k8s/hostIPC",
 				Value: true,
 			},
@@ -560,9 +559,9 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 	})
 
 	ginkgo.It("hostPort", func() {
-		jsonPatch := tarsMetaTools.JsonPatch{
+		jsonPatch := tarsMeta.JsonPatch{
 			{
-				OP:   tarsMetaTools.JsonPatchAdd,
+				OP:   tarsMeta.JsonPatchAdd,
 				Path: "/spec/k8s/hostPorts",
 				Value: []*tarsCrdV1Beta3.TK8SHostPort{
 					{
@@ -616,9 +615,9 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 	ginkgo.It("mounts", func() {
 		hostPathType := k8sCoreV1.HostPathUnset
 		quantity, _ := resource.ParseQuantity("1G")
-		jsonPatch := tarsMetaTools.JsonPatch{
+		jsonPatch := tarsMeta.JsonPatch{
 			{
-				OP:   tarsMetaTools.JsonPatchAdd,
+				OP:   tarsMeta.JsonPatchAdd,
 				Path: "/spec/k8s/mounts",
 				Value: []tarsCrdV1Beta3.TK8SMount{
 					{
@@ -781,13 +780,13 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 
 	ginkgo.Context("nodeSelector", func() {
 		ginkgo.It("None", func() {
-			jsonPatch := tarsMetaTools.JsonPatch{
+			jsonPatch := tarsMeta.JsonPatch{
 				{
-					OP:   tarsMetaTools.JsonPatchReplace,
+					OP:   tarsMeta.JsonPatchReplace,
 					Path: "/spec/k8s/nodeSelector",
 					Value: []k8sCoreV1.NodeSelectorRequirement{
 						{
-							Key:      tarsMetaV1Beta3.K8SHostNameLabel,
+							Key:      tarsMeta.K8SHostNameLabel,
 							Operator: k8sCoreV1.NodeSelectorOpExists,
 						},
 						{
@@ -823,7 +822,7 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 						{
 							MatchExpressions: []k8sCoreV1.NodeSelectorRequirement{
 								{
-									Key:      tarsMetaV1Beta3.K8SHostNameLabel,
+									Key:      tarsMeta.K8SHostNameLabel,
 									Operator: k8sCoreV1.NodeSelectorOpExists,
 								},
 								{
@@ -837,7 +836,7 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 									Values:   []string{"v1"},
 								},
 								{
-									Key:      fmt.Sprintf("%s.%s", tarsMetaV1Beta3.TarsNodeLabel, s.Namespace),
+									Key:      fmt.Sprintf("%s.%s", tarsMeta.TarsNodeLabel, s.Namespace),
 									Operator: k8sCoreV1.NodeSelectorOpExists,
 								},
 							},
@@ -851,18 +850,18 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 
 	ginkgo.Context("abilityAffinity & nodeSelector", func() {
 		ginkgo.It("AppRequired", func() {
-			jsonPatch := tarsMetaTools.JsonPatch{
+			jsonPatch := tarsMeta.JsonPatch{
 				{
-					OP:    tarsMetaTools.JsonPatchReplace,
+					OP:    tarsMeta.JsonPatchReplace,
 					Path:  "/spec/k8s/abilityAffinity",
 					Value: tarsCrdV1Beta3.AppRequired,
 				},
 				{
-					OP:   tarsMetaTools.JsonPatchReplace,
+					OP:   tarsMeta.JsonPatchReplace,
 					Path: "/spec/k8s/nodeSelector",
 					Value: []k8sCoreV1.NodeSelectorRequirement{
 						{
-							Key:      tarsMetaV1Beta3.K8SHostNameLabel,
+							Key:      tarsMeta.K8SHostNameLabel,
 							Operator: k8sCoreV1.NodeSelectorOpExists,
 						},
 						{
@@ -898,7 +897,7 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 						{
 							MatchExpressions: []k8sCoreV1.NodeSelectorRequirement{
 								{
-									Key:      tarsMetaV1Beta3.K8SHostNameLabel,
+									Key:      tarsMeta.K8SHostNameLabel,
 									Operator: k8sCoreV1.NodeSelectorOpExists,
 								},
 								{
@@ -912,11 +911,11 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 									Values:   []string{"v1"},
 								},
 								{
-									Key:      fmt.Sprintf("%s.%s", tarsMetaV1Beta3.TarsNodeLabel, s.Namespace),
+									Key:      fmt.Sprintf("%s.%s", tarsMeta.TarsNodeLabel, s.Namespace),
 									Operator: k8sCoreV1.NodeSelectorOpExists,
 								},
 								{
-									Key:      fmt.Sprintf("%s.%s.%s", tarsMetaV1Beta3.TarsAbilityLabelPrefix, s.Namespace, App),
+									Key:      fmt.Sprintf("%s.%s.%s", tarsMeta.TarsAbilityLabelPrefix, s.Namespace, App),
 									Operator: k8sCoreV1.NodeSelectorOpExists,
 								},
 							},
@@ -928,18 +927,18 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 		})
 
 		ginkgo.It("AppOrServerPreferred", func() {
-			jsonPatch := tarsMetaTools.JsonPatch{
+			jsonPatch := tarsMeta.JsonPatch{
 				{
-					OP:    tarsMetaTools.JsonPatchReplace,
+					OP:    tarsMeta.JsonPatchReplace,
 					Path:  "/spec/k8s/abilityAffinity",
 					Value: tarsCrdV1Beta3.AppOrServerPreferred,
 				},
 				{
-					OP:   tarsMetaTools.JsonPatchReplace,
+					OP:   tarsMeta.JsonPatchReplace,
 					Path: "/spec/k8s/nodeSelector",
 					Value: []k8sCoreV1.NodeSelectorRequirement{
 						{
-							Key:      tarsMetaV1Beta3.K8SHostNameLabel,
+							Key:      tarsMeta.K8SHostNameLabel,
 							Operator: k8sCoreV1.NodeSelectorOpExists,
 						},
 						{
@@ -975,7 +974,7 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 						{
 							MatchExpressions: []k8sCoreV1.NodeSelectorRequirement{
 								{
-									Key:      tarsMetaV1Beta3.K8SHostNameLabel,
+									Key:      tarsMeta.K8SHostNameLabel,
 									Operator: k8sCoreV1.NodeSelectorOpExists,
 								},
 								{
@@ -989,7 +988,7 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 									Values:   []string{"v1"},
 								},
 								{
-									Key:      fmt.Sprintf("%s.%s", tarsMetaV1Beta3.TarsNodeLabel, s.Namespace),
+									Key:      fmt.Sprintf("%s.%s", tarsMeta.TarsNodeLabel, s.Namespace),
 									Operator: k8sCoreV1.NodeSelectorOpExists,
 								},
 							},
@@ -1002,7 +1001,7 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 						Preference: k8sCoreV1.NodeSelectorTerm{
 							MatchExpressions: []k8sCoreV1.NodeSelectorRequirement{
 								{
-									Key:      fmt.Sprintf("%s.%s.%s-%s", tarsMetaV1Beta3.TarsAbilityLabelPrefix, s.Namespace, App, Server),
+									Key:      fmt.Sprintf("%s.%s.%s-%s", tarsMeta.TarsAbilityLabelPrefix, s.Namespace, App, Server),
 									Operator: k8sCoreV1.NodeSelectorOpExists,
 								},
 							},
@@ -1013,7 +1012,7 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 						Preference: k8sCoreV1.NodeSelectorTerm{
 							MatchExpressions: []k8sCoreV1.NodeSelectorRequirement{
 								{
-									Key:      fmt.Sprintf("%s.%s.%s", tarsMetaV1Beta3.TarsAbilityLabelPrefix, s.Namespace, App),
+									Key:      fmt.Sprintf("%s.%s.%s", tarsMeta.TarsAbilityLabelPrefix, s.Namespace, App),
 									Operator: k8sCoreV1.NodeSelectorOpExists,
 								},
 							},
@@ -1026,9 +1025,9 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 	})
 
 	ginkgo.It("notStacked", func() {
-		jsonPatch := tarsMetaTools.JsonPatch{
+		jsonPatch := tarsMeta.JsonPatch{
 			{
-				OP:    tarsMetaTools.JsonPatchReplace,
+				OP:    tarsMeta.JsonPatchReplace,
 				Path:  "/spec/k8s/notStacked",
 				Value: true,
 			},
@@ -1052,7 +1051,7 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 						{
 							MatchExpressions: []k8sCoreV1.NodeSelectorRequirement{
 								{
-									Key:      fmt.Sprintf("%s.%s", tarsMetaV1Beta3.TarsNodeLabel, s.Namespace),
+									Key:      fmt.Sprintf("%s.%s", tarsMeta.TarsNodeLabel, s.Namespace),
 									Operator: k8sCoreV1.NodeSelectorOpExists,
 								},
 							},
@@ -1065,12 +1064,12 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 					{
 						LabelSelector: &k8sMetaV1.LabelSelector{
 							MatchLabels: map[string]string{
-								tarsMetaV1Beta3.TServerAppLabel:  App,
-								tarsMetaV1Beta3.TServerNameLabel: Server,
+								tarsMeta.TServerAppLabel:  App,
+								tarsMeta.TServerNameLabel: Server,
 							},
 						},
 						Namespaces:  []string{s.Namespace},
-						TopologyKey: tarsMetaV1Beta3.K8SHostNameLabel,
+						TopologyKey: tarsMeta.K8SHostNameLabel,
 					},
 				},
 			},
@@ -1081,9 +1080,9 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 	})
 
 	ginkgo.It("notStacked && hostIPC", func() {
-		jsonPatch := tarsMetaTools.JsonPatch{
+		jsonPatch := tarsMeta.JsonPatch{
 			{
-				OP:    tarsMetaTools.JsonPatchReplace,
+				OP:    tarsMeta.JsonPatchReplace,
 				Path:  "/spec/k8s/notStacked",
 				Value: true,
 			},
@@ -1107,7 +1106,7 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 						{
 							MatchExpressions: []k8sCoreV1.NodeSelectorRequirement{
 								{
-									Key:      fmt.Sprintf("%s.%s", tarsMetaV1Beta3.TarsNodeLabel, s.Namespace),
+									Key:      fmt.Sprintf("%s.%s", tarsMeta.TarsNodeLabel, s.Namespace),
 									Operator: k8sCoreV1.NodeSelectorOpExists,
 								},
 							},
@@ -1120,12 +1119,12 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 					{
 						LabelSelector: &k8sMetaV1.LabelSelector{
 							MatchLabels: map[string]string{
-								tarsMetaV1Beta3.TServerAppLabel:  App,
-								tarsMetaV1Beta3.TServerNameLabel: Server,
+								tarsMeta.TServerAppLabel:  App,
+								tarsMeta.TServerNameLabel: Server,
 							},
 						},
 						Namespaces:  []string{s.Namespace},
-						TopologyKey: tarsMetaV1Beta3.K8SHostNameLabel,
+						TopologyKey: tarsMeta.K8SHostNameLabel,
 					},
 				},
 			},
@@ -1136,9 +1135,9 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 	})
 
 	ginkgo.It("notStacked && hostNetwork", func() {
-		jsonPatch := tarsMetaTools.JsonPatch{
+		jsonPatch := tarsMeta.JsonPatch{
 			{
-				OP:    tarsMetaTools.JsonPatchReplace,
+				OP:    tarsMeta.JsonPatchReplace,
 				Path:  "/spec/k8s/notStacked",
 				Value: true,
 			},
@@ -1162,7 +1161,7 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 						{
 							MatchExpressions: []k8sCoreV1.NodeSelectorRequirement{
 								{
-									Key:      fmt.Sprintf("%s.%s", tarsMetaV1Beta3.TarsNodeLabel, s.Namespace),
+									Key:      fmt.Sprintf("%s.%s", tarsMeta.TarsNodeLabel, s.Namespace),
 									Operator: k8sCoreV1.NodeSelectorOpExists,
 								},
 							},
@@ -1175,12 +1174,12 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 					{
 						LabelSelector: &k8sMetaV1.LabelSelector{
 							MatchLabels: map[string]string{
-								tarsMetaV1Beta3.TServerAppLabel:  App,
-								tarsMetaV1Beta3.TServerNameLabel: Server,
+								tarsMeta.TServerAppLabel:  App,
+								tarsMeta.TServerNameLabel: Server,
 							},
 						},
 						Namespaces:  []string{s.Namespace},
-						TopologyKey: tarsMetaV1Beta3.K8SHostNameLabel,
+						TopologyKey: tarsMeta.K8SHostNameLabel,
 					},
 				},
 			},
@@ -1191,9 +1190,9 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 	})
 
 	ginkgo.It("notStacked && hostPort", func() {
-		jsonPatch := tarsMetaTools.JsonPatch{
+		jsonPatch := tarsMeta.JsonPatch{
 			{
-				OP:    tarsMetaTools.JsonPatchReplace,
+				OP:    tarsMeta.JsonPatchReplace,
 				Path:  "/spec/k8s/notStacked",
 				Value: true,
 			},
@@ -1217,7 +1216,7 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 						{
 							MatchExpressions: []k8sCoreV1.NodeSelectorRequirement{
 								{
-									Key:      fmt.Sprintf("%s.%s", tarsMetaV1Beta3.TarsNodeLabel, s.Namespace),
+									Key:      fmt.Sprintf("%s.%s", tarsMeta.TarsNodeLabel, s.Namespace),
 									Operator: k8sCoreV1.NodeSelectorOpExists,
 								},
 							},
@@ -1230,12 +1229,12 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 					{
 						LabelSelector: &k8sMetaV1.LabelSelector{
 							MatchLabels: map[string]string{
-								tarsMetaV1Beta3.TServerAppLabel:  App,
-								tarsMetaV1Beta3.TServerNameLabel: Server,
+								tarsMeta.TServerAppLabel:  App,
+								tarsMeta.TServerNameLabel: Server,
 							},
 						},
 						Namespaces:  []string{s.Namespace},
-						TopologyKey: tarsMetaV1Beta3.K8SHostNameLabel,
+						TopologyKey: tarsMeta.K8SHostNameLabel,
 					},
 				},
 			},
@@ -1256,9 +1255,9 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 			targetPolicy = k8sAppsV1.OrderedReadyPodManagement
 		}
 
-		jsonPatch := tarsMetaTools.JsonPatch{
+		jsonPatch := tarsMeta.JsonPatch{
 			{
-				OP:    tarsMetaTools.JsonPatchReplace,
+				OP:    tarsMeta.JsonPatchReplace,
 				Path:  "/spec/k8s/podManagementPolicy",
 				Value: targetPolicy,
 			},
@@ -1290,16 +1289,16 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 
 			expectedReadiesGate := []k8sCoreV1.PodReadinessGate{
 				{
-					ConditionType: tarsMetaV1Beta3.TPodReadinessGate,
+					ConditionType: tarsMeta.TPodReadinessGate,
 				},
 			}
 			assert.Equal(ginkgo.GinkgoT(), expectedReadiesGate, spec.ReadinessGates)
 		})
 
 		ginkgo.It("delete default readinessGate", func() {
-			jsonPatch := tarsMetaTools.JsonPatch{
+			jsonPatch := tarsMeta.JsonPatch{
 				{
-					OP:   tarsMetaTools.JsonPatchRemove,
+					OP:   tarsMeta.JsonPatchRemove,
 					Path: "/spec/k8s/readinessGates",
 				},
 			}
@@ -1316,7 +1315,7 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 
 			expectedReadiesGate := []k8sCoreV1.PodReadinessGate{
 				{
-					ConditionType: tarsMetaV1Beta3.TPodReadinessGate,
+					ConditionType: tarsMeta.TPodReadinessGate,
 				},
 			}
 			assert.Equal(ginkgo.GinkgoT(), expectedReadiesGate, spec.ReadinessGates)
@@ -1324,9 +1323,9 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 
 		ginkgo.It("new readinessGate", func() {
 			newReadiesGate := []string{scaffold.RandStringRunes(10), scaffold.RandStringRunes(10)}
-			jsonPatch := tarsMetaTools.JsonPatch{
+			jsonPatch := tarsMeta.JsonPatch{
 				{
-					OP:    tarsMetaTools.JsonPatchReplace,
+					OP:    tarsMeta.JsonPatchReplace,
 					Path:  "/spec/k8s/readinessGates",
 					Value: newReadiesGate,
 				},
@@ -1345,7 +1344,7 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 
 			expectedReadiesGate := []k8sCoreV1.PodReadinessGate{
 				{
-					ConditionType: tarsMetaV1Beta3.TPodReadinessGate,
+					ConditionType: tarsMeta.TPodReadinessGate,
 				},
 				{
 					ConditionType: k8sCoreV1.PodConditionType(newReadiesGate[0]),
@@ -1361,9 +1360,9 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 	ginkgo.Context("release & replicas", func() {
 
 		ginkgo.It("before release", func() {
-			jsonPatch := tarsMetaTools.JsonPatch{
+			jsonPatch := tarsMeta.JsonPatch{
 				{
-					OP:    tarsMetaTools.JsonPatchReplace,
+					OP:    tarsMeta.JsonPatchReplace,
 					Path:  "/spec/k8s/replicas",
 					Value: 3,
 				},
@@ -1395,14 +1394,14 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 				},
 			}
 
-			jsonPatch := tarsMetaTools.JsonPatch{
+			jsonPatch := tarsMeta.JsonPatch{
 				{
-					OP:    tarsMetaTools.JsonPatchReplace,
+					OP:    tarsMeta.JsonPatchReplace,
 					Path:  "/spec/release",
 					Value: release,
 				},
 				{
-					OP:    tarsMetaTools.JsonPatchReplace,
+					OP:    tarsMeta.JsonPatchReplace,
 					Path:  "/spec/k8s/replicas",
 					Value: 3,
 				},
@@ -1423,9 +1422,9 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 
 	ginkgo.It("serviceAccount", func() {
 		newServiceAccount := scaffold.RandStringRunes(15)
-		jsonPatch := tarsMetaTools.JsonPatch{
+		jsonPatch := tarsMeta.JsonPatch{
 			{
-				OP:    tarsMetaTools.JsonPatchAdd,
+				OP:    tarsMeta.JsonPatchAdd,
 				Path:  "/spec/k8s/serviceAccount",
 				Value: newServiceAccount,
 			},
@@ -1445,9 +1444,9 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 	})
 
 	ginkgo.It("resources", func() {
-		jsonPatch := tarsMetaTools.JsonPatch{
+		jsonPatch := tarsMeta.JsonPatch{
 			{
-				OP:   tarsMetaTools.JsonPatchAdd,
+				OP:   tarsMeta.JsonPatchAdd,
 				Path: "/spec/k8s/resources",
 				Value: k8sCoreV1.ResourceRequirements{
 					Limits: k8sCoreV1.ResourceList{

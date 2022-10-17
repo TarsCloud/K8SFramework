@@ -9,7 +9,8 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	tarsCrdV1Beta3 "k8s.tars.io/crd/v1beta3"
-	tarsMetaV1Beta3 "k8s.tars.io/meta/v1beta3"
+	tarsMeta "k8s.tars.io/meta"
+
 	"strings"
 	"time"
 )
@@ -61,7 +62,7 @@ var _ = ginkgo.Describe("try create tars server with unexpected filed value", fu
 					AbilityAffinity: tarsCrdV1Beta3.None,
 					NodeSelector:    []k8sCoreV1.NodeSelectorRequirement{},
 					ImagePullPolicy: k8sCoreV1.PullAlways,
-					LauncherType:    tarsCrdV1Beta3.Background,
+					LauncherType:    tarsMeta.Background,
 				},
 			},
 		}
@@ -112,7 +113,7 @@ var _ = ginkgo.Describe("try create tars server with unexpected filed value", fu
 
 		ginkgo.It("reserved servant port", func() {
 			tsLayout.Spec.Tars.Servants[0].Name = "FirstObj"
-			tsLayout.Spec.Tars.Servants[0].Port = tarsMetaV1Beta3.NodeServantPort
+			tsLayout.Spec.Tars.Servants[0].Port = tarsMeta.NodeServantPort
 
 			tsLayout.Spec.Tars.Servants[1].Name = "SecondObj"
 			tsLayout.Spec.Tars.Servants[1].Port = 3000
@@ -161,7 +162,7 @@ var _ = ginkgo.Describe("try create tars server with unexpected filed value", fu
 
 		ginkgo.It("reserved port value", func() {
 			tsLayout.Spec.Tars.Ports[0].Name = "first"
-			tsLayout.Spec.Tars.Ports[0].Port = tarsMetaV1Beta3.NodeServantPort
+			tsLayout.Spec.Tars.Ports[0].Port = tarsMeta.NodeServantPort
 
 			tsLayout.Spec.Tars.Ports[1].Name = "second"
 			tsLayout.Spec.Tars.Ports[1].Port = 3001

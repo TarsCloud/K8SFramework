@@ -11,8 +11,8 @@ import (
 	patchTypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
 	tarsCrdV1Beta3 "k8s.tars.io/crd/v1beta3"
-	tarsMetaTools "k8s.tars.io/meta/tools"
-	tarsMetaV1Beta3 "k8s.tars.io/meta/v1beta3"
+	tarsMeta "k8s.tars.io/meta"
+
 	"strings"
 	"time"
 )
@@ -89,7 +89,7 @@ var _ = ginkgo.Describe("try create/update tars server and check service", func(
 					AbilityAffinity: tarsCrdV1Beta3.None,
 					NodeSelector:    []k8sCoreV1.NodeSelectorRequirement{},
 					ImagePullPolicy: k8sCoreV1.PullAlways,
-					LauncherType:    tarsCrdV1Beta3.Background,
+					LauncherType:    tarsMeta.Background,
 				},
 			},
 		}
@@ -104,8 +104,8 @@ var _ = ginkgo.Describe("try create/update tars server and check service", func(
 		assert.NotNil(ginkgo.GinkgoT(), service)
 
 		expectedLabels := map[string]string{
-			tarsMetaV1Beta3.TServerAppLabel:  App,
-			tarsMetaV1Beta3.TServerNameLabel: Server,
+			tarsMeta.TServerAppLabel:  App,
+			tarsMeta.TServerNameLabel: Server,
 		}
 		assert.True(ginkgo.GinkgoT(), scaffold.CheckLeftInRight(expectedLabels, service.Labels))
 		assert.True(ginkgo.GinkgoT(), scaffold.CheckLeftInRight(expectedLabels, service.Spec.Selector))
@@ -135,9 +135,9 @@ var _ = ginkgo.Describe("try create/update tars server and check service", func(
 
 	ginkgo.It("add servant", func() {
 		var ThirdObj = "ThirdObj"
-		jsonPatch := tarsMetaTools.JsonPatch{
+		jsonPatch := tarsMeta.JsonPatch{
 			{
-				OP:   tarsMetaTools.JsonPatchAdd,
+				OP:   tarsMeta.JsonPatchAdd,
 				Path: "/spec/tars/servants/0",
 				Value: &tarsCrdV1Beta3.TServerServant{
 					Name:       ThirdObj,
@@ -161,8 +161,8 @@ var _ = ginkgo.Describe("try create/update tars server and check service", func(
 		assert.NotNil(ginkgo.GinkgoT(), service)
 
 		expectedLabels := map[string]string{
-			tarsMetaV1Beta3.TServerAppLabel:  App,
-			tarsMetaV1Beta3.TServerNameLabel: Server,
+			tarsMeta.TServerAppLabel:  App,
+			tarsMeta.TServerNameLabel: Server,
 		}
 		assert.True(ginkgo.GinkgoT(), scaffold.CheckLeftInRight(expectedLabels, service.Labels))
 		assert.True(ginkgo.GinkgoT(), scaffold.CheckLeftInRight(expectedLabels, service.Spec.Selector))
@@ -201,9 +201,9 @@ var _ = ginkgo.Describe("try create/update tars server and check service", func(
 
 	ginkgo.It("update servant", func() {
 		var ThirdObj = "ThirdObj"
-		jsonPatch := tarsMetaTools.JsonPatch{
+		jsonPatch := tarsMeta.JsonPatch{
 			{
-				OP:   tarsMetaTools.JsonPatchReplace,
+				OP:   tarsMeta.JsonPatchReplace,
 				Path: "/spec/tars/servants/1",
 				Value: &tarsCrdV1Beta3.TServerServant{
 					Name:       ThirdObj,
@@ -227,8 +227,8 @@ var _ = ginkgo.Describe("try create/update tars server and check service", func(
 		assert.NotNil(ginkgo.GinkgoT(), service)
 
 		expectedLabels := map[string]string{
-			tarsMetaV1Beta3.TServerAppLabel:  App,
-			tarsMetaV1Beta3.TServerNameLabel: Server,
+			tarsMeta.TServerAppLabel:  App,
+			tarsMeta.TServerNameLabel: Server,
 		}
 		assert.True(ginkgo.GinkgoT(), scaffold.CheckLeftInRight(expectedLabels, service.Labels))
 		assert.True(ginkgo.GinkgoT(), scaffold.CheckLeftInRight(expectedLabels, service.Spec.Selector))
@@ -257,9 +257,9 @@ var _ = ginkgo.Describe("try create/update tars server and check service", func(
 	})
 
 	ginkgo.It("delete servant", func() {
-		jsonPatch := tarsMetaTools.JsonPatch{
+		jsonPatch := tarsMeta.JsonPatch{
 			{
-				OP:   tarsMetaTools.JsonPatchRemove,
+				OP:   tarsMeta.JsonPatchRemove,
 				Path: "/spec/tars/servants/1",
 			},
 		}
@@ -273,8 +273,8 @@ var _ = ginkgo.Describe("try create/update tars server and check service", func(
 		assert.NotNil(ginkgo.GinkgoT(), service)
 
 		expectedLabels := map[string]string{
-			tarsMetaV1Beta3.TServerAppLabel:  App,
-			tarsMetaV1Beta3.TServerNameLabel: Server,
+			tarsMeta.TServerAppLabel:  App,
+			tarsMeta.TServerNameLabel: Server,
 		}
 		assert.True(ginkgo.GinkgoT(), scaffold.CheckLeftInRight(expectedLabels, service.Labels))
 		assert.True(ginkgo.GinkgoT(), scaffold.CheckLeftInRight(expectedLabels, service.Spec.Selector))
@@ -295,9 +295,9 @@ var _ = ginkgo.Describe("try create/update tars server and check service", func(
 	})
 
 	ginkgo.It("daemonset", func() {
-		jsonPatch := tarsMetaTools.JsonPatch{
+		jsonPatch := tarsMeta.JsonPatch{
 			{
-				OP:    tarsMetaTools.JsonPatchAdd,
+				OP:    tarsMeta.JsonPatchAdd,
 				Path:  "/spec/k8s/daemonSet",
 				Value: true,
 			},
