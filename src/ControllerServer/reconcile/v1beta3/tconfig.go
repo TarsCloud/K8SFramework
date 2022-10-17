@@ -48,11 +48,11 @@ func (r *TConfigReconciler) EnqueueObj(resourceName string, resourceEvent k8sWat
 	case k8sWatchV1.Deleted:
 		r.deleteQueue.Add(namespace)
 	case k8sWatchV1.Added:
-		labels := tconfigMetadataObj.GetLabels()
-		app, _ := labels[tarsMetaV1beta3.TServerAppLabel]
-		server, _ := labels[tarsMetaV1beta3.TServerNameLabel]
-		configName, _ := labels[tarsMetaV1beta3.TConfigNameLabel]
-		podSeq, _ := labels[tarsMetaV1beta3.TConfigPodSeqLabel]
+		objLabels := tconfigMetadataObj.GetLabels()
+		app, _ := objLabels[tarsMetaV1beta3.TServerAppLabel]
+		server, _ := objLabels[tarsMetaV1beta3.TServerNameLabel]
+		configName, _ := objLabels[tarsMetaV1beta3.TConfigNameLabel]
+		podSeq, _ := objLabels[tarsMetaV1beta3.TConfigPodSeqLabel]
 		key = fmt.Sprintf("%s/%s/%s/%s/%s", namespace, app, server, configName, podSeq)
 		r.addQueue.Add(key)
 	}
@@ -180,8 +180,8 @@ func (r *TConfigReconciler) reconcileDelete(key string) reconcile.Result {
 
 func (r *TConfigReconciler) Start(stopCh chan struct{}) {
 	go wait.Until(func() { r.processItem(r.addQueue, r.reconcileAdd) }, time.Second, stopCh)
-	go wait.Until(func() { r.processItem(r.addQueue, r.reconcileModify) }, time.Second, stopCh)
-	go wait.Until(func() { r.processItem(r.addQueue, r.reconcileDelete) }, time.Second, stopCh)
+	go wait.Until(func() { r.processItem(r.modifyQueue, r.reconcileModify) }, time.Second, stopCh)
+	go wait.Until(func() { r.processItem(r.deleteQueue, r.reconcileDelete) }, time.Second, stopCh)
 }
 
 func (r *TConfigReconciler) processItem(queue workqueue.RateLimitingInterface, reconciler func(key string) reconcile.Result) bool {
