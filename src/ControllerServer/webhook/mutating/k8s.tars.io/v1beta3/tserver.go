@@ -73,7 +73,7 @@ func mutatingCreateTServer(requestAdmissionView *k8sAdmissionV1.AdmissionReview)
 	}
 
 	if tserver.Spec.Normal != nil {
-		if _, ok := tserver.Labels[tarsMeta.TemplateLabel]; ok {
+		if _, ok := tserver.Labels[tarsMeta.TTemplateLabel]; ok {
 			jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
 				OP:   tarsMeta.JsonPatchRemove,
 				Path: "/metadata/labels/tars.io~1Template",

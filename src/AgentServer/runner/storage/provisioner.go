@@ -97,16 +97,16 @@ func (p *TLocalProvisioner) GetVolumeModeInfo(claim *k8sCoreV1.PersistentVolumeC
 	var gid, uid = 0, 0
 	var perm int64
 	if claim.Annotations != nil {
-		permAnn := claim.Annotations[tarsMeta.TLocalVolumeModeLabel]
+		permAnn := claim.Annotations[tarsMeta.TLocalVolumeModeAnnotation]
 		if permAnn == "" {
 			permAnn = DefaultPerm
 		}
 		perm, _ = strconv.ParseInt(permAnn, 8, 32)
-		if uidAnn := claim.Annotations[tarsMeta.TLocalVolumeUIDLabel]; uidAnn != "" {
+		if uidAnn := claim.Annotations[tarsMeta.TLocalVolumeUIDAnnotation]; uidAnn != "" {
 			uid, _ = strconv.Atoi(uidAnn)
 		}
 
-		if gidAnn := claim.Annotations[tarsMeta.TLocalVolumeGIDLabel]; gidAnn != "" {
+		if gidAnn := claim.Annotations[tarsMeta.TLocalVolumeGIDAnnotation]; gidAnn != "" {
 			gid, _ = strconv.Atoi(gidAnn)
 		}
 	}

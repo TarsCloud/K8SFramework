@@ -19,7 +19,7 @@ func mutatingCreateTTemplate(requestAdmissionView *k8sAdmissionV1.AdmissionRevie
 
 		if fatherless {
 			if ttemplate.Labels != nil {
-				if _, ok := ttemplate.Labels[tarsMeta.ParentLabel]; ok {
+				if _, ok := ttemplate.Labels[tarsMeta.TTemplateParentLabel]; ok {
 					jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
 						OP:   tarsMeta.JsonPatchRemove,
 						Path: "/metadata/labels/tars.io~1Parent",

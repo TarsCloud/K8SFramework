@@ -68,7 +68,7 @@ func validDeleteTTemplate(clients *controller.Clients, informers *controller.Inf
 	_ = json.Unmarshal(view.Request.OldObject.Raw, ttemplate)
 	namespace := ttemplate.Namespace
 
-	requirement, _ := labels.NewRequirement(tarsMeta.TemplateLabel, selection.DoubleEquals, []string{ttemplate.Name})
+	requirement, _ := labels.NewRequirement(tarsMeta.TTemplateLabel, selection.DoubleEquals, []string{ttemplate.Name})
 	tservers, err := informers.TServerInformer.Lister().TServers(namespace).List(labels.NewSelector().Add(*requirement))
 	if err != nil {
 		return fmt.Errorf(tarsMeta.ResourceSelectorError, namespace, "tservers", err.Error())
@@ -77,7 +77,7 @@ func validDeleteTTemplate(clients *controller.Clients, informers *controller.Inf
 		return fmt.Errorf("cannot delete ttemplate %s/%s because it is reference by some tserver", namespace, ttemplate.Name)
 	}
 
-	requirement, _ = labels.NewRequirement(tarsMeta.ParentLabel, selection.DoubleEquals, []string{ttemplate.Name})
+	requirement, _ = labels.NewRequirement(tarsMeta.TTemplateParentLabel, selection.DoubleEquals, []string{ttemplate.Name})
 	ttemplates, err := informers.TTemplateInformer.Lister().ByNamespace(namespace).List(labels.NewSelector().Add(*requirement))
 	if err != nil {
 		return fmt.Errorf(tarsMeta.ResourceSelectorError, namespace, "ttemplates", err.Error())

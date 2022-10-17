@@ -118,9 +118,9 @@ func buildPVCAnnotations(tserver *tarsCrdV1beta3.TServer) map[string]map[string]
 		for _, mount := range tserver.Spec.K8S.Mounts {
 			if mount.Source.TLocalVolume != nil {
 				annotations[mount.Name] = map[string]string{
-					tarsMeta.TLocalVolumeUIDLabel:  mount.Source.TLocalVolume.UID,
-					tarsMeta.TLocalVolumeGIDLabel:  mount.Source.TLocalVolume.GID,
-					tarsMeta.TLocalVolumeModeLabel: mount.Source.TLocalVolume.Mode,
+					tarsMeta.TLocalVolumeUIDAnnotation: mount.Source.TLocalVolume.UID,
+					tarsMeta.TLocalVolumeGIDAnnotation: mount.Source.TLocalVolume.GID,
+					tarsMeta.TLocalVolumeLabel:         mount.Source.TLocalVolume.Mode,
 				}
 			}
 		}
