@@ -6,7 +6,7 @@ import (
 	k8sCoreV1 "k8s.io/api/core/v1"
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
-	tarsMetaV1beta3 "k8s.tars.io/meta/v1beta3"
+	tarsMeta "k8s.tars.io/meta"
 	"os"
 	"path"
 	"strconv"
@@ -47,7 +47,7 @@ func newTLocalProvisioner() *TLocalProvisioner {
 	}
 	h := fnv.New32a()
 	_, _ = h.Write([]byte(node))
-	_, _ = h.Write([]byte(tarsMetaV1beta3.TStorageClassName))
+	_, _ = h.Write([]byte(tarsMeta.TStorageClassName))
 
 	return &TLocalProvisioner{
 		podBase:            "/usr/local/app/tars/host-mount",
@@ -67,9 +67,9 @@ func (p *TLocalProvisioner) GetVolumePathInfo(claim *k8sCoreV1.PersistentVolumeC
 	}
 
 	matchLabels := claim.Spec.Selector.MatchLabels
-	app, _ := matchLabels[tarsMetaV1beta3.TServerAppLabel]
-	server, _ := matchLabels[tarsMetaV1beta3.TServerNameLabel]
-	directory, _ := matchLabels[tarsMetaV1beta3.TLocalVolumeLabel]
+	app, _ := matchLabels[tarsMeta.TServerAppLabel]
+	server, _ := matchLabels[tarsMeta.TServerNameLabel]
+	directory, _ := matchLabels[tarsMeta.TLocalVolumeLabel]
 
 	volumeName := fmt.Sprintf("%s-%s-%s-%s-%s", claim.Namespace, directory, app, server, p.identity)
 	if claim.Spec.VolumeName != "" && claim.Spec.VolumeName != volumeName {
@@ -97,16 +97,16 @@ func (p *TLocalProvisioner) GetVolumeModeInfo(claim *k8sCoreV1.PersistentVolumeC
 	var gid, uid = 0, 0
 	var perm int64
 	if claim.Annotations != nil {
-		permAnn := claim.Annotations[tarsMetaV1beta3.TLocalVolumeModeLabel]
+		permAnn := claim.Annotations[tarsMeta.TLocalVolumeModeLabel]
 		if permAnn == "" {
 			permAnn = DefaultPerm
 		}
 		perm, _ = strconv.ParseInt(permAnn, 8, 32)
-		if uidAnn := claim.Annotations[tarsMetaV1beta3.TLocalVolumeUIDLabel]; uidAnn != "" {
+		if uidAnn := claim.Annotations[tarsMeta.TLocalVolumeUIDLabel]; uidAnn != "" {
 			uid, _ = strconv.Atoi(uidAnn)
 		}
 
-		if gidAnn := claim.Annotations[tarsMetaV1beta3.TLocalVolumeGIDLabel]; gidAnn != "" {
+		if gidAnn := claim.Annotations[tarsMeta.TLocalVolumeGIDLabel]; gidAnn != "" {
 			gid, _ = strconv.Atoi(gidAnn)
 		}
 	}
@@ -157,7 +157,7 @@ func (p *TLocalProvisioner) Provision(claim *k8sCoreV1.PersistentVolumeClaim) (*
 			},
 			AccessModes:                   claim.Spec.AccessModes,
 			PersistentVolumeReclaimPolicy: p.reclaimPolicy,
-			StorageClassName:              tarsMetaV1beta3.TStorageClassName,
+			StorageClassName:              tarsMeta.TStorageClassName,
 			MountOptions:                  nil,
 			VolumeMode:                    nil,
 			NodeAffinity: &k8sCoreV1.VolumeNodeAffinity{
@@ -166,7 +166,7 @@ func (p *TLocalProvisioner) Provision(claim *k8sCoreV1.PersistentVolumeClaim) (*
 						{
 							MatchExpressions: []k8sCoreV1.NodeSelectorRequirement{
 								{
-									Key:      tarsMetaV1beta3.K8SHostNameLabel,
+									Key:      tarsMeta.K8SHostNameLabel,
 									Operator: k8sCoreV1.NodeSelectorOpIn,
 									Values:   []string{p.node},
 								},

@@ -9,9 +9,7 @@ import (
 	tarsCrdV1beta1 "k8s.tars.io/crd/v1beta1"
 	tarsCrdV1beta2 "k8s.tars.io/crd/v1beta2"
 	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
-	tarsMetaV1beta1 "k8s.tars.io/meta/v1beta1"
-	tarsMetaV1beta2 "k8s.tars.io/meta/v1beta2"
-	tarsMetaV1beta3 "k8s.tars.io/meta/v1beta3"
+	tarsMeta "k8s.tars.io/meta"
 	"unsafe"
 )
 
@@ -77,8 +75,8 @@ func CvTServer1b1To1b3(s []runtime.RawExtension) []runtime.RawExtension {
 
 		var dst = &tarsCrdV1beta3.TServer{
 			TypeMeta: k8sMetaV1.TypeMeta{
-				APIVersion: tarsMetaV1beta3.GroupVersion,
-				Kind:       tarsMetaV1beta3.TServerKind,
+				APIVersion: tarsMeta.TarsGroupVersionV1B3,
+				Kind:       tarsMeta.TServerKind,
 			},
 			ObjectMeta: src.ObjectMeta,
 			Spec: tarsCrdV1beta3.TServerSpec{
@@ -106,9 +104,9 @@ func CvTServer1b1To1b3(s []runtime.RawExtension) []runtime.RawExtension {
 					Replicas:            src.Spec.K8S.Replicas,
 					ReadinessGates:      []string{},
 					Resources:           src.Spec.K8S.Resources,
-					UpdateStrategy:      tarsMetaV1beta3.DefaultStatefulsetUpdateStrategy,
-					ImagePullPolicy:     tarsMetaV1beta3.DefaultImagePullPolicy,
-					LauncherType:        tarsMetaV1beta3.DefaultLauncherType,
+					UpdateStrategy:      tarsMeta.DefaultStatefulsetUpdateStrategy,
+					ImagePullPolicy:     tarsMeta.DefaultImagePullPolicy,
+					LauncherType:        tarsMeta.DefaultLauncherType,
 				},
 				Release: nil,
 			},
@@ -228,8 +226,8 @@ func CvTServer1b3To1b1(s []runtime.RawExtension) []runtime.RawExtension {
 
 		var dst = &tarsCrdV1beta1.TServer{
 			TypeMeta: k8sMetaV1.TypeMeta{
-				APIVersion: tarsMetaV1beta1.GroupVersion,
-				Kind:       tarsMetaV1beta1.TServerKind,
+				APIVersion: tarsMeta.TarsGroupVersionV1B1,
+				Kind:       tarsMeta.TServerKind,
 			},
 			ObjectMeta: src.ObjectMeta,
 			Spec: tarsCrdV1beta1.TServerSpec{
@@ -360,8 +358,8 @@ func CvTServer1b2To1b3(s []runtime.RawExtension) []runtime.RawExtension {
 
 		var dst = &tarsCrdV1beta3.TServer{
 			TypeMeta: k8sMetaV1.TypeMeta{
-				APIVersion: tarsMetaV1beta3.GroupVersion,
-				Kind:       tarsMetaV1beta3.TServerKind,
+				APIVersion: tarsMeta.TarsGroupVersionV1B3,
+				Kind:       tarsMeta.TServerKind,
 			},
 			ObjectMeta: src.ObjectMeta,
 			Spec: tarsCrdV1beta3.TServerSpec{
@@ -391,7 +389,7 @@ func CvTServer1b2To1b3(s []runtime.RawExtension) []runtime.RawExtension {
 					Resources:           src.Spec.K8S.Resources,
 					UpdateStrategy:      src.Spec.K8S.UpdateStrategy,
 					ImagePullPolicy:     src.Spec.K8S.ImagePullPolicy,
-					LauncherType:        tarsCrdV1beta3.LauncherType(src.Spec.K8S.LauncherType),
+					LauncherType:        src.Spec.K8S.LauncherType,
 				},
 				Release: nil,
 			},
@@ -503,8 +501,8 @@ func CvTServer1b3To1b2(s []runtime.RawExtension) []runtime.RawExtension {
 
 		var dst = &tarsCrdV1beta2.TServer{
 			TypeMeta: k8sMetaV1.TypeMeta{
-				APIVersion: tarsMetaV1beta2.GroupVersion,
-				Kind:       tarsMetaV1beta2.TServerKind,
+				APIVersion: tarsMeta.TarsGroupVersionV1B2,
+				Kind:       tarsMeta.TServerKind,
 			},
 			ObjectMeta: src.ObjectMeta,
 			Spec: tarsCrdV1beta2.TServerSpec{
@@ -532,7 +530,7 @@ func CvTServer1b3To1b2(s []runtime.RawExtension) []runtime.RawExtension {
 					Resources:           src.Spec.K8S.Resources,
 					UpdateStrategy:      src.Spec.K8S.UpdateStrategy,
 					ImagePullPolicy:     src.Spec.K8S.ImagePullPolicy,
-					LauncherType:        tarsCrdV1beta2.LauncherType(src.Spec.K8S.LauncherType),
+					LauncherType:        src.Spec.K8S.LauncherType,
 				},
 				Release: nil,
 			},

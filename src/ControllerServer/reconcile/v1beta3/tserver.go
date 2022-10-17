@@ -14,7 +14,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
-	tarsMetaV1beta3 "k8s.tars.io/meta/v1beta3"
+	tarsMeta "k8s.tars.io/meta"
 	"strings"
 	"tarscontroller/controller"
 	"tarscontroller/reconcile"
@@ -84,10 +84,10 @@ func (r *TServerReconciler) EnqueueObj(resourceName string, resourceEvent k8sWat
 		}
 		var app, server string
 		var ok bool
-		if app, ok = pod.Labels[tarsMetaV1beta3.TServerAppLabel]; !ok && app != "" {
+		if app, ok = pod.Labels[tarsMeta.TServerAppLabel]; !ok && app != "" {
 			return
 		}
-		if server, ok = pod.Labels[tarsMetaV1beta3.TServerNameLabel]; !ok && server != "" {
+		if server, ok = pod.Labels[tarsMeta.TServerNameLabel]; !ok && server != "" {
 			return
 		}
 		key := fmt.Sprintf("%s/%s-%s", pod.Namespace, strings.ToLower(app), strings.ToLower(server))
@@ -118,21 +118,21 @@ func (r *TServerReconciler) reconcile(key string) reconcile.Result {
 	tserver, err := r.informers.TServerInformer.Lister().TServers(namespace).Get(name)
 	if err != nil {
 		if !errors.IsNotFound(err) {
-			utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceGetError, "tserver", namespace, name, err.Error()))
+			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "tserver", namespace, name, err.Error()))
 			return reconcile.RateLimit
 		}
 		return reconcile.AllOk
 	}
 
-	appRequire, _ := labels.NewRequirement(tarsMetaV1beta3.TServerAppLabel, selection.Equals, []string{tserver.Spec.App})
-	serverRequire, _ := labels.NewRequirement(tarsMetaV1beta3.TServerNameLabel, selection.Equals, []string{tserver.Spec.Server})
+	appRequire, _ := labels.NewRequirement(tarsMeta.TServerAppLabel, selection.Equals, []string{tserver.Spec.App})
+	serverRequire, _ := labels.NewRequirement(tarsMeta.TServerNameLabel, selection.Equals, []string{tserver.Spec.Server})
 	selector := labels.NewSelector().Add(*appRequire, *serverRequire)
 
 	pods, err := r.informers.PodInformer.Lister().Pods(namespace).List(selector)
 
 	if err != nil {
 		if !errors.IsNotFound(err) {
-			utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceSelectorError, namespace, "pods", err.Error()))
+			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceSelectorError, namespace, "pods", err.Error()))
 			return reconcile.RateLimit
 		}
 		return reconcile.AllOk
@@ -159,7 +159,7 @@ func (r *TServerReconciler) reconcile(key string) reconcile.Result {
 	}
 	_, err = r.clients.CrdClient.CrdV1beta3().TServers(namespace).UpdateStatus(context.TODO(), tserverCopy, k8sMetaV1.UpdateOptions{})
 	if err != nil {
-		utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourcePatchError, "tserver", namespace, name, err.Error()))
+		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourcePatchError, "tserver", namespace, name, err.Error()))
 		return reconcile.RateLimit
 	}
 	return reconcile.AllOk

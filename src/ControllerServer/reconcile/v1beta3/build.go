@@ -10,7 +10,7 @@ import (
 	utilRuntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/utils/integer"
 	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
-	tarsMetaV1beta3 "k8s.tars.io/meta/v1beta3"
+	tarsMeta "k8s.tars.io/meta"
 	"strings"
 	"tarscontroller/controller"
 )
@@ -100,12 +100,12 @@ func buildPodInitContainers(tserver *tarsCrdV1beta3.TServer) []k8sCoreV1.Contain
 		image = tserver.Spec.Release.TServerReleaseNode.Image
 	}
 
-	if image == "" || image == tarsMetaV1beta3.ServiceImagePlaceholder {
+	if image == "" || image == tarsMeta.ServiceImagePlaceholder {
 		image, _ = controller.GetDefaultNodeImage(tserver.Namespace)
 	}
 
-	if image == tarsMetaV1beta3.ServiceImagePlaceholder {
-		utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ShouldNotHappenError, "no node image set"))
+	if image == tarsMeta.ServiceImagePlaceholder {
+		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ShouldNotHappenError, "no node image set"))
 	}
 
 	containers := []k8sCoreV1.Container{
@@ -157,7 +157,7 @@ func buildPodInitContainers(tserver *tarsCrdV1beta3.TServer) []k8sCoreV1.Contain
 		},
 	}
 
-	if tserver.Spec.K8S.LauncherType != tarsCrdV1beta3.Background {
+	if tserver.Spec.K8S.LauncherType != tarsMeta.Background {
 		containers[0].Env = append(containers[0].Env,
 			k8sCoreV1.EnvVar{
 				Name:  "LauncherType",
@@ -302,7 +302,7 @@ func buildPodAffinity(tserver *tarsCrdV1beta3.TServer) *k8sCoreV1.Affinity {
 
 	nodeSelectorTerm = append(nodeSelectorTerm,
 		k8sCoreV1.NodeSelectorRequirement{
-			Key:      fmt.Sprintf("%s.%s", tarsMetaV1beta3.TarsNodeLabel, tserver.Namespace),
+			Key:      fmt.Sprintf("%s.%s", tarsMeta.TarsNodeLabel, tserver.Namespace),
 			Operator: k8sCoreV1.NodeSelectorOpExists,
 		},
 	)
@@ -315,14 +315,14 @@ func buildPodAffinity(tserver *tarsCrdV1beta3.TServer) *k8sCoreV1.Affinity {
 		case tarsCrdV1beta3.AppRequired:
 			nodeSelectorTerm = append(nodeSelectorTerm,
 				k8sCoreV1.NodeSelectorRequirement{
-					Key:      fmt.Sprintf("%s.%s.%s", tarsMetaV1beta3.TarsAbilityLabelPrefix, tserver.Namespace, tserver.Spec.App),
+					Key:      fmt.Sprintf("%s.%s.%s", tarsMeta.TarsAbilityLabelPrefix, tserver.Namespace, tserver.Spec.App),
 					Operator: k8sCoreV1.NodeSelectorOpExists,
 				},
 			)
 		case tarsCrdV1beta3.ServerRequired:
 			nodeSelectorTerm = append(nodeSelectorTerm,
 				k8sCoreV1.NodeSelectorRequirement{
-					Key:      fmt.Sprintf("%s.%s.%s-%s", tarsMetaV1beta3.TarsAbilityLabelPrefix, tserver.Namespace, tserver.Spec.App, tserver.Spec.Server),
+					Key:      fmt.Sprintf("%s.%s.%s-%s", tarsMeta.TarsAbilityLabelPrefix, tserver.Namespace, tserver.Spec.App, tserver.Spec.Server),
 					Operator: k8sCoreV1.NodeSelectorOpExists,
 				},
 			)
@@ -333,7 +333,7 @@ func buildPodAffinity(tserver *tarsCrdV1beta3.TServer) *k8sCoreV1.Affinity {
 					Preference: k8sCoreV1.NodeSelectorTerm{
 						MatchExpressions: []k8sCoreV1.NodeSelectorRequirement{
 							{
-								Key:      fmt.Sprintf("%s.%s.%s-%s", tarsMetaV1beta3.TarsAbilityLabelPrefix, tserver.Namespace, tserver.Spec.App, tserver.Spec.Server),
+								Key:      fmt.Sprintf("%s.%s.%s-%s", tarsMeta.TarsAbilityLabelPrefix, tserver.Namespace, tserver.Spec.App, tserver.Spec.Server),
 								Operator: k8sCoreV1.NodeSelectorOpExists,
 							},
 						},
@@ -344,7 +344,7 @@ func buildPodAffinity(tserver *tarsCrdV1beta3.TServer) *k8sCoreV1.Affinity {
 					Preference: k8sCoreV1.NodeSelectorTerm{
 						MatchExpressions: []k8sCoreV1.NodeSelectorRequirement{
 							{
-								Key:      fmt.Sprintf("%s.%s.%s", tarsMetaV1beta3.TarsAbilityLabelPrefix, tserver.Namespace, tserver.Spec.App),
+								Key:      fmt.Sprintf("%s.%s.%s", tarsMeta.TarsAbilityLabelPrefix, tserver.Namespace, tserver.Spec.App),
 								Operator: k8sCoreV1.NodeSelectorOpExists,
 							},
 						},
@@ -359,12 +359,12 @@ func buildPodAffinity(tserver *tarsCrdV1beta3.TServer) *k8sCoreV1.Affinity {
 					{
 						LabelSelector: &k8sMetaV1.LabelSelector{
 							MatchLabels: map[string]string{
-								tarsMetaV1beta3.TServerAppLabel:  tserver.Spec.App,
-								tarsMetaV1beta3.TServerNameLabel: tserver.Spec.Server,
+								tarsMeta.TServerAppLabel:  tserver.Spec.App,
+								tarsMeta.TServerNameLabel: tserver.Spec.Server,
 							},
 						},
 						Namespaces:  []string{tserver.Namespace},
-						TopologyKey: tarsMetaV1beta3.K8SHostNameLabel,
+						TopologyKey: tarsMeta.K8SHostNameLabel,
 					},
 				},
 			}
@@ -394,7 +394,7 @@ func buildPodTemplate(tserver *tarsCrdV1beta3.TServer) k8sCoreV1.PodTemplateSpec
 		dnsPolicy = k8sCoreV1.DNSClusterFirstWithHostNet
 	}
 
-	serverImage := tarsMetaV1beta3.ServiceImagePlaceholder
+	serverImage := tarsMeta.ServiceImagePlaceholder
 
 	if tserver.Spec.Release != nil {
 		serverImage = tserver.Spec.Release.Image
@@ -404,8 +404,8 @@ func buildPodTemplate(tserver *tarsCrdV1beta3.TServer) k8sCoreV1.PodTemplateSpec
 		ObjectMeta: k8sMetaV1.ObjectMeta{
 			Name: tserver.Name,
 			Labels: map[string]string{
-				tarsMetaV1beta3.TServerAppLabel:  tserver.Spec.App,
-				tarsMetaV1beta3.TServerNameLabel: tserver.Spec.Server,
+				tarsMeta.TServerAppLabel:  tserver.Spec.App,
+				tarsMeta.TServerNameLabel: tserver.Spec.Server,
 			},
 		},
 		Spec: k8sCoreV1.PodSpec{
@@ -447,14 +447,14 @@ func buildPodTemplate(tserver *tarsCrdV1beta3.TServer) k8sCoreV1.PodTemplateSpec
 	}
 
 	if tserver.Spec.Release != nil {
-		spec.Labels[tarsMetaV1beta3.TServerIdLabel] = tserver.Spec.Release.ID
+		spec.Labels[tarsMeta.TServerIdLabel] = tserver.Spec.Release.ID
 	}
 
 	return spec
 }
 
 func buildTVolumeClaimTemplates(tserver *tarsCrdV1beta3.TServer, name string) *k8sCoreV1.PersistentVolumeClaim {
-	storageClassName := tarsMetaV1beta3.TStorageClassName
+	storageClassName := tarsMeta.TStorageClassName
 	volumeMode := k8sCoreV1.PersistentVolumeFilesystem
 	quantity, _ := resource.ParseQuantity("1G")
 	pvc := &k8sCoreV1.PersistentVolumeClaim{
@@ -466,21 +466,21 @@ func buildTVolumeClaimTemplates(tserver *tarsCrdV1beta3.TServer, name string) *k
 			Name:      name,
 			Namespace: tserver.Namespace,
 			Labels: map[string]string{
-				tarsMetaV1beta3.TServerAppLabel:   tserver.Spec.App,
-				tarsMetaV1beta3.TServerNameLabel:  tserver.Spec.Server,
-				tarsMetaV1beta3.TLocalVolumeLabel: name,
+				tarsMeta.TServerAppLabel:   tserver.Spec.App,
+				tarsMeta.TServerNameLabel:  tserver.Spec.Server,
+				tarsMeta.TLocalVolumeLabel: name,
 			},
 			OwnerReferences: []k8sMetaV1.OwnerReference{
-				*k8sMetaV1.NewControllerRef(tserver, tarsCrdV1beta3.SchemeGroupVersion.WithKind(tarsMetaV1beta3.TServerKind)),
+				*k8sMetaV1.NewControllerRef(tserver, tarsCrdV1beta3.SchemeGroupVersion.WithKind(tarsMeta.TServerKind)),
 			},
 		},
 		Spec: k8sCoreV1.PersistentVolumeClaimSpec{
 			AccessModes: []k8sCoreV1.PersistentVolumeAccessMode{k8sCoreV1.ReadWriteOnce},
 			Selector: &k8sMetaV1.LabelSelector{
 				MatchLabels: map[string]string{
-					tarsMetaV1beta3.TServerAppLabel:   tserver.Spec.App,
-					tarsMetaV1beta3.TServerNameLabel:  tserver.Spec.Server,
-					tarsMetaV1beta3.TLocalVolumeLabel: name,
+					tarsMeta.TServerAppLabel:   tserver.Spec.App,
+					tarsMeta.TServerNameLabel:  tserver.Spec.Server,
+					tarsMeta.TLocalVolumeLabel: name,
 				},
 			},
 			Resources: k8sCoreV1.ResourceRequirements{
@@ -509,7 +509,7 @@ func buildStatefulsetVolumeClaimTemplates(tserver *tarsCrdV1beta3.TServer) []k8s
 	}
 
 	if tserver.Spec.K8S.HostIPC || tserver.Spec.K8S.HostNetwork || len(tserver.Spec.K8S.HostPorts) > 0 {
-		volumeClaimTemplates = append(volumeClaimTemplates, *buildTVolumeClaimTemplates(tserver, tarsMetaV1beta3.THostBindPlaceholder))
+		volumeClaimTemplates = append(volumeClaimTemplates, *buildTVolumeClaimTemplates(tserver, tarsMeta.THostBindPlaceholder))
 	}
 
 	return volumeClaimTemplates
@@ -521,19 +521,19 @@ func buildStatefulset(tserver *tarsCrdV1beta3.TServer) *k8sAppsV1.StatefulSet {
 			Name:      tserver.Name,
 			Namespace: tserver.Namespace,
 			Labels: map[string]string{
-				tarsMetaV1beta3.TServerAppLabel:  tserver.Spec.App,
-				tarsMetaV1beta3.TServerNameLabel: tserver.Spec.Server,
+				tarsMeta.TServerAppLabel:  tserver.Spec.App,
+				tarsMeta.TServerNameLabel: tserver.Spec.Server,
 			},
 			OwnerReferences: []k8sMetaV1.OwnerReference{
-				*k8sMetaV1.NewControllerRef(tserver, tarsCrdV1beta3.SchemeGroupVersion.WithKind(tarsMetaV1beta3.TServerKind)),
+				*k8sMetaV1.NewControllerRef(tserver, tarsCrdV1beta3.SchemeGroupVersion.WithKind(tarsMeta.TServerKind)),
 			},
 		},
 		Spec: k8sAppsV1.StatefulSetSpec{
 			Replicas: &tserver.Spec.K8S.Replicas,
 			Selector: &k8sMetaV1.LabelSelector{
 				MatchLabels: map[string]string{
-					tarsMetaV1beta3.TServerAppLabel:  tserver.Spec.App,
-					tarsMetaV1beta3.TServerNameLabel: tserver.Spec.Server,
+					tarsMeta.TServerAppLabel:  tserver.Spec.App,
+					tarsMeta.TServerNameLabel: tserver.Spec.Server,
 				},
 			},
 			Template:             buildPodTemplate(tserver),
@@ -553,18 +553,18 @@ func buildDaemonset(tserver *tarsCrdV1beta3.TServer) *k8sAppsV1.DaemonSet {
 			Name:      tserver.Name,
 			Namespace: tserver.Namespace,
 			OwnerReferences: []k8sMetaV1.OwnerReference{
-				*k8sMetaV1.NewControllerRef(tserver, tarsCrdV1beta3.SchemeGroupVersion.WithKind(tarsMetaV1beta3.TServerKind)),
+				*k8sMetaV1.NewControllerRef(tserver, tarsCrdV1beta3.SchemeGroupVersion.WithKind(tarsMeta.TServerKind)),
 			},
 			Labels: map[string]string{
-				tarsMetaV1beta3.TServerAppLabel:  tserver.Spec.App,
-				tarsMetaV1beta3.TServerNameLabel: tserver.Spec.Server,
+				tarsMeta.TServerAppLabel:  tserver.Spec.App,
+				tarsMeta.TServerNameLabel: tserver.Spec.Server,
 			},
 		},
 		Spec: k8sAppsV1.DaemonSetSpec{
 			Selector: &k8sMetaV1.LabelSelector{
 				MatchLabels: map[string]string{
-					tarsMetaV1beta3.TServerAppLabel:  tserver.Spec.App,
-					tarsMetaV1beta3.TServerNameLabel: tserver.Spec.Server,
+					tarsMeta.TServerAppLabel:  tserver.Spec.App,
+					tarsMeta.TServerNameLabel: tserver.Spec.Server,
 				},
 			},
 			Template:       buildPodTemplate(tserver),
@@ -620,17 +620,17 @@ func buildService(tserver *tarsCrdV1beta3.TServer) *k8sCoreV1.Service {
 			Name:      tserver.Name,
 			Namespace: tserver.Namespace,
 			Labels: map[string]string{
-				tarsMetaV1beta3.TServerAppLabel:  tserver.Spec.App,
-				tarsMetaV1beta3.TServerNameLabel: tserver.Spec.Server,
+				tarsMeta.TServerAppLabel:  tserver.Spec.App,
+				tarsMeta.TServerNameLabel: tserver.Spec.Server,
 			},
 			OwnerReferences: []k8sMetaV1.OwnerReference{
-				*k8sMetaV1.NewControllerRef(tserver, tarsCrdV1beta3.SchemeGroupVersion.WithKind(tarsMetaV1beta3.TServerKind)),
+				*k8sMetaV1.NewControllerRef(tserver, tarsCrdV1beta3.SchemeGroupVersion.WithKind(tarsMeta.TServerKind)),
 			},
 		},
 		Spec: k8sCoreV1.ServiceSpec{
 			Selector: map[string]string{
-				tarsMetaV1beta3.TServerAppLabel:  tserver.Spec.App,
-				tarsMetaV1beta3.TServerNameLabel: tserver.Spec.Server,
+				tarsMeta.TServerAppLabel:  tserver.Spec.App,
+				tarsMeta.TServerNameLabel: tserver.Spec.Server,
 			},
 			ClusterIP: k8sCoreV1.ClusterIPNone,
 			Type:      k8sCoreV1.ServiceTypeClusterIP,
@@ -646,11 +646,11 @@ func buildTEndpoint(tserver *tarsCrdV1beta3.TServer) *tarsCrdV1beta3.TEndpoint {
 			Name:      tserver.Name,
 			Namespace: tserver.Namespace,
 			OwnerReferences: []k8sMetaV1.OwnerReference{
-				*k8sMetaV1.NewControllerRef(tserver, tarsCrdV1beta3.SchemeGroupVersion.WithKind(tarsMetaV1beta3.TServerKind)),
+				*k8sMetaV1.NewControllerRef(tserver, tarsCrdV1beta3.SchemeGroupVersion.WithKind(tarsMeta.TServerKind)),
 			},
 			Labels: map[string]string{
-				tarsMetaV1beta3.TServerAppLabel:  tserver.Spec.App,
-				tarsMetaV1beta3.TServerNameLabel: tserver.Spec.Server,
+				tarsMeta.TServerAppLabel:  tserver.Spec.App,
+				tarsMeta.TServerNameLabel: tserver.Spec.Server,
 			},
 		},
 		Spec: tarsCrdV1beta3.TEndpointSpec{
@@ -673,11 +673,11 @@ func buildTExitedRecord(tserver *tarsCrdV1beta3.TServer) *tarsCrdV1beta3.TExited
 			Name:      tserver.Name,
 			Namespace: tserver.Namespace,
 			OwnerReferences: []k8sMetaV1.OwnerReference{
-				*k8sMetaV1.NewControllerRef(tserver, tarsCrdV1beta3.SchemeGroupVersion.WithKind(tarsMetaV1beta3.TServerKind)),
+				*k8sMetaV1.NewControllerRef(tserver, tarsCrdV1beta3.SchemeGroupVersion.WithKind(tarsMeta.TServerKind)),
 			},
 			Labels: map[string]string{
-				tarsMetaV1beta3.TServerAppLabel:  tserver.Spec.App,
-				tarsMetaV1beta3.TServerNameLabel: tserver.Spec.Server,
+				tarsMeta.TServerAppLabel:  tserver.Spec.App,
+				tarsMeta.TServerNameLabel: tserver.Spec.Server,
 			},
 		},
 		App:    tserver.Spec.App,
@@ -690,7 +690,7 @@ func buildTExitedRecord(tserver *tarsCrdV1beta3.TServer) *tarsCrdV1beta3.TExited
 func syncTEndpoint(tserver *tarsCrdV1beta3.TServer, endpoint *tarsCrdV1beta3.TEndpoint) {
 	endpoint.Labels = tserver.Labels
 	endpoint.OwnerReferences = []k8sMetaV1.OwnerReference{
-		*k8sMetaV1.NewControllerRef(tserver, tarsCrdV1beta3.SchemeGroupVersion.WithKind(tarsMetaV1beta3.TServerKind)),
+		*k8sMetaV1.NewControllerRef(tserver, tarsCrdV1beta3.SchemeGroupVersion.WithKind(tarsMeta.TServerKind)),
 	}
 	endpoint.Spec.App = tserver.Spec.App
 	endpoint.Spec.Server = tserver.Spec.Server

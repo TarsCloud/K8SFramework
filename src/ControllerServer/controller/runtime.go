@@ -18,7 +18,7 @@ import (
 	crdVersioned "k8s.tars.io/client-go/clientset/versioned"
 	crdScheme "k8s.tars.io/client-go/clientset/versioned/scheme"
 	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
-	tarsMetaV1beta3 "k8s.tars.io/meta/v1beta3"
+	tarsMeta "k8s.tars.io/meta"
 	"os"
 	"strings"
 	"sync"
@@ -62,10 +62,10 @@ func GetDefaultNodeImage(namespace string) (image string, secret string) {
 		}
 
 		utilRuntime.HandleError(fmt.Errorf("no default node image set"))
-		return tarsMetaV1beta3.ServiceImagePlaceholder, ""
+		return tarsMeta.ServiceImagePlaceholder, ""
 	}
 
-	tfc, _ = crdClient.CrdV1beta3().TFrameworkConfigs(namespace).Get(context.TODO(), tarsMetaV1beta3.FixedTFrameworkConfigResourceName, k8sMetaV1.GetOptions{})
+	tfc, _ = crdClient.CrdV1beta3().TFrameworkConfigs(namespace).Get(context.TODO(), tarsMeta.FixedTFrameworkConfigResourceName, k8sMetaV1.GetOptions{})
 	if tfc != nil {
 		return tfc.NodeImage.Image, tfc.NodeImage.Secret
 	}
@@ -80,7 +80,7 @@ func GetDefaultNodeImage(namespace string) (image string, secret string) {
 	}
 
 	utilRuntime.HandleError(fmt.Errorf("no default node image set"))
-	return tarsMetaV1beta3.ServiceImagePlaceholder, ""
+	return tarsMeta.ServiceImagePlaceholder, ""
 }
 
 func GetControllerUsername() string {
@@ -139,11 +139,11 @@ func CreateContext(masterUrl, kubeConfigPath string) (*Clients, *Informers, erro
 		controllerNamespace = string(bs)
 	} else {
 		utilRuntime.HandleError(fmt.Errorf("cannot read namespace file : %s", err.Error()))
-		controllerNamespace = tarsMetaV1beta3.DefaultControllerNamespace
+		controllerNamespace = tarsMeta.DefaultControllerNamespace
 	}
 
 	if masterUrl != "" || kubeConfigPath != "" {
-		controllerServiceAccount = tarsMetaV1beta3.DefaultUnlawfulAndOnlyForDebugUserName
+		controllerServiceAccount = tarsMeta.DefaultUnlawfulAndOnlyForDebugUserName
 	} else {
 		controllerServiceAccount = fmt.Sprintf("system:serviceaccount:%s:%s", controllerNamespace, TControllerServiceAccount)
 	}

@@ -8,7 +8,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/util/json"
 	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
-	tarsMetaTools "k8s.tars.io/meta/tools"
+	tarsMeta "k8s.tars.io/meta"
 	"regexp"
 )
 
@@ -27,7 +27,7 @@ func mutatingCreateTAccount(requestAdmissionView *k8sAdmissionV1.AdmissionReview
 	newTAccount := &tarsCrdV1beta3.TAccount{}
 	_ = json.Unmarshal(requestAdmissionView.Request.Object.Raw, newTAccount)
 
-	var jsonPatch tarsMetaTools.JsonPatch
+	var jsonPatch tarsMeta.JsonPatch
 
 	if newTAccount.Spec.Authentication.Password != nil {
 		passwordString := *newTAccount.Spec.Authentication.Password
@@ -37,29 +37,29 @@ func mutatingCreateTAccount(requestAdmissionView *k8sAdmissionV1.AdmissionReview
 			return nil, err
 		}
 		bcryptPassword, _ := generateBcryptPassword(passwordString)
-		jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
-			OP:   tarsMetaTools.JsonPatchRemove,
+		jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
+			OP:   tarsMeta.JsonPatchRemove,
 			Path: "/spec/authentication/password",
 		})
 
-		jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
-			OP:    tarsMetaTools.JsonPatchAdd,
+		jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
+			OP:    tarsMeta.JsonPatchAdd,
 			Path:  "/spec/authentication/bcryptPassword",
 			Value: string(bcryptPassword),
 		})
 	}
 
 	tokens := make([]tarsCrdV1beta3.TAccountAuthenticationToken, 0, 0)
-	jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
-		OP:    tarsMetaTools.JsonPatchAdd,
+	jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
+		OP:    tarsMeta.JsonPatchAdd,
 		Path:  "/spec/authentication/tokens",
 		Value: tokens,
 	})
 
 	if newTAccount.Annotations != nil {
 		if _, ok := newTAccount.Annotations[UnsafeTAccountAnnotationKey]; ok {
-			jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
-				OP:   tarsMetaTools.JsonPatchRemove,
+			jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
+				OP:   tarsMeta.JsonPatchRemove,
 				Path: UnsafeTAccountAnnotationPath,
 			})
 		}
@@ -78,12 +78,12 @@ func mutatingUpdateTAccount(requestAdmissionView *k8sAdmissionV1.AdmissionReview
 	oldTAccount := &tarsCrdV1beta3.TAccount{}
 	_ = json.Unmarshal(requestAdmissionView.Request.OldObject.Raw, oldTAccount)
 
-	var jsonPatch tarsMetaTools.JsonPatch
+	var jsonPatch tarsMeta.JsonPatch
 
 	if newTAccount.Annotations != nil {
 		if _, ok := newTAccount.Annotations[UnsafeTAccountAnnotationKey]; ok {
-			jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
-				OP:   tarsMetaTools.JsonPatchRemove,
+			jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
+				OP:   tarsMeta.JsonPatchRemove,
 				Path: UnsafeTAccountAnnotationPath,
 			})
 		}
@@ -101,13 +101,13 @@ func mutatingUpdateTAccount(requestAdmissionView *k8sAdmissionV1.AdmissionReview
 
 			bcryptPassword, _ := generateBcryptPassword(passwordString)
 
-			jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
-				OP:   tarsMetaTools.JsonPatchRemove,
+			jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
+				OP:   tarsMeta.JsonPatchRemove,
 				Path: "/spec/authentication/password",
 			})
 
-			jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
-				OP:    tarsMetaTools.JsonPatchAdd,
+			jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
+				OP:    tarsMeta.JsonPatchAdd,
 				Path:  "/spec/authentication/bcryptPassword",
 				Value: string(bcryptPassword),
 			})
@@ -124,8 +124,8 @@ func mutatingUpdateTAccount(requestAdmissionView *k8sAdmissionV1.AdmissionReview
 
 	if passwordChanged {
 		tokens := make([]tarsCrdV1beta3.TAccountAuthenticationToken, 0, 0)
-		jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
-			OP:    tarsMetaTools.JsonPatchAdd,
+		jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
+			OP:    tarsMeta.JsonPatchAdd,
 			Path:  "/spec/authentication/tokens",
 			Value: tokens,
 		})

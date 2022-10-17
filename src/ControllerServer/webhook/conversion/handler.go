@@ -6,9 +6,7 @@ import (
 	k8sExtensionsV1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	tarsMetaV1beta1 "k8s.tars.io/meta/v1beta1"
-	tarsMetaV1beta2 "k8s.tars.io/meta/v1beta2"
-	tarsMetaV1beta3 "k8s.tars.io/meta/v1beta3"
+	tarsMeta "k8s.tars.io/meta"
 	"net/http"
 	conversionCrdV1beta2 "tarscontroller/webhook/conversion/v1beta2"
 	conversionCrdV1beta3 "tarscontroller/webhook/conversion/v1beta3"
@@ -79,15 +77,15 @@ func registry(kind string, fromGV, toGV string, conversion func([]runtime.RawExt
 
 func init() {
 
-	registry(tarsMetaV1beta2.TServerKind, tarsMetaV1beta1.GroupVersion, tarsMetaV1beta2.GroupVersion, conversionCrdV1beta2.CvTServer1b1To1b2)
-	registry(tarsMetaV1beta2.TServerKind, tarsMetaV1beta2.GroupVersion, tarsMetaV1beta1.GroupVersion, conversionCrdV1beta2.CvTServer1b2To1b1)
+	registry(tarsMeta.TServerKind, tarsMeta.TarsGroupVersionV1B1, tarsMeta.TarsGroupVersionV1B2, conversionCrdV1beta2.CvTServer1b1To1b2)
+	registry(tarsMeta.TServerKind, tarsMeta.TarsGroupVersionV1B2, tarsMeta.TarsGroupVersionV1B1, conversionCrdV1beta2.CvTServer1b2To1b1)
 
-	registry(tarsMetaV1beta3.TServerKind, tarsMetaV1beta1.GroupVersion, tarsMetaV1beta3.GroupVersion, conversionCrdV1beta3.CvTServer1b1To1b3)
-	registry(tarsMetaV1beta3.TServerKind, tarsMetaV1beta2.GroupVersion, tarsMetaV1beta3.GroupVersion, conversionCrdV1beta3.CvTServer1b2To1b3)
+	registry(tarsMeta.TServerKind, tarsMeta.TarsGroupVersionV1B1, tarsMeta.TarsGroupVersionV1B3, conversionCrdV1beta3.CvTServer1b1To1b3)
+	registry(tarsMeta.TServerKind, tarsMeta.TarsGroupVersionV1B2, tarsMeta.TarsGroupVersionV1B3, conversionCrdV1beta3.CvTServer1b2To1b3)
 
-	registry(tarsMetaV1beta3.TServerKind, tarsMetaV1beta3.GroupVersion, tarsMetaV1beta1.GroupVersion, conversionCrdV1beta3.CvTServer1b3To1b1)
-	registry(tarsMetaV1beta3.TServerKind, tarsMetaV1beta3.GroupVersion, tarsMetaV1beta2.GroupVersion, conversionCrdV1beta3.CvTServer1b3To1b2)
+	registry(tarsMeta.TServerKind, tarsMeta.TarsGroupVersionV1B3, tarsMeta.TarsGroupVersionV1B1, conversionCrdV1beta3.CvTServer1b3To1b1)
+	registry(tarsMeta.TServerKind, tarsMeta.TarsGroupVersionV1B3, tarsMeta.TarsGroupVersionV1B2, conversionCrdV1beta3.CvTServer1b3To1b2)
 
-	registry(tarsMetaV1beta3.TFrameworkConfigKind, tarsMetaV1beta2.GroupVersion, tarsMetaV1beta3.GroupVersion, conversionCrdV1beta3.CvTFC1b2To1b3)
-	registry(tarsMetaV1beta3.TFrameworkConfigKind, tarsMetaV1beta3.GroupVersion, tarsMetaV1beta2.GroupVersion, conversionCrdV1beta3.CvTFC1b3To1b2)
+	registry(tarsMeta.TFrameworkConfigKind, tarsMeta.TarsGroupVersionV1B2, tarsMeta.TarsGroupVersionV1B3, conversionCrdV1beta3.CvTFC1b2To1b3)
+	registry(tarsMeta.TFrameworkConfigKind, tarsMeta.TarsGroupVersionV1B3, tarsMeta.TarsGroupVersionV1B2, conversionCrdV1beta3.CvTFC1b3To1b2)
 }

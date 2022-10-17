@@ -5,8 +5,7 @@ import (
 	"fmt"
 	k8sAdmissionV1 "k8s.io/api/admission/v1"
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	tarsMetaV1beta2 "k8s.tars.io/meta/v1beta2"
-	tarsMetaV1beta3 "k8s.tars.io/meta/v1beta3"
+	tarsMeta "k8s.tars.io/meta"
 	"net/http"
 	"tarscontroller/controller"
 	validatingAppsV1 "tarscontroller/webhook/validating/apps/v1"
@@ -31,11 +30,11 @@ var handlers = map[string]func(*controller.Clients, *controller.Informers, *k8sA
 
 func init() {
 	handlers = map[string]func(*controller.Clients, *controller.Informers, *k8sAdmissionV1.AdmissionReview) error{
-		"core/v1":                    validatingCoreV1.Handler,
-		"/v1":                        validatingCoreV1.Handler,
-		"apps/v1":                    validatingAppsV1.Handler,
-		tarsMetaV1beta2.GroupVersion: validatingCrdV1Beta2.Handler,
-		tarsMetaV1beta3.GroupVersion: validatingCrdV1Beta3.Handler,
+		"core/v1":                     validatingCoreV1.Handler,
+		"/v1":                         validatingCoreV1.Handler,
+		"apps/v1":                     validatingAppsV1.Handler,
+		tarsMeta.TarsGroupVersionV1B2: validatingCrdV1Beta2.Handler,
+		tarsMeta.TarsGroupVersionV1B3: validatingCrdV1Beta3.Handler,
 	}
 }
 

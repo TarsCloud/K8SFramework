@@ -10,7 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	k8sWatchV1 "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/util/workqueue"
-	tarsMetaV1beta3 "k8s.tars.io/meta/v1beta3"
+	tarsMeta "k8s.tars.io/meta"
 	"strings"
 	"tarscontroller/controller"
 	"tarscontroller/reconcile"
@@ -101,7 +101,7 @@ func (r *NodeReconciler) reconcile(key string) reconcile.Result {
 	node, err := r.informers.NodeInformer.Lister().Get(name)
 	if err != nil {
 		if !errors.IsNotFound(err) {
-			utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceGetError, "node", "", name, err.Error()))
+			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "node", "", name, err.Error()))
 			return reconcile.RateLimit
 		}
 		return reconcile.AllOk
@@ -113,13 +113,13 @@ func (r *NodeReconciler) reconcile(key string) reconcile.Result {
 
 	nodeNamespaceLabelExist := false
 	for k := range node.Labels {
-		if strings.HasPrefix(k, tarsMetaV1beta3.TarsNodeLabel+".") {
+		if strings.HasPrefix(k, tarsMeta.TarsNodeLabel+".") {
 			nodeNamespaceLabelExist = true
 			break
 		}
 	}
 
-	_, nodeLabelExist := node.Labels[tarsMetaV1beta3.TarsNodeLabel]
+	_, nodeLabelExist := node.Labels[tarsMeta.TarsNodeLabel]
 
 	if nodeLabelExist == nodeNamespaceLabelExist {
 		return reconcile.AllOk
@@ -127,14 +127,14 @@ func (r *NodeReconciler) reconcile(key string) reconcile.Result {
 
 	nodeCopy := node.DeepCopy()
 	if nodeNamespaceLabelExist {
-		nodeCopy.Labels[tarsMetaV1beta3.TarsNodeLabel] = ""
+		nodeCopy.Labels[tarsMeta.TarsNodeLabel] = ""
 	} else {
-		delete(nodeCopy.Labels, tarsMetaV1beta3.TarsNodeLabel)
+		delete(nodeCopy.Labels, tarsMeta.TarsNodeLabel)
 	}
 
 	nodeInterface := r.clients.K8sClient.CoreV1().Nodes()
 	if _, err = nodeInterface.Update(context.TODO(), nodeCopy, k8sMetaV1.UpdateOptions{}); err != nil {
-		utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceUpdateError, "node", "", name, err.Error()))
+		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceUpdateError, "node", "", name, err.Error()))
 		return reconcile.RateLimit
 	}
 

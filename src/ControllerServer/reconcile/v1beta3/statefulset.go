@@ -16,7 +16,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
-	tarsMetaV1beta3 "k8s.tars.io/meta/v1beta3"
+	tarsMeta "k8s.tars.io/meta"
 	"tarscontroller/controller"
 	"tarscontroller/reconcile"
 	"time"
@@ -147,7 +147,7 @@ func (r *StatefulSetReconciler) syncStatefulset(tserver *tarsCrdV1beta3.TServer,
 	syncStatefulSet(tserver, statefulSetCopy)
 	statefulSetInterface := r.clients.K8sClient.AppsV1().StatefulSets(namespace)
 	if _, err := statefulSetInterface.Update(context.TODO(), statefulSetCopy, k8sMetaV1.UpdateOptions{}); err != nil {
-		utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceUpdateError, "statefulset", namespace, name, err.Error()))
+		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceUpdateError, "statefulset", namespace, name, err.Error()))
 		return reconcile.RateLimit
 	}
 	return reconcile.AllOk
@@ -158,16 +158,16 @@ func (r *StatefulSetReconciler) recreateStatefulset(tserver *tarsCrdV1beta3.TSer
 	name := tserver.Name
 	err := r.clients.K8sClient.AppsV1().StatefulSets(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
 	if err != nil && !errors.IsNotFound(err) {
-		utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceDeleteError, "statefulset", namespace, name, err.Error()))
+		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceDeleteError, "statefulset", namespace, name, err.Error()))
 		return reconcile.RateLimit
 	}
 
 	if shouldDeletePVCS != nil {
-		appRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TServerAppLabel, selection.DoubleEquals, []string{tserver.Spec.App})
-		serverRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TServerNameLabel, selection.DoubleEquals, []string{tserver.Spec.Server})
+		appRequirement, _ := labels.NewRequirement(tarsMeta.TServerAppLabel, selection.DoubleEquals, []string{tserver.Spec.App})
+		serverRequirement, _ := labels.NewRequirement(tarsMeta.TServerNameLabel, selection.DoubleEquals, []string{tserver.Spec.Server})
 		labelSelector := labels.NewSelector().Add(*appRequirement, *serverRequirement)
 
-		localVolumeRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TLocalVolumeLabel, selection.DoubleEquals, shouldDeletePVCS)
+		localVolumeRequirement, _ := labels.NewRequirement(tarsMeta.TLocalVolumeLabel, selection.DoubleEquals, shouldDeletePVCS)
 		labelSelector.Add(*localVolumeRequirement)
 
 		err = r.clients.K8sClient.CoreV1().PersistentVolumeClaims(namespace).DeleteCollection(context.TODO(), k8sMetaV1.DeleteOptions{}, k8sMetaV1.ListOptions{
@@ -175,7 +175,7 @@ func (r *StatefulSetReconciler) recreateStatefulset(tserver *tarsCrdV1beta3.TSer
 		})
 
 		if err != nil {
-			utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceDeleteCollectionError, "persistentvolumeclaims", labelSelector.String(), err.Error()))
+			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceDeleteCollectionError, "persistentvolumeclaims", labelSelector.String(), err.Error()))
 		}
 	}
 	return reconcile.AddAfter
@@ -191,12 +191,12 @@ func (r *StatefulSetReconciler) reconcile(key string) reconcile.Result {
 	tserver, err := r.informers.TServerInformer.Lister().TServers(namespace).Get(name)
 	if err != nil {
 		if !errors.IsNotFound(err) {
-			utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceGetError, "tserver", namespace, name, err.Error()))
+			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "tserver", namespace, name, err.Error()))
 			return reconcile.RateLimit
 		}
 		err = r.clients.K8sClient.AppsV1().StatefulSets(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
 		if err != nil && !errors.IsNotFound(err) {
-			utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceDeleteError, "statefulset", namespace, name, err.Error()))
+			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceDeleteError, "statefulset", namespace, name, err.Error()))
 			return reconcile.RateLimit
 		}
 		return reconcile.AllOk
@@ -205,7 +205,7 @@ func (r *StatefulSetReconciler) reconcile(key string) reconcile.Result {
 	if tserver.DeletionTimestamp != nil || tserver.Spec.K8S.DaemonSet {
 		err = r.clients.K8sClient.AppsV1().StatefulSets(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
 		if err != nil && !errors.IsNotFound(err) {
-			utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceDeleteError, "statefulset", namespace, name, err.Error()))
+			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceDeleteError, "statefulset", namespace, name, err.Error()))
 			return reconcile.RateLimit
 		}
 		return reconcile.AllOk
@@ -214,7 +214,7 @@ func (r *StatefulSetReconciler) reconcile(key string) reconcile.Result {
 	statefulSet, err := r.informers.StatefulSetInformer.Lister().StatefulSets(namespace).Get(name)
 	if err != nil {
 		if !errors.IsNotFound(err) {
-			utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceGetError, "statefulset", namespace, name, err.Error()))
+			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "statefulset", namespace, name, err.Error()))
 			return reconcile.RateLimit
 		}
 
@@ -222,7 +222,7 @@ func (r *StatefulSetReconciler) reconcile(key string) reconcile.Result {
 			statefulSet = buildStatefulset(tserver)
 			statefulSetInterface := r.clients.K8sClient.AppsV1().StatefulSets(namespace)
 			if _, err = statefulSetInterface.Create(context.TODO(), statefulSet, k8sMetaV1.CreateOptions{}); err != nil && !errors.IsAlreadyExists(err) {
-				utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceCreateError, "statefulset", namespace, name, err.Error()))
+				utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceCreateError, "statefulset", namespace, name, err.Error()))
 				return reconcile.RateLimit
 			}
 		}
@@ -235,8 +235,8 @@ func (r *StatefulSetReconciler) reconcile(key string) reconcile.Result {
 
 	if !k8sMetaV1.IsControlledBy(statefulSet, tserver) {
 		// 此处意味着出现了非由 controller 管理的同名 statefulSet, 需要警告和重试
-		msg := fmt.Sprintf(tarsMetaV1beta3.ResourceOutControlError, "statefulset", namespace, statefulSet.Name, namespace, name)
-		controller.Event(tserver, k8sCoreV1.EventTypeWarning, tarsMetaV1beta3.ResourceOutControlReason, msg)
+		msg := fmt.Sprintf(tarsMeta.ResourceOutControlError, "statefulset", namespace, statefulSet.Name, namespace, name)
+		controller.Event(tserver, k8sCoreV1.EventTypeWarning, tarsMeta.ResourceOutControlReason, msg)
 		return reconcile.RateLimit
 	}
 

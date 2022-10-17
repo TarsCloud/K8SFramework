@@ -5,8 +5,7 @@ import (
 	"fmt"
 	k8sAdmissionV1 "k8s.io/api/admission/v1"
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	tarsMetaV1beta2 "k8s.tars.io/meta/v1beta2"
-	tarsMetaV1beta3 "k8s.tars.io/meta/v1beta3"
+	tarsMeta "k8s.tars.io/meta"
 	"net/http"
 	"tarscontroller/controller"
 	crdMutatingV1beta2 "tarscontroller/webhook/mutating/k8s.tars.io/v1beta2"
@@ -29,8 +28,8 @@ var handlers = map[string]func(*controller.Clients, *controller.Informers, *k8sA
 
 func init() {
 	handlers = map[string]func(*controller.Clients, *controller.Informers, *k8sAdmissionV1.AdmissionReview) ([]byte, error){
-		tarsMetaV1beta2.GroupVersion: crdMutatingV1beta2.Handle,
-		tarsMetaV1beta3.GroupVersion: crdMutatingV1beta3.Handle,
+		tarsMeta.TarsGroupVersionV1B2: crdMutatingV1beta2.Handle,
+		tarsMeta.TarsGroupVersionV1B3: crdMutatingV1beta3.Handle,
 	}
 }
 
@@ -45,7 +44,7 @@ func (v *Mutating) Handle(w http.ResponseWriter, r *http.Request) {
 	responseAdmissionView := k8sAdmissionV1.AdmissionReview{
 		TypeMeta: k8sMetaV1.TypeMeta{
 			Kind:       "AdmissionReview",
-			APIVersion: "admission.k8s.io/v1",
+			APIVersion: k8sAdmissionV1.SchemeGroupVersion.String(),
 		},
 		Response: &k8sAdmissionV1.AdmissionResponse{
 			UID: requestView.Request.UID,

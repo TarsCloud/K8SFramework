@@ -10,8 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	k8sWatchV1 "k8s.io/apimachinery/pkg/watch"
 	tarsV1beta3 "k8s.tars.io/crd/v1beta3"
-	tarsMetaTools "k8s.tars.io/meta/tools"
-	tarsMetaV1beta3 "k8s.tars.io/meta/v1beta3"
+	tarsMeta "k8s.tars.io/meta"
 	"log"
 	"os"
 	"os/exec"
@@ -237,9 +236,9 @@ func submit(task *Task) error {
 			Name:      task.kanikoPodName,
 			Namespace: glK8sContext.namespace,
 			Labels: map[string]string{
-				tarsMetaV1beta3.TServerAppLabel:  "tars",
-				tarsMetaV1beta3.TServerNameLabel: "tarskaniko",
-				tarsMetaV1beta3.TServerIdLabel:   task.id,
+				tarsMeta.TServerAppLabel:  "tars",
+				tarsMeta.TServerNameLabel: "tarskaniko",
+				tarsMeta.TServerIdLabel:   task.id,
 			},
 		},
 		Spec: k8sCoreV1.PodSpec{
@@ -305,7 +304,7 @@ func submit(task *Task) error {
 							},
 						},
 						Namespaces:  []string{glK8sContext.namespace},
-						TopologyKey: tarsMetaV1beta3.K8SHostNameLabel,
+						TopologyKey: tarsMeta.K8SHostNameLabel,
 					},
 				},
 			}},
@@ -447,9 +446,9 @@ func (e *Engine) onBuildFailed(task *Task, err error) {
 		Last:    &task.taskBuildRunningState,
 	}
 
-	jsonPatch := tarsMetaTools.JsonPatch{
+	jsonPatch := tarsMeta.JsonPatch{
 		{
-			OP:    tarsMetaTools.JsonPatchAdd,
+			OP:    tarsMeta.JsonPatchAdd,
 			Path:  "/build",
 			Value: buildState,
 		},
@@ -504,14 +503,14 @@ func (e *Engine) onBuildSuccess(task *Task) {
 		}
 	}
 
-	jsonPatch := tarsMetaTools.JsonPatch{
+	jsonPatch := tarsMeta.JsonPatch{
 		{
-			OP:    tarsMetaTools.JsonPatchAdd,
+			OP:    tarsMeta.JsonPatchAdd,
 			Path:  "/build",
 			Value: buildState,
 		},
 		{
-			OP:    tarsMetaTools.JsonPatchAdd,
+			OP:    tarsMeta.JsonPatchAdd,
 			Path:  "/releases",
 			Value: releases,
 		},

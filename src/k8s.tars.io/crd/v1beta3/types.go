@@ -20,6 +20,7 @@ import (
 	k8sAppsV1 "k8s.io/api/apps/v1"
 	k8sCoreV1 "k8s.io/api/core/v1"
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	tarsMeta "k8s.tars.io/meta"
 )
 
 type TServerServant struct {
@@ -135,13 +136,6 @@ const (
 	None                 AbilityAffinityType = "None"
 )
 
-type LauncherType string
-
-const (
-	Foreground LauncherType = "foreground"
-	Background LauncherType = "background"
-)
-
 type TServerK8S struct {
 	ServiceAccount string `json:"serviceAccount,omitempty"`
 
@@ -178,7 +172,7 @@ type TServerK8S struct {
 	Resources       k8sCoreV1.ResourceRequirements      `json:"resources,omitempty"`
 	UpdateStrategy  k8sAppsV1.StatefulSetUpdateStrategy `json:"updateStrategy"`
 	ImagePullPolicy k8sCoreV1.PullPolicy                `json:"imagePullPolicy"`
-	LauncherType    LauncherType                        `json:"launcherType"`
+	LauncherType    tarsMeta.LauncherType               `json:"launcherType"`
 }
 
 type TK8SHostPort struct {

@@ -1,4 +1,4 @@
-package tools
+package meta
 
 type JsonPatchOperator string
 

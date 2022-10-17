@@ -7,7 +7,7 @@ import (
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
-	tarsMetaV1beta3 "k8s.tars.io/meta/v1beta3"
+	tarsMeta "k8s.tars.io/meta"
 	"tarsagent/runner"
 	"time"
 )
@@ -25,7 +25,7 @@ func (r *Runner) Init() error {
 
 func (r *Runner) enqueueClaim(obj interface{}) {
 	claim := obj.(*k8sCoreV1.PersistentVolumeClaim)
-	if claim.Spec.StorageClassName == nil || *claim.Spec.StorageClassName != tarsMetaV1beta3.TStorageClassName {
+	if claim.Spec.StorageClassName == nil || *claim.Spec.StorageClassName != tarsMeta.TStorageClassName {
 		return
 	}
 	if claim.Spec.VolumeName != "" && !r.provision.ProvisionedBy(claim.Spec.VolumeName) {
@@ -36,7 +36,7 @@ func (r *Runner) enqueueClaim(obj interface{}) {
 
 func (r *Runner) enqueueVolume(obj interface{}) {
 	volume := obj.(*k8sCoreV1.PersistentVolume)
-	if volume.Spec.StorageClassName == tarsMetaV1beta3.TStorageClassName && r.provision.ProvisionedBy(volume.Name) {
+	if volume.Spec.StorageClassName == tarsMeta.TStorageClassName && r.provision.ProvisionedBy(volume.Name) {
 		r.reconcile.enqueueVolume(volume)
 	}
 }
@@ -54,7 +54,7 @@ func (r *Runner) enqueueNode(obj interface{}) {
 
 func (r *Runner) enqueueStorage(obj interface{}) {
 	class := obj.(*k8sStorageV1.StorageClass)
-	if class.Name == tarsMetaV1beta3.TStorageClassName {
+	if class.Name == tarsMeta.TStorageClassName {
 		if class.ReclaimPolicy != nil {
 			r.provision.reclaimPolicy = *class.ReclaimPolicy
 		} else {

@@ -8,7 +8,7 @@ import (
 	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/apimachinery/pkg/util/json"
 	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
-	tarsMetaV1beta3 "k8s.tars.io/meta/v1beta3"
+	tarsMeta "k8s.tars.io/meta"
 	"strings"
 	"tarscontroller/controller"
 )
@@ -17,7 +17,7 @@ func validTTemplate(newTTemplate *tarsCrdV1beta3.TTemplate, oldTTemplate *tarsCr
 
 	parentName := newTTemplate.Spec.Parent
 	if parentName == "" {
-		return fmt.Errorf(tarsMetaV1beta3.ResourceInvalidError, "ttemplate", "value of filed \".spec.parent\" should not empty ")
+		return fmt.Errorf(tarsMeta.ResourceInvalidError, "ttemplate", "value of filed \".spec.parent\" should not empty ")
 	}
 
 	if newTTemplate.Name == newTTemplate.Spec.Parent {
@@ -28,9 +28,9 @@ func validTTemplate(newTTemplate *tarsCrdV1beta3.TTemplate, oldTTemplate *tarsCr
 	_, err := informers.TTemplateInformer.Lister().ByNamespace(namespace).Get(parentName)
 	if err != nil {
 		if !errors.IsNotFound(err) {
-			return fmt.Errorf(tarsMetaV1beta3.ResourceGetError, "ttemplate", namespace, parentName, err.Error())
+			return fmt.Errorf(tarsMeta.ResourceGetError, "ttemplate", namespace, parentName, err.Error())
 		}
-		return fmt.Errorf(tarsMetaV1beta3.ResourceNotExistError, "ttemplate", namespace, parentName)
+		return fmt.Errorf(tarsMeta.ResourceNotExistError, "ttemplate", namespace, parentName)
 	}
 
 	return nil
@@ -56,11 +56,11 @@ func validDeleteTTemplate(clients *controller.Clients, informers *controller.Inf
 	username := view.Request.UserInfo.Username
 	controllerUserName := controller.GetControllerUsername()
 
-	if controllerUserName == username || controllerUserName == tarsMetaV1beta3.DefaultUnlawfulAndOnlyForDebugUserName {
+	if controllerUserName == username || controllerUserName == tarsMeta.DefaultUnlawfulAndOnlyForDebugUserName {
 		return nil
 	}
 
-	if strings.HasPrefix(username, tarsMetaV1beta3.KubernetesSystemAccountPrefix) {
+	if strings.HasPrefix(username, tarsMeta.KubernetesSystemAccountPrefix) {
 		return nil
 	}
 
@@ -68,19 +68,19 @@ func validDeleteTTemplate(clients *controller.Clients, informers *controller.Inf
 	_ = json.Unmarshal(view.Request.OldObject.Raw, ttemplate)
 	namespace := ttemplate.Namespace
 
-	requirement, _ := labels.NewRequirement(tarsMetaV1beta3.TemplateLabel, selection.DoubleEquals, []string{ttemplate.Name})
+	requirement, _ := labels.NewRequirement(tarsMeta.TemplateLabel, selection.DoubleEquals, []string{ttemplate.Name})
 	tservers, err := informers.TServerInformer.Lister().TServers(namespace).List(labels.NewSelector().Add(*requirement))
 	if err != nil {
-		return fmt.Errorf(tarsMetaV1beta3.ResourceSelectorError, namespace, "tservers", err.Error())
+		return fmt.Errorf(tarsMeta.ResourceSelectorError, namespace, "tservers", err.Error())
 	}
 	if tservers != nil && len(tservers) != 0 {
 		return fmt.Errorf("cannot delete ttemplate %s/%s because it is reference by some tserver", namespace, ttemplate.Name)
 	}
 
-	requirement, _ = labels.NewRequirement(tarsMetaV1beta3.ParentLabel, selection.DoubleEquals, []string{ttemplate.Name})
+	requirement, _ = labels.NewRequirement(tarsMeta.ParentLabel, selection.DoubleEquals, []string{ttemplate.Name})
 	ttemplates, err := informers.TTemplateInformer.Lister().ByNamespace(namespace).List(labels.NewSelector().Add(*requirement))
 	if err != nil {
-		return fmt.Errorf(tarsMetaV1beta3.ResourceSelectorError, namespace, "ttemplates", err.Error())
+		return fmt.Errorf(tarsMeta.ResourceSelectorError, namespace, "ttemplates", err.Error())
 	}
 	if ttemplates != nil && len(ttemplates) != 0 {
 		return fmt.Errorf("cannot delete ttemplate %s/%s because it is reference by some ttemplate", namespace, ttemplate.Name)

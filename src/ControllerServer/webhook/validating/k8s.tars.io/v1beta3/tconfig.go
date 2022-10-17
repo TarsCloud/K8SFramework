@@ -12,8 +12,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/json"
 	utilRuntime "k8s.io/apimachinery/pkg/util/runtime"
 	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
-	tarsMetaTools "k8s.tars.io/meta/tools"
-	tarsMetaV1beta3 "k8s.tars.io/meta/v1beta3"
+	tarsMeta "k8s.tars.io/meta"
 	"strings"
 	"tarscontroller/controller"
 )
@@ -21,24 +20,24 @@ import (
 func prepareActiveTConfig(newTConfig *tarsCrdV1beta3.TConfig, clients *controller.Clients, informers *controller.Informers) error {
 	namespace := newTConfig.Namespace
 
-	appRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TServerAppLabel, selection.DoubleEquals, []string{newTConfig.App})
-	serverRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TServerNameLabel, selection.DoubleEquals, []string{newTConfig.Server})
-	configNameRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TConfigNameLabel, selection.DoubleEquals, []string{newTConfig.ConfigName})
-	podSeqRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TConfigPodSeqLabel, selection.DoubleEquals, []string{newTConfig.PodSeq})
-	activateRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TConfigActivatedLabel, selection.DoubleEquals, []string{"true"})
+	appRequirement, _ := labels.NewRequirement(tarsMeta.TServerAppLabel, selection.DoubleEquals, []string{newTConfig.App})
+	serverRequirement, _ := labels.NewRequirement(tarsMeta.TServerNameLabel, selection.DoubleEquals, []string{newTConfig.Server})
+	configNameRequirement, _ := labels.NewRequirement(tarsMeta.TConfigNameLabel, selection.DoubleEquals, []string{newTConfig.ConfigName})
+	podSeqRequirement, _ := labels.NewRequirement(tarsMeta.TConfigPodSeqLabel, selection.DoubleEquals, []string{newTConfig.PodSeq})
+	activateRequirement, _ := labels.NewRequirement(tarsMeta.TConfigActivatedLabel, selection.DoubleEquals, []string{"true"})
 
 	labelSelector := labels.NewSelector().Add(*appRequirement).Add(*serverRequirement).Add(*configNameRequirement).Add(*podSeqRequirement).Add(*activateRequirement)
 
 	tconfigs, err := informers.TConfigInformer.Lister().ByNamespace(namespace).List(labelSelector)
 	if err != nil {
-		err = fmt.Errorf(tarsMetaV1beta3.ResourceSelectorError, namespace, "tconfig", err.Error())
+		err = fmt.Errorf(tarsMeta.ResourceSelectorError, namespace, "tconfig", err.Error())
 		utilRuntime.HandleError(err)
 		return err
 	}
 
-	jsonPatch := tarsMetaTools.JsonPatch{
-		tarsMetaTools.JsonPatchItem{
-			OP:    tarsMetaTools.JsonPatchAdd,
+	jsonPatch := tarsMeta.JsonPatch{
+		tarsMeta.JsonPatchItem{
+			OP:    tarsMeta.JsonPatchAdd,
 			Path:  "/metadata/labels/tars.io~1Deactivate",
 			Value: "Deactivating",
 		},
@@ -54,7 +53,7 @@ func prepareActiveTConfig(newTConfig *tarsCrdV1beta3.TConfig, clients *controlle
 
 		_, err = clients.CrdClient.CrdV1beta3().TConfigs(namespace).Patch(context.TODO(), name, patchTypes.JSONPatchType, patchContent, k8sMetaV1.PatchOptions{})
 		if err != nil {
-			err = fmt.Errorf(tarsMetaV1beta3.ResourcePatchError, "tconfig", namespace, name, err.Error())
+			err = fmt.Errorf(tarsMeta.ResourcePatchError, "tconfig", namespace, name, err.Error())
 			utilRuntime.HandleError(err)
 			return err
 		}
@@ -63,13 +62,13 @@ func prepareActiveTConfig(newTConfig *tarsCrdV1beta3.TConfig, clients *controlle
 }
 
 func prepareDeleteTConfig(tconfig *tarsCrdV1beta3.TConfig, clients *controller.Clients, informers *controller.Informers) error {
-	appRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TServerAppLabel, selection.DoubleEquals, []string{tconfig.App})
-	serverRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TServerNameLabel, selection.DoubleEquals, []string{tconfig.Server})
-	configNameRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TConfigNameLabel, selection.DoubleEquals, []string{tconfig.ConfigName})
+	appRequirement, _ := labels.NewRequirement(tarsMeta.TServerAppLabel, selection.DoubleEquals, []string{tconfig.App})
+	serverRequirement, _ := labels.NewRequirement(tarsMeta.TServerNameLabel, selection.DoubleEquals, []string{tconfig.Server})
+	configNameRequirement, _ := labels.NewRequirement(tarsMeta.TConfigNameLabel, selection.DoubleEquals, []string{tconfig.ConfigName})
 
 	labelSelector := labels.NewSelector().Add(*appRequirement).Add(*serverRequirement).Add(*configNameRequirement)
 	if tconfig.PodSeq != "m" {
-		podSeqRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TConfigPodSeqLabel, selection.DoubleEquals, []string{tconfig.PodSeq})
+		podSeqRequirement, _ := labels.NewRequirement(tarsMeta.TConfigPodSeqLabel, selection.DoubleEquals, []string{tconfig.PodSeq})
 		labelSelector = labelSelector.Add(*podSeqRequirement)
 	}
 
@@ -77,14 +76,14 @@ func prepareDeleteTConfig(tconfig *tarsCrdV1beta3.TConfig, clients *controller.C
 	tconfigRuntimeObjects, err := informers.TConfigInformer.Lister().ByNamespace(namespace).List(labelSelector)
 
 	if err != nil && !errors.IsNotFound(err) {
-		err = fmt.Errorf(tarsMetaV1beta3.ResourceSelectorError, namespace, "tconfig", err.Error())
+		err = fmt.Errorf(tarsMeta.ResourceSelectorError, namespace, "tconfig", err.Error())
 		utilRuntime.HandleError(err)
 		return err
 	}
 
-	jsonPatch := tarsMetaTools.JsonPatch{
-		tarsMetaTools.JsonPatchItem{
-			OP:    tarsMetaTools.JsonPatchAdd,
+	jsonPatch := tarsMeta.JsonPatch{
+		tarsMeta.JsonPatchItem{
+			OP:    tarsMeta.JsonPatchAdd,
 			Path:  "/metadata/labels/tars.io~1Deleting",
 			Value: "Deleting",
 		},
@@ -102,7 +101,7 @@ func prepareDeleteTConfig(tconfig *tarsCrdV1beta3.TConfig, clients *controller.C
 
 			_, err = clients.CrdClient.CrdV1beta3().TConfigs(namespace).Patch(context.TODO(), name, patchTypes.JSONPatchType, patchContent, k8sMetaV1.PatchOptions{})
 			if err != nil {
-				err = fmt.Errorf(tarsMetaV1beta3.ResourcePatchError, "tconfig", namespace, name, err.Error())
+				err = fmt.Errorf(tarsMeta.ResourcePatchError, "tconfig", namespace, name, err.Error())
 				utilRuntime.HandleError(err)
 				return err
 			}
@@ -122,14 +121,14 @@ func prepareDeleteTConfig(tconfig *tarsCrdV1beta3.TConfig, clients *controller.C
 
 		tconfigObjLabels := tconfigObj.GetLabels()
 		if tconfigObjLabels == nil {
-			err = fmt.Errorf(tarsMetaV1beta3.ShouldNotHappenError, fmt.Sprintf("resource %s %s%s labels value is nil", "tconfig", namespace, tconfigObj.GetName()))
+			err = fmt.Errorf(tarsMeta.ShouldNotHappenError, fmt.Sprintf("resource %s %s%s labels value is nil", "tconfig", namespace, tconfigObj.GetName()))
 			utilRuntime.HandleError(err)
 			return err
 		}
 
-		podSeq, ok := tconfigObjLabels[tarsMetaV1beta3.TConfigPodSeqLabel]
+		podSeq, ok := tconfigObjLabels[tarsMeta.TConfigPodSeqLabel]
 		if !ok || len(podSeq) == 0 {
-			err = fmt.Errorf(tarsMetaV1beta3.ShouldNotHappenError, fmt.Sprintf("resource %s %s%s labels[%s] value is nil", "tconfig", namespace, tconfigObj.GetName(), tarsMetaV1beta3.TConfigPodSeqLabel))
+			err = fmt.Errorf(tarsMeta.ShouldNotHappenError, fmt.Sprintf("resource %s %s%s labels[%s] value is nil", "tconfig", namespace, tconfigObj.GetName(), tarsMeta.TConfigPodSeqLabel))
 			utilRuntime.HandleError(err)
 			return err
 		}
@@ -146,7 +145,7 @@ func prepareDeleteTConfig(tconfig *tarsCrdV1beta3.TConfig, clients *controller.C
 	for _, name := range willMarkDeletingTConfig {
 		_, err = clients.CrdClient.CrdV1beta3().TConfigs(namespace).Patch(context.TODO(), name, patchTypes.JSONPatchType, patchContent, k8sMetaV1.PatchOptions{})
 		if err != nil {
-			err = fmt.Errorf(tarsMetaV1beta3.ResourcePatchError, "tconfig", namespace, name, err.Error())
+			err = fmt.Errorf(tarsMeta.ResourcePatchError, "tconfig", namespace, name, err.Error())
 			utilRuntime.HandleError(err)
 			return err
 		}
@@ -159,12 +158,12 @@ func validCreateTConfig(clients *controller.Clients, informers *controller.Infor
 	newTConfig := &tarsCrdV1beta3.TConfig{}
 	_ = json.Unmarshal(view.Request.Object.Raw, newTConfig)
 
-	if _, ok := newTConfig.Labels[tarsMetaV1beta3.TConfigDeactivateLabel]; ok {
-		return fmt.Errorf("can not set label [%s] when create", tarsMetaV1beta3.TConfigDeactivateLabel)
+	if _, ok := newTConfig.Labels[tarsMeta.TConfigDeactivateLabel]; ok {
+		return fmt.Errorf("can not set label [%s] when create", tarsMeta.TConfigDeactivateLabel)
 	}
 
-	if _, ok := newTConfig.Labels[tarsMetaV1beta3.TConfigDeletingLabel]; ok {
-		return fmt.Errorf("can not set label [%s] when create", tarsMetaV1beta3.TConfigDeletingLabel)
+	if _, ok := newTConfig.Labels[tarsMeta.TConfigDeletingLabel]; ok {
+		return fmt.Errorf("can not set label [%s] when create", tarsMeta.TConfigDeletingLabel)
 	}
 
 	if len(newTConfig.Server) == 0 && newTConfig.PodSeq != "m" {
@@ -172,13 +171,13 @@ func validCreateTConfig(clients *controller.Clients, informers *controller.Infor
 	}
 
 	if newTConfig.PodSeq != "m" {
-		appRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TServerAppLabel, selection.DoubleEquals, []string{newTConfig.App})
-		serverRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TServerNameLabel, selection.DoubleEquals, []string{newTConfig.Server})
-		configNameRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TConfigNameLabel, selection.DoubleEquals, []string{newTConfig.ConfigName})
-		podSeqRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TConfigPodSeqLabel, selection.DoubleEquals, []string{"m"})
-		activatedRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TConfigActivatedLabel, selection.DoubleEquals, []string{"true"})
-		deactivatingRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TConfigDeactivateLabel, selection.DoesNotExist, []string{})
-		deletingRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TConfigDeletingLabel, selection.DoesNotExist, []string{})
+		appRequirement, _ := labels.NewRequirement(tarsMeta.TServerAppLabel, selection.DoubleEquals, []string{newTConfig.App})
+		serverRequirement, _ := labels.NewRequirement(tarsMeta.TServerNameLabel, selection.DoubleEquals, []string{newTConfig.Server})
+		configNameRequirement, _ := labels.NewRequirement(tarsMeta.TConfigNameLabel, selection.DoubleEquals, []string{newTConfig.ConfigName})
+		podSeqRequirement, _ := labels.NewRequirement(tarsMeta.TConfigPodSeqLabel, selection.DoubleEquals, []string{"m"})
+		activatedRequirement, _ := labels.NewRequirement(tarsMeta.TConfigActivatedLabel, selection.DoubleEquals, []string{"true"})
+		deactivatingRequirement, _ := labels.NewRequirement(tarsMeta.TConfigDeactivateLabel, selection.DoesNotExist, []string{})
+		deletingRequirement, _ := labels.NewRequirement(tarsMeta.TConfigDeletingLabel, selection.DoesNotExist, []string{})
 		labelSelector := labels.NewSelector().Add(*appRequirement).Add(*serverRequirement).Add(*configNameRequirement).Add(*podSeqRequirement).
 			Add(*activatedRequirement).Add(*deactivatingRequirement).Add(*deletingRequirement)
 		namespace := newTConfig.Namespace
@@ -188,7 +187,7 @@ func validCreateTConfig(clients *controller.Clients, informers *controller.Infor
 			if errors.IsNotFound(err) {
 				return fmt.Errorf("no activated master tconfig found")
 			}
-			err = fmt.Errorf(tarsMetaV1beta3.ResourceSelectorError, namespace, "tconfig", err.Error())
+			err = fmt.Errorf(tarsMeta.ResourceSelectorError, namespace, "tconfig", err.Error())
 			utilRuntime.HandleError(err)
 			return err
 		}
@@ -206,7 +205,7 @@ func validCreateTConfig(clients *controller.Clients, informers *controller.Infor
 
 func validUpdateTConfig(clients *controller.Clients, informers *controller.Informers, view *k8sAdmissionV1.AdmissionReview) error {
 	controllerUserName := controller.GetControllerUsername()
-	if controllerUserName == view.Request.UserInfo.Username || controllerUserName == tarsMetaV1beta3.DefaultUnlawfulAndOnlyForDebugUserName {
+	if controllerUserName == view.Request.UserInfo.Username || controllerUserName == tarsMeta.DefaultUnlawfulAndOnlyForDebugUserName {
 		return nil
 	}
 	newTConfig := &tarsCrdV1beta3.TConfig{}
@@ -214,36 +213,36 @@ func validUpdateTConfig(clients *controller.Clients, informers *controller.Infor
 	oldTConfig := &tarsCrdV1beta3.TConfig{}
 	_ = json.Unmarshal(view.Request.OldObject.Raw, oldTConfig)
 
-	if _, ok := oldTConfig.Labels[tarsMetaV1beta3.TConfigDeletingLabel]; ok {
+	if _, ok := oldTConfig.Labels[tarsMeta.TConfigDeletingLabel]; ok {
 		return fmt.Errorf("can not update deleting tconfig")
 	}
 
 	if newTConfig.App != oldTConfig.App {
-		return fmt.Errorf(tarsMetaV1beta3.FiledImmutableError, "tconfig", "/app")
+		return fmt.Errorf(tarsMeta.FiledImmutableError, "tconfig", "/app")
 	}
 	if newTConfig.Server != oldTConfig.Server {
-		return fmt.Errorf(tarsMetaV1beta3.FiledImmutableError, "tconfig", "/server")
+		return fmt.Errorf(tarsMeta.FiledImmutableError, "tconfig", "/server")
 	}
 	if newTConfig.PodSeq != oldTConfig.PodSeq {
-		return fmt.Errorf(tarsMetaV1beta3.FiledImmutableError, "tconfig", "/podSeq")
+		return fmt.Errorf(tarsMeta.FiledImmutableError, "tconfig", "/podSeq")
 	}
 	if newTConfig.ConfigName != oldTConfig.ConfigName {
-		return fmt.Errorf(tarsMetaV1beta3.FiledImmutableError, "tconfig", "/configName")
+		return fmt.Errorf(tarsMeta.FiledImmutableError, "tconfig", "/configName")
 	}
 	if newTConfig.ConfigContent != oldTConfig.ConfigContent {
-		return fmt.Errorf(tarsMetaV1beta3.FiledImmutableError, "tconfig", "/configContent")
+		return fmt.Errorf(tarsMeta.FiledImmutableError, "tconfig", "/configContent")
 	}
 	if newTConfig.Version != oldTConfig.Version {
-		return fmt.Errorf(tarsMetaV1beta3.FiledImmutableError, "tconfig", "/version")
+		return fmt.Errorf(tarsMeta.FiledImmutableError, "tconfig", "/version")
 	}
 	if newTConfig.UpdateTime != oldTConfig.UpdateTime {
-		return fmt.Errorf(tarsMetaV1beta3.FiledImmutableError, "TConfig", "/updateTime")
+		return fmt.Errorf(tarsMeta.FiledImmutableError, "TConfig", "/updateTime")
 	}
 	if newTConfig.UpdatePerson != oldTConfig.UpdatePerson {
-		return fmt.Errorf(tarsMetaV1beta3.FiledImmutableError, "TConfig", "/updatePerson")
+		return fmt.Errorf(tarsMeta.FiledImmutableError, "TConfig", "/updatePerson")
 	}
 	if newTConfig.UpdateReason != oldTConfig.UpdateReason {
-		return fmt.Errorf(tarsMetaV1beta3.FiledImmutableError, "TConfig", "/updateReason")
+		return fmt.Errorf(tarsMeta.FiledImmutableError, "TConfig", "/updateReason")
 	}
 
 	if !newTConfig.Activated && oldTConfig.Activated {
@@ -261,11 +260,11 @@ func validDeleteTConfig(clients *controller.Clients, informers *controller.Infor
 	username := view.Request.UserInfo.Username
 	controllerUserName := controller.GetControllerUsername()
 
-	if controllerUserName == username || controllerUserName == tarsMetaV1beta3.DefaultUnlawfulAndOnlyForDebugUserName {
+	if controllerUserName == username || controllerUserName == tarsMeta.DefaultUnlawfulAndOnlyForDebugUserName {
 		return nil
 	}
 
-	if strings.HasPrefix(username, tarsMetaV1beta3.KubernetesSystemAccountPrefix) {
+	if strings.HasPrefix(username, tarsMeta.KubernetesSystemAccountPrefix) {
 		return nil
 	}
 
@@ -276,11 +275,11 @@ func validDeleteTConfig(clients *controller.Clients, informers *controller.Infor
 		return nil
 	}
 
-	if _, ok := tconfig.Labels[tarsMetaV1beta3.TConfigDeactivateLabel]; ok {
+	if _, ok := tconfig.Labels[tarsMeta.TConfigDeactivateLabel]; ok {
 		return nil
 	}
 
-	if _, ok := tconfig.Labels[tarsMetaV1beta3.TConfigDeletingLabel]; ok {
+	if _, ok := tconfig.Labels[tarsMeta.TConfigDeletingLabel]; ok {
 		return nil
 	}
 

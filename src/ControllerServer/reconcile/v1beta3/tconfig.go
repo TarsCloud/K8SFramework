@@ -13,8 +13,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	k8sWatchV1 "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/util/workqueue"
-	tarsMetaTools "k8s.tars.io/meta/tools"
-	tarsMetaV1beta3 "k8s.tars.io/meta/v1beta3"
+	tarsMeta "k8s.tars.io/meta"
 	"sort"
 	"strings"
 	"tarscontroller/controller"
@@ -49,10 +48,10 @@ func (r *TConfigReconciler) EnqueueObj(resourceName string, resourceEvent k8sWat
 		r.deleteQueue.Add(namespace)
 	case k8sWatchV1.Added:
 		objLabels := tconfigMetadataObj.GetLabels()
-		app, _ := objLabels[tarsMetaV1beta3.TServerAppLabel]
-		server, _ := objLabels[tarsMetaV1beta3.TServerNameLabel]
-		configName, _ := objLabels[tarsMetaV1beta3.TConfigNameLabel]
-		podSeq, _ := objLabels[tarsMetaV1beta3.TConfigPodSeqLabel]
+		app, _ := objLabels[tarsMeta.TServerAppLabel]
+		server, _ := objLabels[tarsMeta.TServerNameLabel]
+		configName, _ := objLabels[tarsMeta.TConfigNameLabel]
+		podSeq, _ := objLabels[tarsMeta.TConfigPodSeqLabel]
 		key = fmt.Sprintf("%s/%s/%s/%s/%s", namespace, app, server, configName, podSeq)
 		r.addQueue.Add(key)
 	}
@@ -61,12 +60,12 @@ func (r *TConfigReconciler) EnqueueObj(resourceName string, resourceEvent k8sWat
 
 func (r *TConfigReconciler) reconcileAdd(key string) reconcile.Result {
 	namespace, app, server, configName, podSeq := r.splitAddKey(key)
-	appRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TServerAppLabel, selection.DoubleEquals, []string{app})
-	serverRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TServerNameLabel, selection.DoubleEquals, []string{server})
-	configNameRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TConfigNameLabel, selection.DoubleEquals, []string{configName})
-	podSeqRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TConfigPodSeqLabel, selection.DoubleEquals, []string{podSeq})
-	activatedRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TConfigActivatedLabel, selection.DoubleEquals, []string{"false"})
-	deletingRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TConfigDeletingLabel, selection.DoesNotExist, nil)
+	appRequirement, _ := labels.NewRequirement(tarsMeta.TServerAppLabel, selection.DoubleEquals, []string{app})
+	serverRequirement, _ := labels.NewRequirement(tarsMeta.TServerNameLabel, selection.DoubleEquals, []string{server})
+	configNameRequirement, _ := labels.NewRequirement(tarsMeta.TConfigNameLabel, selection.DoubleEquals, []string{configName})
+	podSeqRequirement, _ := labels.NewRequirement(tarsMeta.TConfigPodSeqLabel, selection.DoubleEquals, []string{podSeq})
+	activatedRequirement, _ := labels.NewRequirement(tarsMeta.TConfigActivatedLabel, selection.DoubleEquals, []string{"false"})
+	deletingRequirement, _ := labels.NewRequirement(tarsMeta.TConfigDeletingLabel, selection.DoesNotExist, nil)
 
 	labelSelector := labels.NewSelector().
 		Add(*appRequirement).Add(*serverRequirement).Add(*configNameRequirement).
@@ -74,11 +73,11 @@ func (r *TConfigReconciler) reconcileAdd(key string) reconcile.Result {
 
 	tconfigs, err := r.informers.TConfigInformer.Lister().ByNamespace(namespace).List(labelSelector)
 	if err != nil && !errors.IsNotFound(err) {
-		utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceSelectorError, namespace, "tconfig", err.Error()))
+		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceSelectorError, namespace, "tconfig", err.Error()))
 		return reconcile.RateLimit
 	}
 
-	maxTConfigHistory := tarsMetaV1beta3.DefaultMaxTConfigHistory
+	maxTConfigHistory := tarsMeta.DefaultMaxTConfigHistory
 	if tfc := controller.GetTFrameworkConfig(namespace); tfc != nil {
 		maxTConfigHistory = tfc.RecordLimit.TConfigHistory
 	}
@@ -91,14 +90,14 @@ func (r *TConfigReconciler) reconcileAdd(key string) reconcile.Result {
 		obj := tconfig.(k8sMetaV1.Object)
 		objLabels := obj.GetLabels()
 		if objLabels == nil {
-			err = fmt.Errorf(tarsMetaV1beta3.ShouldNotHappenError, fmt.Sprintf("resource %s %s%s labels value is nil", "tconfig", namespace, obj.GetName()))
+			err = fmt.Errorf(tarsMeta.ShouldNotHappenError, fmt.Sprintf("resource %s %s%s labels value is nil", "tconfig", namespace, obj.GetName()))
 			utilRuntime.HandleError(err)
 			continue
 		}
 
-		version, ok := objLabels[tarsMetaV1beta3.TConfigVersionLabel]
+		version, ok := objLabels[tarsMeta.TConfigVersionLabel]
 		if !ok || version == "" {
-			err = fmt.Errorf(tarsMetaV1beta3.ShouldNotHappenError, fmt.Sprintf("resource %s %s%s labels[%s] value is nil", "tconfig", namespace, obj.GetName(), tarsMetaV1beta3.TConfigVersionLabel))
+			err = fmt.Errorf(tarsMeta.ShouldNotHappenError, fmt.Sprintf("resource %s %s%s labels[%s] value is nil", "tconfig", namespace, obj.GetName(), tarsMeta.TConfigVersionLabel))
 			utilRuntime.HandleError(err)
 			continue
 		}
@@ -106,14 +105,14 @@ func (r *TConfigReconciler) reconcileAdd(key string) reconcile.Result {
 	}
 	sort.Strings(versions)
 	compareVersion := versions[maxTConfigHistory-len(tconfigs)]
-	compareRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TConfigVersionLabel, selection.LessThan, []string{compareVersion})
+	compareRequirement, _ := labels.NewRequirement(tarsMeta.TConfigVersionLabel, selection.LessThan, []string{compareVersion})
 	labelSelector = labelSelector.Add(*compareRequirement)
 	err = r.clients.CrdClient.CrdV1beta3().TConfigs(namespace).DeleteCollection(context.TODO(), k8sMetaV1.DeleteOptions{}, k8sMetaV1.ListOptions{
 		LabelSelector: labelSelector.String(),
 	})
 
 	if err != nil {
-		utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceDeleteCollectionError, "tconfig", labelSelector.String(), err.Error()))
+		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceDeleteCollectionError, "tconfig", labelSelector.String(), err.Error()))
 		return reconcile.RateLimit
 	}
 
@@ -122,26 +121,26 @@ func (r *TConfigReconciler) reconcileAdd(key string) reconcile.Result {
 
 func (r *TConfigReconciler) reconcileModify(key string) reconcile.Result {
 	namespace := key
-	deactivateRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TConfigDeactivateLabel, selection.Exists, nil)
+	deactivateRequirement, _ := labels.NewRequirement(tarsMeta.TConfigDeactivateLabel, selection.Exists, nil)
 	deactivateLabelSelector := labels.NewSelector().Add(*deactivateRequirement)
 	tconfigs, err := r.informers.TConfigInformer.Lister().ByNamespace(namespace).List(deactivateLabelSelector)
 	if err != nil && !errors.IsNotFound(err) {
-		utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceSelectorError, namespace, "tconfig", err.Error()))
+		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceSelectorError, namespace, "tconfig", err.Error()))
 		return reconcile.RateLimit
 	}
 
-	jsonPatch := tarsMetaTools.JsonPatch{
+	jsonPatch := tarsMeta.JsonPatch{
 		{
-			OP:   tarsMetaTools.JsonPatchRemove,
+			OP:   tarsMeta.JsonPatchRemove,
 			Path: "/metadata/labels/tars.io~1Deactivate",
 		},
 		{
-			OP:    tarsMetaTools.JsonPatchAdd,
+			OP:    tarsMeta.JsonPatchAdd,
 			Path:  "/metadata/labels/tars.io~1Activated",
 			Value: "false",
 		},
 		{
-			OP:    tarsMetaTools.JsonPatchReplace,
+			OP:    tarsMeta.JsonPatchReplace,
 			Path:  "/activated",
 			Value: false,
 		},
@@ -153,7 +152,7 @@ func (r *TConfigReconciler) reconcileModify(key string) reconcile.Result {
 		name := v.GetName()
 		_, err = r.clients.CrdClient.CrdV1beta3().TConfigs(namespace).Patch(context.TODO(), name, patchTypes.JSONPatchType, patchContent, k8sMetaV1.PatchOptions{})
 		if err != nil {
-			utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourcePatchError, "tconfig", namespace, name, err.Error()))
+			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourcePatchError, "tconfig", namespace, name, err.Error()))
 			retry = true
 			continue
 		}
@@ -166,13 +165,13 @@ func (r *TConfigReconciler) reconcileModify(key string) reconcile.Result {
 
 func (r *TConfigReconciler) reconcileDelete(key string) reconcile.Result {
 	namespace := key
-	deletingRequirement, _ := labels.NewRequirement(tarsMetaV1beta3.TConfigDeletingLabel, selection.Exists, nil)
+	deletingRequirement, _ := labels.NewRequirement(tarsMeta.TConfigDeletingLabel, selection.Exists, nil)
 	deletingLabelSelector := labels.NewSelector().Add(*deletingRequirement)
 	err := r.clients.CrdClient.CrdV1beta3().TConfigs(namespace).DeleteCollection(context.TODO(), k8sMetaV1.DeleteOptions{}, k8sMetaV1.ListOptions{
 		LabelSelector: deletingLabelSelector.String(),
 	})
 	if err != nil {
-		utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceDeleteCollectionError, "tconfig", deletingLabelSelector.String(), err.Error()))
+		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceDeleteCollectionError, "tconfig", deletingLabelSelector.String(), err.Error()))
 		return reconcile.RateLimit
 	}
 	return reconcile.AllOk

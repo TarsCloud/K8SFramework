@@ -9,7 +9,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
-	tarsMetaV1beta3 "k8s.tars.io/meta/v1beta3"
+	tarsMeta "k8s.tars.io/meta"
 	"tarscontroller/controller"
 	"tarscontroller/reconcile"
 	"time"
@@ -98,14 +98,14 @@ func (r *TFrameworkConfigReconciler) reconcile(key string) reconcile.Result {
 		return reconcile.AllOk
 	}
 
-	if name != tarsMetaV1beta3.FixedTFrameworkConfigResourceName {
+	if name != tarsMeta.FixedTFrameworkConfigResourceName {
 		return reconcile.AllOk
 	}
 
 	tframeworkconfig, err := r.informers.TFrameworkConfigInformer.Lister().TFrameworkConfigs(namespace).Get(name)
 	if err != nil {
 		if !errors.IsNotFound(err) {
-			utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceGetError, "tfameworkconfig", namespace, name, err.Error()))
+			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "tfameworkconfig", namespace, name, err.Error()))
 			return reconcile.RateLimit
 		}
 		return reconcile.AllOk

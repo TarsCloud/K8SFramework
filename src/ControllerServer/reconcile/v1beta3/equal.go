@@ -5,7 +5,7 @@ import (
 	k8sCoreV1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
-	tarsMetaV1beta3 "k8s.tars.io/meta/v1beta3"
+	tarsMeta "k8s.tars.io/meta"
 )
 
 func equalServicePort(l, r []k8sCoreV1.ServicePort) bool {
@@ -590,8 +590,8 @@ func EqualTServerAndService(tserver *tarsCrdV1beta3.TServer, service *k8sCoreV1.
 	}
 
 	targetLabels := map[string]string{
-		tarsMetaV1beta3.TServerAppLabel:  tserverSpec.App,
-		tarsMetaV1beta3.TServerNameLabel: tserverSpec.Server,
+		tarsMeta.TServerAppLabel:  tserverSpec.App,
+		tarsMeta.TServerNameLabel: tserverSpec.Server,
 	}
 
 	if !ContainLabel(targetLabels, service.Labels) {
@@ -613,8 +613,8 @@ func EqualTServerAndService(tserver *tarsCrdV1beta3.TServer, service *k8sCoreV1.
 func EqualTServerAndDaemonSet(tserver *tarsCrdV1beta3.TServer, daemonSet *k8sAppsV1.DaemonSet) bool {
 
 	targetLabels := map[string]string{
-		tarsMetaV1beta3.TServerAppLabel:  tserver.Spec.App,
-		tarsMetaV1beta3.TServerNameLabel: tserver.Spec.Server,
+		tarsMeta.TServerAppLabel:  tserver.Spec.App,
+		tarsMeta.TServerNameLabel: tserver.Spec.Server,
 	}
 
 	if !ContainLabel(targetLabels, daemonSet.Labels) {
@@ -629,7 +629,7 @@ func EqualTServerAndDaemonSet(tserver *tarsCrdV1beta3.TServer, daemonSet *k8sApp
 	targetTemplateLabels := targetMatchLabels
 
 	if tserver.Spec.Release != nil {
-		targetTemplateLabels[tarsMetaV1beta3.TServerIdLabel] = tserver.Spec.Release.ID
+		targetTemplateLabels[tarsMeta.TServerIdLabel] = tserver.Spec.Release.ID
 	}
 
 	if !ContainLabel(targetTemplateLabels, daemonSet.Spec.Template.Labels) {
@@ -699,7 +699,7 @@ func EqualTServerAndDaemonSet(tserver *tarsCrdV1beta3.TServer, daemonSet *k8sApp
 	}
 
 	if initContainer != nil {
-		launcherType := string(tarsCrdV1beta3.Background)
+		launcherType := string(tarsMeta.Background)
 		for _, e := range initContainer.Env {
 			if e.Name == "LauncherType" {
 				launcherType = e.Value
@@ -719,7 +719,7 @@ func EqualTServerAndDaemonSet(tserver *tarsCrdV1beta3.TServer, daemonSet *k8sApp
 		return false
 	}
 
-	serverImage := tarsMetaV1beta3.ServiceImagePlaceholder
+	serverImage := tarsMeta.ServiceImagePlaceholder
 	if tserver.Spec.Release != nil {
 		serverImage = tserver.Spec.Release.Image
 	}
@@ -772,8 +772,8 @@ func EqualTServerAndStatefulSet(tserver *tarsCrdV1beta3.TServer, statefulSet *k8
 	*/
 
 	targetLabels := map[string]string{
-		tarsMetaV1beta3.TServerAppLabel:  tserver.Spec.App,
-		tarsMetaV1beta3.TServerNameLabel: tserver.Spec.Server,
+		tarsMeta.TServerAppLabel:  tserver.Spec.App,
+		tarsMeta.TServerNameLabel: tserver.Spec.Server,
 	}
 
 	if !ContainLabel(targetLabels, statefulSet.Labels) {
@@ -788,7 +788,7 @@ func EqualTServerAndStatefulSet(tserver *tarsCrdV1beta3.TServer, statefulSet *k8
 	targetTemplateLabels := targetMatchLabels
 
 	if tserver.Spec.Release != nil {
-		targetTemplateLabels[tarsMetaV1beta3.TServerIdLabel] = tserver.Spec.Release.ID
+		targetTemplateLabels[tarsMeta.TServerIdLabel] = tserver.Spec.Release.ID
 	}
 
 	if !ContainLabel(targetTemplateLabels, statefulSet.Spec.Template.Labels) {
@@ -858,7 +858,7 @@ func EqualTServerAndStatefulSet(tserver *tarsCrdV1beta3.TServer, statefulSet *k8
 	}
 
 	if initContainer != nil {
-		launcherType := string(tarsCrdV1beta3.Background)
+		launcherType := string(tarsMeta.Background)
 		for _, e := range initContainer.Env {
 			if e.Name == "LauncherType" {
 				launcherType = e.Value
@@ -884,7 +884,7 @@ func EqualTServerAndStatefulSet(tserver *tarsCrdV1beta3.TServer, statefulSet *k8
 		return false
 	}
 
-	serverImage := tarsMetaV1beta3.ServiceImagePlaceholder
+	serverImage := tarsMeta.ServiceImagePlaceholder
 	if tserver.Spec.Release != nil {
 		serverImage = tserver.Spec.Release.Image
 	}

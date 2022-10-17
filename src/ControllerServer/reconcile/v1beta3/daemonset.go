@@ -13,7 +13,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
-	tarsMetaV1beta3 "k8s.tars.io/meta/v1beta3"
+	tarsMeta "k8s.tars.io/meta"
 	"tarscontroller/controller"
 	"tarscontroller/reconcile"
 	"time"
@@ -114,12 +114,12 @@ func (r *DaemonSetReconciler) reconcile(key string) reconcile.Result {
 	tserver, err := r.informers.TServerInformer.Lister().TServers(namespace).Get(name)
 	if err != nil {
 		if !errors.IsNotFound(err) {
-			utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceGetError, "tserver", namespace, name, err.Error()))
+			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "tserver", namespace, name, err.Error()))
 			return reconcile.RateLimit
 		}
 		err = r.clients.K8sClient.AppsV1().DaemonSets(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
 		if err != nil && !errors.IsNotFound(err) {
-			utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceDeleteError, "daemonset", namespace, name, err.Error()))
+			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceDeleteError, "daemonset", namespace, name, err.Error()))
 			return reconcile.RateLimit
 		}
 		return reconcile.AllOk
@@ -128,7 +128,7 @@ func (r *DaemonSetReconciler) reconcile(key string) reconcile.Result {
 	if tserver.DeletionTimestamp != nil || !tserver.Spec.K8S.DaemonSet {
 		err = r.clients.K8sClient.AppsV1().DaemonSets(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
 		if err != nil && !errors.IsNotFound(err) {
-			utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceDeleteError, "daemonset", namespace, name, err.Error()))
+			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceDeleteError, "daemonset", namespace, name, err.Error()))
 			return reconcile.RateLimit
 		}
 		return reconcile.AllOk
@@ -137,14 +137,14 @@ func (r *DaemonSetReconciler) reconcile(key string) reconcile.Result {
 	daemonSet, err := r.informers.DaemonSetInformer.Lister().DaemonSets(namespace).Get(name)
 	if err != nil {
 		if !errors.IsNotFound(err) {
-			utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceGetError, "daemonset", namespace, name, err.Error()))
+			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "daemonset", namespace, name, err.Error()))
 			return reconcile.RateLimit
 		}
 
 		daemonSet = buildDaemonset(tserver)
 		daemonSetInterface := r.clients.K8sClient.AppsV1().DaemonSets(namespace)
 		if _, err = daemonSetInterface.Create(context.TODO(), daemonSet, k8sMetaV1.CreateOptions{}); err != nil && !errors.IsAlreadyExists(err) {
-			utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceCreateError, "daemonset", namespace, name, err.Error()))
+			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceCreateError, "daemonset", namespace, name, err.Error()))
 			return reconcile.RateLimit
 		}
 
@@ -157,8 +157,8 @@ func (r *DaemonSetReconciler) reconcile(key string) reconcile.Result {
 
 	if !k8sMetaV1.IsControlledBy(daemonSet, tserver) {
 		//此处意味着出现了非由 controller 管理的同名 daemonSet, 需要警告和重试
-		msg := fmt.Sprintf(tarsMetaV1beta3.ResourceOutControlError, "daemonset", namespace, daemonSet.Name, namespace, name)
-		controller.Event(tserver, k8sCoreV1.EventTypeWarning, tarsMetaV1beta3.ResourceOutControlReason, msg)
+		msg := fmt.Sprintf(tarsMeta.ResourceOutControlError, "daemonset", namespace, daemonSet.Name, namespace, name)
+		controller.Event(tserver, k8sCoreV1.EventTypeWarning, tarsMeta.ResourceOutControlReason, msg)
 		return reconcile.RateLimit
 	}
 
@@ -169,7 +169,7 @@ func (r *DaemonSetReconciler) reconcile(key string) reconcile.Result {
 		syncDaemonSet(tserver, daemonSetCopy)
 		daemonSetInterface := r.clients.K8sClient.AppsV1().DaemonSets(namespace)
 		if _, err := daemonSetInterface.Update(context.TODO(), daemonSetCopy, k8sMetaV1.UpdateOptions{}); err != nil {
-			utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceUpdateError, "daemonset", namespace, name, err.Error()))
+			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceUpdateError, "daemonset", namespace, name, err.Error()))
 			return reconcile.RateLimit
 		}
 	}

@@ -12,7 +12,7 @@ import (
 	tarsInformers "k8s.tars.io/client-go/informers/externalversions"
 	tarsInformersV1beta3 "k8s.tars.io/client-go/informers/externalversions/crd/v1beta3"
 	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
-	tarsMetaV1beta3 "k8s.tars.io/meta/v1beta3"
+	tarsMeta "k8s.tars.io/meta"
 )
 
 type EventsReceiver interface {
@@ -57,7 +57,7 @@ func newInformers(clients *Clients) *Informers {
 
 	k8sInformerFactoryWithFilter := k8sInformers.NewSharedInformerFactoryWithOptions(clients.K8sClient, 0, k8sInformers.WithTweakListOptions(
 		func(options *k8sMetaV1.ListOptions) {
-			options.LabelSelector = fmt.Sprintf("%s,%s", tarsMetaV1beta3.TServerAppLabel, tarsMetaV1beta3.TServerNameLabel)
+			options.LabelSelector = fmt.Sprintf("%s,%s", tarsMeta.TServerAppLabel, tarsMeta.TServerNameLabel)
 		}))
 
 	tarsInformerFactory := tarsInformers.NewSharedInformerFactoryWithOptions(clients.CrdClient, 0)

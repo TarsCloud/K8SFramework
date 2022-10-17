@@ -5,7 +5,7 @@ import (
 	tarsInformers "k8s.tars.io/client-go/informers/externalversions"
 	tarsInformersV1beta3 "k8s.tars.io/client-go/informers/externalversions/crd/v1beta3"
 	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
-	tarsMetaV1beta3 "k8s.tars.io/meta/v1beta3"
+	tarsMeta "k8s.tars.io/meta"
 )
 
 type Informers struct {
@@ -35,7 +35,7 @@ func NewWatcher() *Watcher {
 				switch obj.(type) {
 				case *tarsCrdV1beta3.TFrameworkConfig:
 					tfc := obj.(*tarsCrdV1beta3.TFrameworkConfig)
-					if tfc.Name == tarsMetaV1beta3.FixedTFrameworkConfigResourceName {
+					if tfc.Name == tarsMeta.FixedTFrameworkConfigResourceName {
 						setMaxReleases(tfc.RecordLimit.TImageRelease)
 						setExecutor(tfc.ImageBuild.Executor.Image, tfc.ImageBuild.Executor.Secret)
 						setRepository(tfc.ImageUpload.Registry, tfc.ImageUpload.Secret)
@@ -49,7 +49,7 @@ func NewWatcher() *Watcher {
 				switch newObj.(type) {
 				case *tarsCrdV1beta3.TFrameworkConfig:
 					tfc := newObj.(*tarsCrdV1beta3.TFrameworkConfig)
-					if tfc.Name == tarsMetaV1beta3.FixedTFrameworkConfigResourceName {
+					if tfc.Name == tarsMeta.FixedTFrameworkConfigResourceName {
 						setMaxReleases(tfc.RecordLimit.TImageRelease)
 						setExecutor(tfc.ImageBuild.Executor.Image, tfc.ImageBuild.Executor.Secret)
 						setRepository(tfc.ImageUpload.Registry, tfc.ImageUpload.Secret)

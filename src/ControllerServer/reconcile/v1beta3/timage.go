@@ -12,8 +12,7 @@ import (
 	k8sWatchV1 "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/util/workqueue"
 	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
-	tarsMetaTools "k8s.tars.io/meta/tools"
-	tarsMetaV1beta3 "k8s.tars.io/meta/v1beta3"
+	tarsMeta "k8s.tars.io/meta"
 	"strings"
 	"tarscontroller/controller"
 	"tarscontroller/reconcile"
@@ -51,7 +50,7 @@ func (r *TImageReconciler) EnqueueObj(resourceName string, resourceEvent k8sWatc
 
 		if timage.ImageType == "server" {
 			if timage.Build != nil && timage.Build.Running != nil {
-				maxBuildTime := tarsMetaV1beta3.DefaultMaxImageBuildTime
+				maxBuildTime := tarsMeta.DefaultMaxImageBuildTime
 				if tfc := controller.GetTFrameworkConfig(timage.Namespace); tfc != nil {
 					maxBuildTime = tfc.ImageBuild.MaxBuildTime
 				}
@@ -123,11 +122,11 @@ func (r *TImageReconciler) reconcile(key string) reconcile.Result {
 		if errors.IsNotFound(err) {
 			return reconcile.AllOk
 		}
-		utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceGetError, "timage", namespace, name, err.Error()))
+		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "timage", namespace, name, err.Error()))
 		return reconcile.RateLimit
 	}
 
-	var jsonPatch tarsMetaTools.JsonPatch
+	var jsonPatch tarsMeta.JsonPatch
 
 	switch target {
 	case reconcileTargetCheckImageBuildOvertime:
@@ -149,8 +148,8 @@ func (r *TImageReconciler) reconcile(key string) reconcile.Result {
 				Message:         "task overtime",
 			},
 		}
-		jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
-			OP:    tarsMetaTools.JsonPatchAdd,
+		jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
+			OP:    tarsMeta.JsonPatchAdd,
 			Path:  "/build",
 			Value: buildState,
 		})

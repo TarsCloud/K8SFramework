@@ -11,7 +11,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
-	tarsMetaV1beta3 "k8s.tars.io/meta/v1beta3"
+	tarsMeta "k8s.tars.io/meta"
 	"tarscontroller/controller"
 	"tarscontroller/reconcile"
 	"time"
@@ -110,7 +110,7 @@ func (r *TAccountReconciler) reconcile(key string) (reconcile.Result, *time.Dura
 		if errors.IsNotFound(err) {
 			return reconcile.AllOk, nil
 		}
-		utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceGetError, "taccount", namespace, name, err.Error()))
+		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "taccount", namespace, name, err.Error()))
 		return reconcile.RateLimit, nil
 	}
 
@@ -145,7 +145,7 @@ func (r *TAccountReconciler) reconcile(key string) (reconcile.Result, *time.Dura
 		newTaccount.Spec.Authentication.Tokens = newTokens
 		_, err = r.clients.CrdClient.CrdV1beta3().TAccounts(namespace).Update(context.TODO(), newTaccount, k8sMetaV1.UpdateOptions{})
 		if err != nil {
-			utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourcePatchError, "taccount", namespace, name, err.Error()))
+			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourcePatchError, "taccount", namespace, name, err.Error()))
 			return reconcile.RateLimit, nil
 		}
 	}

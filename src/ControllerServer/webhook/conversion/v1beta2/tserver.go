@@ -9,8 +9,7 @@ import (
 	utilRuntime "k8s.io/apimachinery/pkg/util/runtime"
 	tarsCrdV1beta1 "k8s.tars.io/crd/v1beta1"
 	tarsCrdV1beta2 "k8s.tars.io/crd/v1beta2"
-	tarsMetaV1beta1 "k8s.tars.io/meta/v1beta1"
-	tarsMetaV1beta2 "k8s.tars.io/meta/v1beta2"
+	tarsMeta "k8s.tars.io/meta"
 	"tarscontroller/controller"
 )
 
@@ -76,8 +75,8 @@ func CvTServer1b1To1b2(s []runtime.RawExtension) []runtime.RawExtension {
 
 		dst := &tarsCrdV1beta2.TServer{
 			TypeMeta: k8sMetaV1.TypeMeta{
-				APIVersion: tarsMetaV1beta2.GroupVersion,
-				Kind:       tarsMetaV1beta2.TServerKind,
+				APIVersion: tarsMeta.TarsGroupVersionV1B2,
+				Kind:       tarsMeta.TServerKind,
 			},
 			ObjectMeta: src.ObjectMeta,
 			Spec: tarsCrdV1beta2.TServerSpec{
@@ -104,8 +103,8 @@ func CvTServer1b1To1b2(s []runtime.RawExtension) []runtime.RawExtension {
 					ReadinessGate:       src.Spec.K8S.ReadinessGate,
 					Resources:           src.Spec.K8S.Resources,
 					UpdateStrategy:      k8sAppsV1.StatefulSetUpdateStrategy{},
-					ImagePullPolicy:     DefaultImagePullPolicy,
-					LauncherType:        DefaultLauncherType,
+					ImagePullPolicy:     tarsMeta.DefaultImagePullPolicy,
+					LauncherType:        tarsMeta.DefaultLauncherType,
 				},
 				Release: nil,
 			},
@@ -144,8 +143,8 @@ func CvTServer1b1To1b2(s []runtime.RawExtension) []runtime.RawExtension {
 			}
 
 			dst.Spec.K8S.UpdateStrategy = DefaultStatefulsetUpdateStrategy
-			dst.Spec.K8S.ImagePullPolicy = DefaultImagePullPolicy
-			dst.Spec.K8S.LauncherType = DefaultLauncherType
+			dst.Spec.K8S.ImagePullPolicy = tarsMeta.DefaultImagePullPolicy
+			dst.Spec.K8S.LauncherType = tarsMeta.DefaultLauncherType
 			if dst.Spec.Tars != nil && dst.Spec.Release != nil {
 				image, secret := controller.GetDefaultNodeImage(src.Namespace)
 				dst.Spec.Release.TServerReleaseNode = &tarsCrdV1beta2.TServerReleaseNode{
@@ -222,8 +221,8 @@ func CvTServer1b2To1b1(s []runtime.RawExtension) []runtime.RawExtension {
 
 		dst := &tarsCrdV1beta1.TServer{
 			TypeMeta: k8sMetaV1.TypeMeta{
-				APIVersion: tarsMetaV1beta1.GroupVersion,
-				Kind:       tarsMetaV1beta1.TServerKind,
+				APIVersion: tarsMeta.TarsGroupVersionV1B1,
+				Kind:       tarsMeta.TServerKind,
 			},
 			ObjectMeta: src.ObjectMeta,
 			Spec: tarsCrdV1beta1.TServerSpec{

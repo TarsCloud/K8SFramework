@@ -14,8 +14,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
-	tarsMetaTools "k8s.tars.io/meta/tools"
-	tarsMetaV1beta3 "k8s.tars.io/meta/v1beta3"
+	tarsMeta "k8s.tars.io/meta"
 	"tarscontroller/controller"
 	"tarscontroller/reconcile"
 	"time"
@@ -107,7 +106,7 @@ func (r *TTreeReconciler) reconcile(key string) reconcile.Result {
 	tserver, err := r.informers.TServerInformer.Lister().TServers(namespace).Get(name)
 	if err != nil {
 		if !errors.IsNotFound(err) {
-			utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceGetError, "tserver", namespace, name, err.Error()))
+			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "tserver", namespace, name, err.Error()))
 			return reconcile.RateLimit
 		}
 		return reconcile.AllOk
@@ -117,11 +116,11 @@ func (r *TTreeReconciler) reconcile(key string) reconcile.Result {
 		return reconcile.AllOk
 	}
 
-	ttree, err := r.informers.TTreeInformer.Lister().TTrees(namespace).Get(tarsMetaV1beta3.FixedTTreeResourceName)
+	ttree, err := r.informers.TTreeInformer.Lister().TTrees(namespace).Get(tarsMeta.FixedTTreeResourceName)
 	if err != nil {
-		msg := fmt.Sprintf(tarsMetaV1beta3.ResourceGetError, "ttree", namespace, tarsMetaV1beta3.FixedTTreeResourceName, err.Error())
+		msg := fmt.Sprintf(tarsMeta.ResourceGetError, "ttree", namespace, tarsMeta.FixedTTreeResourceName, err.Error())
 		utilRuntime.HandleError(fmt.Errorf(msg))
-		controller.Event(tserver, k8sCoreV1.EventTypeWarning, tarsMetaV1beta3.ResourceGetReason, msg)
+		controller.Event(tserver, k8sCoreV1.EventTypeWarning, tarsMeta.ResourceGetReason, msg)
 		return reconcile.RateLimit
 	}
 
@@ -138,16 +137,16 @@ func (r *TTreeReconciler) reconcile(key string) reconcile.Result {
 		CreateTime:   k8sMetaV1.Now(),
 		Mark:         "AddByController",
 	}
-	jsonPatch := tarsMetaTools.JsonPatch{
+	jsonPatch := tarsMeta.JsonPatch{
 		{
-			OP:    tarsMetaTools.JsonPatchAdd,
+			OP:    tarsMeta.JsonPatchAdd,
 			Path:  "/apps/-",
 			Value: newTressApp,
 		},
 	}
 
 	patchContent, _ := json.Marshal(jsonPatch)
-	_, err = r.clients.CrdClient.CrdV1beta3().TTrees(namespace).Patch(context.TODO(), tarsMetaV1beta3.FixedTTreeResourceName, patchTypes.JSONPatchType, patchContent, k8sMetaV1.PatchOptions{})
+	_, err = r.clients.CrdClient.CrdV1beta3().TTrees(namespace).Patch(context.TODO(), tarsMeta.FixedTTreeResourceName, patchTypes.JSONPatchType, patchContent, k8sMetaV1.PatchOptions{})
 	if err != nil {
 		return reconcile.RateLimit
 	}

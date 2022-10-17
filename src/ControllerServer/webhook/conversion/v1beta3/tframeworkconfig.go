@@ -8,8 +8,7 @@ import (
 	utilRuntime "k8s.io/apimachinery/pkg/util/runtime"
 	tarsCrdV1beta2 "k8s.tars.io/crd/v1beta2"
 	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
-	tarsMetaV1beta2 "k8s.tars.io/meta/v1beta2"
-	tarsMetaV1beta3 "k8s.tars.io/meta/v1beta3"
+	tarsMeta "k8s.tars.io/meta"
 )
 
 func conversionUpChainV1b2ToV1b3(src map[string][]*tarsCrdV1beta2.TFrameworkTarsEndpoint) (dst map[string][]*tarsCrdV1beta3.TFrameworkTarsEndpoint) {
@@ -35,8 +34,8 @@ func CvTFC1b2To1b3(s []runtime.RawExtension) []runtime.RawExtension {
 
 		dst := &tarsCrdV1beta3.TFrameworkConfig{
 			TypeMeta: k8sMetaV1.TypeMeta{
-				APIVersion: tarsMetaV1beta3.GroupVersion,
-				Kind:       tarsMetaV1beta3.TFrameworkConfigKind,
+				APIVersion: tarsMeta.TarsGroupVersionV1B1,
+				Kind:       tarsMeta.TFrameworkConfigKind,
 			},
 			ObjectMeta: src.ObjectMeta,
 			ImageBuild: tarsCrdV1beta3.TFrameworkImageBuild{
@@ -100,8 +99,8 @@ func CvTFC1b3To1b2(s []runtime.RawExtension) []runtime.RawExtension {
 
 		dst := &tarsCrdV1beta2.TFrameworkConfig{
 			TypeMeta: k8sMetaV1.TypeMeta{
-				APIVersion: tarsMetaV1beta2.GroupVersion,
-				Kind:       tarsMetaV1beta2.TFrameworkConfigKind,
+				APIVersion: tarsMeta.TarsGroupVersionV1B2,
+				Kind:       tarsMeta.TFrameworkConfigKind,
 			},
 			ObjectMeta: src.ObjectMeta,
 			ImageBuild: tarsCrdV1beta2.TFrameworkImageBuild{

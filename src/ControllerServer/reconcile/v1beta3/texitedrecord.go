@@ -14,8 +14,7 @@ import (
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/utils/integer"
 	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
-	tarsMetaTools "k8s.tars.io/meta/tools"
-	tarsMetaV1beta3 "k8s.tars.io/meta/v1beta3"
+	tarsMeta "k8s.tars.io/meta"
 	"strings"
 	"tarscontroller/controller"
 	"tarscontroller/reconcile"
@@ -53,8 +52,8 @@ func (r *TExitedRecordReconciler) EnqueueObj(resourceName string, resourceEvent 
 	case *k8sCoreV1.Pod:
 		pod := resourceObj.(*k8sCoreV1.Pod)
 		if pod.DeletionTimestamp != nil && pod.UID != "" && pod.Labels != nil {
-			app, appExist := pod.Labels[tarsMetaV1beta3.TServerAppLabel]
-			server, serverExist := pod.Labels[tarsMetaV1beta3.TServerNameLabel]
+			app, appExist := pod.Labels[tarsMeta.TServerAppLabel]
+			server, serverExist := pod.Labels[tarsMeta.TServerNameLabel]
 			if appExist && serverExist {
 				tExitedEvent := &tarsCrdV1beta3.TExitedRecord{
 					App:    app,
@@ -63,7 +62,7 @@ func (r *TExitedRecordReconciler) EnqueueObj(resourceName string, resourceEvent 
 						{
 							UID:        string(pod.UID),
 							Name:       pod.Name,
-							ID:         pod.Labels[tarsMetaV1beta3.TServerIdLabel],
+							ID:         pod.Labels[tarsMeta.TServerIdLabel],
 							NodeIP:     pod.Status.HostIP,
 							PodIP:      pod.Status.PodIP,
 							CreateTime: pod.CreationTimestamp,
@@ -143,12 +142,12 @@ func (r *TExitedRecordReconciler) reconcileBaseTServer(namespace string, name st
 	tserver, err := r.informers.TServerInformer.Lister().TServers(namespace).Get(name)
 	if err != nil {
 		if !errors.IsNotFound(err) {
-			utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceGetError, "tserver", namespace, name, err.Error()))
+			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "tserver", namespace, name, err.Error()))
 			return reconcile.RateLimit
 		}
 		err = r.clients.CrdClient.CrdV1beta3().TExitedRecords(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
 		if err != nil && !errors.IsNotFound(err) {
-			utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceDeleteError, "texitedrecord", namespace, name, err.Error()))
+			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceDeleteError, "texitedrecord", namespace, name, err.Error()))
 			return reconcile.RateLimit
 		}
 		return reconcile.AllOk
@@ -157,7 +156,7 @@ func (r *TExitedRecordReconciler) reconcileBaseTServer(namespace string, name st
 	if tserver.DeletionTimestamp != nil {
 		err = r.clients.CrdClient.CrdV1beta3().TExitedRecords(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
 		if err != nil && !errors.IsNotFound(err) {
-			utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceDeleteError, "texitedrecord", namespace, name, err.Error()))
+			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceDeleteError, "texitedrecord", namespace, name, err.Error()))
 			return reconcile.RateLimit
 		}
 		return reconcile.AllOk
@@ -166,13 +165,13 @@ func (r *TExitedRecordReconciler) reconcileBaseTServer(namespace string, name st
 	tExitedRecord, err := r.informers.TExitedRecordInformer.Lister().TExitedRecords(namespace).Get(name)
 	if err != nil {
 		if !errors.IsNotFound(err) {
-			utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceGetError, "texitedrecord", namespace, name, err.Error()))
+			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "texitedrecord", namespace, name, err.Error()))
 			return reconcile.RateLimit
 		}
 		tExitedRecord = buildTExitedRecord(tserver)
 		tExitedPodInterface := r.clients.CrdClient.CrdV1beta3().TExitedRecords(namespace)
 		if _, err = tExitedPodInterface.Create(context.TODO(), tExitedRecord, k8sMetaV1.CreateOptions{}); err != nil && !errors.IsAlreadyExists(err) {
-			utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceCreateError, "texitedrecord", namespace, name, err.Error()))
+			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceCreateError, "texitedrecord", namespace, name, err.Error()))
 			return reconcile.RateLimit
 		}
 		return reconcile.AllOk
@@ -188,7 +187,7 @@ func (r *TExitedRecordReconciler) reconcileBasePod(namespace string, tExitedPodS
 	tExitedRecord, err := r.informers.TExitedRecordInformer.Lister().TExitedRecords(namespace).Get(tExitedRecordName)
 	if err != nil {
 		if !errors.IsNotFound(err) {
-			utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourceGetError, "texitedrecord", namespace, tExitedRecordName, err.Error()))
+			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "texitedrecord", namespace, tExitedRecordName, err.Error()))
 			return reconcile.RateLimit
 		}
 		return reconcile.AllOk
@@ -206,23 +205,23 @@ func (r *TExitedRecordReconciler) reconcileBasePod(namespace string, tExitedPodS
 		}
 	}
 
-	jsonPatch := tarsMetaTools.JsonPatch{
+	jsonPatch := tarsMeta.JsonPatch{
 		{
-			OP:    tarsMetaTools.JsonPatchAdd,
+			OP:    tarsMeta.JsonPatchAdd,
 			Path:  "/pods/0",
 			Value: tExitedEvent.Pods[0],
 		},
 	}
 
-	recordsLimit := tarsMetaV1beta3.DefaultMaxRecordLen
+	recordsLimit := tarsMeta.DefaultMaxRecordLen
 
 	if tfc := controller.GetTFrameworkConfig(namespace); tfc != nil {
 		recordsLimit = tfc.RecordLimit.TExitedPod
 	}
 
 	if recordedPodsLen >= recordsLimit {
-		jsonPatch = append(jsonPatch, tarsMetaTools.JsonPatchItem{
-			OP:   tarsMetaTools.JsonPatchRemove,
+		jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
+			OP:   tarsMeta.JsonPatchRemove,
 			Path: fmt.Sprintf("/pods/%d", recordedPodsLen),
 		})
 	}
@@ -231,7 +230,7 @@ func (r *TExitedRecordReconciler) reconcileBasePod(namespace string, tExitedPodS
 	_, err = r.clients.CrdClient.CrdV1beta3().TExitedRecords(namespace).Patch(context.TODO(), tExitedRecordName, patchTypes.JSONPatchType, patchContent, k8sMetaV1.PatchOptions{})
 
 	if err != nil {
-		utilRuntime.HandleError(fmt.Errorf(tarsMetaV1beta3.ResourcePatchError, "texitedrecord", namespace, tExitedRecordName, err.Error()))
+		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourcePatchError, "texitedrecord", namespace, tExitedRecordName, err.Error()))
 		return reconcile.RateLimit
 	}
 
