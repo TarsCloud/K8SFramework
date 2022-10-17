@@ -44,7 +44,7 @@ func (r *TConfigReconciler) EnqueueObj(resourceName string, resourceEvent k8sWat
 	var key string
 	switch resourceEvent {
 	case k8sWatchV1.Modified:
-		r.addQueue.Add(namespace)
+		r.modifyQueue.Add(namespace)
 	case k8sWatchV1.Deleted:
 		r.deleteQueue.Add(namespace)
 	case k8sWatchV1.Added:
