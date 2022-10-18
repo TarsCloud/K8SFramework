@@ -20,14 +20,11 @@ import (
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	tarsMeta "k8s.tars.io/meta"
 )
 
-// GroupName is the group name use in this package
-const GroupName = "k8s.tars.io"
-const Version = "v1beta3"
-
 // SchemeGroupVersion is group version used to register these objects
-var SchemeGroupVersion = schema.GroupVersion{Group: GroupName, Version: Version}
+var SchemeGroupVersion = schema.GroupVersion{Group: tarsMeta.TarsGroup, Version: tarsMeta.V1beta3}
 
 // Resource takes an unqualified resource and returns a Group qualified GroupResource
 func Resource(resource string) schema.GroupResource {

@@ -247,7 +247,9 @@ var _ = ginkgo.Describe("test server level config", func() {
 
 			time.Sleep(s.Opts.SyncTime)
 			oldTConfig, err = s.CRDClient.CrdV1beta3().TConfigs(s.Namespace).Get(context.TODO(), ResourceName, k8sMetaV1.GetOptions{})
-			assert.NotNil(ginkgo.GinkgoT(), err)
+			if err == nil {
+				assert.True(ginkgo.GinkgoT(), k8sMetaV1.HasLabel(oldTConfig.ObjectMeta, tarsMeta.TConfigDeletingLabel))
+			}
 		})
 	})
 

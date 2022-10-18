@@ -2,8 +2,6 @@ package meta
 
 const KubernetesSystemAccountPrefix = "system:serviceaccount:kube-system:"
 
-const ()
-
 const TPodReadinessGate = "tars.io/active"
 const NodeServantName = "nodeobj"
 const NodeServantPort = 19385
