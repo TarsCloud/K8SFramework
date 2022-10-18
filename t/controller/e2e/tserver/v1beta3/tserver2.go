@@ -19,8 +19,10 @@ var _ = ginkgo.Describe("try create normal server with unexpected filed value", 
 	opts := &scaffold.Options{
 		Name:      "default",
 		K8SConfig: scaffold.GetK8SConfigFile(),
-		SyncTime:  1500 * time.Millisecond,
+		SyncTime:  800 * time.Millisecond,
 	}
+
+	var Resource = "test-testserver"
 
 	s := scaffold.NewScaffold(opts)
 
@@ -45,6 +47,10 @@ var _ = ginkgo.Describe("try create normal server with unexpected filed value", 
 				},
 			},
 		}
+	})
+
+	ginkgo.AfterEach(func() {
+		_ = s.CRDClient.CrdV1beta3().TServers(s.Namespace).Delete(context.TODO(), Resource, k8sMetaV1.DeleteOptions{})
 	})
 
 	ginkgo.It("app", func() {

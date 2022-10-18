@@ -28,7 +28,7 @@ var _ = ginkgo.Describe("test account", func() {
 	opts := &scaffold.Options{
 		Name:      "default",
 		K8SConfig: scaffold.GetK8SConfigFile(),
-		SyncTime:  1500 * time.Millisecond,
+		SyncTime:  800 * time.Millisecond,
 	}
 	s := scaffold.NewScaffold(opts)
 

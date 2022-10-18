@@ -221,7 +221,8 @@ func (r *StatefulSetReconciler) reconcile(key string) reconcile.Result {
 		if !tserver.Spec.K8S.DaemonSet {
 			statefulSet = buildStatefulset(tserver)
 			statefulSetInterface := r.clients.K8sClient.AppsV1().StatefulSets(namespace)
-			if _, err = statefulSetInterface.Create(context.TODO(), statefulSet, k8sMetaV1.CreateOptions{}); err != nil && !errors.IsAlreadyExists(err) {
+			_, err = statefulSetInterface.Create(context.TODO(), statefulSet, k8sMetaV1.CreateOptions{})
+			if err != nil && !errors.IsAlreadyExists(err) {
 				utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceCreateError, "statefulset", namespace, name, err.Error()))
 				return reconcile.RateLimit
 			}

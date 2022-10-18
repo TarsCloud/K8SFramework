@@ -19,10 +19,12 @@ var _ = ginkgo.Describe("try create tars server with unexpected filed value", fu
 	opts := &scaffold.Options{
 		Name:      "default",
 		K8SConfig: scaffold.GetK8SConfigFile(),
-		SyncTime:  1500 * time.Millisecond,
+		SyncTime:  800 * time.Millisecond,
 	}
 
 	s := scaffold.NewScaffold(opts)
+
+	var Resource = "test-testserver"
 
 	var tsLayout *tarsCrdV1Beta2.TServer
 	ginkgo.BeforeEach(func() {
@@ -42,7 +44,7 @@ var _ = ginkgo.Describe("try create tars server with unexpected filed value", fu
 
 		tsLayout = &tarsCrdV1Beta2.TServer{
 			ObjectMeta: k8sMetaV1.ObjectMeta{
-				Name:      "test-testserver",
+				Name:      Resource,
 				Namespace: s.Namespace,
 			},
 			Spec: tarsCrdV1Beta2.TServerSpec{
@@ -66,6 +68,10 @@ var _ = ginkgo.Describe("try create tars server with unexpected filed value", fu
 				},
 			},
 		}
+	})
+
+	ginkgo.AfterEach(func() {
+		_ = s.CRDClient.CrdV1beta2().TServers(s.Namespace).Delete(context.TODO(), Resource, k8sMetaV1.DeleteOptions{})
 	})
 
 	ginkgo.It("app", func() {

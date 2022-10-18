@@ -44,7 +44,7 @@ func mutatingCreateTServer(requestAdmissionView *k8sAdmissionV1.AdmissionReview)
 	jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
 		OP:    tarsMeta.JsonPatchAdd,
 		Path:  "/metadata/labels/tars.io~1SubType",
-		Value: string(tserver.Spec.SubType),
+		Value: tserver.Spec.SubType,
 	})
 
 	if tserver.Spec.Tars != nil {

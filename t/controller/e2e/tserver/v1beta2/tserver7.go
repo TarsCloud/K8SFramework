@@ -23,7 +23,7 @@ var _ = ginkgo.Describe("try create/update normal server and check statefulset",
 	opts := &scaffold.Options{
 		Name:      "default",
 		K8SConfig: scaffold.GetK8SConfigFile(),
-		SyncTime:  1500 * time.Millisecond,
+		SyncTime:  800 * time.Millisecond,
 	}
 
 	s := scaffold.NewScaffold(opts)
@@ -72,6 +72,10 @@ var _ = ginkgo.Describe("try create/update normal server and check statefulset",
 		statefulset, err := s.K8SClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), statefulset)
+	})
+
+	ginkgo.AfterEach(func() {
+		_ = s.CRDClient.CrdV1beta2().TServers(s.Namespace).Delete(context.TODO(), Resource, k8sMetaV1.DeleteOptions{})
 	})
 
 	ginkgo.It("before update", func() {

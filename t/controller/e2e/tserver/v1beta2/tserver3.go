@@ -19,7 +19,7 @@ var _ = ginkgo.Describe("try create tars server and check filed", func() {
 	opts := &scaffold.Options{
 		Name:      "default",
 		K8SConfig: scaffold.GetK8SConfigFile(),
-		SyncTime:  1500 * time.Millisecond,
+		SyncTime:  800 * time.Millisecond,
 	}
 
 	s := scaffold.NewScaffold(opts)
@@ -95,6 +95,10 @@ var _ = ginkgo.Describe("try create tars server and check filed", func() {
 		_, err = s.CRDClient.CrdV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		time.Sleep(s.Opts.SyncTime)
+	})
+
+	ginkgo.AfterEach(func() {
+		_ = s.CRDClient.CrdV1beta2().TServers(s.Namespace).Delete(context.TODO(), Resource, k8sMetaV1.DeleteOptions{})
 	})
 
 	ginkgo.It("check filed value", func() {

@@ -18,7 +18,7 @@ var _ = ginkgo.Describe("test app level config", func() {
 	opts := &scaffold.Options{
 		Name:      "default",
 		K8SConfig: scaffold.GetK8SConfigFile(),
-		SyncTime:  1500 * time.Millisecond,
+		SyncTime:  800 * time.Millisecond,
 	}
 	s := scaffold.NewScaffold(opts)
 
@@ -226,23 +226,19 @@ var _ = ginkgo.Describe("test app level config", func() {
 			assert.True(ginkgo.GinkgoT(), scaffold.CheckLeftInRight(exceptedNewTConfigLabels, newTConfig.Labels))
 
 			time.Sleep(s.Opts.SyncTime)
-			exceptedAfterCreateNewLabels := map[string]string{
-				tarsMeta.TServerAppLabel:       ServerApp,
-				tarsMeta.TServerNameLabel:      "",
-				tarsMeta.TConfigPodSeqLabel:    "m",
-				tarsMeta.TConfigActivatedLabel: "false",
-			}
 			oldTConfig, err := s.CRDClient.CrdV1beta1().TConfigs(s.Namespace).Get(context.TODO(), ResourceName, k8sMetaV1.GetOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.NotNil(ginkgo.GinkgoT(), oldTConfig)
-			assert.True(ginkgo.GinkgoT(), scaffold.CheckLeftInRight(exceptedAfterCreateNewLabels, oldTConfig.Labels))
+			assert.True(ginkgo.GinkgoT(), k8sMetaV1.HasLabel(oldTConfig.ObjectMeta, tarsMeta.TConfigDeactivateLabel) || oldTConfig.Activated == false)
 
 			err = s.CRDClient.CrdV1beta1().TConfigs(s.Namespace).Delete(context.TODO(), NewResourceName, k8sMetaV1.DeleteOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 
 			time.Sleep(s.Opts.SyncTime)
 			oldTConfig, err = s.CRDClient.CrdV1beta1().TConfigs(s.Namespace).Get(context.TODO(), ResourceName, k8sMetaV1.GetOptions{})
-			assert.NotNil(ginkgo.GinkgoT(), err)
+			if err == nil {
+				assert.True(ginkgo.GinkgoT(), k8sMetaV1.HasLabel(oldTConfig.ObjectMeta, tarsMeta.TConfigDeletingLabel))
+			}
 		})
 	})
 
