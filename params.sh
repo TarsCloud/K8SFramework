@@ -24,7 +24,7 @@ _CONTROLLER_SERVERS_="tarscontroller tarsagent"
 _FRAMEWORK_SERVERS_="tarskaniko tarsimage  tarsnode tarsAdminRegistry tarsregistry tarsconfig tarslog tarsnotify tarsstat tarsproperty \
                      tarsquerystat tarsqueryproperty tarskevent tarsweb elasticsearch"
 
-_CRD_SERVED_VERSIONS_="v1beta1 v1beta2 v1beta3"
+_CRD_SERVED_VERSIONS_="v1beta2 v1beta3"
 _CRD_STORAGE_VERSION_="v1beta3"
 
 _PARAMS_="TARS_CPP_DIR TARS_WEB_DIR                                                                                  \
