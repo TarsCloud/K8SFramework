@@ -3,6 +3,7 @@ package v1beta2
 import (
 	"context"
 	"e2e/scaffold"
+	"fmt"
 	"github.com/onsi/ginkgo"
 	"github.com/stretchr/testify/assert"
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -235,6 +236,8 @@ var _ = ginkgo.Describe("test server level config", func() {
 			oldTConfig, err := s.CRDClient.CrdV1beta2().TConfigs(s.Namespace).Get(context.TODO(), ResourceName, k8sMetaV1.GetOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.NotNil(ginkgo.GinkgoT(), oldTConfig)
+			bs, _ := json.Marshal(oldTConfig)
+			fmt.Printf("get oldTconfig: %s\n", bs)
 			assert.True(ginkgo.GinkgoT(), k8sMetaV1.HasLabel(oldTConfig.ObjectMeta, tarsMeta.TConfigDeactivateLabel) || oldTConfig.Activated == false)
 
 			err = s.CRDClient.CrdV1beta2().TConfigs(s.Namespace).Delete(context.TODO(), NewResourceName, k8sMetaV1.DeleteOptions{})

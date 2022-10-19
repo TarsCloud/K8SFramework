@@ -36,6 +36,27 @@ func prepareActiveTConfig(newTConfig *tarsCrdV1beta2.TConfig, clients *controlle
 		return err
 	}
 
+	var names []string
+	for _, tconfig := range tconfigs {
+		v := tconfig.(k8sMetaV1.Object)
+		name := v.GetName()
+		if name == newTConfig.Name {
+			continue
+		}
+		names = append(names, name)
+	}
+
+	counts := len(names)
+	if counts == 0 {
+		return nil
+	}
+
+	if counts != 1 {
+		err = fmt.Errorf("get unexpected number of activated tconfigs %s/%s-%s/%s:%s", namespace, newTConfig.App, newTConfig.Server, newTConfig.ConfigName, newTConfig.PodSeq)
+		utilRuntime.HandleError(err)
+		return err
+	}
+
 	jsonPatch := tarsMeta.JsonPatch{
 		tarsMeta.JsonPatchItem{
 			OP:    tarsMeta.JsonPatchAdd,
@@ -44,20 +65,11 @@ func prepareActiveTConfig(newTConfig *tarsCrdV1beta2.TConfig, clients *controlle
 		},
 	}
 	patchContent, _ := json.Marshal(jsonPatch)
-	for _, tconfig := range tconfigs {
-		v := tconfig.(k8sMetaV1.Object)
-		name := v.GetName()
-
-		if name == newTConfig.Name {
-			continue
-		}
-
-		_, err = clients.CrdClient.CrdV1beta2().TConfigs(namespace).Patch(context.TODO(), name, patchTypes.JSONPatchType, patchContent, k8sMetaV1.PatchOptions{})
-		if err != nil {
-			err = fmt.Errorf(tarsMeta.ResourcePatchError, "tconfig", namespace, name, err.Error())
-			utilRuntime.HandleError(err)
-			return err
-		}
+	_, err = clients.CrdClient.CrdV1beta3().TConfigs(namespace).Patch(context.TODO(), names[0], patchTypes.JSONPatchType, patchContent, k8sMetaV1.PatchOptions{})
+	if err != nil {
+		err = fmt.Errorf(tarsMeta.ResourcePatchError, "tconfig", namespace, names[0], err.Error())
+		utilRuntime.HandleError(err)
+		return err
 	}
 	return nil
 }
