@@ -15,6 +15,7 @@ import (
 	tarsMeta "k8s.tars.io/meta"
 	"strings"
 	"tarscontroller/controller"
+	"time"
 )
 
 func prepareActiveTConfig(newTConfig *tarsCrdV1beta2.TConfig, clients *controller.Clients, informers *controller.Informers) error {
@@ -158,6 +159,8 @@ func validCreateTConfig(clients *controller.Clients, informers *controller.Infor
 	newTConfig := &tarsCrdV1beta2.TConfig{}
 	_ = json.Unmarshal(view.Request.Object.Raw, newTConfig)
 
+	fmt.Printf("xxxx validating create tconfig v1b2 %s/%s at %d", newTConfig.Namespace, newTConfig.Name, time.Now().UnixMilli())
+
 	if _, ok := newTConfig.Labels[tarsMeta.TConfigDeactivateLabel]; ok {
 		return fmt.Errorf("can not set label [%s] when create", tarsMeta.TConfigDeactivateLabel)
 	}
@@ -210,6 +213,9 @@ func validUpdateTConfig(clients *controller.Clients, informers *controller.Infor
 	}
 	newTConfig := &tarsCrdV1beta2.TConfig{}
 	_ = json.Unmarshal(view.Request.Object.Raw, newTConfig)
+
+	fmt.Printf("xxxx validating update tconfig v1b2 %s/%s at %d", newTConfig.Namespace, newTConfig.Name, time.Now().UnixMilli())
+
 	oldTConfig := &tarsCrdV1beta2.TConfig{}
 	_ = json.Unmarshal(view.Request.OldObject.Raw, oldTConfig)
 
@@ -270,6 +276,7 @@ func validDeleteTConfig(clients *controller.Clients, informers *controller.Infor
 
 	tconfig := &tarsCrdV1beta2.TConfig{}
 	_ = json.Unmarshal(view.Request.OldObject.Raw, tconfig)
+	fmt.Printf("xxxx validating delete tconfig v1b2 %s/%s at %d", tconfig.Namespace, tconfig.Name, time.Now().UnixMilli())
 
 	if !tconfig.Activated {
 		return nil

@@ -34,6 +34,8 @@ func (r *TConfigReconciler) splitAddKey(key string) (namespace, app, server, con
 	return v[0], v[1], v[2], v[3], v[4]
 }
 
+var mapEnqueueTime = make(map[string]int64)
+
 func (r *TConfigReconciler) EnqueueObj(resourceName string, resourceEvent k8sWatchV1.EventType, resourceObj interface{}) {
 	if resourceName != "tconfig" {
 		return
@@ -56,11 +58,21 @@ func (r *TConfigReconciler) EnqueueObj(resourceName string, resourceEvent k8sWat
 		podSeq, _ := objLabels[tarsMeta.TConfigPodSeqLabel]
 		key = fmt.Sprintf("%s/%s/%s/%s/%s", namespace, app, server, configName, podSeq)
 		r.addQueue.Add(key)
+		now := time.Now().UnixMilli()
+		fmt.Printf("xxxx enqueue tconfig %s at %d", key, now)
+		mapEnqueueTime[key] = now
 	}
 	return
 }
 
 func (r *TConfigReconciler) reconcileAdd(key string) reconcile.Result {
+	begin := time.Now().UnixMilli()
+	defer func() {
+		end := time.Now().UnixMilli()
+		fmt.Printf("xxxx defer tconfig %s at %d, %d, %d, cost: %d, %d\n", key, mapEnqueueTime[key], begin, end, end-begin, end-mapEnqueueTime[key])
+		delete(mapEnqueueTime, key)
+	}()
+
 	namespace, app, server, configName, podSeq := r.splitAddKey(key)
 	appRequirement, _ := labels.NewRequirement(tarsMeta.TServerAppLabel, selection.DoubleEquals, []string{app})
 	serverRequirement, _ := labels.NewRequirement(tarsMeta.TServerNameLabel, selection.DoubleEquals, []string{server})
