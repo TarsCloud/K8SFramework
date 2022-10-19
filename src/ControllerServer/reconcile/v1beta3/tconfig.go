@@ -47,6 +47,8 @@ func (r *TConfigReconciler) EnqueueObj(resourceName string, resourceEvent k8sWat
 	case k8sWatchV1.Deleted:
 		r.deleteQueue.Add(namespace)
 	case k8sWatchV1.Added:
+		r.modifyQueue.Add(namespace)
+		r.deleteQueue.Add(namespace)
 		objLabels := tconfigMetadataObj.GetLabels()
 		app, _ := objLabels[tarsMeta.TServerAppLabel]
 		server, _ := objLabels[tarsMeta.TServerNameLabel]
