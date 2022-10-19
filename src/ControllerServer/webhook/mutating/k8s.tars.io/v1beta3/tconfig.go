@@ -14,7 +14,6 @@ import (
 func mutatingCreateTConfig(requestAdmissionView *k8sAdmissionV1.AdmissionReview) ([]byte, error) {
 	tconfig := &tarsCrdV1beta3.TConfig{}
 	_ = json.Unmarshal(requestAdmissionView.Request.Object.Raw, tconfig)
-	fmt.Printf("xxxx mutating create tconfig v1b3 %s/%s at %d", tconfig.Namespace, tconfig.Name, time.Now().UnixMilli())
 
 	var jsonPatch tarsMeta.JsonPatch
 
@@ -85,7 +84,7 @@ func mutatingCreateTConfig(requestAdmissionView *k8sAdmissionV1.AdmissionReview)
 func mutatingUpdateTConfig(requestAdmissionView *k8sAdmissionV1.AdmissionReview) ([]byte, error) {
 	tconfig := &tarsCrdV1beta3.TConfig{}
 	_ = json.Unmarshal(requestAdmissionView.Request.Object.Raw, tconfig)
-	fmt.Printf("xxxx mutating update tconfig v1b3 %s/%s at %d", tconfig.Namespace, tconfig.Name, time.Now().UnixMilli())
+
 	var jsonPatch tarsMeta.JsonPatch
 
 	if tconfig.Labels == nil {

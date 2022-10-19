@@ -171,8 +171,6 @@ func validCreateTConfig(clients *controller.Clients, informers *controller.Infor
 	newTConfig := &tarsCrdV1beta3.TConfig{}
 	_ = json.Unmarshal(view.Request.Object.Raw, newTConfig)
 
-	fmt.Printf("xxxx validating create tconfig v1b3 %s/%s at %d", newTConfig.Namespace, newTConfig.Name, time.Now().UnixMilli())
-
 	if _, ok := newTConfig.Labels[tarsMeta.TConfigDeactivateLabel]; ok {
 		return fmt.Errorf("can not set label [%s] when create", tarsMeta.TConfigDeactivateLabel)
 	}
@@ -225,8 +223,6 @@ func validUpdateTConfig(clients *controller.Clients, informers *controller.Infor
 	}
 	newTConfig := &tarsCrdV1beta3.TConfig{}
 	_ = json.Unmarshal(view.Request.Object.Raw, newTConfig)
-
-	fmt.Printf("xxxx validating update tconfig v1b3 %s/%s at %d", newTConfig.Namespace, newTConfig.Name, time.Now().UnixMilli())
 
 	oldTConfig := &tarsCrdV1beta3.TConfig{}
 	_ = json.Unmarshal(view.Request.OldObject.Raw, oldTConfig)
@@ -289,10 +285,12 @@ func validDeleteTConfig(clients *controller.Clients, informers *controller.Infor
 	tconfig := &tarsCrdV1beta3.TConfig{}
 	_ = json.Unmarshal(view.Request.OldObject.Raw, tconfig)
 
-	fmt.Printf("xxxx validating delete tconfig v1b3 %s/%s at %d", tconfig.Namespace, tconfig.Name, time.Now().UnixMilli())
-
 	if !tconfig.Activated {
 		return nil
+	}
+
+	if !tconfig.CreationTimestamp.Add(48 * time.Second).Before(time.Now()) {
+		return fmt.Errorf("tconfig during deletion guard time(48s)")
 	}
 
 	if _, ok := tconfig.Labels[tarsMeta.TConfigDeactivateLabel]; ok {

@@ -3,7 +3,6 @@ package v1beta1
 import (
 	"context"
 	"e2e/scaffold"
-	"fmt"
 	"github.com/onsi/ginkgo"
 	"github.com/stretchr/testify/assert"
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -230,11 +229,14 @@ var _ = ginkgo.Describe("test app level config", func() {
 			oldTConfig, err := s.CRDClient.CrdV1beta1().TConfigs(s.Namespace).Get(context.TODO(), ResourceName, k8sMetaV1.GetOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.NotNil(ginkgo.GinkgoT(), oldTConfig)
-			bs, _ := json.Marshal(oldTConfig)
-			fmt.Printf("get oldTconfig: %s\n", bs)
 			assert.True(ginkgo.GinkgoT(), k8sMetaV1.HasLabel(oldTConfig.ObjectMeta, tarsMeta.TConfigDeactivateLabel) || oldTConfig.Activated == false)
 
 			err = s.CRDClient.CrdV1beta1().TConfigs(s.Namespace).Delete(context.TODO(), NewResourceName, k8sMetaV1.DeleteOptions{})
+			assert.NotNil(ginkgo.GinkgoT(), err)
+			assert.True(ginkgo.GinkgoT(), strings.Contains(err.Error(), "during deletion guard time"))
+
+			time.Sleep(50 * time.Second) //skip tconfig deletion guard time
+			err = s.CRDClient.CrdV1beta2().TConfigs(s.Namespace).Delete(context.TODO(), NewResourceName, k8sMetaV1.DeleteOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 
 			time.Sleep(s.Opts.SyncTime)

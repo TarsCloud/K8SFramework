@@ -251,7 +251,7 @@ e2e.controller:
 	@echo "$@ -> [ Start ]"
 	@mkdir -p cache/linux/amd64/go
 	$(ENV_DOCKER_RUN) --rm -v $(PWD)/src:/src -v $(PWD)/t:/t -v $(PWD)/cache/linux/amd64/build:/build -v $(PWD)/cache/linux/amd64/go:/go linux/amd64/tarscompiler:$(BUILD_VERSION) e2e.controller
-	cache/linux/amd64/build/bin/e2e.controller
+	cache/linux/amd64/build/bin/e2e.controller --ginkgo.progress 4
 	@echo "$@ -> [ Done ]"
 
 ### e2e.framework : framework servers e2e test

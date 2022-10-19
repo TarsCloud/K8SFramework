@@ -226,3 +226,7 @@ jobs:
 
       - name: Run e2e.framework test
         run: make e2e.framework NAMESPACE=tars
+
+      - name: Show Controller logs
+        if: ${{ failure() }}
+        run: kubectl get pods -n tars-system |grep tars |awk '{system("kubectl logs -n tars-system " $1)}'
