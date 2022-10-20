@@ -18,6 +18,8 @@ const (
 	DefaultPerm = "0755"
 
 	NodeNameEnv = "NodeName"
+
+	TLVInPod = "/usr/local/app/tars/host-mount"
 )
 
 type ProvisioningState string

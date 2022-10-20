@@ -11,6 +11,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"tarsagent/gflag"
 )
 
 type TLocalProvisioner struct {
@@ -41,17 +42,14 @@ type TLocalVolumeModeInfo struct {
 
 // newTLocalProvisioner creates a new tars local provisioner
 func newTLocalProvisioner() *TLocalProvisioner {
-	node := os.Getenv(NodeNameEnv)
-	if node == "" {
-		klog.Fatal("env variable NodeName must be set so that this provisioner can identify itself")
-	}
+	node := gflag.NodeName
 	h := fnv.New32a()
-	_, _ = h.Write([]byte(node))
+	_, _ = h.Write([]byte(gflag.NodeName))
 	_, _ = h.Write([]byte(tarsMeta.TStorageClassName))
 
 	return &TLocalProvisioner{
-		podBase:            "/usr/local/app/tars/host-mount",
-		hostBase:           "/usr/local/app/tars/host-mount",
+		podBase:            TLVInPod,
+		hostBase:           gflag.TLVInHost,
 		identity:           fmt.Sprintf("%x", h.Sum32()),
 		node:               node,
 		name:               TLVPVProvisioner,

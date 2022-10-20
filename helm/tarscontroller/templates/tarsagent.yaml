@@ -84,6 +84,8 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
+            - name: TLVInHost
+              value: {{.Values.agent.tlv_in_host}}
           volumeMounts:
             - mountPath: /etc/tarsagent
               name: etc-tarsagent-dir

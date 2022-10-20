@@ -3,7 +3,6 @@ package storage
 import (
 	"context"
 	"fmt"
-	"golang.org/x/time/rate"
 	k8sCoreV1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -337,11 +336,7 @@ func (r *Reconciler) Start(stopCh chan struct{}) {
 }
 
 func NewReconciler(k8sClient kubernetes.Interface, claimInformer k8sInformersCoreV1.PersistentVolumeClaimInformer, volumeInformer k8sInformersCoreV1.PersistentVolumeInformer, provision *TLocalProvisioner) *Reconciler {
-	rateLimiter := workqueue.NewMaxOfRateLimiter(
-		workqueue.NewItemExponentialFailureRateLimiter(15*time.Second, 15*time.Second),
-		&workqueue.BucketRateLimiter{Limiter: rate.NewLimiter(rate.Limit(10), 100)},
-	)
-
+	rateLimiter := workqueue.NewItemExponentialFailureRateLimiter(1*time.Second, 30*time.Second)
 	return &Reconciler{
 		k8sClient:      k8sClient,
 		claimInformer:  claimInformer,
