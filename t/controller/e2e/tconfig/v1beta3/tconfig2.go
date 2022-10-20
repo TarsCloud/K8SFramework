@@ -313,6 +313,8 @@ var _ = ginkgo.Describe("test server level config", func() {
 			}
 			assert.True(ginkgo.GinkgoT(), scaffold.CheckLeftInRight(slaveConfigExceptedLabels, slaveTConfig.Labels))
 
+			time.Sleep(50 * time.Second) //skip tconfig deletion guard time
+
 			err = s.CRDClient.CrdV1beta3().TConfigs(s.Namespace).Delete(context.TODO(), ResourceName, k8sMetaV1.DeleteOptions{})
 			assert.NotNil(ginkgo.GinkgoT(), err)
 

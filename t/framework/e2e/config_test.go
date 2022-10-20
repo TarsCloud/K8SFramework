@@ -154,6 +154,7 @@ func TestAppLevelTConfig(t *testing.T) {
 			return ctx
 		}).
 		Teardown(func(ctx context.Context, t *testing.T, config *envconf.Config) context.Context {
+			time.Sleep(50 * time.Second) //skip tconfig deletion guard time
 			_ = r.Delete(ctx, v1Tconfig)
 			_ = r.Delete(ctx, v2Tconfig)
 			return ctx
@@ -332,6 +333,7 @@ func TestServerLevelTConfig(t *testing.T) {
 			return ctx
 		}).
 		Teardown(func(ctx context.Context, t *testing.T, config *envconf.Config) context.Context {
+			time.Sleep(50 * time.Second) //skip tconfig deletion guard time
 			_ = r.Delete(ctx, slaveTconfig)
 			_ = r.Delete(ctx, v2Tconfig)
 			_ = r.Delete(ctx, v1Tconfig)
