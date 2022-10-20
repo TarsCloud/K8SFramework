@@ -4,6 +4,7 @@ go 1.15
 
 require (
 	golang.org/x/crypto v0.0.0-20201002170205-7f63de1d35b0
+	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e
 	k8s.io/api v0.20.15
 	k8s.io/apiextensions-apiserver v0.20.15
 	k8s.io/apimachinery v0.20.15
