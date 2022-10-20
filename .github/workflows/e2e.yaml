@@ -113,6 +113,10 @@ jobs:
       - name: Run e2e.controller test
         run: make e2e.controller
 
+      - name: Show Controller logs
+        if: ${{ failure() }}
+        run: kubectl get pods -n tars-system |grep tars |awk '{system("kubectl logs -n tars-system " $1)}'
+
   prepare-framework:
     runs-on: ubuntu-latest
     timeout-minutes: 90
@@ -229,4 +233,5 @@ jobs:
 
       - name: Show Controller logs
         if: ${{ failure() }}
-        run: kubectl get pods -n tars-system |grep tars |awk '{system("kubectl logs -n tars-system " $1)}'
+        run:
+          kubectl get pods -n tars-system |grep tars |awk '{system("kubectl logs -n tars-system " $1)}'

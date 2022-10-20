@@ -33,7 +33,7 @@ func NewPVCReconciler(clients *controller.Clients, informers *controller.Informe
 		clients:   clients,
 		informers: informers,
 		threads:   threads,
-		workQueue: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), ""),
+		workQueue: workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 	}
 	informers.Register(reconciler)
 	return reconciler
@@ -59,10 +59,10 @@ func (r *PVCReconciler) processItem() bool {
 	res := r.reconcile(key)
 
 	switch res {
-	case reconcile.AllOk:
+	case reconcile.Done:
 		r.workQueue.Forget(obj)
 		return true
-	case reconcile.RateLimit:
+	case reconcile.Retry:
 		r.workQueue.AddRateLimited(obj)
 		return true
 	case reconcile.FatalError:
@@ -132,20 +132,20 @@ func (r *PVCReconciler) reconcile(key string) reconcile.Result {
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
 		utilRuntime.HandleError(fmt.Errorf("invalid key: %s", key))
-		return reconcile.AllOk
+		return reconcile.Done
 	}
 
 	tserver, err := r.informers.TServerInformer.Lister().TServers(namespace).Get(name)
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "tserver", namespace, name, err.Error()))
-			return reconcile.RateLimit
+			return reconcile.Retry
 		}
-		return reconcile.AllOk
+		return reconcile.Done
 	}
 
 	if tserver.DeletionTimestamp != nil || tserver.Spec.K8S.DaemonSet {
-		return reconcile.AllOk
+		return reconcile.Done
 	}
 
 	annotations := buildPVCAnnotations(tserver)
@@ -162,7 +162,7 @@ func (r *PVCReconciler) reconcile(key string) reconcile.Result {
 				continue
 			}
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceSelectorError, namespace, "persistentVolumeclaims", err.Error()))
-			return reconcile.RateLimit
+			return reconcile.Retry
 		}
 
 		for _, pvc := range pvcs {
@@ -186,7 +186,7 @@ func (r *PVCReconciler) reconcile(key string) reconcile.Result {
 		}
 	}
 	if retry {
-		return reconcile.RateLimit
+		return reconcile.Retry
 	}
-	return reconcile.AllOk
+	return reconcile.Done
 }

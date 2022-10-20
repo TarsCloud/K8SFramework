@@ -347,7 +347,7 @@ func NewReconciler(k8sClient kubernetes.Interface, claimInformer k8sInformersCor
 		claimInformer:  claimInformer,
 		volumeInformer: volumeInformer,
 		provision:      provision,
-		claimQueue:     workqueue.NewNamedRateLimitingQueue(rateLimiter, "claims"),
-		volumeQueue:    workqueue.NewNamedRateLimitingQueue(rateLimiter, "volumes"),
+		claimQueue:     workqueue.NewRateLimitingQueue(rateLimiter),
+		volumeQueue:    workqueue.NewRateLimitingQueue(rateLimiter),
 	}
 }

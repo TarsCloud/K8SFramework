@@ -33,7 +33,7 @@ func NewTImageReconciler(clients *controller.Clients, informers *controller.Info
 		clients:   clients,
 		informers: informers,
 		threads:   threads,
-		workQueue: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), ""),
+		workQueue: workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 	}
 	informers.Register(reconciler)
 	return reconciler
@@ -43,11 +43,8 @@ func (r *TImageReconciler) EnqueueObj(resourceName string, resourceEvent k8sWatc
 	switch resourceObj.(type) {
 	case *tarsCrdV1beta3.TImage:
 		timage := resourceObj.(*tarsCrdV1beta3.TImage)
-
 		if timage.ImageType == "node" {
-
 		}
-
 		if timage.ImageType == "server" {
 			if timage.Build != nil && timage.Build.Running != nil {
 				maxBuildTime := tarsMeta.DefaultMaxImageBuildTime
@@ -58,7 +55,6 @@ func (r *TImageReconciler) EnqueueObj(resourceName string, resourceEvent k8sWatc
 				r.workQueue.AddAfter(key, time.Duration(maxBuildTime)*time.Second)
 			}
 		}
-
 	default:
 		return
 	}
@@ -83,10 +79,10 @@ func (r *TImageReconciler) processItem() bool {
 
 	res := r.reconcile(key)
 	switch res {
-	case reconcile.AllOk:
+	case reconcile.Done:
 		r.workQueue.Forget(obj)
 		return true
-	case reconcile.RateLimit:
+	case reconcile.Retry:
 		r.workQueue.AddRateLimited(obj)
 		return true
 	case reconcile.FatalError:
@@ -120,10 +116,10 @@ func (r *TImageReconciler) reconcile(key string) reconcile.Result {
 	timage, err := r.informers.TImageInformer.Lister().TImages(namespace).Get(name)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			return reconcile.AllOk
+			return reconcile.Done
 		}
 		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "timage", namespace, name, err.Error()))
-		return reconcile.RateLimit
+		return reconcile.Retry
 	}
 
 	var jsonPatch tarsMeta.JsonPatch
@@ -131,7 +127,7 @@ func (r *TImageReconciler) reconcile(key string) reconcile.Result {
 	switch target {
 	case reconcileTargetCheckImageBuildOvertime:
 		if timage.Build == nil || timage.Build.Running == nil || value != timage.Build.Running.ID {
-			return reconcile.AllOk
+			return reconcile.Done
 		}
 		buildState := tarsCrdV1beta3.TImageBuild{
 			Last: &tarsCrdV1beta3.TImageBuildState{
@@ -160,8 +156,8 @@ func (r *TImageReconciler) reconcile(key string) reconcile.Result {
 		_, err = r.clients.CrdClient.CrdV1beta3().TImages(namespace).Patch(context.TODO(), name, types.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		if err != nil {
 			utilRuntime.HandleError(err)
-			return reconcile.RateLimit
+			return reconcile.Retry
 		}
 	}
-	return reconcile.AllOk
+	return reconcile.Done
 }

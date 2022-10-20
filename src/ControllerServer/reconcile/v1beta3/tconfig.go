@@ -24,6 +24,7 @@ import (
 type TConfigReconciler struct {
 	clients     *controller.Clients
 	informers   *controller.Informers
+	threads     int
 	addQueue    workqueue.RateLimitingInterface
 	modifyQueue workqueue.RateLimitingInterface
 	deleteQueue workqueue.RateLimitingInterface
@@ -40,22 +41,21 @@ func (r *TConfigReconciler) EnqueueObj(resourceName string, resourceEvent k8sWat
 	}
 	tconfigMetadataObj := resourceObj.(k8sMetaV1.Object)
 	namespace := tconfigMetadataObj.GetNamespace()
-	var key string
 	switch resourceEvent {
-	case k8sWatchV1.Modified:
-		r.modifyQueue.Add(namespace)
-	case k8sWatchV1.Deleted:
-		r.deleteQueue.Add(namespace)
 	case k8sWatchV1.Added:
 		r.modifyQueue.Add(namespace)
-		r.deleteQueue.Add(namespace)
 		objLabels := tconfigMetadataObj.GetLabels()
 		app, _ := objLabels[tarsMeta.TServerAppLabel]
 		server, _ := objLabels[tarsMeta.TServerNameLabel]
 		configName, _ := objLabels[tarsMeta.TConfigNameLabel]
 		podSeq, _ := objLabels[tarsMeta.TConfigPodSeqLabel]
-		key = fmt.Sprintf("%s/%s/%s/%s/%s", namespace, app, server, configName, podSeq)
+		key := fmt.Sprintf("%s/%s/%s/%s/%s", namespace, app, server, configName, podSeq)
 		r.addQueue.Add(key)
+	case k8sWatchV1.Modified:
+		r.modifyQueue.Add(namespace)
+		r.deleteQueue.Add(namespace)
+	case k8sWatchV1.Deleted:
+		r.deleteQueue.Add(namespace)
 	}
 	return
 }
@@ -76,7 +76,7 @@ func (r *TConfigReconciler) reconcileAdd(key string) reconcile.Result {
 	tconfigs, err := r.informers.TConfigInformer.Lister().ByNamespace(namespace).List(labelSelector)
 	if err != nil && !errors.IsNotFound(err) {
 		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceSelectorError, namespace, "tconfig", err.Error()))
-		return reconcile.RateLimit
+		return reconcile.Retry
 	}
 
 	maxTConfigHistory := tarsMeta.DefaultMaxTConfigHistory
@@ -85,8 +85,9 @@ func (r *TConfigReconciler) reconcileAdd(key string) reconcile.Result {
 	}
 
 	if len(tconfigs) <= maxTConfigHistory {
-		return reconcile.AllOk
+		return reconcile.Done
 	}
+
 	var versions []string
 	for _, tconfig := range tconfigs {
 		obj := tconfig.(k8sMetaV1.Object)
@@ -115,10 +116,10 @@ func (r *TConfigReconciler) reconcileAdd(key string) reconcile.Result {
 
 	if err != nil {
 		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceDeleteCollectionError, "tconfig", labelSelector.String(), err.Error()))
-		return reconcile.RateLimit
+		return reconcile.Retry
 	}
 
-	return reconcile.AllOk
+	return reconcile.Done
 }
 
 func (r *TConfigReconciler) reconcileModify(key string) reconcile.Result {
@@ -128,7 +129,7 @@ func (r *TConfigReconciler) reconcileModify(key string) reconcile.Result {
 	tconfigs, err := r.informers.TConfigInformer.Lister().ByNamespace(namespace).List(deactivateLabelSelector)
 	if err != nil && !errors.IsNotFound(err) {
 		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceSelectorError, namespace, "tconfig", err.Error()))
-		return reconcile.RateLimit
+		return reconcile.Retry
 	}
 
 	jsonPatch := tarsMeta.JsonPatch{
@@ -160,9 +161,9 @@ func (r *TConfigReconciler) reconcileModify(key string) reconcile.Result {
 		}
 	}
 	if retry {
-		return reconcile.RateLimit
+		return reconcile.Retry
 	}
-	return reconcile.AllOk
+	return reconcile.Done
 }
 
 func (r *TConfigReconciler) reconcileDelete(key string) reconcile.Result {
@@ -174,15 +175,17 @@ func (r *TConfigReconciler) reconcileDelete(key string) reconcile.Result {
 	})
 	if err != nil {
 		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceDeleteCollectionError, "tconfig", deletingLabelSelector.String(), err.Error()))
-		return reconcile.RateLimit
+		return reconcile.Retry
 	}
-	return reconcile.AllOk
+	return reconcile.Done
 }
 
 func (r *TConfigReconciler) Start(stopCh chan struct{}) {
-	go wait.Until(func() { r.processItem(r.addQueue, r.reconcileAdd) }, time.Second, stopCh)
-	go wait.Until(func() { r.processItem(r.modifyQueue, r.reconcileModify) }, time.Second, stopCh)
-	go wait.Until(func() { r.processItem(r.deleteQueue, r.reconcileDelete) }, time.Second, stopCh)
+	for i := 0; i < r.threads; i++ {
+		go wait.Until(func() { r.processItem(r.addQueue, r.reconcileAdd) }, time.Second, stopCh)
+		go wait.Until(func() { r.processItem(r.modifyQueue, r.reconcileModify) }, time.Second, stopCh)
+		go wait.Until(func() { r.processItem(r.deleteQueue, r.reconcileDelete) }, time.Second, stopCh)
+	}
 }
 
 func (r *TConfigReconciler) processItem(queue workqueue.RateLimitingInterface, reconciler func(key string) reconcile.Result) bool {
@@ -203,10 +206,10 @@ func (r *TConfigReconciler) processItem(queue workqueue.RateLimitingInterface, r
 
 	res := reconciler(key)
 	switch res {
-	case reconcile.AllOk:
+	case reconcile.Done:
 		queue.Forget(obj)
 		return true
-	case reconcile.RateLimit:
+	case reconcile.Retry:
 		queue.AddRateLimited(obj)
 		return true
 	case reconcile.FatalError:
@@ -219,13 +222,14 @@ func (r *TConfigReconciler) processItem(queue workqueue.RateLimitingInterface, r
 	}
 }
 
-func NewTConfigReconciler(clients *controller.Clients, informers *controller.Informers, _ int) *TConfigReconciler {
+func NewTConfigReconciler(clients *controller.Clients, informers *controller.Informers, threads int) *TConfigReconciler {
 	reconciler := &TConfigReconciler{
 		clients:     clients,
 		informers:   informers,
-		addQueue:    workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "add"),
-		modifyQueue: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "modify"),
-		deleteQueue: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "delete"),
+		threads:     threads,
+		addQueue:    workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
+		modifyQueue: workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
+		deleteQueue: workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 	}
 	informers.Register(reconciler)
 	return reconciler

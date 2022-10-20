@@ -56,10 +56,10 @@ func (r *ServiceReconciler) processItem() bool {
 	res := r.reconcile(key)
 
 	switch res {
-	case reconcile.AllOk:
+	case reconcile.Done:
 		r.workQueue.Forget(obj)
 		return true
-	case reconcile.RateLimit:
+	case reconcile.Retry:
 		r.workQueue.AddRateLimited(obj)
 		return true
 	case reconcile.AddAfter:
@@ -108,46 +108,46 @@ func (r *ServiceReconciler) reconcile(key string) reconcile.Result {
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
 		utilRuntime.HandleError(fmt.Errorf("invalid key: %s", key))
-		return reconcile.AllOk
+		return reconcile.Done
 	}
 
 	tserver, err := r.informers.TServerInformer.Lister().TServers(namespace).Get(name)
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "tserver", namespace, name, err.Error()))
-			return reconcile.RateLimit
+			return reconcile.Retry
 		}
 		err = r.clients.K8sClient.CoreV1().Services(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
 		if err != nil && !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceDeleteError, "service", namespace, name, err.Error()))
-			return reconcile.RateLimit
+			return reconcile.Retry
 		}
-		return reconcile.AllOk
+		return reconcile.Done
 	}
 
 	if tserver.DeletionTimestamp != nil || tserver.Spec.K8S.DaemonSet {
 		err = r.clients.K8sClient.CoreV1().Services(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
 		if err != nil && !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceDeleteError, "service", namespace, name, err.Error()))
-			return reconcile.RateLimit
+			return reconcile.Retry
 		}
-		return reconcile.AllOk
+		return reconcile.Done
 	}
 
 	service, err := r.informers.ServiceInformer.Lister().Services(namespace).Get(name)
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "service", namespace, name, err.Error()))
-			return reconcile.RateLimit
+			return reconcile.Retry
 		}
 		service = buildService(tserver)
 		serviceInterface := r.clients.K8sClient.CoreV1().Services(namespace)
 		if _, err = serviceInterface.Create(context.TODO(), service, k8sMetaV1.CreateOptions{}); err != nil && !errors.IsAlreadyExists(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceCreateError, "service", namespace, name, err.Error()))
-			return reconcile.RateLimit
+			return reconcile.Retry
 		}
 
-		return reconcile.AllOk
+		return reconcile.Done
 	}
 
 	if service.DeletionTimestamp != nil {
@@ -158,7 +158,7 @@ func (r *ServiceReconciler) reconcile(key string) reconcile.Result {
 		// 此处意味着出现了非由 controller 管理的同名 service, 需要警告和重试
 		msg := fmt.Sprintf(tarsMeta.ResourceOutControlError, "service", namespace, service.Name, namespace, name)
 		controller.Event(tserver, k8sCoreV1.EventTypeWarning, tarsMeta.ResourceOutControlReason, msg)
-		return reconcile.RateLimit
+		return reconcile.Retry
 	}
 
 	anyChanged := !EqualTServerAndService(tserver, service)
@@ -169,9 +169,9 @@ func (r *ServiceReconciler) reconcile(key string) reconcile.Result {
 		serviceInterface := r.clients.K8sClient.CoreV1().Services(namespace)
 		if _, err := serviceInterface.Update(context.TODO(), serviceCopy, k8sMetaV1.UpdateOptions{}); err != nil {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceUpdateError, "service", namespace, name, err.Error()))
-			return reconcile.RateLimit
+			return reconcile.Retry
 		}
 	}
 
-	return reconcile.AllOk
+	return reconcile.Done
 }

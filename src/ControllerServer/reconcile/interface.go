@@ -5,8 +5,8 @@ import k8sWatchV1 "k8s.io/apimachinery/pkg/watch"
 type Result uint
 
 const (
-	AllOk      Result = 0
-	RateLimit  Result = 1
+	Done       Result = 0
+	Retry      Result = 1
 	FatalError Result = 2
 	AddAfter   Result = 3
 )

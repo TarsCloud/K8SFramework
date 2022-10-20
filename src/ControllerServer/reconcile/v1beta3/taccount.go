@@ -51,7 +51,7 @@ func NewTAccountReconciler(clients *controller.Clients, informers *controller.In
 		clients:   clients,
 		informers: informers,
 		threads:   threads,
-		workQueue: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), ""),
+		workQueue: workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 	}
 	informers.Register(reconciler)
 	return reconciler
@@ -76,10 +76,10 @@ func (r *TAccountReconciler) processItem() bool {
 
 	res, duration := r.reconcile(key)
 	switch res {
-	case reconcile.AllOk:
+	case reconcile.Done:
 		r.workQueue.Forget(obj)
 		return true
-	case reconcile.RateLimit:
+	case reconcile.Retry:
 		r.workQueue.AddRateLimited(obj)
 		return true
 	case reconcile.FatalError:
@@ -102,20 +102,20 @@ func (r *TAccountReconciler) reconcile(key string) (reconcile.Result, *time.Dura
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
 		utilRuntime.HandleError(fmt.Errorf("invalid key: %s", key))
-		return reconcile.AllOk, nil
+		return reconcile.Done, nil
 	}
 
 	taccount, err := r.informers.TAccountInformer.Lister().TAccounts(namespace).Get(name)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			return reconcile.AllOk, nil
+			return reconcile.Done, nil
 		}
 		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "taccount", namespace, name, err.Error()))
-		return reconcile.RateLimit, nil
+		return reconcile.Retry, nil
 	}
 
 	if taccount.Spec.Authentication.Tokens == nil || len(taccount.Spec.Authentication.Tokens) == 0 {
-		return reconcile.AllOk, nil
+		return reconcile.Done, nil
 	}
 
 	currentTime := k8sMetaV1.Now()
@@ -146,7 +146,7 @@ func (r *TAccountReconciler) reconcile(key string) (reconcile.Result, *time.Dura
 		_, err = r.clients.CrdClient.CrdV1beta3().TAccounts(namespace).Update(context.TODO(), newTaccount, k8sMetaV1.UpdateOptions{})
 		if err != nil {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourcePatchError, "taccount", namespace, name, err.Error()))
-			return reconcile.RateLimit, nil
+			return reconcile.Retry, nil
 		}
 	}
 

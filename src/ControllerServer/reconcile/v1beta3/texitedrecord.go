@@ -33,7 +33,7 @@ func NewTExitedPodReconciler(clients *controller.Clients, informers *controller.
 		clients:   clients,
 		informers: informers,
 		threads:   threads,
-		workQueue: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), ""),
+		workQueue: workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 	}
 	informers.Register(reconciler)
 	return reconciler
@@ -52,9 +52,9 @@ func (r *TExitedRecordReconciler) EnqueueObj(resourceName string, resourceEvent 
 	case *k8sCoreV1.Pod:
 		pod := resourceObj.(*k8sCoreV1.Pod)
 		if pod.DeletionTimestamp != nil && pod.UID != "" && pod.Labels != nil {
-			app, appExist := pod.Labels[tarsMeta.TServerAppLabel]
-			server, serverExist := pod.Labels[tarsMeta.TServerNameLabel]
-			if appExist && serverExist {
+			app := pod.Labels[tarsMeta.TServerAppLabel]
+			server := pod.Labels[tarsMeta.TServerNameLabel]
+			if app != "" && server != "" {
 				tExitedEvent := &tarsCrdV1beta3.TExitedRecord{
 					App:    app,
 					Server: server,
@@ -111,10 +111,10 @@ func (r *TExitedRecordReconciler) processItem() bool {
 	}
 
 	switch res {
-	case reconcile.AllOk:
+	case reconcile.Done:
 		r.workQueue.Forget(obj)
 		return true
-	case reconcile.RateLimit:
+	case reconcile.Retry:
 		r.workQueue.AddRateLimited(obj)
 		return true
 	case reconcile.FatalError:
@@ -143,40 +143,40 @@ func (r *TExitedRecordReconciler) reconcileBaseTServer(namespace string, name st
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "tserver", namespace, name, err.Error()))
-			return reconcile.RateLimit
+			return reconcile.Retry
 		}
 		err = r.clients.CrdClient.CrdV1beta3().TExitedRecords(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
 		if err != nil && !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceDeleteError, "texitedrecord", namespace, name, err.Error()))
-			return reconcile.RateLimit
+			return reconcile.Retry
 		}
-		return reconcile.AllOk
+		return reconcile.Done
 	}
 
 	if tserver.DeletionTimestamp != nil {
 		err = r.clients.CrdClient.CrdV1beta3().TExitedRecords(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
 		if err != nil && !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceDeleteError, "texitedrecord", namespace, name, err.Error()))
-			return reconcile.RateLimit
+			return reconcile.Retry
 		}
-		return reconcile.AllOk
+		return reconcile.Done
 	}
 
 	tExitedRecord, err := r.informers.TExitedRecordInformer.Lister().TExitedRecords(namespace).Get(name)
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "texitedrecord", namespace, name, err.Error()))
-			return reconcile.RateLimit
+			return reconcile.Retry
 		}
 		tExitedRecord = buildTExitedRecord(tserver)
 		tExitedPodInterface := r.clients.CrdClient.CrdV1beta3().TExitedRecords(namespace)
 		if _, err = tExitedPodInterface.Create(context.TODO(), tExitedRecord, k8sMetaV1.CreateOptions{}); err != nil && !errors.IsAlreadyExists(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceCreateError, "texitedrecord", namespace, name, err.Error()))
-			return reconcile.RateLimit
+			return reconcile.Retry
 		}
-		return reconcile.AllOk
+		return reconcile.Done
 	}
-	return reconcile.AllOk
+	return reconcile.Done
 }
 
 func (r *TExitedRecordReconciler) reconcileBasePod(namespace string, tExitedPodSpecString string) reconcile.Result {
@@ -188,9 +188,9 @@ func (r *TExitedRecordReconciler) reconcileBasePod(namespace string, tExitedPodS
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "texitedrecord", namespace, tExitedRecordName, err.Error()))
-			return reconcile.RateLimit
+			return reconcile.Retry
 		}
-		return reconcile.AllOk
+		return reconcile.Done
 	}
 
 	recordedPodsLen := len(tExitedRecord.Pods)
@@ -201,7 +201,7 @@ func (r *TExitedRecordReconciler) reconcileBasePod(namespace string, tExitedPodS
 	for i := 0; i < maxCheckLen; i++ {
 		if tExitedRecord.Pods[i].UID == tExitedEvent.Pods[0].UID {
 			// means exited events had recorded
-			return reconcile.AllOk
+			return reconcile.Done
 		}
 	}
 
@@ -231,8 +231,8 @@ func (r *TExitedRecordReconciler) reconcileBasePod(namespace string, tExitedPodS
 
 	if err != nil {
 		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourcePatchError, "texitedrecord", namespace, tExitedRecordName, err.Error()))
-		return reconcile.RateLimit
+		return reconcile.Retry
 	}
 
-	return reconcile.AllOk
+	return reconcile.Done
 }

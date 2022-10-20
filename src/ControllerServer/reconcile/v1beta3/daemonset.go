@@ -31,7 +31,7 @@ func NewDaemonSetReconciler(clients *controller.Clients, informers *controller.I
 		clients:   clients,
 		informers: informers,
 		threads:   threads,
-		workQueue: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), ""),
+		workQueue: workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 	}
 	informers.Register(reconciler)
 	return reconciler
@@ -57,10 +57,10 @@ func (r *DaemonSetReconciler) processItem() bool {
 	res := r.reconcile(key)
 
 	switch res {
-	case reconcile.AllOk:
+	case reconcile.Done:
 		r.workQueue.Forget(obj)
 		return true
-	case reconcile.RateLimit:
+	case reconcile.Retry:
 		r.workQueue.AddRateLimited(obj)
 		return true
 	case reconcile.AddAfter:
@@ -108,47 +108,47 @@ func (r *DaemonSetReconciler) reconcile(key string) reconcile.Result {
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
 		utilRuntime.HandleError(fmt.Errorf("invalid key: %s", key))
-		return reconcile.AllOk
+		return reconcile.Done
 	}
 
 	tserver, err := r.informers.TServerInformer.Lister().TServers(namespace).Get(name)
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "tserver", namespace, name, err.Error()))
-			return reconcile.RateLimit
+			return reconcile.Retry
 		}
 		err = r.clients.K8sClient.AppsV1().DaemonSets(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
 		if err != nil && !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceDeleteError, "daemonset", namespace, name, err.Error()))
-			return reconcile.RateLimit
+			return reconcile.Retry
 		}
-		return reconcile.AllOk
+		return reconcile.Done
 	}
 
 	if tserver.DeletionTimestamp != nil || !tserver.Spec.K8S.DaemonSet {
 		err = r.clients.K8sClient.AppsV1().DaemonSets(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
 		if err != nil && !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceDeleteError, "daemonset", namespace, name, err.Error()))
-			return reconcile.RateLimit
+			return reconcile.Retry
 		}
-		return reconcile.AllOk
+		return reconcile.Done
 	}
 
 	daemonSet, err := r.informers.DaemonSetInformer.Lister().DaemonSets(namespace).Get(name)
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "daemonset", namespace, name, err.Error()))
-			return reconcile.RateLimit
+			return reconcile.Retry
 		}
 
 		daemonSet = buildDaemonset(tserver)
 		daemonSetInterface := r.clients.K8sClient.AppsV1().DaemonSets(namespace)
 		if _, err = daemonSetInterface.Create(context.TODO(), daemonSet, k8sMetaV1.CreateOptions{}); err != nil && !errors.IsAlreadyExists(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceCreateError, "daemonset", namespace, name, err.Error()))
-			return reconcile.RateLimit
+			return reconcile.Retry
 		}
 
-		return reconcile.AllOk
+		return reconcile.Done
 	}
 
 	if daemonSet.DeletionTimestamp != nil {
@@ -159,7 +159,7 @@ func (r *DaemonSetReconciler) reconcile(key string) reconcile.Result {
 		//此处意味着出现了非由 controller 管理的同名 daemonSet, 需要警告和重试
 		msg := fmt.Sprintf(tarsMeta.ResourceOutControlError, "daemonset", namespace, daemonSet.Name, namespace, name)
 		controller.Event(tserver, k8sCoreV1.EventTypeWarning, tarsMeta.ResourceOutControlReason, msg)
-		return reconcile.RateLimit
+		return reconcile.Retry
 	}
 
 	anyChanged := !EqualTServerAndDaemonSet(tserver, daemonSet)
@@ -170,8 +170,8 @@ func (r *DaemonSetReconciler) reconcile(key string) reconcile.Result {
 		daemonSetInterface := r.clients.K8sClient.AppsV1().DaemonSets(namespace)
 		if _, err := daemonSetInterface.Update(context.TODO(), daemonSetCopy, k8sMetaV1.UpdateOptions{}); err != nil {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceUpdateError, "daemonset", namespace, name, err.Error()))
-			return reconcile.RateLimit
+			return reconcile.Retry
 		}
 	}
-	return reconcile.AllOk
+	return reconcile.Done
 }

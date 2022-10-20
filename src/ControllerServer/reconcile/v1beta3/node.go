@@ -55,10 +55,10 @@ func (r *NodeReconciler) processItem() bool {
 	res := r.reconcile(key)
 
 	switch res {
-	case reconcile.AllOk:
+	case reconcile.Done:
 		r.workQueue.Forget(obj)
 		return true
-	case reconcile.RateLimit:
+	case reconcile.Retry:
 		r.workQueue.AddRateLimited(obj)
 		return true
 	case reconcile.AddAfter:
@@ -102,13 +102,13 @@ func (r *NodeReconciler) reconcile(key string) reconcile.Result {
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "node", "", name, err.Error()))
-			return reconcile.RateLimit
+			return reconcile.Retry
 		}
-		return reconcile.AllOk
+		return reconcile.Done
 	}
 
 	if node.DeletionTimestamp != nil || node.Labels == nil {
-		return reconcile.AllOk
+		return reconcile.Done
 	}
 
 	nodeNamespaceLabelExist := false
@@ -122,7 +122,7 @@ func (r *NodeReconciler) reconcile(key string) reconcile.Result {
 	_, nodeLabelExist := node.Labels[tarsMeta.TarsNodeLabel]
 
 	if nodeLabelExist == nodeNamespaceLabelExist {
-		return reconcile.AllOk
+		return reconcile.Done
 	}
 
 	nodeCopy := node.DeepCopy()
@@ -135,8 +135,8 @@ func (r *NodeReconciler) reconcile(key string) reconcile.Result {
 	nodeInterface := r.clients.K8sClient.CoreV1().Nodes()
 	if _, err = nodeInterface.Update(context.TODO(), nodeCopy, k8sMetaV1.UpdateOptions{}); err != nil {
 		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceUpdateError, "node", "", name, err.Error()))
-		return reconcile.RateLimit
+		return reconcile.Retry
 	}
 
-	return reconcile.AllOk
+	return reconcile.Done
 }

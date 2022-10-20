@@ -32,8 +32,7 @@ func NewTEndpointReconciler(clients *controller.Clients, informers *controller.I
 	reconciler := &TEndpointReconciler{
 		clients:   clients,
 		informers: informers,
-		threads:   threads,
-		workQueue: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), ""),
+		threads:   threads,		workQueue: workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 	}
 	informers.Register(reconciler)
 	return reconciler
@@ -74,10 +73,10 @@ func (r *TEndpointReconciler) processItem() bool {
 	res = r.reconcile(key)
 
 	switch res {
-	case reconcile.AllOk:
+	case reconcile.Done:
 		r.workQueue.Forget(obj)
 		return true
-	case reconcile.RateLimit:
+	case reconcile.Retry:
 		//r.workQueue.AddRateLimited(obj)
 		r.workQueue.AddAfter(obj, time.Millisecond*100)
 		return true
@@ -133,45 +132,45 @@ func (r *TEndpointReconciler) reconcile(key string) reconcile.Result {
 
 	if err != nil {
 		utilRuntime.HandleError(fmt.Errorf("invalid key: %s", key))
-		return reconcile.AllOk
+		return reconcile.Done
 	}
 
 	tserver, err := r.informers.TServerInformer.Lister().TServers(namespace).Get(name)
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "tserver", namespace, name, err.Error()))
-			return reconcile.RateLimit
+			return reconcile.Retry
 		}
 		err = r.clients.CrdClient.CrdV1beta3().TEndpoints(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
 		if err != nil && !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceDeleteError, "tendpoint", namespace, name, err.Error()))
-			return reconcile.RateLimit
+			return reconcile.Retry
 		}
-		return reconcile.AllOk
+		return reconcile.Done
 	}
 
 	if tserver.DeletionTimestamp != nil {
 		err = r.clients.CrdClient.CrdV1beta3().TEndpoints(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
 		if err != nil && !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceDeleteError, "tendpoint", namespace, name, err.Error()))
-			return reconcile.RateLimit
+			return reconcile.Retry
 		}
-		return reconcile.AllOk
+		return reconcile.Done
 	}
 
 	tendpoint, err := r.informers.TEndpointInformer.Lister().TEndpoints(namespace).Get(name)
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "tendpoint", namespace, name, err.Error()))
-			return reconcile.RateLimit
+			return reconcile.Retry
 		}
 		tendpoint = buildTEndpoint(tserver)
 		tendpointInterface := r.clients.CrdClient.CrdV1beta3().TEndpoints(namespace)
 		if _, err = tendpointInterface.Create(context.TODO(), tendpoint, k8sMetaV1.CreateOptions{}); err != nil && !errors.IsAlreadyExists(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceCreateError, "tendpoint", namespace, name, err.Error()))
-			return reconcile.RateLimit
+			return reconcile.Retry
 		}
-		return reconcile.AllOk
+		return reconcile.Done
 	}
 
 	if !k8sMetaV1.IsControlledBy(tendpoint, tserver) {
@@ -179,18 +178,17 @@ func (r *TEndpointReconciler) reconcile(key string) reconcile.Result {
 		if err = tendpointInterface.Delete(context.TODO(), tendpoint.Name, k8sMetaV1.DeleteOptions{}); err != nil {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceUpdateError, "tendpoint", namespace, name, err.Error()))
 		}
-		return reconcile.RateLimit
+		return reconcile.Retry
 	}
 
 	anyChanged := !EqualTServerAndTEndpoint(tserver, tendpoint)
-
 	if anyChanged {
 		tendpointCopy := tendpoint.DeepCopy()
 		syncTEndpoint(tserver, tendpointCopy)
 		tendpointInterface := r.clients.CrdClient.CrdV1beta3().TEndpoints(namespace)
 		if _, err = tendpointInterface.Update(context.TODO(), tendpointCopy, k8sMetaV1.UpdateOptions{}); err != nil {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceUpdateError, "tendpoint", namespace, name, err.Error()))
-			return reconcile.RateLimit
+			return reconcile.Retry
 		}
 	}
 	return r.updateStatus(tendpoint)
@@ -284,7 +282,7 @@ func (r *TEndpointReconciler) updateStatus(tendpoint *tarsCrdV1beta3.TEndpoint) 
 	pods, err := r.informers.PodInformer.Lister().Pods(namespace).List(labels.NewSelector().Add(*appRequirement).Add(*serverRequirement))
 	if err != nil {
 		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceSelectorError, namespace, "tendpoint", err.Error()))
-		return reconcile.RateLimit
+		return reconcile.Retry
 	}
 
 	tendpointPodStatuses := make([]*tarsCrdV1beta3.TEndpointPodStatus, 0, len(pods))
@@ -299,8 +297,8 @@ func (r *TEndpointReconciler) updateStatus(tendpoint *tarsCrdV1beta3.TEndpoint) 
 
 	if err != nil {
 		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceUpdateError, "tendpoint", namespace, tendpoint.Name, err.Error()))
-		return reconcile.RateLimit
+		return reconcile.Retry
 	}
 
-	return reconcile.AllOk
+	return reconcile.Done
 }

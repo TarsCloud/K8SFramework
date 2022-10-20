@@ -3,8 +3,7 @@ package v1beta3
 import (
 	"context"
 	"fmt"
-	k8sCoreV1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	"golang.org/x/time/rate"
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	patchTypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
@@ -28,11 +27,12 @@ type TTreeReconciler struct {
 }
 
 func NewTTreeReconciler(clients *controller.Clients, informers *controller.Informers, threads int) *TTreeReconciler {
+	rateLimiter := &workqueue.BucketRateLimiter{Limiter: rate.NewLimiter(rate.Limit(10), 50)}
 	reconciler := &TTreeReconciler{
 		clients:   clients,
 		informers: informers,
 		threads:   threads,
-		workQueue: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), ""),
+		workQueue: workqueue.NewRateLimitingQueue(rateLimiter),
 	}
 	informers.Register(reconciler)
 	return reconciler
@@ -58,10 +58,10 @@ func (r *TTreeReconciler) processItem() bool {
 	res := r.reconcile(key)
 
 	switch res {
-	case reconcile.AllOk:
+	case reconcile.Done:
 		r.workQueue.Forget(obj)
 		return true
-	case reconcile.RateLimit:
+	case reconcile.Retry:
 		r.workQueue.AddRateLimited(obj)
 		return true
 	case reconcile.FatalError:
@@ -78,7 +78,7 @@ func (r *TTreeReconciler) EnqueueObj(resourceName string, resourceEvent k8sWatch
 	switch resourceObj.(type) {
 	case *tarsCrdV1beta3.TServer:
 		tserver := resourceObj.(*tarsCrdV1beta3.TServer)
-		key := fmt.Sprintf("%s/%s", tserver.Namespace, tserver.Name)
+		key := fmt.Sprintf("%s/%s", tserver.Namespace, tserver.Spec.App)
 		r.workQueue.Add(key)
 	default:
 		return
@@ -97,41 +97,27 @@ func (r *TTreeReconciler) Start(stopCh chan struct{}) {
 }
 
 func (r *TTreeReconciler) reconcile(key string) reconcile.Result {
-	namespace, name, err := cache.SplitMetaNamespaceKey(key)
+	namespace, app, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
 		utilRuntime.HandleError(fmt.Errorf("invalid key: %s", key))
-		return reconcile.AllOk
-	}
-
-	tserver, err := r.informers.TServerInformer.Lister().TServers(namespace).Get(name)
-	if err != nil {
-		if !errors.IsNotFound(err) {
-			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "tserver", namespace, name, err.Error()))
-			return reconcile.RateLimit
-		}
-		return reconcile.AllOk
-	}
-
-	if tserver.DeletionTimestamp != nil {
-		return reconcile.AllOk
+		return reconcile.Done
 	}
 
 	ttree, err := r.informers.TTreeInformer.Lister().TTrees(namespace).Get(tarsMeta.FixedTTreeResourceName)
 	if err != nil {
 		msg := fmt.Sprintf(tarsMeta.ResourceGetError, "ttree", namespace, tarsMeta.FixedTTreeResourceName, err.Error())
 		utilRuntime.HandleError(fmt.Errorf(msg))
-		controller.Event(tserver, k8sCoreV1.EventTypeWarning, tarsMeta.ResourceGetReason, msg)
-		return reconcile.RateLimit
+		return reconcile.Retry
 	}
 
 	for i := range ttree.Apps {
-		if ttree.Apps[i].Name == tserver.Spec.App {
-			return reconcile.AllOk
+		if ttree.Apps[i].Name == app {
+			return reconcile.Done
 		}
 	}
 
 	newTressApp := &tarsCrdV1beta3.TTreeApp{
-		Name:         tserver.Spec.App,
+		Name:         app,
 		BusinessRef:  "",
 		CreatePerson: "",
 		CreateTime:   k8sMetaV1.Now(),
@@ -148,8 +134,8 @@ func (r *TTreeReconciler) reconcile(key string) reconcile.Result {
 	patchContent, _ := json.Marshal(jsonPatch)
 	_, err = r.clients.CrdClient.CrdV1beta3().TTrees(namespace).Patch(context.TODO(), tarsMeta.FixedTTreeResourceName, patchTypes.JSONPatchType, patchContent, k8sMetaV1.PatchOptions{})
 	if err != nil {
-		return reconcile.RateLimit
+		return reconcile.Retry
 	}
 
-	return reconcile.AllOk
+	return reconcile.Done
 }
