@@ -3,7 +3,6 @@ package v1beta3
 import (
 	"context"
 	"fmt"
-	"golang.org/x/time/rate"
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	patchTypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
@@ -30,16 +29,17 @@ type TTreeReconciler struct {
 
 func NewTTreeController(clients *util.Clients, factories *util.InformerFactories, threads int) *TTreeReconciler {
 	trInformer := factories.TarsInformerFactory.Crd().V1beta3().TTrees()
-	rateLimiter := &workqueue.BucketRateLimiter{Limiter: rate.NewLimiter(rate.Limit(10), 50)}
-	ttc := &TTreeReconciler{
+	tsInformer := factories.TarsInformerFactory.Crd().V1beta3().TServers()
+	c := &TTreeReconciler{
 		clients:  clients,
 		trLister: trInformer.Lister(),
 		threads:  threads,
-		queue:    workqueue.NewRateLimitingQueue(rateLimiter),
-		synced:   []cache.InformerSynced{trInformer.Informer().HasSynced},
+		queue:    workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
+		synced:   []cache.InformerSynced{trInformer.Informer().HasSynced, tsInformer.Informer().HasSynced},
 	}
-	controller.SetInformerHandlerEvent(tarsMeta.TServerKind, trInformer.Informer(), ttc)
-	return ttc
+	controller.SetInformerHandlerEvent(tarsMeta.TTreeKind, trInformer.Informer(), c)
+	controller.SetInformerHandlerEvent(tarsMeta.TServerKind, tsInformer.Informer(), c)
+	return c
 }
 
 func (r *TTreeReconciler) processItem() bool {

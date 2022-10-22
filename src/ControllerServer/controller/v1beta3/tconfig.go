@@ -236,7 +236,7 @@ func (r *TConfigReconciler) processItem(queue workqueue.RateLimitingInterface, r
 
 func NewTConfigController(clients *util.Clients, factories *util.InformerFactories, threads int) *TConfigReconciler {
 	tcInformer := factories.MetadataInformerFactor.ForResource(tarsCrdV1beta3.SchemeGroupVersion.WithResource("tconfigs"))
-	tcc := &TConfigReconciler{
+	c := &TConfigReconciler{
 		clients:     clients,
 		tcLister:    tcInformer.Lister(),
 		threads:     threads,
@@ -245,6 +245,6 @@ func NewTConfigController(clients *util.Clients, factories *util.InformerFactori
 		deleteQueue: workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 		synced:      []cache.InformerSynced{tcInformer.Informer().HasSynced},
 	}
-	controller.SetInformerHandlerEvent(tarsMeta.TAccountKind, tcInformer.Informer(), tcc)
-	return tcc
+	controller.SetInformerHandlerEvent(tarsMeta.TConfigKind, tcInformer.Informer(), c)
+	return c
 }

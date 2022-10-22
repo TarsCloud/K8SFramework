@@ -52,7 +52,7 @@ func New(clients *util.Clients, factories *util.InformerFactories) *Webhook {
 	return webhook
 }
 
-func (h *Webhook) StartController(stopCh chan struct{}) {
+func (h *Webhook) Start(stopCh chan struct{}) {
 	go wait.Until(func() {
 		validatingFunc := func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Add("Content-Type", "application/json")

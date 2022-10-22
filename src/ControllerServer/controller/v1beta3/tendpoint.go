@@ -37,7 +37,7 @@ func NewTEndpointController(clients *util.Clients, factories *util.InformerFacto
 	podInformer := factories.K8SInformerFactoryWithTarsFilter.Core().V1().Pods()
 	teInformer := factories.TarsInformerFactory.Crd().V1beta3().TEndpoints()
 	tsInformer := factories.TarsInformerFactory.Crd().V1beta3().TServers()
-	tec := &TEndpointReconciler{
+	c := &TEndpointReconciler{
 		clients:   clients,
 		podLister: podInformer.Lister(),
 		teLister:  teInformer.Lister(),
@@ -46,10 +46,10 @@ func NewTEndpointController(clients *util.Clients, factories *util.InformerFacto
 		queue:     workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 		synced:    []cache.InformerSynced{podInformer.Informer().HasSynced, teInformer.Informer().HasSynced, tsInformer.Informer().HasSynced},
 	}
-	controller.SetInformerHandlerEvent(tarsMeta.KPodKind, podInformer.Informer(), tec)
-	controller.SetInformerHandlerEvent(tarsMeta.TEndpointKind, teInformer.Informer(), tec)
-	controller.SetInformerHandlerEvent(tarsMeta.TServerKind, tsInformer.Informer(), tec)
-	return tec
+	controller.SetInformerHandlerEvent(tarsMeta.KPodKind, podInformer.Informer(), c)
+	controller.SetInformerHandlerEvent(tarsMeta.TEndpointKind, teInformer.Informer(), c)
+	controller.SetInformerHandlerEvent(tarsMeta.TServerKind, tsInformer.Informer(), c)
+	return c
 }
 
 func splitTARSConditionReason(reason string) (setting, present, pid string) {

@@ -35,7 +35,7 @@ type TServerReconciler struct {
 func NewTServerController(clients *util.Clients, factories *util.InformerFactories, threads int) *TServerReconciler {
 	podInformer := factories.K8SInformerFactoryWithTarsFilter.Core().V1().Pods()
 	tsInformer := factories.TarsInformerFactory.Crd().V1beta3().TServers()
-	tsc := &TServerReconciler{
+	c := &TServerReconciler{
 		clients:   clients,
 		podLister: podInformer.Lister(),
 		tsLister:  tsInformer.Lister(),
@@ -43,9 +43,9 @@ func NewTServerController(clients *util.Clients, factories *util.InformerFactori
 		queue:     workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 		synced:    []cache.InformerSynced{tsInformer.Informer().HasSynced},
 	}
-	controller.SetInformerHandlerEvent(tarsMeta.KPodKind, podInformer.Informer(), tsc)
-	controller.SetInformerHandlerEvent(tarsMeta.TServerKind, tsInformer.Informer(), tsc)
-	return tsc
+	controller.SetInformerHandlerEvent(tarsMeta.KPodKind, podInformer.Informer(), c)
+	controller.SetInformerHandlerEvent(tarsMeta.TServerKind, tsInformer.Informer(), c)
+	return c
 }
 
 func (r *TServerReconciler) processItem() bool {

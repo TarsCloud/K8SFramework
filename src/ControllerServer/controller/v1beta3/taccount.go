@@ -59,15 +59,15 @@ func (r *TAccountReconciler) StartController(stopCh chan struct{}) {
 
 func NewTAccountController(clients *util.Clients, factories *util.InformerFactories, threads int) *TAccountReconciler {
 	taInformer := factories.TarsInformerFactory.Crd().V1beta3().TAccounts()
-	tac := &TAccountReconciler{
+	c := &TAccountReconciler{
 		clients:  clients,
 		taLister: taInformer.Lister(),
 		threads:  threads,
 		queue:    workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 		synced:   []cache.InformerSynced{taInformer.Informer().HasSynced},
 	}
-	controller.SetInformerHandlerEvent(tarsMeta.TAccountKind, taInformer.Informer(), tac)
-	return tac
+	controller.SetInformerHandlerEvent(tarsMeta.TAccountKind, taInformer.Informer(), c)
+	return c
 }
 
 func (r *TAccountReconciler) processItem() bool {

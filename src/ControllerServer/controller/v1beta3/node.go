@@ -29,15 +29,15 @@ type NodeReconciler struct {
 
 func NewNodeController(clients *util.Clients, factories *util.InformerFactories, threads int) *NodeReconciler {
 	nodeInformer := factories.K8SInformerFactory.Core().V1().Nodes()
-	nc := &NodeReconciler{
+	c := &NodeReconciler{
 		clients:    clients,
 		nodeLister: nodeInformer.Lister(),
 		threads:    threads,
 		queue:      workqueue.NewRateLimitingQueue(workqueue.DefaultItemBasedRateLimiter()),
 		synced:     []cache.InformerSynced{nodeInformer.Informer().HasSynced},
 	}
-	controller.SetInformerHandlerEvent(tarsMeta.KNodeKind, nodeInformer.Informer(), nc)
-	return nc
+	controller.SetInformerHandlerEvent(tarsMeta.KNodeKind, nodeInformer.Informer(), c)
+	return c
 }
 
 func (r *NodeReconciler) processItem() bool {

@@ -32,7 +32,10 @@ func setupTFCWatch(factories *InformerFactories) {
 
 func GetTFrameworkConfig(namespace string) *tarsCrdV1beta3.TFrameworkConfig {
 	tfc, _ := tfcMap.Load(namespace)
-	return tfc.(*tarsCrdV1beta3.TFrameworkConfig)
+	if tfc != nil {
+		return tfc.(*tarsCrdV1beta3.TFrameworkConfig)
+	}
+	return nil
 }
 
 func setTFrameworkConfig(tfc *tarsCrdV1beta3.TFrameworkConfig) {

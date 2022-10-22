@@ -33,15 +33,15 @@ type TImageReconciler struct {
 
 func NewTImageController(clients *util.Clients, factories *util.InformerFactories, threads int) *TImageReconciler {
 	tiInformer := factories.TarsInformerFactory.Crd().V1beta3().TImages()
-	tic := &TImageReconciler{
+	c := &TImageReconciler{
 		clients:  clients,
 		tiLister: tiInformer.Lister(),
 		threads:  threads,
 		queue:    workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 		synced:   []cache.InformerSynced{tiInformer.Informer().HasSynced},
 	}
-	controller.SetInformerHandlerEvent(tarsMeta.TServerKind, tiInformer.Informer(), tic)
-	return tic
+	controller.SetInformerHandlerEvent(tarsMeta.TServerKind, tiInformer.Informer(), c)
+	return c
 }
 
 func (r *TImageReconciler) EnqueueResourceEvent(resourceKind string, resourceEvent k8sWatchV1.EventType, resourceObj interface{}) {

@@ -39,7 +39,7 @@ func NewServiceController(clients *util.Clients, factories *util.InformerFactori
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartRecordingToSink(&k8sCoreTypeV1.EventSinkImpl{Interface: clients.K8sClient.CoreV1().Events("")})
 
-	sc := &ServiceReconciler{
+	c := &ServiceReconciler{
 		clients:       clients,
 		svcLiter:      svcInformer.Lister(),
 		tsLister:      tsInformer.Lister(),
@@ -48,9 +48,9 @@ func NewServiceController(clients *util.Clients, factories *util.InformerFactori
 		synced:        []cache.InformerSynced{svcInformer.Informer().HasSynced, tsInformer.Informer().HasSynced},
 		eventRecorder: eventBroadcaster.NewRecorder(scheme.Scheme, k8sCoreV1.EventSource{Component: "daemonset-controller"}),
 	}
-	controller.SetInformerHandlerEvent(tarsMeta.KServiceKind, svcInformer.Informer(), sc)
-	controller.SetInformerHandlerEvent(tarsMeta.TServerKind, tsInformer.Informer(), sc)
-	return sc
+	controller.SetInformerHandlerEvent(tarsMeta.KServiceKind, svcInformer.Informer(), c)
+	controller.SetInformerHandlerEvent(tarsMeta.TServerKind, tsInformer.Informer(), c)
+	return c
 }
 
 func (r *ServiceReconciler) processItem() bool {

@@ -24,8 +24,8 @@ func main() {
 
 	//call webhook.start() before factories.start(),because factories.start() depend on webhook.conversion service
 	hooks := webhook.New(clients, factories)
+	hooks.Start(stopCh)
 
-	hooks.StartController(stopCh)
 	time.Sleep(time.Second * 1)
 
 	controllers := []controller.Controller{
@@ -48,7 +48,7 @@ func main() {
 	callbacks := leaderelection.LeaderCallbacks{
 		OnStartedLeading: func(ctx context.Context) {
 			for _, c := range controllers {
-				c.StartController(stopCh)
+				go c.StartController(stopCh)
 			}
 		},
 		OnStoppedLeading: func() {

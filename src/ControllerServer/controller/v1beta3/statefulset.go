@@ -79,7 +79,7 @@ func NewStatefulSetController(clients *util.Clients, factories *util.InformerFac
 	tsInformer := factories.TarsInformerFactory.Crd().V1beta3().TServers()
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartRecordingToSink(&k8sCoreTypeV1.EventSinkImpl{Interface: clients.K8sClient.CoreV1().Events("")})
-	sc := &StatefulSetReconciler{
+	c := &StatefulSetReconciler{
 		clients:       clients,
 		stsLister:     stsInformer.Lister(),
 		tsLister:      tsInformer.Lister(),
@@ -88,9 +88,9 @@ func NewStatefulSetController(clients *util.Clients, factories *util.InformerFac
 		synced:        []cache.InformerSynced{stsInformer.Informer().HasSynced, tsInformer.Informer().HasSynced},
 		eventRecorder: eventBroadcaster.NewRecorder(scheme.Scheme, k8sCoreV1.EventSource{Component: "daemonset-controller"}),
 	}
-	controller.SetInformerHandlerEvent(tarsMeta.KStatefulSetKind, stsInformer.Informer(), sc)
-	controller.SetInformerHandlerEvent(tarsMeta.TServerKind, tsInformer.Informer(), sc)
-	return sc
+	controller.SetInformerHandlerEvent(tarsMeta.KStatefulSetKind, stsInformer.Informer(), c)
+	controller.SetInformerHandlerEvent(tarsMeta.TServerKind, tsInformer.Informer(), c)
+	return c
 }
 
 func (r *StatefulSetReconciler) processItem() bool {

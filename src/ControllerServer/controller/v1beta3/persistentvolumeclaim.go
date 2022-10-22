@@ -39,7 +39,7 @@ func NewPVCController(clients *util.Clients, factories *util.InformerFactories, 
 	tsInformer := factories.TarsInformerFactory.Crd().V1beta3().TServers()
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartRecordingToSink(&k8sCoreTypeV1.EventSinkImpl{Interface: clients.K8sClient.CoreV1().Events("")})
-	pc := &PVCReconciler{
+	c := &PVCReconciler{
 		clients:   clients,
 		pvcLister: pvcInformer.Lister(),
 		tsLister:  tsInformer.Lister(),
@@ -47,9 +47,9 @@ func NewPVCController(clients *util.Clients, factories *util.InformerFactories, 
 		queue:     workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 		synced:    []cache.InformerSynced{pvcInformer.Informer().HasSynced, tsInformer.Informer().HasSynced},
 	}
-	controller.SetInformerHandlerEvent(tarsMeta.KPersistentVolumeClaimKind, tsInformer.Informer(), pc)
-	controller.SetInformerHandlerEvent(tarsMeta.TServerKind, tsInformer.Informer(), pc)
-	return pc
+	controller.SetInformerHandlerEvent(tarsMeta.KPersistentVolumeClaimKind, tsInformer.Informer(), c)
+	controller.SetInformerHandlerEvent(tarsMeta.TServerKind, tsInformer.Informer(), c)
+	return c
 }
 
 func (r *PVCReconciler) processItem() bool {

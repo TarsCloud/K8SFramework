@@ -33,9 +33,10 @@ type TExitedRecordReconciler struct {
 }
 
 func NewTExitedPodController(clients *util.Clients, factories *util.InformerFactories, threads int) *TExitedRecordReconciler {
+	podInformer := factories.K8SInformerFactoryWithTarsFilter.Core().V1().Pods()
 	teInformer := factories.TarsInformerFactory.Crd().V1beta3().TExitedRecords()
 	tsInformer := factories.TarsInformerFactory.Crd().V1beta3().TServers()
-	tec := &TExitedRecordReconciler{
+	c := &TExitedRecordReconciler{
 		clients:  clients,
 		teLister: teInformer.Lister(),
 		tsLister: tsInformer.Lister(),
@@ -43,9 +44,10 @@ func NewTExitedPodController(clients *util.Clients, factories *util.InformerFact
 		queue:    workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 		synced:   []cache.InformerSynced{teInformer.Informer().HasSynced, tsInformer.Informer().HasSynced},
 	}
-	controller.SetInformerHandlerEvent(tarsMeta.TEndpointKind, teInformer.Informer(), tec)
-	controller.SetInformerHandlerEvent(tarsMeta.TServerKind, tsInformer.Informer(), tec)
-	return tec
+	controller.SetInformerHandlerEvent(tarsMeta.KPodKind, podInformer.Informer(), c)
+	controller.SetInformerHandlerEvent(tarsMeta.TEndpointKind, teInformer.Informer(), c)
+	controller.SetInformerHandlerEvent(tarsMeta.TServerKind, tsInformer.Informer(), c)
+	return c
 }
 
 func (r *TExitedRecordReconciler) EnqueueResourceEvent(resourceKind string, resourceEvent k8sWatchV1.EventType, resourceObj interface{}) {
