@@ -12,7 +12,7 @@ import (
 	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	"strings"
-	"tarscontroller/controller"
+	"tarscontroller/util"
 )
 
 func buildPodVolumes(tserver *tarsCrdV1beta3.TServer) []k8sCoreV1.Volume {
@@ -101,7 +101,7 @@ func buildPodInitContainers(tserver *tarsCrdV1beta3.TServer) []k8sCoreV1.Contain
 	}
 
 	if image == "" || image == tarsMeta.ServiceImagePlaceholder {
-		image, _ = controller.GetDefaultNodeImage(tserver.Namespace)
+		image, _ = util.GetDefaultNodeImage(tserver.Namespace)
 	}
 
 	if image == tarsMeta.ServiceImagePlaceholder {
@@ -180,7 +180,7 @@ func buildPodImagePullSecrets(tserver *tarsCrdV1beta3.TServer) []k8sCoreV1.Local
 		if tserver.Spec.Tars != nil && tserver.Spec.Release.TServerReleaseNode != nil {
 			nodeSecret = tserver.Spec.Release.TServerReleaseNode.Secret
 			if nodeSecret == "" {
-				_, nodeSecret = controller.GetDefaultNodeImage(tserver.Namespace)
+				_, nodeSecret = util.GetDefaultNodeImage(tserver.Namespace)
 			}
 		}
 	}

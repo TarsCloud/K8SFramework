@@ -10,7 +10,7 @@ import (
 	tarsCrdV1beta1 "k8s.tars.io/crd/v1beta1"
 	tarsCrdV1beta2 "k8s.tars.io/crd/v1beta2"
 	tarsMeta "k8s.tars.io/meta"
-	"tarscontroller/controller"
+	"tarscontroller/util"
 )
 
 func conversionTars1b1To1b2(src *tarsCrdV1beta1.TServerTars) *tarsCrdV1beta2.TServerTars {
@@ -146,7 +146,7 @@ func CvTServer1b1To1b2(s []runtime.RawExtension) []runtime.RawExtension {
 			dst.Spec.K8S.ImagePullPolicy = tarsMeta.DefaultImagePullPolicy
 			dst.Spec.K8S.LauncherType = tarsMeta.DefaultLauncherType
 			if dst.Spec.Tars != nil && dst.Spec.Release != nil {
-				image, secret := controller.GetDefaultNodeImage(src.Namespace)
+				image, secret := util.GetDefaultNodeImage(src.Namespace)
 				dst.Spec.Release.TServerReleaseNode = &tarsCrdV1beta2.TServerReleaseNode{
 					Image:  image,
 					Secret: secret,

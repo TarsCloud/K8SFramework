@@ -11,65 +11,78 @@ import (
 	utilRuntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	k8sWatchV1 "k8s.io/apimachinery/pkg/watch"
+	k8sCoreTypeV1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	k8sCoreListerV1 "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
+	tarsCrdListerV1beta3 "k8s.tars.io/client-go/listers/crd/v1beta3"
 	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	"strings"
 	"tarscontroller/controller"
-	"tarscontroller/reconcile"
+	"tarscontroller/util"
 	"time"
 )
 
 type PVCReconciler struct {
-	clients   *controller.Clients
-	informers *controller.Informers
+	clients   *util.Clients
+	pvcLister k8sCoreListerV1.PersistentVolumeClaimLister
+	tsLister  tarsCrdListerV1beta3.TServerLister
 	threads   int
-	workQueue workqueue.RateLimitingInterface
+	queue     workqueue.RateLimitingInterface
+	synced    []cache.InformerSynced
 }
 
-func NewPVCReconciler(clients *controller.Clients, informers *controller.Informers, threads int) *PVCReconciler {
-	reconciler := &PVCReconciler{
+func NewPVCController(clients *util.Clients, factories *util.InformerFactories, threads int) *PVCReconciler {
+	pvcInformer := factories.K8SInformerFactoryWithTarsFilter.Core().V1().PersistentVolumeClaims()
+	tsInformer := factories.TarsInformerFactory.Crd().V1beta3().TServers()
+	eventBroadcaster := record.NewBroadcaster()
+	eventBroadcaster.StartRecordingToSink(&k8sCoreTypeV1.EventSinkImpl{Interface: clients.K8sClient.CoreV1().Events("")})
+	pc := &PVCReconciler{
 		clients:   clients,
-		informers: informers,
+		pvcLister: pvcInformer.Lister(),
+		tsLister:  tsInformer.Lister(),
 		threads:   threads,
-		workQueue: workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
+		queue:     workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
+		synced:    []cache.InformerSynced{pvcInformer.Informer().HasSynced, tsInformer.Informer().HasSynced},
 	}
-	informers.Register(reconciler)
-	return reconciler
+	controller.SetInformerHandlerEvent(tarsMeta.KPersistentVolumeClaimKind, tsInformer.Informer(), pc)
+	controller.SetInformerHandlerEvent(tarsMeta.TServerKind, tsInformer.Informer(), pc)
+	return pc
 }
 
 func (r *PVCReconciler) processItem() bool {
 
-	obj, shutdown := r.workQueue.Get()
+	obj, shutdown := r.queue.Get()
 
 	if shutdown {
 		return false
 	}
 
-	defer r.workQueue.Done(obj)
+	defer r.queue.Done(obj)
 
 	key, ok := obj.(string)
 	if !ok {
 		utilRuntime.HandleError(fmt.Errorf("expected string in workqueue but got %#v", obj))
-		r.workQueue.Forget(obj)
+		r.queue.Forget(obj)
 		return true
 	}
 
-	res := r.reconcile(key)
+	res := r.sync(key)
 
 	switch res {
-	case reconcile.Done:
-		r.workQueue.Forget(obj)
+	case controller.Done:
+		r.queue.Forget(obj)
 		return true
-	case reconcile.Retry:
-		r.workQueue.AddRateLimited(obj)
+	case controller.Retry:
+		r.queue.AddRateLimited(obj)
 		return true
-	case reconcile.FatalError:
-		r.workQueue.ShutDown()
+	case controller.FatalError:
+		r.queue.ShutDown()
 		return false
-	case reconcile.AddAfter:
-		r.workQueue.AddAfter(obj, time.Second*3)
+	case controller.AddAfter:
+		r.queue.AddAfter(obj, time.Second*3)
 		return true
 	default:
 		//code should not reach here
@@ -78,12 +91,12 @@ func (r *PVCReconciler) processItem() bool {
 	}
 }
 
-func (r *PVCReconciler) EnqueueObj(resourceName string, resourceEvent k8sWatchV1.EventType, resourceObj interface{}) {
+func (r *PVCReconciler) EnqueueResourceEvent(resourceKind string, resourceEvent k8sWatchV1.EventType, resourceObj interface{}) {
 	switch resourceObj.(type) {
 	case *tarsCrdV1beta3.TServer:
 		tserver := resourceObj.(*tarsCrdV1beta3.TServer)
 		key := fmt.Sprintf("%s/%s", tserver.Namespace, tserver.Name)
-		r.workQueue.Add(key)
+		r.queue.Add(key)
 	case *k8sCoreV1.PersistentVolumeClaim:
 		if resourceEvent == k8sWatchV1.Deleted {
 			break
@@ -94,22 +107,31 @@ func (r *PVCReconciler) EnqueueObj(resourceName string, resourceEvent k8sWatchV1
 			server, serverExist := pvc.Labels[tarsMeta.TServerNameLabel]
 			if appExist && serverExist {
 				key := fmt.Sprintf("%s/%s-%s", pvc.Namespace, strings.ToLower(app), strings.ToLower(server))
-				r.workQueue.Add(key)
+				r.queue.Add(key)
 				return
 			}
 		}
 	}
 }
 
-func (r *PVCReconciler) Start(stopCh chan struct{}) {
+func (r *PVCReconciler) StartController(stopCh chan struct{}) {
+	defer utilRuntime.HandleCrash()
+	defer r.queue.ShutDown()
+
+	if !cache.WaitForNamedCacheSync("persistentvolumeclaim controller", stopCh, r.synced...) {
+		return
+	}
+
 	for i := 0; i < r.threads; i++ {
-		workFun := func() {
+		worker := func() {
 			for r.processItem() {
 			}
-			r.workQueue.ShutDown()
+			r.queue.ShutDown()
 		}
-		go wait.Until(workFun, time.Second, stopCh)
+		go wait.Until(worker, time.Second, stopCh)
 	}
+
+	<-stopCh
 }
 
 func buildPVCAnnotations(tserver *tarsCrdV1beta3.TServer) map[string]map[string]string {
@@ -128,24 +150,24 @@ func buildPVCAnnotations(tserver *tarsCrdV1beta3.TServer) map[string]map[string]
 	return annotations
 }
 
-func (r *PVCReconciler) reconcile(key string) reconcile.Result {
+func (r *PVCReconciler) sync(key string) controller.Result {
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
 		utilRuntime.HandleError(fmt.Errorf("invalid key: %s", key))
-		return reconcile.Done
+		return controller.Done
 	}
 
-	tserver, err := r.informers.TServerInformer.Lister().TServers(namespace).Get(name)
+	tserver, err := r.tsLister.TServers(namespace).Get(name)
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "tserver", namespace, name, err.Error()))
-			return reconcile.Retry
+			return controller.Retry
 		}
-		return reconcile.Done
+		return controller.Done
 	}
 
 	if tserver.DeletionTimestamp != nil || tserver.Spec.K8S.DaemonSet {
-		return reconcile.Done
+		return controller.Done
 	}
 
 	annotations := buildPVCAnnotations(tserver)
@@ -156,13 +178,13 @@ func (r *PVCReconciler) reconcile(key string) reconcile.Result {
 		serverRequirement, _ := labels.NewRequirement(tarsMeta.TServerNameLabel, selection.DoubleEquals, []string{tserver.Spec.Server})
 		localVolumeRequirement, _ := labels.NewRequirement(tarsMeta.TLocalVolumeLabel, selection.DoubleEquals, []string{volumeName})
 		labelSelector := labels.NewSelector().Add(*appRequirement).Add(*serverRequirement).Add(*localVolumeRequirement)
-		pvcs, err := r.informers.PersistentVolumeClaimInformer.Lister().PersistentVolumeClaims(namespace).List(labelSelector)
+		pvcs, err := r.pvcLister.PersistentVolumeClaims(namespace).List(labelSelector)
 		if err != nil {
 			if errors.IsNotFound(err) {
 				continue
 			}
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceSelectorError, namespace, "persistentVolumeclaims", err.Error()))
-			return reconcile.Retry
+			return controller.Retry
 		}
 
 		for _, pvc := range pvcs {
@@ -186,7 +208,7 @@ func (r *PVCReconciler) reconcile(key string) reconcile.Result {
 		}
 	}
 	if retry {
-		return reconcile.Retry
+		return controller.Retry
 	}
-	return reconcile.Done
+	return controller.Done
 }

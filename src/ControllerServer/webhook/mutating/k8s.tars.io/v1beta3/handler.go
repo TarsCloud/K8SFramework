@@ -3,7 +3,8 @@ package v1beta3
 import (
 	"fmt"
 	k8sAdmissionV1 "k8s.io/api/admission/v1"
-	"tarscontroller/controller"
+	"tarscontroller/util"
+	"tarscontroller/webhook/informer"
 )
 
 var functions map[string]func(*k8sAdmissionV1.AdmissionReview) ([]byte, error)
@@ -32,7 +33,7 @@ func init() {
 
 }
 
-func Handle(clients *controller.Clients, informer *controller.Informers, view *k8sAdmissionV1.AdmissionReview) ([]byte, error) {
+func Handle(clients *util.Clients, listers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) ([]byte, error) {
 	key := fmt.Sprintf("%s/%s", string(view.Request.Operation), view.Request.Kind.Kind)
 	if fun, ok := functions[key]; ok {
 		return fun(view)

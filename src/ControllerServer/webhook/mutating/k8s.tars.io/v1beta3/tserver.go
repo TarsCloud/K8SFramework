@@ -11,7 +11,7 @@ import (
 	"math"
 	"regexp"
 	"strconv"
-	"tarscontroller/controller"
+	"tarscontroller/util"
 )
 
 func mutatingCreateTServer(requestAdmissionView *k8sAdmissionV1.AdmissionReview) ([]byte, error) {
@@ -175,7 +175,7 @@ func mutatingCreateTServer(requestAdmissionView *k8sAdmissionV1.AdmissionReview)
 
 		if tserver.Spec.Tars != nil {
 			if tserver.Spec.Release.TServerReleaseNode == nil || tserver.Spec.Release.TServerReleaseNode.Image == "" {
-				image, secret := controller.GetDefaultNodeImage(tserver.Namespace)
+				image, secret := util.GetDefaultNodeImage(tserver.Namespace)
 				if image == tarsMeta.ServiceImagePlaceholder {
 					return nil, fmt.Errorf(tarsMeta.ResourceInvalidError, tserver, "no default node image has been set")
 				}

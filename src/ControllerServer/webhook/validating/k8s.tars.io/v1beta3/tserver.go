@@ -8,10 +8,11 @@ import (
 	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	"strings"
-	"tarscontroller/controller"
+	"tarscontroller/util"
+	"tarscontroller/webhook/informer"
 )
 
-func validTServer(newTServer, oldTServer *tarsCrdV1beta3.TServer, clients *controller.Clients, informers *controller.Informers) error {
+func validTServer(newTServer, oldTServer *tarsCrdV1beta3.TServer, clients *util.Clients, listers *informer.Listers) error {
 
 	if oldTServer != nil {
 		if newTServer.Spec.App != oldTServer.Spec.App {
@@ -93,8 +94,12 @@ func validTServer(newTServer, oldTServer *tarsCrdV1beta3.TServer, clients *contr
 			portValues[portValue] = nil
 		}
 
+		if !listers.TTSynced() {
+			return fmt.Errorf("ttemplate infomer has not finished syncing")
+		}
+
 		templateName := newTServer.Spec.Tars.Template
-		_, err := informers.TTemplateInformer.Lister().ByNamespace(namespace).Get(templateName)
+		_, err := listers.TTLister.ByNamespace(namespace).Get(templateName)
 		if err != nil {
 			if !errors.IsNotFound(err) {
 				return fmt.Errorf(tarsMeta.ResourceGetError, "ttemplate", namespace, templateName, err.Error())
@@ -165,13 +170,13 @@ func validTServer(newTServer, oldTServer *tarsCrdV1beta3.TServer, clients *contr
 	return nil
 }
 
-func validCreateTServer(clients *controller.Clients, informers *controller.Informers, view *k8sAdmissionV1.AdmissionReview) error {
+func validCreateTServer(clients *util.Clients, informers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
 	newTServer := &tarsCrdV1beta3.TServer{}
 	_ = json.Unmarshal(view.Request.Object.Raw, newTServer)
 	return validTServer(newTServer, nil, clients, informers)
 }
 
-func validUpdateTServer(clients *controller.Clients, informers *controller.Informers, view *k8sAdmissionV1.AdmissionReview) error {
+func validUpdateTServer(clients *util.Clients, informers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
 	newTServer := &tarsCrdV1beta3.TServer{}
 	_ = json.Unmarshal(view.Request.Object.Raw, newTServer)
 
@@ -181,6 +186,6 @@ func validUpdateTServer(clients *controller.Clients, informers *controller.Infor
 	return validTServer(newTServer, oldTServer, clients, informers)
 }
 
-func validDeleteTServer(clients *controller.Clients, informers *controller.Informers, view *k8sAdmissionV1.AdmissionReview) error {
+func validDeleteTServer(clients *util.Clients, informers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
 	return nil
 }

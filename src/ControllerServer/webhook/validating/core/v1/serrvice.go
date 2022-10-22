@@ -6,13 +6,18 @@ import (
 	k8sCoreV1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/json"
 	tarsMeta "k8s.tars.io/meta"
-	"tarscontroller/controller"
-	"tarscontroller/reconcile/v1beta3"
+	"tarscontroller/controller/v1beta3"
+	"tarscontroller/util"
+	"tarscontroller/webhook/informer"
 )
 
-func validService(newService *k8sCoreV1.Service, oldService *k8sCoreV1.Service, clients *controller.Clients, informer *controller.Informers) error {
+func validService(newService *k8sCoreV1.Service, oldService *k8sCoreV1.Service, clients *util.Clients, listers *informer.Listers) error {
+	if !listers.TSSynced() {
+		return fmt.Errorf("tserver infomer has not finished syncing")
+	}
+
 	namespace := newService.Namespace
-	tserver, err := informer.TServerInformer.Lister().TServers(namespace).Get(newService.Name)
+	tserver, err := listers.TSLister.TServers(namespace).Get(newService.Name)
 	if err != nil {
 		return fmt.Errorf(tarsMeta.ResourceGetError, "tserver", namespace, newService.Name, err.Error())
 	}
@@ -24,24 +29,27 @@ func validService(newService *k8sCoreV1.Service, oldService *k8sCoreV1.Service, 
 	return nil
 }
 
-func validCreateService(clients *controller.Clients, informer *controller.Informers, view *k8sAdmissionV1.AdmissionReview) error {
-	controllerUserName := controller.GetControllerUsername()
+func validCreateService(clients *util.Clients, listers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
+	controllerUserName := util.GetControllerUsername()
 	if controllerUserName == view.Request.UserInfo.Username || controllerUserName == tarsMeta.DefaultUnlawfulAndOnlyForDebugUserName {
 		return nil
 	}
+
 	return fmt.Errorf("only use authorized account can create service")
 }
 
-func validUpdateService(clients *controller.Clients, informer *controller.Informers, view *k8sAdmissionV1.AdmissionReview) error {
-	controllerUserName := controller.GetControllerUsername()
+func validUpdateService(clients *util.Clients, informer *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
+	controllerUserName := util.GetControllerUsername()
 	if controllerUserName == view.Request.UserInfo.Username || controllerUserName == tarsMeta.DefaultUnlawfulAndOnlyForDebugUserName {
 		return nil
 	}
+
 	newService := &k8sCoreV1.Service{}
 	_ = json.Unmarshal(view.Request.Object.Raw, newService)
+
 	return validService(newService, nil, clients, informer)
 }
 
-func validDeleteService(clients *controller.Clients, informer *controller.Informers, view *k8sAdmissionV1.AdmissionReview) error {
+func validDeleteService(clients *util.Clients, listers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
 	return nil
 }

@@ -10,10 +10,11 @@ import (
 	tarsCrdV1beta2 "k8s.tars.io/crd/v1beta2"
 	tarsMeta "k8s.tars.io/meta"
 	"strings"
-	"tarscontroller/controller"
+	"tarscontroller/util"
+	"tarscontroller/webhook/informer"
 )
 
-func validTTemplate(newTTemplate *tarsCrdV1beta2.TTemplate, oldTTemplate *tarsCrdV1beta2.TTemplate, clients *controller.Clients, informers *controller.Informers) error {
+func validTTemplate(newTTemplate *tarsCrdV1beta2.TTemplate, oldTTemplate *tarsCrdV1beta2.TTemplate, clients *util.Clients, listers *informer.Listers) error {
 
 	parentName := newTTemplate.Spec.Parent
 	if parentName == "" {
@@ -24,8 +25,12 @@ func validTTemplate(newTTemplate *tarsCrdV1beta2.TTemplate, oldTTemplate *tarsCr
 		return nil
 	}
 
+	if !listers.TTSynced() {
+		return fmt.Errorf("ttemplate infomer has not finished syncing")
+	}
+
 	namespace := newTTemplate.Namespace
-	_, err := informers.TTemplateInformer.Lister().ByNamespace(namespace).Get(parentName)
+	_, err := listers.TTLister.ByNamespace(namespace).Get(parentName)
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			return fmt.Errorf(tarsMeta.ResourceGetError, "ttemplate", namespace, parentName, err.Error())
@@ -36,13 +41,13 @@ func validTTemplate(newTTemplate *tarsCrdV1beta2.TTemplate, oldTTemplate *tarsCr
 	return nil
 }
 
-func validCreateTTemplate(clients *controller.Clients, informers *controller.Informers, view *k8sAdmissionV1.AdmissionReview) error {
+func validCreateTTemplate(clients *util.Clients, informers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
 	newTTemplate := &tarsCrdV1beta2.TTemplate{}
 	_ = json.Unmarshal(view.Request.Object.Raw, newTTemplate)
 	return validTTemplate(newTTemplate, nil, clients, informers)
 }
 
-func validUpdateTTemplate(clients *controller.Clients, informers *controller.Informers, view *k8sAdmissionV1.AdmissionReview) error {
+func validUpdateTTemplate(clients *util.Clients, informers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
 	newTTemplate := &tarsCrdV1beta2.TTemplate{}
 	_ = json.Unmarshal(view.Request.Object.Raw, newTTemplate)
 
@@ -52,9 +57,9 @@ func validUpdateTTemplate(clients *controller.Clients, informers *controller.Inf
 	return validTTemplate(newTTemplate, oldTTemplate, clients, informers)
 }
 
-func validDeleteTTemplate(clients *controller.Clients, informers *controller.Informers, view *k8sAdmissionV1.AdmissionReview) error {
+func validDeleteTTemplate(clients *util.Clients, listers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
 	username := view.Request.UserInfo.Username
-	controllerUserName := controller.GetControllerUsername()
+	controllerUserName := util.GetControllerUsername()
 
 	if controllerUserName == username || controllerUserName == tarsMeta.DefaultUnlawfulAndOnlyForDebugUserName {
 		return nil
@@ -64,12 +69,15 @@ func validDeleteTTemplate(clients *controller.Clients, informers *controller.Inf
 		return nil
 	}
 
+	if !listers.TTSynced() {
+		return fmt.Errorf("ttemplate infomer has not finished syncing")
+	}
+
 	ttemplate := &tarsCrdV1beta2.TTemplate{}
 	_ = json.Unmarshal(view.Request.OldObject.Raw, ttemplate)
 	namespace := ttemplate.Namespace
-
 	requirement, _ := labels.NewRequirement(tarsMeta.TTemplateLabel, selection.DoubleEquals, []string{ttemplate.Name})
-	tservers, err := informers.TServerInformer.Lister().TServers(namespace).List(labels.NewSelector().Add(*requirement))
+	tservers, err := listers.TSLister.TServers(namespace).List(labels.NewSelector().Add(*requirement))
 	if err != nil {
 		return fmt.Errorf(tarsMeta.ResourceSelectorError, namespace, "tservers", err.Error())
 	}
@@ -78,7 +86,7 @@ func validDeleteTTemplate(clients *controller.Clients, informers *controller.Inf
 	}
 
 	requirement, _ = labels.NewRequirement(tarsMeta.TTemplateParentLabel, selection.DoubleEquals, []string{ttemplate.Name})
-	ttemplates, err := informers.TTemplateInformer.Lister().ByNamespace(namespace).List(labels.NewSelector().Add(*requirement))
+	ttemplates, err := listers.TTLister.ByNamespace(namespace).List(labels.NewSelector().Add(*requirement))
 	if err != nil {
 		return fmt.Errorf(tarsMeta.ResourceSelectorError, namespace, "ttemplates", err.Error())
 	}

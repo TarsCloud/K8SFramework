@@ -7,27 +7,28 @@ import (
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	tarsMeta "k8s.tars.io/meta"
 	"net/http"
-	"tarscontroller/controller"
+	"tarscontroller/util"
+	"tarscontroller/webhook/informer"
 	crdMutatingV1beta2 "tarscontroller/webhook/mutating/k8s.tars.io/v1beta2"
 	crdMutatingV1beta3 "tarscontroller/webhook/mutating/k8s.tars.io/v1beta3"
 )
 
 type Mutating struct {
-	clients   *controller.Clients
-	informers *controller.Informers
+	clients *util.Clients
+	listers *informer.Listers
 }
 
-func New(clients *controller.Clients, informers *controller.Informers) *Mutating {
+func New(clients *util.Clients, listers *informer.Listers) *Mutating {
 	return &Mutating{
-		clients:   clients,
-		informers: informers,
+		clients: clients,
+		listers: listers,
 	}
 }
 
-var handlers = map[string]func(*controller.Clients, *controller.Informers, *k8sAdmissionV1.AdmissionReview) ([]byte, error){}
+var handlers = map[string]func(*util.Clients, *informer.Listers, *k8sAdmissionV1.AdmissionReview) ([]byte, error){}
 
 func init() {
-	handlers = map[string]func(*controller.Clients, *controller.Informers, *k8sAdmissionV1.AdmissionReview) ([]byte, error){
+	handlers = map[string]func(*util.Clients, *informer.Listers, *k8sAdmissionV1.AdmissionReview) ([]byte, error){
 		tarsMeta.TarsGroupVersionV1B2: crdMutatingV1beta2.Handle,
 		tarsMeta.TarsGroupVersionV1B3: crdMutatingV1beta3.Handle,
 	}
@@ -56,7 +57,7 @@ func (v *Mutating) Handle(w http.ResponseWriter, r *http.Request) {
 	if fun, ok := handlers[gv]; !ok {
 		err = fmt.Errorf("unsupported mutating %s.%s", gv, requestView.Request.Kind.Kind)
 	} else {
-		patchContent, err = fun(v.clients, v.informers, requestView)
+		patchContent, err = fun(v.clients, v.listers, requestView)
 	}
 
 	if err != nil {

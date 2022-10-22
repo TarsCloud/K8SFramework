@@ -10,85 +10,98 @@ import (
 	k8sWatchV1 "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
+	tarsCrdListerV1beta3 "k8s.tars.io/client-go/listers/crd/v1beta3"
 	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	"tarscontroller/controller"
-	"tarscontroller/reconcile"
+	"tarscontroller/util"
 	"time"
 )
 
 type TAccountReconciler struct {
-	clients   *controller.Clients
-	informers *controller.Informers
-	threads   int
-	workQueue workqueue.RateLimitingInterface
+	clients  *util.Clients
+	taLister tarsCrdListerV1beta3.TAccountLister
+	threads  int
+	queue    workqueue.RateLimitingInterface
+	synced   []cache.InformerSynced
 }
 
-func (r *TAccountReconciler) EnqueueObj(resourceName string, resourceEvent k8sWatchV1.EventType, resourceObj interface{}) {
+func (r *TAccountReconciler) EnqueueResourceEvent(resourceKind string, resourceEvent k8sWatchV1.EventType, resourceObj interface{}) {
 	switch resourceObj.(type) {
 	case *tarsCrdV1beta3.TAccount:
 		taccount := resourceObj.(*tarsCrdV1beta3.TAccount)
 		key := fmt.Sprintf("%s/%s", taccount.Namespace, taccount.Name)
-		r.workQueue.Add(key)
+		r.queue.Add(key)
 	default:
 		return
 	}
 }
 
-func (r *TAccountReconciler) Start(stopCh chan struct{}) {
+func (r *TAccountReconciler) StartController(stopCh chan struct{}) {
+	defer utilRuntime.HandleCrash()
+	defer r.queue.ShutDown()
+
+	if !cache.WaitForNamedCacheSync("taccount controller", stopCh, r.synced...) {
+		return
+	}
+
 	for i := 0; i < r.threads; i++ {
-		workFun := func() {
+		worker := func() {
 			for r.processItem() {
 			}
-			r.workQueue.ShutDown()
+			r.queue.ShutDown()
 		}
-		go wait.Until(workFun, time.Second, stopCh)
+		go wait.Until(worker, time.Second, stopCh)
 	}
+
+	<-stopCh
 }
 
-func NewTAccountReconciler(clients *controller.Clients, informers *controller.Informers, threads int) *TAccountReconciler {
-	reconciler := &TAccountReconciler{
-		clients:   clients,
-		informers: informers,
-		threads:   threads,
-		workQueue: workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
+func NewTAccountController(clients *util.Clients, factories *util.InformerFactories, threads int) *TAccountReconciler {
+	taInformer := factories.TarsInformerFactory.Crd().V1beta3().TAccounts()
+	tac := &TAccountReconciler{
+		clients:  clients,
+		taLister: taInformer.Lister(),
+		threads:  threads,
+		queue:    workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
+		synced:   []cache.InformerSynced{taInformer.Informer().HasSynced},
 	}
-	informers.Register(reconciler)
-	return reconciler
+	controller.SetInformerHandlerEvent(tarsMeta.TAccountKind, taInformer.Informer(), tac)
+	return tac
 }
 
 func (r *TAccountReconciler) processItem() bool {
 
-	obj, shutdown := r.workQueue.Get()
+	obj, shutdown := r.queue.Get()
 
 	if shutdown {
 		return false
 	}
 
-	defer r.workQueue.Done(obj)
+	defer r.queue.Done(obj)
 
 	key, ok := obj.(string)
 	if !ok {
 		utilRuntime.HandleError(fmt.Errorf("expected string in workqueue but got %#v", obj))
-		r.workQueue.Forget(obj)
+		r.queue.Forget(obj)
 		return true
 	}
 
-	res, duration := r.reconcile(key)
+	res, duration := r.sync(key)
 	switch res {
-	case reconcile.Done:
-		r.workQueue.Forget(obj)
+	case controller.Done:
+		r.queue.Forget(obj)
 		return true
-	case reconcile.Retry:
-		r.workQueue.AddRateLimited(obj)
+	case controller.Retry:
+		r.queue.AddRateLimited(obj)
 		return true
-	case reconcile.FatalError:
-		r.workQueue.ShutDown()
+	case controller.FatalError:
+		r.queue.ShutDown()
 		return false
-	case reconcile.AddAfter:
-		r.workQueue.Forget(obj)
+	case controller.AddAfter:
+		r.queue.Forget(obj)
 		if duration != nil {
-			r.workQueue.AddAfter(obj, *duration)
+			r.queue.AddAfter(obj, *duration)
 		}
 		return true
 	default:
@@ -98,24 +111,24 @@ func (r *TAccountReconciler) processItem() bool {
 	}
 }
 
-func (r *TAccountReconciler) reconcile(key string) (reconcile.Result, *time.Duration) {
+func (r *TAccountReconciler) sync(key string) (controller.Result, *time.Duration) {
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
 		utilRuntime.HandleError(fmt.Errorf("invalid key: %s", key))
-		return reconcile.Done, nil
+		return controller.Done, nil
 	}
 
-	taccount, err := r.informers.TAccountInformer.Lister().TAccounts(namespace).Get(name)
+	taccount, err := r.taLister.TAccounts(namespace).Get(name)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			return reconcile.Done, nil
+			return controller.Done, nil
 		}
 		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "taccount", namespace, name, err.Error()))
-		return reconcile.Retry, nil
+		return controller.Retry, nil
 	}
 
 	if taccount.Spec.Authentication.Tokens == nil || len(taccount.Spec.Authentication.Tokens) == 0 {
-		return reconcile.Done, nil
+		return controller.Done, nil
 	}
 
 	currentTime := k8sMetaV1.Now()
@@ -146,9 +159,9 @@ func (r *TAccountReconciler) reconcile(key string) (reconcile.Result, *time.Dura
 		_, err = r.clients.CrdClient.CrdV1beta3().TAccounts(namespace).Update(context.TODO(), newTaccount, k8sMetaV1.UpdateOptions{})
 		if err != nil {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourcePatchError, "taccount", namespace, name, err.Error()))
-			return reconcile.Retry, nil
+			return controller.Retry, nil
 		}
 	}
 
-	return reconcile.AddAfter, minDuration
+	return controller.AddAfter, minDuration
 }

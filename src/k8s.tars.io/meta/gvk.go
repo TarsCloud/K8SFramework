@@ -14,6 +14,15 @@ const (
 )
 
 const (
+	KNodeKind    = "Node"
+	KServiceKind = "Service"
+	KPodKind                   = "Pod"
+	KPersistentVolumeClaimKind = "PersistentVolumeClaim"
+	KStatefulSetKind           = "StatefulSet"
+	KDaemonSetKind           = "Daemonset"
+)
+
+const (
 	TServerKind          = "TServer"
 	TImageKind           = "TImage"
 	TConfigKind          = "TConfig"
@@ -21,5 +30,6 @@ const (
 	TTemplateKind        = "TTemplate"
 	TEndpointKind        = "TEndpoint"
 	TTreeKind            = "TTree"
+	TExitedRecordKind    = "TExitedRecord"
 	TFrameworkConfigKind = "TFrameworkConfig"
 )

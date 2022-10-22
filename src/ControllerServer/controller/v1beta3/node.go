@@ -9,63 +9,68 @@ import (
 	utilRuntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	k8sWatchV1 "k8s.io/apimachinery/pkg/watch"
+	k8sCoreListerV1 "k8s.io/client-go/listers/core/v1"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 	tarsMeta "k8s.tars.io/meta"
 	"strings"
 	"tarscontroller/controller"
-	"tarscontroller/reconcile"
+	"tarscontroller/util"
 	"time"
 )
 
 type NodeReconciler struct {
-	clients   *controller.Clients
-	informers *controller.Informers
-	threads   int
-	workQueue workqueue.RateLimitingInterface
+	clients    *util.Clients
+	nodeLister k8sCoreListerV1.NodeLister
+	threads    int
+	queue      workqueue.RateLimitingInterface
+	synced     []cache.InformerSynced
 }
 
-func NewNodeReconciler(clients *controller.Clients, informers *controller.Informers, threads int) *NodeReconciler {
-	reconciler := &NodeReconciler{
-		clients:   clients,
-		informers: informers,
-		threads:   threads,
-		workQueue: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultItemBasedRateLimiter(), ""),
+func NewNodeController(clients *util.Clients, factories *util.InformerFactories, threads int) *NodeReconciler {
+	nodeInformer := factories.K8SInformerFactory.Core().V1().Nodes()
+	nc := &NodeReconciler{
+		clients:    clients,
+		nodeLister: nodeInformer.Lister(),
+		threads:    threads,
+		queue:      workqueue.NewRateLimitingQueue(workqueue.DefaultItemBasedRateLimiter()),
+		synced:     []cache.InformerSynced{nodeInformer.Informer().HasSynced},
 	}
-	informers.Register(reconciler)
-	return reconciler
+	controller.SetInformerHandlerEvent(tarsMeta.KNodeKind, nodeInformer.Informer(), nc)
+	return nc
 }
 
 func (r *NodeReconciler) processItem() bool {
 
-	obj, shutdown := r.workQueue.Get()
+	obj, shutdown := r.queue.Get()
 
 	if shutdown {
 		return false
 	}
 
-	defer r.workQueue.Done(obj)
+	defer r.queue.Done(obj)
 
 	key, ok := obj.(string)
 	if !ok {
 		utilRuntime.HandleError(fmt.Errorf("expected string in workqueue but got %#v", obj))
-		r.workQueue.Forget(obj)
+		r.queue.Forget(obj)
 		return true
 	}
 
-	res := r.reconcile(key)
+	res := r.sync(key)
 
 	switch res {
-	case reconcile.Done:
-		r.workQueue.Forget(obj)
+	case controller.Done:
+		r.queue.Forget(obj)
 		return true
-	case reconcile.Retry:
-		r.workQueue.AddRateLimited(obj)
+	case controller.Retry:
+		r.queue.AddRateLimited(obj)
 		return true
-	case reconcile.AddAfter:
-		r.workQueue.AddAfter(obj, time.Second*1)
+	case controller.AddAfter:
+		r.queue.AddAfter(obj, time.Second*1)
 		return true
-	case reconcile.FatalError:
-		r.workQueue.ShutDown()
+	case controller.FatalError:
+		r.queue.ShutDown()
 		return false
 	default:
 		//code should not reach here
@@ -74,41 +79,50 @@ func (r *NodeReconciler) processItem() bool {
 	}
 }
 
-func (r *NodeReconciler) EnqueueObj(resourceName string, resourceEvent k8sWatchV1.EventType, resourceObj interface{}) {
+func (r *NodeReconciler) EnqueueResourceEvent(resourceKind string, resourceEvent k8sWatchV1.EventType, resourceObj interface{}) {
 	switch resourceObj.(type) {
 	case *k8sCoreV1.Node:
 		node := resourceObj.(*k8sCoreV1.Node)
 		key := node.Name
-		r.workQueue.Add(key)
+		r.queue.Add(key)
 	default:
 		return
 	}
 }
 
-func (r *NodeReconciler) Start(stopCh chan struct{}) {
+func (r *NodeReconciler) StartController(stopCh chan struct{}) {
+	defer utilRuntime.HandleCrash()
+	defer r.queue.ShutDown()
+
+	if !cache.WaitForNamedCacheSync("node controller", stopCh, r.synced...) {
+		return
+	}
+
 	for i := 0; i < r.threads; i++ {
-		workFun := func() {
+		worker := func() {
 			for r.processItem() {
 			}
-			r.workQueue.ShutDown()
+			r.queue.ShutDown()
 		}
-		go wait.Until(workFun, time.Second, stopCh)
+		go wait.Until(worker, time.Second, stopCh)
 	}
+
+	<-stopCh
 }
 
-func (r *NodeReconciler) reconcile(key string) reconcile.Result {
+func (r *NodeReconciler) sync(key string) controller.Result {
 	name := key
-	node, err := r.informers.NodeInformer.Lister().Get(name)
+	node, err := r.nodeLister.Get(name)
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "node", "", name, err.Error()))
-			return reconcile.Retry
+			return controller.Retry
 		}
-		return reconcile.Done
+		return controller.Done
 	}
 
 	if node.DeletionTimestamp != nil || node.Labels == nil {
-		return reconcile.Done
+		return controller.Done
 	}
 
 	nodeNamespaceLabelExist := false
@@ -122,7 +136,7 @@ func (r *NodeReconciler) reconcile(key string) reconcile.Result {
 	_, nodeLabelExist := node.Labels[tarsMeta.TarsNodeLabel]
 
 	if nodeLabelExist == nodeNamespaceLabelExist {
-		return reconcile.Done
+		return controller.Done
 	}
 
 	nodeCopy := node.DeepCopy()
@@ -135,8 +149,8 @@ func (r *NodeReconciler) reconcile(key string) reconcile.Result {
 	nodeInterface := r.clients.K8sClient.CoreV1().Nodes()
 	if _, err = nodeInterface.Update(context.TODO(), nodeCopy, k8sMetaV1.UpdateOptions{}); err != nil {
 		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceUpdateError, "node", "", name, err.Error()))
-		return reconcile.Retry
+		return controller.Retry
 	}
 
-	return reconcile.Done
+	return controller.Done
 }

@@ -10,36 +10,41 @@ import (
 	utilRuntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	k8sWatchV1 "k8s.io/apimachinery/pkg/watch"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
+	tarsCrdListerV1beta3 "k8s.tars.io/client-go/listers/crd/v1beta3"
 	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	"strings"
 	"tarscontroller/controller"
-	"tarscontroller/reconcile"
+	"tarscontroller/util"
 	"time"
 )
 
 const reconcileTargetCheckImageBuildOvertime = "CHECK_BUILD_OVERTIME"
 
 type TImageReconciler struct {
-	clients   *controller.Clients
-	informers *controller.Informers
-	threads   int
-	workQueue workqueue.RateLimitingInterface
+	clients  *util.Clients
+	tiLister tarsCrdListerV1beta3.TImageLister
+	threads  int
+	queue    workqueue.RateLimitingInterface
+	synced   []cache.InformerSynced
 }
 
-func NewTImageReconciler(clients *controller.Clients, informers *controller.Informers, threads int) *TImageReconciler {
-	reconciler := &TImageReconciler{
-		clients:   clients,
-		informers: informers,
-		threads:   threads,
-		workQueue: workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
+func NewTImageController(clients *util.Clients, factories *util.InformerFactories, threads int) *TImageReconciler {
+	tiInformer := factories.TarsInformerFactory.Crd().V1beta3().TImages()
+	tic := &TImageReconciler{
+		clients:  clients,
+		tiLister: tiInformer.Lister(),
+		threads:  threads,
+		queue:    workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
+		synced:   []cache.InformerSynced{tiInformer.Informer().HasSynced},
 	}
-	informers.Register(reconciler)
-	return reconciler
+	controller.SetInformerHandlerEvent(tarsMeta.TServerKind, tiInformer.Informer(), tic)
+	return tic
 }
 
-func (r *TImageReconciler) EnqueueObj(resourceName string, resourceEvent k8sWatchV1.EventType, resourceObj interface{}) {
+func (r *TImageReconciler) EnqueueResourceEvent(resourceKind string, resourceEvent k8sWatchV1.EventType, resourceObj interface{}) {
 	switch resourceObj.(type) {
 	case *tarsCrdV1beta3.TImage:
 		timage := resourceObj.(*tarsCrdV1beta3.TImage)
@@ -48,11 +53,11 @@ func (r *TImageReconciler) EnqueueObj(resourceName string, resourceEvent k8sWatc
 		if timage.ImageType == "server" {
 			if timage.Build != nil && timage.Build.Running != nil {
 				maxBuildTime := tarsMeta.DefaultMaxImageBuildTime
-				if tfc := controller.GetTFrameworkConfig(timage.Namespace); tfc != nil {
+				if tfc := util.GetTFrameworkConfig(timage.Namespace); tfc != nil {
 					maxBuildTime = tfc.ImageBuild.MaxBuildTime
 				}
 				key := fmt.Sprintf("%s/%s/%s/%s", timage.Namespace, timage.Name, reconcileTargetCheckImageBuildOvertime, timage.Build.Running.ID)
-				r.workQueue.AddAfter(key, time.Duration(maxBuildTime)*time.Second)
+				r.queue.AddAfter(key, time.Duration(maxBuildTime)*time.Second)
 			}
 		}
 	default:
@@ -62,31 +67,31 @@ func (r *TImageReconciler) EnqueueObj(resourceName string, resourceEvent k8sWatc
 
 func (r *TImageReconciler) processItem() bool {
 
-	obj, shutdown := r.workQueue.Get()
+	obj, shutdown := r.queue.Get()
 
 	if shutdown {
 		return false
 	}
 
-	defer r.workQueue.Done(obj)
+	defer r.queue.Done(obj)
 
 	key, ok := obj.(string)
 	if !ok {
 		utilRuntime.HandleError(fmt.Errorf("expected string in workqueue but got %#v", obj))
-		r.workQueue.Forget(obj)
+		r.queue.Forget(obj)
 		return true
 	}
 
-	res := r.reconcile(key)
+	res := r.sync(key)
 	switch res {
-	case reconcile.Done:
-		r.workQueue.Forget(obj)
+	case controller.Done:
+		r.queue.Forget(obj)
 		return true
-	case reconcile.Retry:
-		r.workQueue.AddRateLimited(obj)
+	case controller.Retry:
+		r.queue.AddRateLimited(obj)
 		return true
-	case reconcile.FatalError:
-		r.workQueue.ShutDown()
+	case controller.FatalError:
+		r.queue.ShutDown()
 		return false
 	default:
 		//code should not reach here
@@ -95,15 +100,24 @@ func (r *TImageReconciler) processItem() bool {
 	}
 }
 
-func (r *TImageReconciler) Start(stopCh chan struct{}) {
+func (r *TImageReconciler) StartController(stopCh chan struct{}) {
+	defer utilRuntime.HandleCrash()
+	defer r.queue.ShutDown()
+
+	if !cache.WaitForNamedCacheSync("timage controller", stopCh, r.synced...) {
+		return
+	}
+
 	for i := 0; i < r.threads; i++ {
-		workFun := func() {
+		worker := func() {
 			for r.processItem() {
 			}
-			r.workQueue.ShutDown()
+			r.queue.ShutDown()
 		}
-		go wait.Until(workFun, time.Second, stopCh)
+		go wait.Until(worker, time.Second, stopCh)
 	}
+
+	<-stopCh
 }
 
 func (r *TImageReconciler) splitKey(key string) (namespace, name, target, value string) {
@@ -111,15 +125,15 @@ func (r *TImageReconciler) splitKey(key string) (namespace, name, target, value 
 	return v[0], v[1], v[2], v[3]
 }
 
-func (r *TImageReconciler) reconcile(key string) reconcile.Result {
+func (r *TImageReconciler) sync(key string) controller.Result {
 	namespace, name, target, value := r.splitKey(key)
-	timage, err := r.informers.TImageInformer.Lister().TImages(namespace).Get(name)
+	timage, err := r.tiLister.TImages(namespace).Get(name)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			return reconcile.Done
+			return controller.Done
 		}
 		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "timage", namespace, name, err.Error()))
-		return reconcile.Retry
+		return controller.Retry
 	}
 
 	var jsonPatch tarsMeta.JsonPatch
@@ -127,7 +141,7 @@ func (r *TImageReconciler) reconcile(key string) reconcile.Result {
 	switch target {
 	case reconcileTargetCheckImageBuildOvertime:
 		if timage.Build == nil || timage.Build.Running == nil || value != timage.Build.Running.ID {
-			return reconcile.Done
+			return controller.Done
 		}
 		buildState := tarsCrdV1beta3.TImageBuild{
 			Last: &tarsCrdV1beta3.TImageBuildState{
@@ -156,8 +170,8 @@ func (r *TImageReconciler) reconcile(key string) reconcile.Result {
 		_, err = r.clients.CrdClient.CrdV1beta3().TImages(namespace).Patch(context.TODO(), name, types.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		if err != nil {
 			utilRuntime.HandleError(err)
-			return reconcile.Retry
+			return controller.Retry
 		}
 	}
-	return reconcile.Done
+	return controller.Done
 }

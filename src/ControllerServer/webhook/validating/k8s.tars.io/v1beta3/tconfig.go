@@ -14,11 +14,17 @@ import (
 	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	"strings"
-	"tarscontroller/controller"
+	"tarscontroller/util"
+	"tarscontroller/webhook/informer"
 	"time"
 )
 
-func prepareActiveTConfig(newTConfig *tarsCrdV1beta3.TConfig, clients *controller.Clients, informers *controller.Informers) error {
+func prepareActiveTConfig(newTConfig *tarsCrdV1beta3.TConfig, clients *util.Clients, listers *informer.Listers) error {
+
+	if !listers.TCSynced() {
+		return fmt.Errorf("tconfig infomer has not finished syncing")
+	}
+
 	namespace := newTConfig.Namespace
 
 	appRequirement, _ := labels.NewRequirement(tarsMeta.TServerAppLabel, selection.DoubleEquals, []string{newTConfig.App})
@@ -29,7 +35,7 @@ func prepareActiveTConfig(newTConfig *tarsCrdV1beta3.TConfig, clients *controlle
 
 	labelSelector := labels.NewSelector().Add(*appRequirement).Add(*serverRequirement).Add(*configNameRequirement).Add(*podSeqRequirement).Add(*activateRequirement)
 
-	tconfigs, err := informers.TConfigInformer.Lister().ByNamespace(namespace).List(labelSelector)
+	tconfigs, err := listers.TCLister.ByNamespace(namespace).List(labelSelector)
 	if err != nil {
 		err = fmt.Errorf(tarsMeta.ResourceSelectorError, namespace, "tconfig", err.Error())
 		utilRuntime.HandleError(err)
@@ -74,7 +80,12 @@ func prepareActiveTConfig(newTConfig *tarsCrdV1beta3.TConfig, clients *controlle
 	return nil
 }
 
-func prepareDeleteTConfig(tconfig *tarsCrdV1beta3.TConfig, clients *controller.Clients, informers *controller.Informers) error {
+func prepareDeleteTConfig(tconfig *tarsCrdV1beta3.TConfig, clients *util.Clients, listers *informer.Listers) error {
+
+	if !listers.TCSynced() {
+		return fmt.Errorf("tconfig infomer has not finished syncing")
+	}
+
 	appRequirement, _ := labels.NewRequirement(tarsMeta.TServerAppLabel, selection.DoubleEquals, []string{tconfig.App})
 	serverRequirement, _ := labels.NewRequirement(tarsMeta.TServerNameLabel, selection.DoubleEquals, []string{tconfig.Server})
 	configNameRequirement, _ := labels.NewRequirement(tarsMeta.TConfigNameLabel, selection.DoubleEquals, []string{tconfig.ConfigName})
@@ -86,7 +97,7 @@ func prepareDeleteTConfig(tconfig *tarsCrdV1beta3.TConfig, clients *controller.C
 	}
 
 	namespace := tconfig.Namespace
-	tconfigRuntimeObjects, err := informers.TConfigInformer.Lister().ByNamespace(namespace).List(labelSelector)
+	tconfigRuntimeObjects, err := listers.TCLister.ByNamespace(namespace).List(labelSelector)
 
 	if err != nil && !errors.IsNotFound(err) {
 		err = fmt.Errorf(tarsMeta.ResourceSelectorError, namespace, "tconfig", err.Error())
@@ -167,7 +178,7 @@ func prepareDeleteTConfig(tconfig *tarsCrdV1beta3.TConfig, clients *controller.C
 	return nil
 }
 
-func validCreateTConfig(clients *controller.Clients, informers *controller.Informers, view *k8sAdmissionV1.AdmissionReview) error {
+func validCreateTConfig(clients *util.Clients, listers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
 	newTConfig := &tarsCrdV1beta3.TConfig{}
 	_ = json.Unmarshal(view.Request.Object.Raw, newTConfig)
 
@@ -194,7 +205,7 @@ func validCreateTConfig(clients *controller.Clients, informers *controller.Infor
 		labelSelector := labels.NewSelector().Add(*appRequirement).Add(*serverRequirement).Add(*configNameRequirement).Add(*podSeqRequirement).
 			Add(*activatedRequirement).Add(*deactivatingRequirement).Add(*deletingRequirement)
 		namespace := newTConfig.Namespace
-		tconfigRuntimeObjects, err := informers.TConfigInformer.Lister().ByNamespace(namespace).List(labelSelector)
+		tconfigRuntimeObjects, err := listers.TCLister.ByNamespace(namespace).List(labelSelector)
 
 		if err != nil {
 			if errors.IsNotFound(err) {
@@ -211,13 +222,13 @@ func validCreateTConfig(clients *controller.Clients, informers *controller.Infor
 	}
 
 	if newTConfig.Activated {
-		return prepareActiveTConfig(newTConfig, clients, informers)
+		return prepareActiveTConfig(newTConfig, clients, listers)
 	}
 	return nil
 }
 
-func validUpdateTConfig(clients *controller.Clients, informers *controller.Informers, view *k8sAdmissionV1.AdmissionReview) error {
-	controllerUserName := controller.GetControllerUsername()
+func validUpdateTConfig(clients *util.Clients, listers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
+	controllerUserName := util.GetControllerUsername()
 	if controllerUserName == view.Request.UserInfo.Username || controllerUserName == tarsMeta.DefaultUnlawfulAndOnlyForDebugUserName {
 		return nil
 	}
@@ -264,15 +275,15 @@ func validUpdateTConfig(clients *controller.Clients, informers *controller.Infor
 	}
 
 	if !oldTConfig.Activated && newTConfig.Activated {
-		return prepareActiveTConfig(newTConfig, clients, informers)
+		return prepareActiveTConfig(newTConfig, clients, listers)
 	}
 
 	return nil
 }
 
-func validDeleteTConfig(clients *controller.Clients, informers *controller.Informers, view *k8sAdmissionV1.AdmissionReview) error {
+func validDeleteTConfig(clients *util.Clients, informers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
 	username := view.Request.UserInfo.Username
-	controllerUserName := controller.GetControllerUsername()
+	controllerUserName := util.GetControllerUsername()
 
 	if controllerUserName == username || controllerUserName == tarsMeta.DefaultUnlawfulAndOnlyForDebugUserName {
 		return nil

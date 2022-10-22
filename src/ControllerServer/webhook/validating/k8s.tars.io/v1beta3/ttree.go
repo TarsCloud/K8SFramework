@@ -11,10 +11,11 @@ import (
 	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	"strings"
-	"tarscontroller/controller"
+	"tarscontroller/util"
+	"tarscontroller/webhook/informer"
 )
 
-func validTTree(newTTree *tarsCrdV1beta3.TTree, oldTTree *tarsCrdV1beta3.TTree, clients *controller.Clients, informers *controller.Informers) error {
+func validTTree(newTTree *tarsCrdV1beta3.TTree, oldTTree *tarsCrdV1beta3.TTree, clients *util.Clients, listers *informer.Listers) error {
 	namespace := newTTree.Namespace
 
 	businessMap := make(map[string]interface{}, len(newTTree.Businesses))
@@ -42,11 +43,15 @@ func validTTree(newTTree *tarsCrdV1beta3.TTree, oldTTree *tarsCrdV1beta3.TTree, 
 		return nil
 	}
 
+	if !listers.TRSynced() {
+		return fmt.Errorf("tserver infomer has not finished syncing")
+	}
+
 	for i := range oldTTree.Apps {
 		appName := oldTTree.Apps[i].Name
 		if _, ok := appMap[appName]; !ok {
 			requirement, _ := labels.NewRequirement(tarsMeta.TServerAppLabel, selection.DoubleEquals, []string{appName})
-			tservers, err := informers.TServerInformer.Lister().TServers(namespace).List(labels.NewSelector().Add(*requirement))
+			tservers, err := listers.TSLister.TServers(namespace).List(labels.NewSelector().Add(*requirement))
 			if err != nil {
 				utilRuntime.HandleError(err)
 				return err
@@ -59,7 +64,7 @@ func validTTree(newTTree *tarsCrdV1beta3.TTree, oldTTree *tarsCrdV1beta3.TTree, 
 	return nil
 }
 
-func validCreateTTree(clients *controller.Clients, informers *controller.Informers, view *k8sAdmissionV1.AdmissionReview) error {
+func validCreateTTree(clients *util.Clients, listers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
 	newTTree := &tarsCrdV1beta3.TTree{}
 	_ = json.Unmarshal(view.Request.Object.Raw, newTTree)
 
@@ -68,8 +73,11 @@ func validCreateTTree(clients *controller.Clients, informers *controller.Informe
 	}
 
 	namespace := newTTree.Namespace
+	if !listers.TRSynced() {
+		return fmt.Errorf("ttree infomer has not finished syncing")
+	}
 
-	_, err := informers.TTreeInformer.Lister().TTrees(namespace).Get(tarsMeta.FixedTTreeResourceName)
+	_, err := listers.TTLister.ByNamespace(namespace).Get(tarsMeta.FixedTTreeResourceName)
 	if err == nil {
 		return fmt.Errorf("create ttree operation is defined")
 	}
@@ -78,11 +86,11 @@ func validCreateTTree(clients *controller.Clients, informers *controller.Informe
 		return fmt.Errorf("create ttree operation is defined")
 	}
 
-	return validTTree(newTTree, nil, clients, informers)
+	return validTTree(newTTree, nil, clients, listers)
 }
 
-func validUpdateTTree(clients *controller.Clients, informers *controller.Informers, view *k8sAdmissionV1.AdmissionReview) error {
-	controllerUserName := controller.GetControllerUsername()
+func validUpdateTTree(clients *util.Clients, listers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
+	controllerUserName := util.GetControllerUsername()
 	if controllerUserName == view.Request.UserInfo.Username || controllerUserName == tarsMeta.DefaultUnlawfulAndOnlyForDebugUserName {
 		return nil
 	}
@@ -92,12 +100,12 @@ func validUpdateTTree(clients *controller.Clients, informers *controller.Informe
 	oldTTree := &tarsCrdV1beta3.TTree{}
 	_ = json.Unmarshal(view.Request.OldObject.Raw, oldTTree)
 
-	return validTTree(ttree, oldTTree, clients, informers)
+	return validTTree(ttree, oldTTree, clients, listers)
 }
 
-func validDeleteTTree(clients *controller.Clients, informers *controller.Informers, view *k8sAdmissionV1.AdmissionReview) error {
+func validDeleteTTree(clients *util.Clients, listers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
 	username := view.Request.UserInfo.Username
-	controllerUserName := controller.GetControllerUsername()
+	controllerUserName := util.GetControllerUsername()
 
 	if controllerUserName == username || controllerUserName == tarsMeta.DefaultUnlawfulAndOnlyForDebugUserName {
 		return nil

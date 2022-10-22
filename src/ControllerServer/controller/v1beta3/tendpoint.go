@@ -11,31 +11,45 @@ import (
 	utilRuntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	k8sWatchV1 "k8s.io/apimachinery/pkg/watch"
+	k8sCoreListerV1 "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
+	tarsCrdListerV1beta3 "k8s.tars.io/client-go/listers/crd/v1beta3"
 	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	"strings"
 	"tarscontroller/controller"
-	"tarscontroller/reconcile"
+	"tarscontroller/util"
 	"time"
 )
 
 type TEndpointReconciler struct {
-	clients   *controller.Clients
-	informers *controller.Informers
+	clients   *util.Clients
+	podLister k8sCoreListerV1.PodLister
+	teLister  tarsCrdListerV1beta3.TEndpointLister
+	tsLister  tarsCrdListerV1beta3.TServerLister
 	threads   int
-	workQueue workqueue.RateLimitingInterface
+	queue     workqueue.RateLimitingInterface
+	synced    []cache.InformerSynced
 }
 
-func NewTEndpointReconciler(clients *controller.Clients, informers *controller.Informers, threads int) *TEndpointReconciler {
-	reconciler := &TEndpointReconciler{
+func NewTEndpointController(clients *util.Clients, factories *util.InformerFactories, threads int) *TEndpointReconciler {
+	podInformer := factories.K8SInformerFactoryWithTarsFilter.Core().V1().Pods()
+	teInformer := factories.TarsInformerFactory.Crd().V1beta3().TEndpoints()
+	tsInformer := factories.TarsInformerFactory.Crd().V1beta3().TServers()
+	tec := &TEndpointReconciler{
 		clients:   clients,
-		informers: informers,
-		threads:   threads,		workQueue: workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
+		podLister: podInformer.Lister(),
+		teLister:  teInformer.Lister(),
+		tsLister:  tsInformer.Lister(),
+		threads:   threads,
+		queue:     workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
+		synced:    []cache.InformerSynced{podInformer.Informer().HasSynced, teInformer.Informer().HasSynced, tsInformer.Informer().HasSynced},
 	}
-	informers.Register(reconciler)
-	return reconciler
+	controller.SetInformerHandlerEvent(tarsMeta.KPodKind, podInformer.Informer(), tec)
+	controller.SetInformerHandlerEvent(tarsMeta.TEndpointKind, teInformer.Informer(), tec)
+	controller.SetInformerHandlerEvent(tarsMeta.TServerKind, tsInformer.Informer(), tec)
+	return tec
 }
 
 func splitTARSConditionReason(reason string) (setting, present, pid string) {
@@ -54,34 +68,34 @@ func splitTARSConditionReason(reason string) (setting, present, pid string) {
 
 func (r *TEndpointReconciler) processItem() bool {
 
-	obj, shutdown := r.workQueue.Get()
+	obj, shutdown := r.queue.Get()
 
 	if shutdown {
 		return false
 	}
 
-	defer r.workQueue.Done(obj)
+	defer r.queue.Done(obj)
 
 	key, ok := obj.(string)
 	if !ok {
 		utilRuntime.HandleError(fmt.Errorf("expected string in workqueue but got %#v", obj))
-		r.workQueue.Forget(obj)
+		r.queue.Forget(obj)
 		return true
 	}
 
-	var res reconcile.Result
-	res = r.reconcile(key)
+	var res controller.Result
+	res = r.sync(key)
 
 	switch res {
-	case reconcile.Done:
-		r.workQueue.Forget(obj)
+	case controller.Done:
+		r.queue.Forget(obj)
 		return true
-	case reconcile.Retry:
-		//r.workQueue.AddRateLimited(obj)
-		r.workQueue.AddAfter(obj, time.Millisecond*100)
+	case controller.Retry:
+		//r.queue.AddRateLimited(obj)
+		r.queue.AddAfter(obj, time.Millisecond*100)
 		return true
-	case reconcile.FatalError:
-		r.workQueue.ShutDown()
+	case controller.FatalError:
+		r.queue.ShutDown()
 		return false
 	default:
 		//code should not reach here
@@ -90,16 +104,16 @@ func (r *TEndpointReconciler) processItem() bool {
 	}
 }
 
-func (r *TEndpointReconciler) EnqueueObj(resourceName string, resourceEvent k8sWatchV1.EventType, resourceObj interface{}) {
+func (r *TEndpointReconciler) EnqueueResourceEvent(resourceKind string, resourceEvent k8sWatchV1.EventType, resourceObj interface{}) {
 	switch resourceObj.(type) {
 	case *tarsCrdV1beta3.TServer:
 		tserver := resourceObj.(*tarsCrdV1beta3.TServer)
 		key := fmt.Sprintf("%s/%s", tserver.Namespace, tserver.Name)
-		r.workQueue.Add(key)
+		r.queue.Add(key)
 	case *tarsCrdV1beta3.TEndpoint:
 		tendpoint := resourceObj.(*tarsCrdV1beta3.TEndpoint)
 		key := fmt.Sprintf("%s/%s", tendpoint.Namespace, tendpoint.Name)
-		r.workQueue.Add(key)
+		r.queue.Add(key)
 	case *k8sCoreV1.Pod:
 		pod := resourceObj.(*k8sCoreV1.Pod)
 		if pod.Labels != nil {
@@ -107,7 +121,7 @@ func (r *TEndpointReconciler) EnqueueObj(resourceName string, resourceEvent k8sW
 			server := pod.Labels[tarsMeta.TServerNameLabel]
 			if app != "" && server != "" {
 				key := fmt.Sprintf("%s/%s-%s", pod.Namespace, strings.ToLower(app), strings.ToLower(server))
-				r.workQueue.Add(key)
+				r.queue.Add(key)
 				return
 			}
 		}
@@ -116,61 +130,70 @@ func (r *TEndpointReconciler) EnqueueObj(resourceName string, resourceEvent k8sW
 	}
 }
 
-func (r *TEndpointReconciler) Start(stopCh chan struct{}) {
+func (r *TEndpointReconciler) StartController(stopCh chan struct{}) {
+	defer utilRuntime.HandleCrash()
+	defer r.queue.ShutDown()
+
+	if !cache.WaitForNamedCacheSync("tendpoint controller", stopCh, r.synced...) {
+		return
+	}
+
 	for i := 0; i < r.threads; i++ {
-		workFun := func() {
+		worker := func() {
 			for r.processItem() {
 			}
-			r.workQueue.ShutDown()
+			r.queue.ShutDown()
 		}
-		go wait.Until(workFun, time.Second, stopCh)
+		go wait.Until(worker, time.Second, stopCh)
 	}
+
+	<-stopCh
 }
 
-func (r *TEndpointReconciler) reconcile(key string) reconcile.Result {
+func (r *TEndpointReconciler) sync(key string) controller.Result {
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 
 	if err != nil {
 		utilRuntime.HandleError(fmt.Errorf("invalid key: %s", key))
-		return reconcile.Done
+		return controller.Done
 	}
 
-	tserver, err := r.informers.TServerInformer.Lister().TServers(namespace).Get(name)
+	tserver, err := r.tsLister.TServers(namespace).Get(name)
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "tserver", namespace, name, err.Error()))
-			return reconcile.Retry
+			return controller.Retry
 		}
 		err = r.clients.CrdClient.CrdV1beta3().TEndpoints(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
 		if err != nil && !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceDeleteError, "tendpoint", namespace, name, err.Error()))
-			return reconcile.Retry
+			return controller.Retry
 		}
-		return reconcile.Done
+		return controller.Done
 	}
 
 	if tserver.DeletionTimestamp != nil {
 		err = r.clients.CrdClient.CrdV1beta3().TEndpoints(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
 		if err != nil && !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceDeleteError, "tendpoint", namespace, name, err.Error()))
-			return reconcile.Retry
+			return controller.Retry
 		}
-		return reconcile.Done
+		return controller.Done
 	}
 
-	tendpoint, err := r.informers.TEndpointInformer.Lister().TEndpoints(namespace).Get(name)
+	tendpoint, err := r.teLister.TEndpoints(namespace).Get(name)
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "tendpoint", namespace, name, err.Error()))
-			return reconcile.Retry
+			return controller.Retry
 		}
 		tendpoint = buildTEndpoint(tserver)
 		tendpointInterface := r.clients.CrdClient.CrdV1beta3().TEndpoints(namespace)
 		if _, err = tendpointInterface.Create(context.TODO(), tendpoint, k8sMetaV1.CreateOptions{}); err != nil && !errors.IsAlreadyExists(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceCreateError, "tendpoint", namespace, name, err.Error()))
-			return reconcile.Retry
+			return controller.Retry
 		}
-		return reconcile.Done
+		return controller.Done
 	}
 
 	if !k8sMetaV1.IsControlledBy(tendpoint, tserver) {
@@ -178,7 +201,7 @@ func (r *TEndpointReconciler) reconcile(key string) reconcile.Result {
 		if err = tendpointInterface.Delete(context.TODO(), tendpoint.Name, k8sMetaV1.DeleteOptions{}); err != nil {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceUpdateError, "tendpoint", namespace, name, err.Error()))
 		}
-		return reconcile.Retry
+		return controller.Retry
 	}
 
 	anyChanged := !EqualTServerAndTEndpoint(tserver, tendpoint)
@@ -188,7 +211,7 @@ func (r *TEndpointReconciler) reconcile(key string) reconcile.Result {
 		tendpointInterface := r.clients.CrdClient.CrdV1beta3().TEndpoints(namespace)
 		if _, err = tendpointInterface.Update(context.TODO(), tendpointCopy, k8sMetaV1.UpdateOptions{}); err != nil {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceUpdateError, "tendpoint", namespace, name, err.Error()))
-			return reconcile.Retry
+			return controller.Retry
 		}
 	}
 	return r.updateStatus(tendpoint)
@@ -274,15 +297,15 @@ func (r *TEndpointReconciler) buildPodStatus(pod *k8sCoreV1.Pod) *tarsCrdV1beta3
 	return podStatus
 }
 
-func (r *TEndpointReconciler) updateStatus(tendpoint *tarsCrdV1beta3.TEndpoint) reconcile.Result {
+func (r *TEndpointReconciler) updateStatus(tendpoint *tarsCrdV1beta3.TEndpoint) controller.Result {
 	namespace := tendpoint.Namespace
 	appRequirement, _ := labels.NewRequirement(tarsMeta.TServerAppLabel, selection.DoubleEquals, []string{tendpoint.Spec.App})
 	serverRequirement, _ := labels.NewRequirement(tarsMeta.TServerNameLabel, selection.DoubleEquals, []string{tendpoint.Spec.Server})
 
-	pods, err := r.informers.PodInformer.Lister().Pods(namespace).List(labels.NewSelector().Add(*appRequirement).Add(*serverRequirement))
+	pods, err := r.podLister.Pods(namespace).List(labels.NewSelector().Add(*appRequirement).Add(*serverRequirement))
 	if err != nil {
 		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceSelectorError, namespace, "tendpoint", err.Error()))
-		return reconcile.Retry
+		return controller.Retry
 	}
 
 	tendpointPodStatuses := make([]*tarsCrdV1beta3.TEndpointPodStatus, 0, len(pods))
@@ -297,8 +320,8 @@ func (r *TEndpointReconciler) updateStatus(tendpoint *tarsCrdV1beta3.TEndpoint) 
 
 	if err != nil {
 		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceUpdateError, "tendpoint", namespace, tendpoint.Name, err.Error()))
-		return reconcile.Retry
+		return controller.Retry
 	}
 
-	return reconcile.Done
+	return controller.Done
 }

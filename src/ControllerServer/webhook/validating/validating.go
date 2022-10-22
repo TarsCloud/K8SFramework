@@ -7,7 +7,8 @@ import (
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	tarsMeta "k8s.tars.io/meta"
 	"net/http"
-	"tarscontroller/controller"
+	"tarscontroller/util"
+	"tarscontroller/webhook/informer"
 	validatingAppsV1 "tarscontroller/webhook/validating/apps/v1"
 	validatingCoreV1 "tarscontroller/webhook/validating/core/v1"
 	validatingCrdV1Beta2 "tarscontroller/webhook/validating/k8s.tars.io/v1beta2"
@@ -15,21 +16,21 @@ import (
 )
 
 type Validating struct {
-	clients   *controller.Clients
-	informers *controller.Informers
+	clients *util.Clients
+	listers *informer.Listers
 }
 
-func New(clients *controller.Clients, informers *controller.Informers) *Validating {
+func New(clients *util.Clients, listers *informer.Listers) *Validating {
 	return &Validating{
-		clients:   clients,
-		informers: informers,
+		clients: clients,
+		listers: listers,
 	}
 }
 
-var handlers = map[string]func(*controller.Clients, *controller.Informers, *k8sAdmissionV1.AdmissionReview) error{}
+var handlers = map[string]func(*util.Clients, *informer.Listers, *k8sAdmissionV1.AdmissionReview) error{}
 
 func init() {
-	handlers = map[string]func(*controller.Clients, *controller.Informers, *k8sAdmissionV1.AdmissionReview) error{
+	handlers = map[string]func(*util.Clients, *informer.Listers, *k8sAdmissionV1.AdmissionReview) error{
 		"core/v1":                     validatingCoreV1.Handler,
 		"/v1":                         validatingCoreV1.Handler,
 		"apps/v1":                     validatingAppsV1.Handler,
@@ -50,7 +51,7 @@ func (v *Validating) Handle(w http.ResponseWriter, r *http.Request) {
 	if fun, ok := handlers[gv]; !ok {
 		err = fmt.Errorf("unsupported validating %s.%s", gv, requestView.Request.Kind.Kind)
 	} else {
-		err = fun(v.clients, v.informers, requestView)
+		err = fun(v.clients, v.listers, requestView)
 	}
 
 	var responseView = &k8sAdmissionV1.AdmissionReview{

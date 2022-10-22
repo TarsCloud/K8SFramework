@@ -11,44 +11,53 @@ import (
 	utilRuntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	k8sWatchV1 "k8s.io/apimachinery/pkg/watch"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/utils/integer"
+	tarsCrdListerV1beta3 "k8s.tars.io/client-go/listers/crd/v1beta3"
 	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	"strings"
 	"tarscontroller/controller"
-	"tarscontroller/reconcile"
+	"tarscontroller/util"
 	"time"
 )
 
 type TExitedRecordReconciler struct {
-	clients   *controller.Clients
-	informers *controller.Informers
-	threads   int
-	workQueue workqueue.RateLimitingInterface
+	clients  *util.Clients
+	teLister tarsCrdListerV1beta3.TExitedRecordLister
+	tsLister tarsCrdListerV1beta3.TServerLister
+	threads  int
+	queue    workqueue.RateLimitingInterface
+	synced   []cache.InformerSynced
 }
 
-func NewTExitedPodReconciler(clients *controller.Clients, informers *controller.Informers, threads int) *TExitedRecordReconciler {
-	reconciler := &TExitedRecordReconciler{
-		clients:   clients,
-		informers: informers,
-		threads:   threads,
-		workQueue: workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
+func NewTExitedPodController(clients *util.Clients, factories *util.InformerFactories, threads int) *TExitedRecordReconciler {
+	teInformer := factories.TarsInformerFactory.Crd().V1beta3().TExitedRecords()
+	tsInformer := factories.TarsInformerFactory.Crd().V1beta3().TServers()
+	tec := &TExitedRecordReconciler{
+		clients:  clients,
+		teLister: teInformer.Lister(),
+		tsLister: tsInformer.Lister(),
+		threads:  threads,
+		queue:    workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
+		synced:   []cache.InformerSynced{teInformer.Informer().HasSynced, tsInformer.Informer().HasSynced},
 	}
-	informers.Register(reconciler)
-	return reconciler
+	controller.SetInformerHandlerEvent(tarsMeta.TEndpointKind, teInformer.Informer(), tec)
+	controller.SetInformerHandlerEvent(tarsMeta.TServerKind, tsInformer.Informer(), tec)
+	return tec
 }
 
-func (r *TExitedRecordReconciler) EnqueueObj(resourceName string, resourceEvent k8sWatchV1.EventType, resourceObj interface{}) {
+func (r *TExitedRecordReconciler) EnqueueResourceEvent(resourceKind string, resourceEvent k8sWatchV1.EventType, resourceObj interface{}) {
 	switch resourceObj.(type) {
 	case *tarsCrdV1beta3.TServer:
 		tserver := resourceObj.(*tarsCrdV1beta3.TServer)
 		key := fmt.Sprintf("%s/%s", tserver.Namespace, tserver.Name)
-		r.workQueue.Add(key)
+		r.queue.Add(key)
 	case *tarsCrdV1beta3.TExitedRecord:
 		texitedRecord := resourceObj.(*tarsCrdV1beta3.TExitedRecord)
 		key := fmt.Sprintf("%s/%s", texitedRecord.Namespace, texitedRecord.Name)
-		r.workQueue.Add(key)
+		r.queue.Add(key)
 	case *k8sCoreV1.Pod:
 		pod := resourceObj.(*k8sCoreV1.Pod)
 		if pod.DeletionTimestamp != nil && pod.UID != "" && pod.Labels != nil {
@@ -72,7 +81,7 @@ func (r *TExitedRecordReconciler) EnqueueObj(resourceName string, resourceEvent 
 				}
 				bs, _ := json.Marshal(tExitedEvent)
 				key := fmt.Sprintf("%s/event/%s", pod.Namespace, bs)
-				r.workQueue.Add(key)
+				r.queue.Add(key)
 				return
 			}
 		}
@@ -87,22 +96,22 @@ func (r *TExitedRecordReconciler) splitKey(key string) []string {
 
 func (r *TExitedRecordReconciler) processItem() bool {
 
-	obj, shutdown := r.workQueue.Get()
+	obj, shutdown := r.queue.Get()
 
 	if shutdown {
 		return false
 	}
 
-	defer r.workQueue.Done(obj)
+	defer r.queue.Done(obj)
 
 	key, ok := obj.(string)
 	if !ok {
 		utilRuntime.HandleError(fmt.Errorf("expected string in workqueue but got %#v", obj))
-		r.workQueue.Forget(obj)
+		r.queue.Forget(obj)
 		return true
 	}
 
-	var res reconcile.Result
+	var res controller.Result
 	v := r.splitKey(key)
 	if len(v) == 2 {
 		res = r.reconcileBaseTServer(v[0], v[1])
@@ -111,14 +120,14 @@ func (r *TExitedRecordReconciler) processItem() bool {
 	}
 
 	switch res {
-	case reconcile.Done:
-		r.workQueue.Forget(obj)
+	case controller.Done:
+		r.queue.Forget(obj)
 		return true
-	case reconcile.Retry:
-		r.workQueue.AddRateLimited(obj)
+	case controller.Retry:
+		r.queue.AddRateLimited(obj)
 		return true
-	case reconcile.FatalError:
-		r.workQueue.ShutDown()
+	case controller.FatalError:
+		r.queue.ShutDown()
 		return false
 	default:
 		//code should not reach here
@@ -127,70 +136,79 @@ func (r *TExitedRecordReconciler) processItem() bool {
 	}
 }
 
-func (r *TExitedRecordReconciler) Start(stopCh chan struct{}) {
+func (r *TExitedRecordReconciler) StartController(stopCh chan struct{}) {
+	defer utilRuntime.HandleCrash()
+	defer r.queue.ShutDown()
+
+	if !cache.WaitForNamedCacheSync("texitedrecord controller", stopCh, r.synced...) {
+		return
+	}
+
 	for i := 0; i < r.threads; i++ {
-		workFun := func() {
+		worker := func() {
 			for r.processItem() {
 			}
-			r.workQueue.ShutDown()
+			r.queue.ShutDown()
 		}
-		go wait.Until(workFun, time.Second, stopCh)
+		go wait.Until(worker, time.Second, stopCh)
 	}
+
+	<-stopCh
 }
 
-func (r *TExitedRecordReconciler) reconcileBaseTServer(namespace string, name string) reconcile.Result {
-	tserver, err := r.informers.TServerInformer.Lister().TServers(namespace).Get(name)
+func (r *TExitedRecordReconciler) reconcileBaseTServer(namespace string, name string) controller.Result {
+	tserver, err := r.tsLister.TServers(namespace).Get(name)
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "tserver", namespace, name, err.Error()))
-			return reconcile.Retry
+			return controller.Retry
 		}
 		err = r.clients.CrdClient.CrdV1beta3().TExitedRecords(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
 		if err != nil && !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceDeleteError, "texitedrecord", namespace, name, err.Error()))
-			return reconcile.Retry
+			return controller.Retry
 		}
-		return reconcile.Done
+		return controller.Done
 	}
 
 	if tserver.DeletionTimestamp != nil {
 		err = r.clients.CrdClient.CrdV1beta3().TExitedRecords(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
 		if err != nil && !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceDeleteError, "texitedrecord", namespace, name, err.Error()))
-			return reconcile.Retry
+			return controller.Retry
 		}
-		return reconcile.Done
+		return controller.Done
 	}
 
-	tExitedRecord, err := r.informers.TExitedRecordInformer.Lister().TExitedRecords(namespace).Get(name)
+	tExitedRecord, err := r.teLister.TExitedRecords(namespace).Get(name)
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "texitedrecord", namespace, name, err.Error()))
-			return reconcile.Retry
+			return controller.Retry
 		}
 		tExitedRecord = buildTExitedRecord(tserver)
 		tExitedPodInterface := r.clients.CrdClient.CrdV1beta3().TExitedRecords(namespace)
 		if _, err = tExitedPodInterface.Create(context.TODO(), tExitedRecord, k8sMetaV1.CreateOptions{}); err != nil && !errors.IsAlreadyExists(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceCreateError, "texitedrecord", namespace, name, err.Error()))
-			return reconcile.Retry
+			return controller.Retry
 		}
-		return reconcile.Done
+		return controller.Done
 	}
-	return reconcile.Done
+	return controller.Done
 }
 
-func (r *TExitedRecordReconciler) reconcileBasePod(namespace string, tExitedPodSpecString string) reconcile.Result {
+func (r *TExitedRecordReconciler) reconcileBasePod(namespace string, tExitedPodSpecString string) controller.Result {
 	var tExitedEvent tarsCrdV1beta3.TExitedRecord
 	_ = json.Unmarshal([]byte(tExitedPodSpecString), &tExitedEvent)
 
 	tExitedRecordName := fmt.Sprintf("%s-%s", strings.ToLower(tExitedEvent.App), strings.ToLower(tExitedEvent.Server))
-	tExitedRecord, err := r.informers.TExitedRecordInformer.Lister().TExitedRecords(namespace).Get(tExitedRecordName)
+	tExitedRecord, err := r.teLister.TExitedRecords(namespace).Get(tExitedRecordName)
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "texitedrecord", namespace, tExitedRecordName, err.Error()))
-			return reconcile.Retry
+			return controller.Retry
 		}
-		return reconcile.Done
+		return controller.Done
 	}
 
 	recordedPodsLen := len(tExitedRecord.Pods)
@@ -201,7 +219,7 @@ func (r *TExitedRecordReconciler) reconcileBasePod(namespace string, tExitedPodS
 	for i := 0; i < maxCheckLen; i++ {
 		if tExitedRecord.Pods[i].UID == tExitedEvent.Pods[0].UID {
 			// means exited events had recorded
-			return reconcile.Done
+			return controller.Done
 		}
 	}
 
@@ -215,7 +233,7 @@ func (r *TExitedRecordReconciler) reconcileBasePod(namespace string, tExitedPodS
 
 	recordsLimit := tarsMeta.DefaultMaxRecordLen
 
-	if tfc := controller.GetTFrameworkConfig(namespace); tfc != nil {
+	if tfc := util.GetTFrameworkConfig(namespace); tfc != nil {
 		recordsLimit = tfc.RecordLimit.TExitedPod
 	}
 
@@ -231,8 +249,8 @@ func (r *TExitedRecordReconciler) reconcileBasePod(namespace string, tExitedPodS
 
 	if err != nil {
 		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourcePatchError, "texitedrecord", namespace, tExitedRecordName, err.Error()))
-		return reconcile.Retry
+		return controller.Retry
 	}
 
-	return reconcile.Done
+	return controller.Done
 }

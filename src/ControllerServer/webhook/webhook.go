@@ -4,9 +4,11 @@ import (
 	"fmt"
 	utilRuntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
+	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
 	"net/http"
-	"tarscontroller/controller"
+	"tarscontroller/util"
 	"tarscontroller/webhook/conversion"
+	"tarscontroller/webhook/informer"
 	"tarscontroller/webhook/mutating"
 	"tarscontroller/webhook/validating"
 	"time"
@@ -21,16 +23,36 @@ type Webhook struct {
 	conversion *conversion.Conversion
 }
 
-func New(clients *controller.Clients, informers *controller.Informers) *Webhook {
+func New(clients *util.Clients, factories *util.InformerFactories) *Webhook {
+	tsInformer := factories.TarsInformerFactory.Crd().V1beta3().TServers()
+	ttInformer := factories.MetadataInformerFactor.ForResource(tarsCrdV1beta3.SchemeGroupVersion.WithResource("ttemplates"))
+	tcInformer := factories.MetadataInformerFactor.ForResource(tarsCrdV1beta3.SchemeGroupVersion.WithResource("tconfigs"))
+	trInformer := factories.MetadataInformerFactor.ForResource(tarsCrdV1beta3.SchemeGroupVersion.WithResource("ttrees"))
+
+	listers := &informer.Listers{
+		TSLister: tsInformer.Lister(),
+		TSSynced: tsInformer.Informer().HasSynced,
+
+		TTLister: ttInformer.Lister(),
+		TTSynced: ttInformer.Informer().HasSynced,
+
+		TCLister: tcInformer.Lister(),
+		TCSynced: tcInformer.Informer().HasSynced,
+
+		TRLister: trInformer.Lister(),
+		TRSynced: trInformer.Informer().HasSynced,
+	}
+
 	webhook := &Webhook{
 		conversion: conversion.New(),
-		mutating:   mutating.New(clients, informers),
-		validating: validating.New(clients, informers),
+		mutating:   mutating.New(clients, listers),
+		validating: validating.New(clients, listers),
 	}
+
 	return webhook
 }
 
-func (h *Webhook) Start(stopCh chan struct{}) {
+func (h *Webhook) StartController(stopCh chan struct{}) {
 	go wait.Until(func() {
 		validatingFunc := func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Add("Content-Type", "application/json")
