@@ -84,7 +84,7 @@ func (r *TEndpointReconciler) processItem() bool {
 	}
 
 	var res controller.Result
-	res = r.sync(key)
+	res = r.reconcile(key)
 
 	switch res {
 	case controller.Done:
@@ -130,7 +130,7 @@ func (r *TEndpointReconciler) EnqueueResourceEvent(resourceKind string, resource
 	}
 }
 
-func (r *TEndpointReconciler) StartController(stopCh chan struct{}) {
+func (r *TEndpointReconciler) Run(stopCh chan struct{}) {
 	defer utilRuntime.HandleCrash()
 	defer r.queue.ShutDown()
 
@@ -150,7 +150,7 @@ func (r *TEndpointReconciler) StartController(stopCh chan struct{}) {
 	<-stopCh
 }
 
-func (r *TEndpointReconciler) sync(key string) controller.Result {
+func (r *TEndpointReconciler) reconcile(key string) controller.Result {
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 
 	if err != nil {

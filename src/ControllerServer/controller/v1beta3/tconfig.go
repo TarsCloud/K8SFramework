@@ -44,7 +44,6 @@ func (r *TConfigReconciler) EnqueueResourceEvent(resourceKind string, resourceEv
 		namespace := tconfigMetadataObj.GetNamespace()
 		switch resourceEvent {
 		case k8sWatchV1.Added:
-			r.modifyQueue.Add(namespace)
 			objLabels := tconfigMetadataObj.GetLabels()
 			app, _ := objLabels[tarsMeta.TServerAppLabel]
 			server, _ := objLabels[tarsMeta.TServerNameLabel]
@@ -52,6 +51,7 @@ func (r *TConfigReconciler) EnqueueResourceEvent(resourceKind string, resourceEv
 			podSeq, _ := objLabels[tarsMeta.TConfigPodSeqLabel]
 			key := fmt.Sprintf("%s/%s/%s/%s/%s", namespace, app, server, configName, podSeq)
 			r.addQueue.Add(key)
+			r.modifyQueue.Add(namespace)
 		case k8sWatchV1.Modified:
 			r.modifyQueue.Add(namespace)
 			r.deleteQueue.Add(namespace)
@@ -61,7 +61,7 @@ func (r *TConfigReconciler) EnqueueResourceEvent(resourceKind string, resourceEv
 	}
 }
 
-func (r *TConfigReconciler) reconcileAdd(key string) controller.Result {
+func (r *TConfigReconciler) reconcileAdded(key string) controller.Result {
 	namespace, app, server, configName, podSeq := r.splitAddKey(key)
 	appRequirement, _ := labels.NewRequirement(tarsMeta.TServerAppLabel, selection.DoubleEquals, []string{app})
 	serverRequirement, _ := labels.NewRequirement(tarsMeta.TServerNameLabel, selection.DoubleEquals, []string{server})
@@ -123,7 +123,7 @@ func (r *TConfigReconciler) reconcileAdd(key string) controller.Result {
 	return controller.Done
 }
 
-func (r *TConfigReconciler) reconcileModify(key string) controller.Result {
+func (r *TConfigReconciler) reconcileModified(key string) controller.Result {
 	namespace := key
 	deactivateRequirement, _ := labels.NewRequirement(tarsMeta.TConfigDeactivateLabel, selection.Exists, nil)
 	deactivateLabelSelector := labels.NewSelector().Add(*deactivateRequirement)
@@ -167,7 +167,7 @@ func (r *TConfigReconciler) reconcileModify(key string) controller.Result {
 	return controller.Done
 }
 
-func (r *TConfigReconciler) reconcileDelete(key string) controller.Result {
+func (r *TConfigReconciler) reconcileDeleted(key string) controller.Result {
 	namespace := key
 	deletingRequirement, _ := labels.NewRequirement(tarsMeta.TConfigDeletingLabel, selection.Exists, nil)
 	deletingLabelSelector := labels.NewSelector().Add(*deletingRequirement)
@@ -181,7 +181,7 @@ func (r *TConfigReconciler) reconcileDelete(key string) controller.Result {
 	return controller.Done
 }
 
-func (r *TConfigReconciler) StartController(stopCh chan struct{}) {
+func (r *TConfigReconciler) Run(stopCh chan struct{}) {
 	defer utilRuntime.HandleCrash()
 	defer r.addQueue.ShutDown()
 	defer r.modifyQueue.ShutDown()
@@ -192,9 +192,15 @@ func (r *TConfigReconciler) StartController(stopCh chan struct{}) {
 	}
 
 	for i := 0; i < r.threads; i++ {
-		go wait.Until(func() { r.processItem(r.addQueue, r.reconcileAdd) }, time.Second, stopCh)
-		go wait.Until(func() { r.processItem(r.modifyQueue, r.reconcileModify) }, time.Second, stopCh)
-		go wait.Until(func() { r.processItem(r.deleteQueue, r.reconcileDelete) }, time.Second, stopCh)
+		go wait.Until(func() { r.processItem(r.addQueue, r.reconcileAdded) }, time.Second, stopCh)
+	}
+
+	for i := 0; i < 3; i++ {
+		go wait.Until(func() { r.processItem(r.modifyQueue, r.reconcileModified) }, time.Second, stopCh)
+	}
+
+	for i := 0; i < 1; i++ {
+		go wait.Until(func() { r.processItem(r.deleteQueue, r.reconcileDeleted) }, time.Second, stopCh)
 	}
 
 	<-stopCh

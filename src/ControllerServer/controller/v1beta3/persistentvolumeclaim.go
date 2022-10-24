@@ -69,7 +69,7 @@ func (r *PVCReconciler) processItem() bool {
 		return true
 	}
 
-	res := r.sync(key)
+	res := r.reconcile(key)
 
 	switch res {
 	case controller.Done:
@@ -114,7 +114,7 @@ func (r *PVCReconciler) EnqueueResourceEvent(resourceKind string, resourceEvent 
 	}
 }
 
-func (r *PVCReconciler) StartController(stopCh chan struct{}) {
+func (r *PVCReconciler) Run(stopCh chan struct{}) {
 	defer utilRuntime.HandleCrash()
 	defer r.queue.ShutDown()
 
@@ -150,7 +150,7 @@ func buildPVCAnnotations(tserver *tarsCrdV1beta3.TServer) map[string]map[string]
 	return annotations
 }
 
-func (r *PVCReconciler) sync(key string) controller.Result {
+func (r *PVCReconciler) reconcile(key string) controller.Result {
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
 		utilRuntime.HandleError(fmt.Errorf("invalid key: %s", key))

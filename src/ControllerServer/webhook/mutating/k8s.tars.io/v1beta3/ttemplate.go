@@ -28,6 +28,7 @@ func mutatingCreateTTemplate(requestAdmissionView *k8sAdmissionV1.AdmissionRevie
 			}
 			break
 		}
+
 		if ttemplate.Labels == nil {
 			labels := map[string]string{}
 			jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{

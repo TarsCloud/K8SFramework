@@ -6,7 +6,7 @@ import (
 	k8sAppsV1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/util/json"
 	tarsMeta "k8s.tars.io/meta"
-	tarsCrdV1beta3 "tarscontroller/controller/v1beta3"
+	tarsControllerV1beta3 "tarscontroller/controller/v1beta3"
 	"tarscontroller/util"
 	"tarscontroller/webhook/informer"
 )
@@ -15,12 +15,14 @@ func validStatefulSet(newStatefulset *k8sAppsV1.StatefulSet, oldStatefulset *k8s
 	if !listers.TSSynced() {
 		return fmt.Errorf("tserver infomer has not finished syncing")
 	}
+
 	namespace := newStatefulset.Namespace
 	tserver, err := listers.TSLister.TServers(namespace).Get(newStatefulset.Name)
 	if err != nil {
 		return fmt.Errorf(tarsMeta.ResourceGetError, "tserver", namespace, newStatefulset.Name, err.Error())
 	}
-	if !tarsCrdV1beta3.EqualTServerAndStatefulSet(tserver, newStatefulset) {
+
+	if !tarsControllerV1beta3.EqualTServerAndStatefulSet(tserver, newStatefulset) {
 		return fmt.Errorf("resource should be modified through tserver")
 	}
 	return nil
@@ -31,6 +33,7 @@ func validCreateStatefulSet(clients *util.Clients, listers *informer.Listers, vi
 	if controllerUserName == view.Request.UserInfo.Username || controllerUserName == tarsMeta.DefaultUnlawfulAndOnlyForDebugUserName {
 		return nil
 	}
+
 	return fmt.Errorf("only use authorized account can create statefulset")
 }
 
@@ -39,6 +42,7 @@ func validUpdateStatefulSet(clients *util.Clients, listers *informer.Listers, vi
 	if controllerUserName == view.Request.UserInfo.Username || controllerUserName == tarsMeta.DefaultUnlawfulAndOnlyForDebugUserName {
 		return nil
 	}
+
 	newStatefulset := &k8sAppsV1.StatefulSet{}
 	_ = json.Unmarshal(view.Request.Object.Raw, newStatefulset)
 	return validStatefulSet(newStatefulset, nil, clients, listers)

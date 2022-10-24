@@ -70,7 +70,7 @@ func (r *ServiceReconciler) processItem() bool {
 		return true
 	}
 
-	res := r.sync(key)
+	res := r.reconcile(key)
 
 	switch res {
 	case controller.Done:
@@ -100,7 +100,7 @@ func (r *ServiceReconciler) EnqueueResourceEvent(resourceKind string, resourceEv
 		r.queue.Add(key)
 	case *k8sCoreV1.Service:
 		service := resourceObj.(*k8sCoreV1.Service)
-		if resourceEvent == k8sWatchV1.Deleted || service.DeletionTimestamp != nil {
+		if resourceEvent == k8sWatchV1.Deleted {
 			key := fmt.Sprintf("%s/%s", service.Namespace, service.Name)
 			r.queue.Add(key)
 		}
@@ -109,7 +109,7 @@ func (r *ServiceReconciler) EnqueueResourceEvent(resourceKind string, resourceEv
 	}
 }
 
-func (r *ServiceReconciler) StartController(stopCh chan struct{}) {
+func (r *ServiceReconciler) Run(stopCh chan struct{}) {
 	defer utilRuntime.HandleCrash()
 	defer r.queue.ShutDown()
 
@@ -129,7 +129,7 @@ func (r *ServiceReconciler) StartController(stopCh chan struct{}) {
 	<-stopCh
 }
 
-func (r *ServiceReconciler) sync(key string) controller.Result {
+func (r *ServiceReconciler) reconcile(key string) controller.Result {
 
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {

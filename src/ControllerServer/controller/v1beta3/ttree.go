@@ -59,7 +59,7 @@ func (r *TTreeReconciler) processItem() bool {
 		return true
 	}
 
-	res := r.sync(key)
+	res := r.reconcile(key)
 
 	switch res {
 	case controller.Done:
@@ -89,7 +89,7 @@ func (r *TTreeReconciler) EnqueueResourceEvent(resourceKind string, resourceEven
 	}
 }
 
-func (r *TTreeReconciler) StartController(stopCh chan struct{}) {
+func (r *TTreeReconciler) Run(stopCh chan struct{}) {
 	defer utilRuntime.HandleCrash()
 	defer r.queue.ShutDown()
 
@@ -109,7 +109,7 @@ func (r *TTreeReconciler) StartController(stopCh chan struct{}) {
 	<-stopCh
 }
 
-func (r *TTreeReconciler) sync(key string) controller.Result {
+func (r *TTreeReconciler) reconcile(key string) controller.Result {
 	namespace, app, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
 		utilRuntime.HandleError(fmt.Errorf("invalid key: %s", key))

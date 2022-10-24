@@ -48,7 +48,7 @@ func main() {
 	callbacks := leaderelection.LeaderCallbacks{
 		OnStartedLeading: func(ctx context.Context) {
 			for _, c := range controllers {
-				go c.StartController(stopCh)
+				go c.Run(stopCh)
 			}
 		},
 		OnStoppedLeading: func() {

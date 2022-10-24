@@ -6,7 +6,7 @@ import (
 	k8sCoreV1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/json"
 	tarsMeta "k8s.tars.io/meta"
-	"tarscontroller/controller/v1beta3"
+	tarsControllerV1beta3 "tarscontroller/controller/v1beta3"
 	"tarscontroller/util"
 	"tarscontroller/webhook/informer"
 )
@@ -22,7 +22,7 @@ func validService(newService *k8sCoreV1.Service, oldService *k8sCoreV1.Service, 
 		return fmt.Errorf(tarsMeta.ResourceGetError, "tserver", namespace, newService.Name, err.Error())
 	}
 
-	if !v1beta3.EqualTServerAndService(tserver, newService) {
+	if !tarsControllerV1beta3.EqualTServerAndService(tserver, newService) {
 		return fmt.Errorf("resource should be modified through tserver")
 	}
 

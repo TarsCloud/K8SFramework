@@ -20,13 +20,11 @@ import (
 )
 
 func prepareActiveTConfig(newTConfig *tarsCrdV1beta3.TConfig, clients *util.Clients, listers *informer.Listers) error {
-
 	if !listers.TCSynced() {
 		return fmt.Errorf("tconfig infomer has not finished syncing")
 	}
 
 	namespace := newTConfig.Namespace
-
 	appRequirement, _ := labels.NewRequirement(tarsMeta.TServerAppLabel, selection.DoubleEquals, []string{newTConfig.App})
 	serverRequirement, _ := labels.NewRequirement(tarsMeta.TServerNameLabel, selection.DoubleEquals, []string{newTConfig.Server})
 	configNameRequirement, _ := labels.NewRequirement(tarsMeta.TConfigNameLabel, selection.DoubleEquals, []string{newTConfig.ConfigName})
@@ -44,8 +42,8 @@ func prepareActiveTConfig(newTConfig *tarsCrdV1beta3.TConfig, clients *util.Clie
 
 	var names []string
 	for _, tconfig := range tconfigs {
-		v := tconfig.(k8sMetaV1.Object)
-		name := v.GetName()
+		obj := tconfig.(k8sMetaV1.Object)
+		name := obj.GetName()
 		if name == newTConfig.Name {
 			continue
 		}
@@ -58,7 +56,7 @@ func prepareActiveTConfig(newTConfig *tarsCrdV1beta3.TConfig, clients *util.Clie
 	}
 
 	if counts != 1 {
-		err = fmt.Errorf("get unexpected number of activated tconfigs %s/%s-%s/%s:%s", namespace, newTConfig.App, newTConfig.Server, newTConfig.ConfigName, newTConfig.PodSeq)
+		err = fmt.Errorf("get unexpected activated tconfigs(%s/%s-%s/%s:%s) counts(%d)", namespace, newTConfig.App, newTConfig.Server, newTConfig.ConfigName, newTConfig.PodSeq, counts)
 		utilRuntime.HandleError(err)
 		return err
 	}
@@ -81,7 +79,6 @@ func prepareActiveTConfig(newTConfig *tarsCrdV1beta3.TConfig, clients *util.Clie
 }
 
 func prepareDeleteTConfig(tconfig *tarsCrdV1beta3.TConfig, clients *util.Clients, listers *informer.Listers) error {
-
 	if !listers.TCSynced() {
 		return fmt.Errorf("tconfig infomer has not finished syncing")
 	}

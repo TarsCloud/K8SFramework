@@ -82,7 +82,7 @@ func (r *TImageReconciler) processItem() bool {
 		return true
 	}
 
-	res := r.sync(key)
+	res := r.reconcile(key)
 	switch res {
 	case controller.Done:
 		r.queue.Forget(obj)
@@ -100,7 +100,7 @@ func (r *TImageReconciler) processItem() bool {
 	}
 }
 
-func (r *TImageReconciler) StartController(stopCh chan struct{}) {
+func (r *TImageReconciler) Run(stopCh chan struct{}) {
 	defer utilRuntime.HandleCrash()
 	defer r.queue.ShutDown()
 
@@ -125,7 +125,7 @@ func (r *TImageReconciler) splitKey(key string) (namespace, name, target, value 
 	return v[0], v[1], v[2], v[3]
 }
 
-func (r *TImageReconciler) sync(key string) controller.Result {
+func (r *TImageReconciler) reconcile(key string) controller.Result {
 	namespace, name, target, value := r.splitKey(key)
 	timage, err := r.tiLister.TImages(namespace).Get(name)
 	if err != nil {

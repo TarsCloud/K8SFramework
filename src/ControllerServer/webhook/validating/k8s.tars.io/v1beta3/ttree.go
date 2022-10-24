@@ -61,6 +61,7 @@ func validTTree(newTTree *tarsCrdV1beta3.TTree, oldTTree *tarsCrdV1beta3.TTree, 
 			}
 		}
 	}
+
 	return nil
 }
 
@@ -72,35 +73,36 @@ func validCreateTTree(clients *util.Clients, listers *informer.Listers, view *k8
 		return fmt.Errorf("create ttree operation is defined")
 	}
 
-	namespace := newTTree.Namespace
 	if !listers.TRSynced() {
-		return fmt.Errorf("ttree infomer has not finished syncing")
+		return fmt.Errorf("ttress infomer has not finished syncing")
 	}
 
-	_, err := listers.TTLister.ByNamespace(namespace).Get(tarsMeta.FixedTTreeResourceName)
+	namespace := newTTree.Namespace
+	_, err := listers.TRLister.ByNamespace(namespace).Get(tarsMeta.FixedTTreeResourceName)
 	if err == nil {
 		return fmt.Errorf("create ttree operation is defined")
 	}
 
 	if !errors.IsNotFound(err) {
-		return fmt.Errorf("create ttree operation is defined")
+		return fmt.Errorf(tarsMeta.ResourceGetError, namespace, "ttree", tarsMeta.FixedTTreeResourceName, err.Error())
 	}
 
 	return validTTree(newTTree, nil, clients, listers)
 }
 
-func validUpdateTTree(clients *util.Clients, listers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
+func validUpdateTTree(clients *util.Clients, informers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
 	controllerUserName := util.GetControllerUsername()
 	if controllerUserName == view.Request.UserInfo.Username || controllerUserName == tarsMeta.DefaultUnlawfulAndOnlyForDebugUserName {
 		return nil
 	}
+
 	ttree := &tarsCrdV1beta3.TTree{}
 	_ = json.Unmarshal(view.Request.Object.Raw, ttree)
 
 	oldTTree := &tarsCrdV1beta3.TTree{}
 	_ = json.Unmarshal(view.Request.OldObject.Raw, oldTTree)
 
-	return validTTree(ttree, oldTTree, clients, listers)
+	return validTTree(ttree, oldTTree, clients, informers)
 }
 
 func validDeleteTTree(clients *util.Clients, listers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {

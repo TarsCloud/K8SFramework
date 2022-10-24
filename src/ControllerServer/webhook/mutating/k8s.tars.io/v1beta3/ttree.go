@@ -34,6 +34,7 @@ func mutatingCreateTTree(requestAdmissionView *k8sAdmissionV1.AdmissionReview) (
 	if jsonPatch != nil {
 		return json.Marshal(jsonPatch)
 	}
+
 	return nil, nil
 }
 

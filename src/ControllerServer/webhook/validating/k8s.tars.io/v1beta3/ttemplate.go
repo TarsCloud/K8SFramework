@@ -73,31 +73,34 @@ func validDeleteTTemplate(clients *util.Clients, listers *informer.Listers, view
 	_ = json.Unmarshal(view.Request.OldObject.Raw, ttemplate)
 	namespace := ttemplate.Namespace
 
-	if !listers.TSSynced() {
-		return fmt.Errorf("tserver infomer has not finished syncing")
+	{
+		if !listers.TTSynced() {
+			return fmt.Errorf("ttemplate infomer has not finished syncing")
+		}
+
+		requirement, _ := labels.NewRequirement(tarsMeta.TTemplateParentLabel, selection.DoubleEquals, []string{ttemplate.Name})
+		ttemplates, err := listers.TTLister.ByNamespace(namespace).List(labels.NewSelector().Add(*requirement))
+		if err != nil {
+			return fmt.Errorf(tarsMeta.ResourceSelectorError, namespace, "ttemplates", err.Error())
+		}
+		if ttemplates != nil && len(ttemplates) != 0 {
+			return fmt.Errorf("cannot delete ttemplate %s/%s because it is reference by some ttemplate", namespace, ttemplate.Name)
+		}
 	}
 
-	requirement, _ := labels.NewRequirement(tarsMeta.TTemplateLabel, selection.DoubleEquals, []string{ttemplate.Name})
-	tservers, err := listers.TSLister.TServers(namespace).List(labels.NewSelector().Add(*requirement))
-	if err != nil {
-		return fmt.Errorf(tarsMeta.ResourceSelectorError, namespace, "tservers", err.Error())
-	}
-	if tservers != nil && len(tservers) != 0 {
-		return fmt.Errorf("cannot delete ttemplate %s/%s because it is reference by some tserver", namespace, ttemplate.Name)
-	}
+	{
+		if !listers.TSSynced() {
+			return fmt.Errorf("tserver infomer has not finished syncing")
+		}
 
-	if !listers.TTSynced() {
-		return fmt.Errorf("ttemplate infomer has not finished syncing")
-	}
-
-	requirement, _ = labels.NewRequirement(tarsMeta.TTemplateParentLabel, selection.DoubleEquals, []string{ttemplate.Name})
-	ttemplates, err := listers.TTLister.ByNamespace(namespace).List(labels.NewSelector().Add(*requirement))
-	if err != nil {
-		return fmt.Errorf(tarsMeta.ResourceSelectorError, namespace, "ttemplates", err.Error())
-	}
-
-	if ttemplates != nil && len(ttemplates) != 0 {
-		return fmt.Errorf("cannot delete ttemplate %s/%s because it is reference by some ttemplate", namespace, ttemplate.Name)
+		requirement, _ := labels.NewRequirement(tarsMeta.TTemplateLabel, selection.DoubleEquals, []string{ttemplate.Name})
+		tservers, err := listers.TSLister.TServers(namespace).List(labels.NewSelector().Add(*requirement))
+		if err != nil {
+			return fmt.Errorf(tarsMeta.ResourceSelectorError, namespace, "tservers", err.Error())
+		}
+		if tservers != nil && len(tservers) != 0 {
+			return fmt.Errorf("cannot delete ttemplate %s/%s because it is reference by some tserver", namespace, ttemplate.Name)
+		}
 	}
 
 	return nil

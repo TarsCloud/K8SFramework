@@ -37,7 +37,7 @@ func (r *TAccountReconciler) EnqueueResourceEvent(resourceKind string, resourceE
 	}
 }
 
-func (r *TAccountReconciler) StartController(stopCh chan struct{}) {
+func (r *TAccountReconciler) Run(stopCh chan struct{}) {
 	defer utilRuntime.HandleCrash()
 	defer r.queue.ShutDown()
 
@@ -87,7 +87,7 @@ func (r *TAccountReconciler) processItem() bool {
 		return true
 	}
 
-	res, duration := r.sync(key)
+	res, duration := r.reconcile(key)
 	switch res {
 	case controller.Done:
 		r.queue.Forget(obj)
@@ -111,7 +111,7 @@ func (r *TAccountReconciler) processItem() bool {
 	}
 }
 
-func (r *TAccountReconciler) sync(key string) (controller.Result, *time.Duration) {
+func (r *TAccountReconciler) reconcile(key string) (controller.Result, *time.Duration) {
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
 		utilRuntime.HandleError(fmt.Errorf("invalid key: %s", key))

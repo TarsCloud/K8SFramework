@@ -43,6 +43,10 @@ func validTTree(newTTree *tarsCrdV1beta2.TTree, oldTTree *tarsCrdV1beta2.TTree, 
 		return nil
 	}
 
+	if !listers.TRSynced() {
+		return fmt.Errorf("tserver infomer has not finished syncing")
+	}
+
 	for i := range oldTTree.Apps {
 		appName := oldTTree.Apps[i].Name
 		if _, ok := appMap[appName]; !ok {
@@ -57,6 +61,7 @@ func validTTree(newTTree *tarsCrdV1beta2.TTree, oldTTree *tarsCrdV1beta2.TTree, 
 			}
 		}
 	}
+
 	return nil
 }
 
@@ -79,7 +84,7 @@ func validCreateTTree(clients *util.Clients, listers *informer.Listers, view *k8
 	}
 
 	if !errors.IsNotFound(err) {
-		return fmt.Errorf("create ttree operation is defined")
+		return fmt.Errorf(tarsMeta.ResourceGetError, namespace, "ttree", tarsMeta.FixedTTreeResourceName, err.Error())
 	}
 
 	return validTTree(newTTree, nil, clients, listers)
@@ -90,6 +95,7 @@ func validUpdateTTree(clients *util.Clients, informers *informer.Listers, view *
 	if controllerUserName == view.Request.UserInfo.Username || controllerUserName == tarsMeta.DefaultUnlawfulAndOnlyForDebugUserName {
 		return nil
 	}
+
 	ttree := &tarsCrdV1beta2.TTree{}
 	_ = json.Unmarshal(view.Request.Object.Raw, ttree)
 

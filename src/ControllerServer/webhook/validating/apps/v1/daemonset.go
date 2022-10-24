@@ -6,7 +6,7 @@ import (
 	k8sAppsV1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/util/json"
 	tarsMeta "k8s.tars.io/meta"
-	tarsCrdV1beta3 "tarscontroller/controller/v1beta3"
+	tarsControllerV1beta3 "tarscontroller/controller/v1beta3"
 	"tarscontroller/util"
 	"tarscontroller/webhook/informer"
 )
@@ -22,7 +22,7 @@ func validDaemonset(newDaemonset, oldDaemonset *k8sAppsV1.DaemonSet, clients *ut
 		return fmt.Errorf(tarsMeta.ResourceGetError, "tserver", namespace, newDaemonset.Name, err.Error())
 	}
 
-	if !tarsCrdV1beta3.EqualTServerAndDaemonSet(tserver, newDaemonset) {
+	if !tarsControllerV1beta3.EqualTServerAndDaemonSet(tserver, newDaemonset) {
 		return fmt.Errorf("this resource should be modified through tserver")
 	}
 

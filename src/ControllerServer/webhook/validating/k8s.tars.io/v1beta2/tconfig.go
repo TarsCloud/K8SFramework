@@ -20,7 +20,6 @@ import (
 )
 
 func prepareActiveTConfig(newTConfig *tarsCrdV1beta2.TConfig, clients *util.Clients, listers *informer.Listers) error {
-
 	if !listers.TCSynced() {
 		return fmt.Errorf("tconfig infomer has not finished syncing")
 	}
@@ -43,8 +42,8 @@ func prepareActiveTConfig(newTConfig *tarsCrdV1beta2.TConfig, clients *util.Clie
 
 	var names []string
 	for _, tconfig := range tconfigs {
-		v := tconfig.(k8sMetaV1.Object)
-		name := v.GetName()
+		obj := tconfig.(k8sMetaV1.Object)
+		name := obj.GetName()
 		if name == newTConfig.Name {
 			continue
 		}
@@ -57,7 +56,7 @@ func prepareActiveTConfig(newTConfig *tarsCrdV1beta2.TConfig, clients *util.Clie
 	}
 
 	if counts != 1 {
-		err = fmt.Errorf("get unexpected number of activated tconfigs %s/%s-%s/%s:%s", namespace, newTConfig.App, newTConfig.Server, newTConfig.ConfigName, newTConfig.PodSeq)
+		err = fmt.Errorf("get unexpected activated tconfigs(%s/%s-%s/%s:%s) counts(%d)", namespace, newTConfig.App, newTConfig.Server, newTConfig.ConfigName, newTConfig.PodSeq, counts)
 		utilRuntime.HandleError(err)
 		return err
 	}
@@ -70,7 +69,7 @@ func prepareActiveTConfig(newTConfig *tarsCrdV1beta2.TConfig, clients *util.Clie
 		},
 	}
 	patchContent, _ := json.Marshal(jsonPatch)
-	_, err = clients.CrdClient.CrdV1beta3().TConfigs(namespace).Patch(context.TODO(), names[0], patchTypes.JSONPatchType, patchContent, k8sMetaV1.PatchOptions{})
+	_, err = clients.CrdClient.CrdV1beta2().TConfigs(namespace).Patch(context.TODO(), names[0], patchTypes.JSONPatchType, patchContent, k8sMetaV1.PatchOptions{})
 	if err != nil {
 		err = fmt.Errorf(tarsMeta.ResourcePatchError, "tconfig", namespace, names[0], err.Error())
 		utilRuntime.HandleError(err)

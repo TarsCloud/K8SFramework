@@ -65,7 +65,7 @@ func (r *TServerReconciler) processItem() bool {
 		return true
 	}
 
-	res := r.sync(key)
+	res := r.reconcile(key)
 
 	switch res {
 	case controller.Done:
@@ -106,7 +106,7 @@ func (r *TServerReconciler) EnqueueResourceEvent(resourceKind string, resourceEv
 	}
 }
 
-func (r *TServerReconciler) StartController(stopCh chan struct{}) {
+func (r *TServerReconciler) Run(stopCh chan struct{}) {
 	defer utilRuntime.HandleCrash()
 	defer r.queue.ShutDown()
 
@@ -126,7 +126,7 @@ func (r *TServerReconciler) StartController(stopCh chan struct{}) {
 	<-stopCh
 }
 
-func (r *TServerReconciler) sync(key string) controller.Result {
+func (r *TServerReconciler) reconcile(key string) controller.Result {
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
 		utilRuntime.HandleError(fmt.Errorf("invalid key: %s", key))

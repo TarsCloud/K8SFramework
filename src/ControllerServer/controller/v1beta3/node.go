@@ -57,7 +57,7 @@ func (r *NodeReconciler) processItem() bool {
 		return true
 	}
 
-	res := r.sync(key)
+	res := r.reconcile(key)
 
 	switch res {
 	case controller.Done:
@@ -90,7 +90,7 @@ func (r *NodeReconciler) EnqueueResourceEvent(resourceKind string, resourceEvent
 	}
 }
 
-func (r *NodeReconciler) StartController(stopCh chan struct{}) {
+func (r *NodeReconciler) Run(stopCh chan struct{}) {
 	defer utilRuntime.HandleCrash()
 	defer r.queue.ShutDown()
 
@@ -110,7 +110,7 @@ func (r *NodeReconciler) StartController(stopCh chan struct{}) {
 	<-stopCh
 }
 
-func (r *NodeReconciler) sync(key string) controller.Result {
+func (r *NodeReconciler) reconcile(key string) controller.Result {
 	name := key
 	node, err := r.nodeLister.Get(name)
 	if err != nil {

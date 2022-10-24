@@ -42,10 +42,10 @@ func NewTExitedPodController(clients *util.Clients, factories *util.InformerFact
 		tsLister: tsInformer.Lister(),
 		threads:  threads,
 		queue:    workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
-		synced:   []cache.InformerSynced{teInformer.Informer().HasSynced, tsInformer.Informer().HasSynced},
+		synced:   []cache.InformerSynced{podInformer.Informer().HasSynced, teInformer.Informer().HasSynced, tsInformer.Informer().HasSynced},
 	}
 	controller.SetInformerHandlerEvent(tarsMeta.KPodKind, podInformer.Informer(), c)
-	controller.SetInformerHandlerEvent(tarsMeta.TEndpointKind, teInformer.Informer(), c)
+	controller.SetInformerHandlerEvent(tarsMeta.TExitedRecordKind, teInformer.Informer(), c)
 	controller.SetInformerHandlerEvent(tarsMeta.TServerKind, tsInformer.Informer(), c)
 	return c
 }
@@ -138,7 +138,7 @@ func (r *TExitedRecordReconciler) processItem() bool {
 	}
 }
 
-func (r *TExitedRecordReconciler) StartController(stopCh chan struct{}) {
+func (r *TExitedRecordReconciler) Run(stopCh chan struct{}) {
 	defer utilRuntime.HandleCrash()
 	defer r.queue.ShutDown()
 

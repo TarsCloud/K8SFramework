@@ -17,7 +17,7 @@ const (
 
 type Controller interface {
 	EnqueueResourceEvent(resourceKind string, resourceEvent k8sWatchV1.EventType, resourceObj interface{})
-	StartController(chan struct{})
+	Run(chan struct{})
 }
 
 func SetInformerHandlerEvent(resourceKind string, resourceInformer cache.SharedInformer, c Controller) {

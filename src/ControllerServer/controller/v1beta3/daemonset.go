@@ -74,7 +74,7 @@ func (r *DaemonSetReconciler) processItem() bool {
 		return true
 	}
 
-	res := r.sync(key)
+	res := r.reconcile(key)
 
 	switch res {
 	case controller.Done:
@@ -104,7 +104,7 @@ func (r *DaemonSetReconciler) EnqueueResourceEvent(resourceKind string, resource
 		r.queue.Add(key)
 	case *k8sAppsV1.DaemonSet:
 		daemonset := resourceObj.(*k8sAppsV1.DaemonSet)
-		if resourceEvent == k8sWatchV1.Deleted || daemonset.DeletionTimestamp != nil {
+		if resourceEvent == k8sWatchV1.Deleted {
 			key := fmt.Sprintf("%s/%s", daemonset.Namespace, daemonset.Name)
 			r.queue.Add(key)
 		}
@@ -113,7 +113,7 @@ func (r *DaemonSetReconciler) EnqueueResourceEvent(resourceKind string, resource
 	}
 }
 
-func (r *DaemonSetReconciler) StartController(stopCh chan struct{}) {
+func (r *DaemonSetReconciler) Run(stopCh chan struct{}) {
 	defer utilRuntime.HandleCrash()
 	defer r.queue.ShutDown()
 
@@ -132,7 +132,7 @@ func (r *DaemonSetReconciler) StartController(stopCh chan struct{}) {
 	<-stopCh
 }
 
-func (r *DaemonSetReconciler) sync(key string) controller.Result {
+func (r *DaemonSetReconciler) reconcile(key string) controller.Result {
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
 		utilRuntime.HandleError(fmt.Errorf("invalid key: %s", key))

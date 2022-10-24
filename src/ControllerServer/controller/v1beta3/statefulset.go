@@ -110,7 +110,7 @@ func (r *StatefulSetReconciler) processItem() bool {
 		return true
 	}
 
-	res := r.sync(key)
+	res := r.reconcile(key)
 
 	switch res {
 	case controller.Done:
@@ -140,14 +140,14 @@ func (r *StatefulSetReconciler) EnqueueResourceEvent(resourceKind string, resour
 		r.queue.Add(key)
 	case *k8sAppsV1.StatefulSet:
 		statefulset := resourceObj.(*k8sAppsV1.StatefulSet)
-		if statefulset.DeletionTimestamp != nil || resourceEvent == k8sWatchV1.Deleted {
+		if resourceEvent == k8sWatchV1.Deleted {
 			key := fmt.Sprintf("%s/%s", statefulset.Namespace, statefulset.Name)
 			r.queue.Add(key)
 		}
 	}
 }
 
-func (r *StatefulSetReconciler) StartController(stopCh chan struct{}) {
+func (r *StatefulSetReconciler) Run(stopCh chan struct{}) {
 	defer utilRuntime.HandleCrash()
 	defer r.queue.ShutDown()
 
@@ -206,7 +206,7 @@ func (r *StatefulSetReconciler) recreateStatefulset(tserver *tarsCrdV1beta3.TSer
 	return controller.AddAfter
 }
 
-func (r *StatefulSetReconciler) sync(key string) controller.Result {
+func (r *StatefulSetReconciler) reconcile(key string) controller.Result {
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
 		utilRuntime.HandleError(fmt.Errorf("invalid key: %s", key))
