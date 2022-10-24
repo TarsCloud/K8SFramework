@@ -231,11 +231,12 @@ var _ = ginkgo.Describe("test app level config", func() {
 			oldTConfig, err := s.CRDClient.CrdV1beta2().TConfigs(s.Namespace).Get(context.TODO(), ResourceName, k8sMetaV1.GetOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.NotNil(ginkgo.GinkgoT(), oldTConfig)
-			if k8sMetaV1.HasLabel(oldTConfig.ObjectMeta, tarsMeta.TConfigDeactivateLabel) || oldTConfig.Activated == false {
+			expected := !oldTConfig.Activated || k8sMetaV1.HasLabel(oldTConfig.ObjectMeta, tarsMeta.TConfigDeactivateLabel)
+			if !expected {
 				bs, _ := json.Marshal(oldTConfig)
-				fmt.Printf("get unexpected tcofig: %s\n", string(bs))
+				fmt.Printf("get unexpected tconfig: %s\n", string(bs))
 			}
-			assert.True(ginkgo.GinkgoT(), k8sMetaV1.HasLabel(oldTConfig.ObjectMeta, tarsMeta.TConfigDeactivateLabel) || oldTConfig.Activated == false)
+			assert.True(ginkgo.GinkgoT(), expected)
 
 			err = s.CRDClient.CrdV1beta2().TConfigs(s.Namespace).Delete(context.TODO(), NewResourceName, k8sMetaV1.DeleteOptions{})
 			assert.NotNil(ginkgo.GinkgoT(), err)
