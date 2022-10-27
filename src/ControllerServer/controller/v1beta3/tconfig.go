@@ -90,6 +90,7 @@ func (r *TConfigReconciler) reconcileAdded(key string) controller.Result {
 	}
 
 	var versions []string
+	versionNameMap := map[string]string{}
 	for _, tconfig := range tconfigs {
 		obj := tconfig.(k8sMetaV1.Object)
 		objLabels := obj.GetLabels()
@@ -108,18 +109,12 @@ func (r *TConfigReconciler) reconcileAdded(key string) controller.Result {
 		versions = append(versions, version)
 	}
 	sort.Strings(versions)
-	compareVersion := versions[maxTConfigHistory-len(tconfigs)]
-	compareRequirement, _ := labels.NewRequirement(tarsMeta.TConfigVersionLabel, selection.LessThan, []string{compareVersion})
-	labelSelector = labelSelector.Add(*compareRequirement)
-	err = r.clients.CrdClient.CrdV1beta3().TConfigs(namespace).DeleteCollection(context.TODO(), k8sMetaV1.DeleteOptions{}, k8sMetaV1.ListOptions{
-		LabelSelector: labelSelector.String(),
-	})
-
-	if err != nil {
-		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceDeleteCollectionError, "tconfig", labelSelector.String(), err.Error()))
+	name := versionNameMap[versions[0]]
+	err = r.clients.CrdClient.CrdV1beta3().TConfigs(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
+	if err != nil && !errors.IsNotFound(err) {
+		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceDeleteError, "tconfig", namespace, name, err.Error()))
 		return controller.Retry
 	}
-
 	return controller.Done
 }
 
