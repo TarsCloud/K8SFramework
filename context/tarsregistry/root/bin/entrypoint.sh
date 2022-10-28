@@ -1,6 +1,6 @@
 #!/bin/bash
 
-.. /bin/timezone.sh
+. /bin/timezone.sh
 
 _K8S_POD_NAME_=${PodName}
 if [ -z "$_K8S_POD_NAME_" ]; then
