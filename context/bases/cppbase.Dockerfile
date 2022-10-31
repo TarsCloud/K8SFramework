@@ -3,8 +3,7 @@ FROM debian:bullseye
 ENV LANG C.UTF-8
 ENV LANGUAGE C.UTF-8
 
-RUN rm -rf /bin/ls                                                                        \
-    # image debian:bullseye had "ls bug", we use busybox ls instead                       \
+RUN apt update                                                                            \
     && apt update                                                                         \
     && apt install                                                                        \
     ca-certificates openssl gdb telnet curl wget default-mysql-client                     \

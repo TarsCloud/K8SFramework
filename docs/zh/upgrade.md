@@ -1,62 +1,54 @@
 # 目录
 
 - [升级](#升级)
-    * [版本与兼容性计划](#版本与兼容性计划)
-        + [版本格式](#版本格式)
-        + [版本规则](#版本规则)
-        + [兼容性规则](#兼容性规则)
-        + [兼容性检测](#兼容性检测)
+    * [兼容性](#兼容性)
     * [获取 Helm Chart](#获取HelmChart)
     * [升级 Controller](#升级Controller)
-        + [确认Framework兼容性](#确认Framework兼容性)
-        + [升级 CRD](#升级CRD)
-        + [安装 Controller](#安装Controller)
-        + [等待 Controller 启动](#等待Controller启动)
+        + [确认 Framework 兼容性](#确认Framework兼容性)
+        + [确认 Controller 兼容性](#确认Controller兼容性)
+        + [执行 Controller 升级操作](#执行Controller升级操作)
+        + [升级 Controller 常见问题解答](#升级Controller常见问题解答)
     + [升级 Framework](#升级Framework)
-      + [确认Controller兼容性](#确认Controller兼容性)
-      + [生成Framework配置文件](#生成Framework配置文件)
-      + [安装Framework](#安装Framework)
-      + [等待Framework启动](#等待Framework启动)
+        + [确认 Controller 兼容性](#确认Controller兼容性)
+        + [生成 Framework 配置文件](#生成Framework配置文件)
+        + [执行 Framework 升级操作](#安装Framework)
+        + [等待 Framework 启动](#等待Framework启动)
 
 # 升级
 
-## 版本与兼容性计划
-从版本 1.3.2 开始, 我们制定了全新的版本与兼容性规则  
-不兼容的升级可能对给您的业务带来损失, 我们强烈建议您在执行升级操作前阅读和理解版本与兼容性规则
+## 兼容性
 
-### 版本格式
+**TarsCloud K8SFrameWork** 每次会发布具有相同版本号的 Controller 和 Framework 两个 Helm Chart
+版本号格式为: "主版本号.次版本号.修订号-附注说明".
 
-**TarsCloud K8SFramework** 在发布 Helm Chart 时,采用与 Kubernetes 相同格式的版本.
-具体为: "主版本号.次版本号.修订号-附注说明".
+鉴于 "Controller","Framework" 即需要独立安装、升级，又需要协同配合,
+我们制定了如下基于版本号的兼容性规则:
 
-### 兼容性规则
+1. 兼容性规则只与 "主版本号码","次版本号" 相关
+2. 当 "次版本" == 0 时, 提供前一主版本的最新两个次版本的兼容性保证
+3. 当 "次版本" == 1 时, 提供前一主版本的最新一个次版本,同主版本的最新一个次版本的兼容性保证
+4. 当 "次版本" >= 2 时, 提供同主版本的最新两个次版本的兼容性保证.
 
-**TarsCloud K8SFramework** 提供最多三个"主版本.次版本"的兼容性保证.具体规则为:
+你在执行各项升降级操作前，请先执行如下兼容性检查,**不兼容的升级可能造成您的业务服务中断,或者业务数据丢失**
 
-1. 当 "次版本" == 0 时, 提供前一主版本的最新两个次版本的兼容性保证
-2. 当 "次版本" == 1 时, 提供前一主版本的最新一个次版本,同主版本的最新一个次版本的兼容性保证
-3. 当 "次版本" >= 2 时, 提供同主版本的最新两个次版本的兼容性保证.
-
-不满足兼容性规则的 升/降级操作 可能导致 framework 程序运行错误, 甚至 crd 对象丢失
-
-### 兼容性检测
-1. 升级 Controller 时, 请确保待升级的 Controller 版本能兼容已安装的 Framework 版本
-2. 升级 Framework 时, 请确保已安装的 Controller 版本能兼容待升级的 Framework 版本
-3. 降级 Framework 时, 请确保已安装的 Controller 版本能兼容待降级的 Framework 版本
-4. 降级 Controller 可能导致不可预知的问题, 我们不建议您对 Controller 执行降级操作
+1. 升级 Controller 时, 请确保待升级的 Controller 版本兼容已安装的 Controller 版本.
+2. 升级 Controller 时, 请确保待升级的 Controller 版本兼容已安装的 Framework 版本,
+3. 升级 Framework 时, 请确保已安装的 Controller 版本兼容待升级的 Framework 版本
+4. 降级 Framework 时, 请确保已安装的 Controller 版本兼容待降级的 Framework 版本
+5. 降级 Controller 可能导致不可预知的问题, 我们不建议您对 Controller 执行降级操作
 
 ## 获取HelmChart
 
-**TarsCloud K8SFrameWork** 的正式发布版本包含 Controller 和 Framework 两种 Helm Chart  
-其包名分别为 tarscontroller-${Vesion}.tgz , tarsframework-${Version}.tgz  
-您可以选择如下任意一种方式获取 **TarsCloud K8SFramework** 正式发布的 Helm Chart:
+您可以选择如下任意一种方式获取:
 
 + 直接下载
-
-  > 您可以在 [github](https://github.com/TarsCloud/K8SFramework/tree/master/charts) 查看并下载 **TarsCloud K8SFramework** 正式发布的 Helm Chart
+  > 您可以在 [github](https://github.com/TarsCloud/K8SFramework/tree/master/charts) 查看并下载 Helm Chart
+  >
+  > 包名分别为 tarscontroller-${vesion}.tgz , tarsframework-${version}.tgz
 
 + Helm Repo
-  > 您可以 添加 tars-k8s repo, 然后在需要时通过 helm 指令来获取 **TarsCloud K8SFramework** 正式发布的 Helm Chart
+
+  > 您可以 添加 tars-k8s repo, 然后在需要时通过 helm 指令来获取 Helm Chart
   >
   > ```shell
   > helm repo add tars-k8s https://tarscloud.github.io/K8SFramework/charts # 添加 tars-k8s repo
@@ -64,16 +56,15 @@
   > helm search repo tars-k8s -l                                           # 查看 tars-k8s repo 索引
   > ```
 
-您也可以参考 <<[构建](make.md)>>文档的 构建目标.Chart 节, 自行从源码构建 Chart 包  
-默认情况下构建出的 Helm Chart 包位于 charts 目录, 版本格式为  "主版本.次版本.0-master"  
-如果您在源码构建时 修改了CHAR_VERSION , CRD 定义等, 则需要您自行保证兼容性
++ 源码构建
+
+  > 您可以参考 <<[构建](make.md)>>文档, 从源码构建 Helm Chart
 
 ## 升级Controller
 
 ### 确认Framework兼容性
 
-升级 Controller 前, 请您确保待安装的 Controller 能兼容当前已安装的 Framework  
-不兼容的升级可能导致 Framework 启动失败或者 CRD 对象丢失  
+升级 Controller 前, 请您确保待安装的 Controller 能兼容当前已安装的 Framework
 您可以执行如下命令查看当前安装了哪些 Framework 版本
 
 ```shell
@@ -81,54 +72,124 @@ helm list -f tarsframework -A
 ```
 
 您可以看到如下输入内容:
+
 ```shell
 NAME           NAMESPACE REVISION  UPDATED                       STATUS   CHART                APP VERSION
-tarsframework  tars      1        2022-06-01 11:09:09.034451845 deployed tarsframework-1.3.2  v1beta3  
+tarsframework  default    1        2022-06-01 11:09:09.034451845 deployed tarsframework-1.3.2  v1beta3  
 ```
+
 CHAT 参数即代表了您已安装的 Framework 版本
 
-### 升级Controller
-如果您是通过  "直接下载" 或者 "源码构建" 方式获取的 Helm Chart, 执行如下命令:
+### 确认Controller兼容性
+
+升级 Controller 前, 请您确保待安装的 Controller 能兼容当前已安装的 Controller
+您可以执行如下命令查看当前安装了哪些 Controller 版本
+
 ```shell
-# 您需要将 ${Version} 替换成实际 版本号
-helm upgrade tarscontroller tarscontroller-${Version}.tgz
+helm list -f tarscontroller -A
 ```
+
+您可以看到如下输入内容:
+
+```shell
+NAME           NAMESPACE REVISION  UPDATED                       STATUS   CHART                APP VERSION
+tarscontroller  default      1    2022-06-01 11:09:09.034451845 deployed tarscontroller-1.3.2  v1beta3  
+```
+
+CHAT 参数即代表了您已安装的 Controller 版本
+
+### 执行Controller升级操作
+
+如果您是通过  "直接下载" 或者 "源码构建" 方式获取的 Helm Chart, 执行如下命令:
+
+```shell
+# 您需要将 ${version} 替换成实际 版本号
+helm upgrade tarscontroller tarscontroller-${version}.tgz
+```
+
 如果您是通过 Helm Repo 方式获取 Helm Chart, 执行如下命令:
 
 ```shell
 # 您需要将 ${Version} 替换成实际 版本号
 helm repo update tars-k8s                                              # 更新 tars-k8s repo 索引
 helm search repo tars-k8s -l                                           # 查看 tars-k8s repo 索引
-helm upgrade tarscontroller tars-k8s/tarscontroller --version=${Version}
+helm upgrade tarscontroller tars-k8s/tarscontroller --version=${version}
 ```
-
-如果您在升级中出现如下错误:
-
-![](images/crd-error0.jpg)
-
-这是因为您之前手动安装过 crd 资源对象，且这些资源对象没有包含 Helm 包管理相关的标签和注解. 您可以执行如下命令，然后重新尝试
-
-```shell
-#!/usr/bin/env bash
-
-ControllerName="tarscontroller"
-ControllerNameSpace="default"
-
-WithoutHelmTarsCrd=$(kubectl get crd -l '!app.kubernetes.io/managed-by' 2>/dev/null | grep 'k8s.tars.io' | awk '{print $1}')
-
-for CRD in "${WithoutHelmTarsCrd[@]}"; do
-  kubectl label crd ${CRD} 'app.kubernetes.io/managed-by=Helm' --overwrite
-  kubectl annotate crd ${CRD} "meta.helm.sh/release-namespace=${ControllerNameSpace}" "meta.helm.sh/release-name=${ControllerName}" --overwrite
-done
-```
-
-### 等待Controller启动
 
 您可以使用如下命令查看 controller pod 启动详情 :
 
 ```shell
 kubectl get pods -n tars-system -o wide
 ```
+
+### 升级Controller常见问题解答
+
+我们列举了在升级 Controller 过程中常见故障,您可以参照处理
+
++ "cannot convert int64 to float64" 错误
+
+  > 此错误为低版本(<=1.19.15) Kubernetes [bug](https://github.com/kubernetes/kubernetes/issues/87675) 导致,
+  > 此错误也意味着您无法再次使用 Helm Upgrade Controller 操作，建议您尽快升级集群版本(>=1.19.16), 你也可以参照如下说明强行升级:
+  >
+  > ```shell
+  > # "直接下载" 或者 "源码构建" 方式获取的 Helm Chart: 
+  > helm install tarscontroller charts/tarscontroller-${version}.tgz --dry-run | kubectl apply --validate=false -f -
+  > 
+  > # helm Repo 方式获取 Helm Chart, 执行如下命令:
+  > helm install tarscontroller tars-k8s/tarscontroller --version=${version} --dry-run | kubectl apply --validate=false -f -
+  > ```
+  > 顺利情况下可以得到如下输出,表示升级成功 (忽略最后一行 error)
+  >
+  > ```shell
+  > namespace/tars-system unchanged
+  > serviceaccount/tars-agent unchanged
+  > serviceaccount/tars-controller unchanged
+  > configmap/tars-agent unchanged
+  > storageclass.storage.k8s.io/tars-storage-class unchanged
+  > customresourcedefinition.apiextensions.k8s.io/taccounts.k8s.tars.io unchanged
+  > customresourcedefinition.apiextensions.k8s.io/tconfigs.k8s.tars.io unchanged
+  > customresourcedefinition.apiextensions.k8s.io/tendpoints.k8s.tars.io unchanged
+  > customresourcedefinition.apiextensions.k8s.io/texitedrecords.k8s.tars.io unchanged
+  > customresourcedefinition.apiextensions.k8s.io/tframeworkconfigs.k8s.tars.io unchanged
+  > customresourcedefinition.apiextensions.k8s.io/tframeworkkey.k8s.tars.io unchanged
+  > customresourcedefinition.apiextensions.k8s.io/timages.k8s.tars.io unchanged
+  > customresourcedefinition.apiextensions.k8s.io/tplugins.k8s.tars.io unchanged
+  > customresourcedefinition.apiextensions.k8s.io/tservers.k8s.tars.io configured
+  > customresourcedefinition.apiextensions.k8s.io/ttemplates.k8s.tars.io unchanged
+  > customresourcedefinition.apiextensions.k8s.io/ttrees.k8s.tars.io unchanged
+  > clusterrole.rbac.authorization.k8s.io/tars-system:tars-agent unchanged
+  > clusterrole.rbac.authorization.k8s.io/tars-system:tars-controller unchanged
+  > clusterrolebinding.rbac.authorization.k8s.io/tars-system:tars-agent unchanged
+  > clusterrolebinding.rbac.authorization.k8s.io/tars-system:tars-controller unchanged
+  > role.rbac.authorization.k8s.io/tars-controller unchanged
+  > rolebinding.rbac.authorization.k8s.io/tars-controller unchanged
+  > service/tars-webhook-service unchanged
+  > daemonset.apps/tars-agent configured
+  > deployment.apps/tars-controller-manger unchanged
+  > mutatingwebhookconfiguration.admissionregistration.k8s.io/tars-mutating-webhook configured
+  > validatingwebhookconfiguration.admissionregistration.k8s.io/tars-validating-webhook unchanged
+  > error: unable to decode "STDIN": Object 'Kind' is missing in '{"HOOKS":null,"LAST DEPLOYED":"Mon Oct 31 17:01:58 2022","MANIFEST":null,"NAME":"tarscontroller","NAMESPACE":"default","REVISION":1,"STATUS":"pending-install","TEST SUITE":"None"}'
+  > ```
+
++ "missing Key" 和 "missing Name" 错误:
+
+  ![](images/crd-error0.jpg)
+
+  > 这是因为您之前手动安装过(kubectl apply ) CRD 资源对象，但这些 CRD 资源没有包含 Helm 包管理相关的标签和注解. 您可以执行如下命令，然后重试
+  >
+  > ```shell
+  > #!/usr/bin/env bash
+  > 
+  > ControllerName="tarscontroller"
+  > ControllerNameSpace="default"
+  > 
+  > WithoutHelmTarsCrd=$(kubectl get crd -l '!app.kubernetes.io/managed-by' 2>/dev/null | grep 'k8s.tars.io' | awk '{print $1}')
+  > 
+  > for CRD in "${WithoutHelmTarsCrd[@]}"; do
+  >   kubectl label crd ${CRD} 'app.kubernetes.io/managed-by=Helm' --overwrite
+  >   kubectl annotate crd ${CRD} "meta.helm.sh/release-namespace=${ControllerNameSpace}" "meta.helm.sh/release-name=${ControllerName}" --overwrite
+  > done
+  > ```
 
 ## 升级Framework
 
