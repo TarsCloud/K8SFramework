@@ -8,7 +8,6 @@
         + [检查 Controller 兼容性](#检查Controller兼容性)
         + [执行 Controller 升级](#执行Controller升级)
         + [升级 Controller 常见问题](#升级Controller常见问题)
-
     + [升级 Framework](#升级Framework)
         + [确认 Controller 兼容性](检查Controller兼容性)
         + [生成 Framework 配置文件](#生成Framework配置文件)
@@ -22,7 +21,7 @@
 **TarsCloud K8SFrameWork** 每次发布都会有相同版本号的 Controller 和 Framework 两个 Helm Chart  
 版本号格式为: "主版本号.次版本号.修订号-附注说明".
 
-为了指导 "Controller","Framework" 直观说明安装、升级的兼容性情况, 我们制定了基于版本号的兼容性规则:
+为了直观说明安装、升级 "Controller","Framework" 时的兼容性情况, 我们制定了基于版本号的兼容性规则:
 
 1. 兼容性规则只与 "主版本号码","次版本号" 相关
 2. 当 "次版本" == 0 时, 提供前一主版本的最新两个次版本的兼容性保证
