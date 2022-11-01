@@ -1,7 +1,6 @@
 # 目录
 
 - [升级](#升级)
-  
     * [兼容性](#兼容性)
     * [获取 Helm Chart](#获取HelmChart)
     * [升级 Controller](#升级Controller)
@@ -9,6 +8,7 @@
         + [检查 Controller 兼容性](#检查Controller兼容性)
         + [执行 Controller 升级](#执行Controller升级)
         + [升级 Controller 常见问题](#升级Controller常见问题)
+
     + [升级 Framework](#升级Framework)
         + [确认 Controller 兼容性](检查Controller兼容性)
         + [生成 Framework 配置文件](#生成Framework配置文件)
@@ -20,9 +20,9 @@
 ## 兼容性
 
 **TarsCloud K8SFrameWork** 每次发布都会有相同版本号的 Controller 和 Framework 两个 Helm Chart  
-版本号格式为: "主版本号.次版本号.修订号-附注说明". 
+版本号格式为: "主版本号.次版本号.修订号-附注说明".
 
-为了指导 "Controller","Framework"  安装、升级,我们制定了如下基于版本号的兼容性规则:
+为了指导 "Controller","Framework" 直观说明安装、升级的兼容性情况, 我们制定了基于版本号的兼容性规则:
 
 1. 兼容性规则只与 "主版本号码","次版本号" 相关
 2. 当 "次版本" == 0 时, 提供前一主版本的最新两个次版本的兼容性保证
@@ -44,8 +44,7 @@
 
 + 直接下载
   > 您可以在 [github](https://github.com/TarsCloud/K8SFramework/tree/master/charts) 查看和下载 Helm Chart，包名分别为 tarscontroller-${vesion}.tgz，tarsframework-${version}.tgz
-  >
-  
+
 + Helm Repo
 
   > 您可以 添加 tars-k8s repo, 然后在需要时通过 helm 指令获取
@@ -86,11 +85,14 @@ CHAT 参数即代表了您已安装的 Framework 版本
 ```shell
 helm list -f tarscontroller -A
 ```
+
 您可以看到如下输出:
+
 ```shell
 NAME           NAMESPACE REVISION  UPDATED                       STATUS   CHART                APP VERSION
 tarscontroller  default    1       2022-06-01 11:09:09.034451845 deployed tarscontroller-1.3.2  v1beta3  
 ```
+
 CHAT 参数即代表了您已安装的 Controller 版本
 
 ### 执行Controller升级
@@ -111,7 +113,7 @@ helm search repo tars-k8s -l                                           # 查看 
 helm upgrade tarscontroller tars-k8s/tarscontroller --version=${version}
 ```
 
-操作后,您可以使用如下命令查看 Controller 启动详情, 如果操作报错，请参考 <<升级Controller常见问题>> 
+操作后,您可以使用如下命令查看 Controller 启动详情, 如果操作报错，请参考 <<升级Controller常见问题>>
 
 ```shell
 kubectl get pods -n tars-system -o wide
