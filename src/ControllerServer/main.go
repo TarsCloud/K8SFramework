@@ -4,46 +4,36 @@ import (
 	"context"
 	"fmt"
 	"k8s.io/client-go/tools/leaderelection"
+	tarsRuntime "k8s.tars.io/runtime"
 	"os"
 	"tarscontroller/controller"
 	"tarscontroller/controller/v1beta3"
-	"tarscontroller/util"
-	"tarscontroller/webhook"
-	"time"
 )
 
 func main() {
-
 	stopCh := make(chan struct{})
-
-	clients, factories, err := util.CreateContext("", "")
+	err := tarsRuntime.CreateContext("", "")
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
 
-	//call webhook.start() before factories.start(),because factories.start() depend on webhook.conversion service
-	hooks := webhook.New(clients, factories)
-	hooks.Start(stopCh)
-
-	time.Sleep(time.Second * 1)
-
 	controllers := []controller.Controller{
-		v1beta3.NewNodeController(clients, factories, 1),
-		v1beta3.NewDaemonSetController(clients, factories, 1),
-		v1beta3.NewTTreeController(clients, factories, 1),
-		v1beta3.NewServiceController(clients, factories, 1),
-		v1beta3.NewTExitedPodController(clients, factories, 1),
-		v1beta3.NewStatefulSetController(clients, factories, 5),
-		v1beta3.NewTServerController(clients, factories, 3),
-		v1beta3.NewTEndpointController(clients, factories, 3),
-		v1beta3.NewTAccountController(clients, factories, 1),
-		v1beta3.NewTConfigController(clients, factories, 3),
-		v1beta3.NewTImageController(clients, factories, 1),
-		v1beta3.NewPVCController(clients, factories, 1),
+		v1beta3.NewNodeController(1),
+		v1beta3.NewDaemonSetController(1),
+		v1beta3.NewTTreeController(1),
+		v1beta3.NewServiceController(1),
+		v1beta3.NewTExitedPodController(1),
+		v1beta3.NewStatefulSetController(5),
+		v1beta3.NewTServerController(3),
+		v1beta3.NewTEndpointController(3),
+		v1beta3.NewTAccountController(1),
+		v1beta3.NewTConfigController(3),
+		v1beta3.NewTImageController(1),
+		v1beta3.NewPVCController(1),
 	}
 
-	factories.Start(stopCh)
+	tarsRuntime.Factories.Start(stopCh)
 
 	callbacks := leaderelection.LeaderCallbacks{
 		OnStartedLeading: func(ctx context.Context) {
@@ -58,5 +48,5 @@ func main() {
 		},
 	}
 
-	util.LeaderElectAndRun(callbacks)
+	tarsRuntime.LeaderElectAndRun(callbacks, tarsRuntime.Namespace, "tars-controller-manger")
 }

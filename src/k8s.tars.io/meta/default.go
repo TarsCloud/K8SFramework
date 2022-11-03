@@ -7,6 +7,7 @@ import (
 
 const DefaultUnlawfulAndOnlyForDebugUserName = "(^_^)"
 const DefaultControllerNamespace = "tars-system"
+const DefaultControllerUsername = "tars-controller"
 const DefaultMaxRecordLen = 60
 const DefaultMaxTConfigHistory = 10
 const DefaultMaxTImageRelease = 32

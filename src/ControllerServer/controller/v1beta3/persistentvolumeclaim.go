@@ -16,39 +16,37 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
-	tarsCrdListerV1beta3 "k8s.tars.io/client-go/listers/crd/v1beta3"
-	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
+	tarsAppsV1beta3 "k8s.tars.io/apps/v1beta3"
+	tarsListerV1beta3 "k8s.tars.io/client-go/listers/apps/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
+	tarsRuntime "k8s.tars.io/runtime"
 	"strings"
 	"tarscontroller/controller"
-	"tarscontroller/util"
 	"time"
 )
 
 type PVCReconciler struct {
-	clients   *util.Clients
 	pvcLister k8sCoreListerV1.PersistentVolumeClaimLister
-	tsLister  tarsCrdListerV1beta3.TServerLister
+	tsLister  tarsListerV1beta3.TServerLister
 	threads   int
 	queue     workqueue.RateLimitingInterface
 	synced    []cache.InformerSynced
 }
 
-func NewPVCController(clients *util.Clients, factories *util.InformerFactories, threads int) *PVCReconciler {
-	pvcInformer := factories.K8SInformerFactoryWithTarsFilter.Core().V1().PersistentVolumeClaims()
-	tsInformer := factories.TarsInformerFactory.Crd().V1beta3().TServers()
+func NewPVCController(threads int) *PVCReconciler {
+	pvcInformer := tarsRuntime.Factories.K8SInformerFactoryWithTarsFilter.Core().V1().PersistentVolumeClaims()
+	tsInformer := tarsRuntime.Factories.TarsInformerFactory.Apps().V1beta3().TServers()
 	eventBroadcaster := record.NewBroadcaster()
-	eventBroadcaster.StartRecordingToSink(&k8sCoreTypeV1.EventSinkImpl{Interface: clients.K8sClient.CoreV1().Events("")})
+	eventBroadcaster.StartRecordingToSink(&k8sCoreTypeV1.EventSinkImpl{Interface: tarsRuntime.Clients.K8sClient.CoreV1().Events("")})
 	c := &PVCReconciler{
-		clients:   clients,
 		pvcLister: pvcInformer.Lister(),
 		tsLister:  tsInformer.Lister(),
 		threads:   threads,
 		queue:     workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 		synced:    []cache.InformerSynced{pvcInformer.Informer().HasSynced, tsInformer.Informer().HasSynced},
 	}
-	controller.SetInformerHandlerEvent(tarsMeta.KPersistentVolumeClaimKind, tsInformer.Informer(), c)
-	controller.SetInformerHandlerEvent(tarsMeta.TServerKind, tsInformer.Informer(), c)
+	controller.SetInformerEventHandle(tarsMeta.KPersistentVolumeClaimKind, tsInformer.Informer(), c)
+	controller.SetInformerEventHandle(tarsMeta.TServerKind, tsInformer.Informer(), c)
 	return c
 }
 
@@ -93,8 +91,8 @@ func (r *PVCReconciler) processItem() bool {
 
 func (r *PVCReconciler) EnqueueResourceEvent(resourceKind string, resourceEvent k8sWatchV1.EventType, resourceObj interface{}) {
 	switch resourceObj.(type) {
-	case *tarsCrdV1beta3.TServer:
-		tserver := resourceObj.(*tarsCrdV1beta3.TServer)
+	case *tarsAppsV1beta3.TServer:
+		tserver := resourceObj.(*tarsAppsV1beta3.TServer)
 		key := fmt.Sprintf("%s/%s", tserver.Namespace, tserver.Name)
 		r.queue.Add(key)
 	case *k8sCoreV1.PersistentVolumeClaim:
@@ -134,7 +132,7 @@ func (r *PVCReconciler) Run(stopCh chan struct{}) {
 	<-stopCh
 }
 
-func buildPVCAnnotations(tserver *tarsCrdV1beta3.TServer) map[string]map[string]string {
+func buildPVCAnnotations(tserver *tarsAppsV1beta3.TServer) map[string]map[string]string {
 	var annotations = make(map[string]map[string]string, 0)
 	if tserver.Spec.K8S.Mounts != nil {
 		for _, mount := range tserver.Spec.K8S.Mounts {
@@ -188,7 +186,8 @@ func (r *PVCReconciler) reconcile(key string) controller.Result {
 		}
 
 		for _, pvc := range pvcs {
-			if pvc.DeletionTimestamp != nil || ContainLabel(pvc.Annotations, volumeProperties) {
+			//if pvc.DeletionTimestamp != nil || ContainLabel(pvc.Annotations, volumeProperties) {
+			if pvc.DeletionTimestamp != nil {
 				continue
 			}
 			pvcCopy := pvc.DeepCopy()
@@ -199,7 +198,7 @@ func (r *PVCReconciler) reconcile(key string) controller.Result {
 			} else {
 				pvcCopy.Annotations = volumeProperties
 			}
-			_, err := r.clients.K8sClient.CoreV1().PersistentVolumeClaims(namespace).Update(context.TODO(), pvcCopy, k8sMetaV1.UpdateOptions{})
+			_, err = tarsRuntime.Clients.K8sClient.CoreV1().PersistentVolumeClaims(namespace).Update(context.TODO(), pvcCopy, k8sMetaV1.UpdateOptions{})
 			if err == nil {
 				continue
 			}

@@ -10,17 +10,16 @@ import (
 	k8sWatchV1 "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
-	tarsCrdListerV1beta3 "k8s.tars.io/client-go/listers/crd/v1beta3"
-	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
+	tarsAppsV1beta3 "k8s.tars.io/apps/v1beta3"
+	tarsListerV1beta3 "k8s.tars.io/client-go/listers/apps/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
+	tarsRuntime "k8s.tars.io/runtime"
 	"tarscontroller/controller"
-	"tarscontroller/util"
 	"time"
 )
 
 type TAccountReconciler struct {
-	clients  *util.Clients
-	taLister tarsCrdListerV1beta3.TAccountLister
+	taLister tarsListerV1beta3.TAccountLister
 	threads  int
 	queue    workqueue.RateLimitingInterface
 	synced   []cache.InformerSynced
@@ -28,8 +27,8 @@ type TAccountReconciler struct {
 
 func (r *TAccountReconciler) EnqueueResourceEvent(resourceKind string, resourceEvent k8sWatchV1.EventType, resourceObj interface{}) {
 	switch resourceObj.(type) {
-	case *tarsCrdV1beta3.TAccount:
-		taccount := resourceObj.(*tarsCrdV1beta3.TAccount)
+	case *tarsAppsV1beta3.TAccount:
+		taccount := resourceObj.(*tarsAppsV1beta3.TAccount)
 		key := fmt.Sprintf("%s/%s", taccount.Namespace, taccount.Name)
 		r.queue.Add(key)
 	default:
@@ -57,16 +56,15 @@ func (r *TAccountReconciler) Run(stopCh chan struct{}) {
 	<-stopCh
 }
 
-func NewTAccountController(clients *util.Clients, factories *util.InformerFactories, threads int) *TAccountReconciler {
-	taInformer := factories.TarsInformerFactory.Crd().V1beta3().TAccounts()
+func NewTAccountController(threads int) *TAccountReconciler {
+	taInformer := tarsRuntime.Factories.TarsInformerFactory.Apps().V1beta3().TAccounts()
 	c := &TAccountReconciler{
-		clients:  clients,
 		taLister: taInformer.Lister(),
 		threads:  threads,
 		queue:    workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 		synced:   []cache.InformerSynced{taInformer.Informer().HasSynced},
 	}
-	controller.SetInformerHandlerEvent(tarsMeta.TAccountKind, taInformer.Informer(), c)
+	controller.SetInformerEventHandle(tarsMeta.TAccountKind, taInformer.Informer(), c)
 	return c
 }
 
@@ -135,7 +133,7 @@ func (r *TAccountReconciler) reconcile(key string) (controller.Result, *time.Dur
 	var minDuration *time.Duration
 
 	shouldUpdate := false
-	newTokens := make([]*tarsCrdV1beta3.TAccountAuthenticationToken, 0, len(taccount.Spec.Authentication.Tokens))
+	newTokens := make([]*tarsAppsV1beta3.TAccountAuthenticationToken, 0, len(taccount.Spec.Authentication.Tokens))
 
 	for _, token := range taccount.Spec.Authentication.Tokens {
 		duration := token.ExpirationTime.Time.Sub(currentTime.Time)
@@ -156,7 +154,7 @@ func (r *TAccountReconciler) reconcile(key string) (controller.Result, *time.Dur
 	if shouldUpdate {
 		newTaccount := taccount.DeepCopy()
 		newTaccount.Spec.Authentication.Tokens = newTokens
-		_, err = r.clients.CrdClient.CrdV1beta3().TAccounts(namespace).Update(context.TODO(), newTaccount, k8sMetaV1.UpdateOptions{})
+		_, err = tarsRuntime.Clients.CrdClient.AppsV1beta3().TAccounts(namespace).Update(context.TODO(), newTaccount, k8sMetaV1.UpdateOptions{})
 		if err != nil {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourcePatchError, "taccount", namespace, name, err.Error()))
 			return controller.Retry, nil

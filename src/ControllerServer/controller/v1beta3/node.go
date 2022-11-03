@@ -13,30 +13,28 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 	tarsMeta "k8s.tars.io/meta"
+	tarsRuntime "k8s.tars.io/runtime"
 	"strings"
 	"tarscontroller/controller"
-	"tarscontroller/util"
 	"time"
 )
 
 type NodeReconciler struct {
-	clients    *util.Clients
 	nodeLister k8sCoreListerV1.NodeLister
 	threads    int
 	queue      workqueue.RateLimitingInterface
 	synced     []cache.InformerSynced
 }
 
-func NewNodeController(clients *util.Clients, factories *util.InformerFactories, threads int) *NodeReconciler {
-	nodeInformer := factories.K8SInformerFactory.Core().V1().Nodes()
+func NewNodeController(threads int) *NodeReconciler {
+	nodeInformer := tarsRuntime.Factories.K8SInformerFactory.Core().V1().Nodes()
 	c := &NodeReconciler{
-		clients:    clients,
 		nodeLister: nodeInformer.Lister(),
 		threads:    threads,
 		queue:      workqueue.NewRateLimitingQueue(workqueue.DefaultItemBasedRateLimiter()),
 		synced:     []cache.InformerSynced{nodeInformer.Informer().HasSynced},
 	}
-	controller.SetInformerHandlerEvent(tarsMeta.KNodeKind, nodeInformer.Informer(), c)
+	controller.SetInformerEventHandle(tarsMeta.KNodeKind, nodeInformer.Informer(), c)
 	return c
 }
 
@@ -146,7 +144,7 @@ func (r *NodeReconciler) reconcile(key string) controller.Result {
 		delete(nodeCopy.Labels, tarsMeta.TarsNodeLabel)
 	}
 
-	nodeInterface := r.clients.K8sClient.CoreV1().Nodes()
+	nodeInterface := tarsRuntime.Clients.K8sClient.CoreV1().Nodes()
 	if _, err = nodeInterface.Update(context.TODO(), nodeCopy, k8sMetaV1.UpdateOptions{}); err != nil {
 		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceUpdateError, "node", "", name, err.Error()))
 		return controller.Retry

@@ -25,12 +25,12 @@ import (
 	fakediscovery "k8s.io/client-go/discovery/fake"
 	"k8s.io/client-go/testing"
 	clientset "k8s.tars.io/client-go/clientset/versioned"
-	crdv1beta1 "k8s.tars.io/client-go/clientset/versioned/typed/crd/v1beta1"
-	fakecrdv1beta1 "k8s.tars.io/client-go/clientset/versioned/typed/crd/v1beta1/fake"
-	crdv1beta2 "k8s.tars.io/client-go/clientset/versioned/typed/crd/v1beta2"
-	fakecrdv1beta2 "k8s.tars.io/client-go/clientset/versioned/typed/crd/v1beta2/fake"
-	crdv1beta3 "k8s.tars.io/client-go/clientset/versioned/typed/crd/v1beta3"
-	fakecrdv1beta3 "k8s.tars.io/client-go/clientset/versioned/typed/crd/v1beta3/fake"
+	appsv1beta1 "k8s.tars.io/client-go/clientset/versioned/typed/apps/v1beta1"
+	fakeappsv1beta1 "k8s.tars.io/client-go/clientset/versioned/typed/apps/v1beta1/fake"
+	appsv1beta2 "k8s.tars.io/client-go/clientset/versioned/typed/apps/v1beta2"
+	fakeappsv1beta2 "k8s.tars.io/client-go/clientset/versioned/typed/apps/v1beta2/fake"
+	appsv1beta3 "k8s.tars.io/client-go/clientset/versioned/typed/apps/v1beta3"
+	fakeappsv1beta3 "k8s.tars.io/client-go/clientset/versioned/typed/apps/v1beta3/fake"
 )
 
 // NewSimpleClientset returns a clientset that will respond with the provided objects.
@@ -80,17 +80,17 @@ func (c *Clientset) Tracker() testing.ObjectTracker {
 
 var _ clientset.Interface = &Clientset{}
 
-// CrdV1beta1 retrieves the CrdV1beta1Client
-func (c *Clientset) CrdV1beta1() crdv1beta1.CrdV1beta1Interface {
-	return &fakecrdv1beta1.FakeCrdV1beta1{Fake: &c.Fake}
+// AppsV1beta1 retrieves the AppsV1beta1Client
+func (c *Clientset) AppsV1beta1() appsv1beta1.AppsV1beta1Interface {
+	return &fakeappsv1beta1.FakeAppsV1beta1{Fake: &c.Fake}
 }
 
-// CrdV1beta2 retrieves the CrdV1beta2Client
-func (c *Clientset) CrdV1beta2() crdv1beta2.CrdV1beta2Interface {
-	return &fakecrdv1beta2.FakeCrdV1beta2{Fake: &c.Fake}
+// AppsV1beta2 retrieves the AppsV1beta2Client
+func (c *Clientset) AppsV1beta2() appsv1beta2.AppsV1beta2Interface {
+	return &fakeappsv1beta2.FakeAppsV1beta2{Fake: &c.Fake}
 }
 
-// CrdV1beta3 retrieves the CrdV1beta3Client
-func (c *Clientset) CrdV1beta3() crdv1beta3.CrdV1beta3Interface {
-	return &fakecrdv1beta3.FakeCrdV1beta3{Fake: &c.Fake}
+// AppsV1beta3 retrieves the AppsV1beta3Client
+func (c *Clientset) AppsV1beta3() appsv1beta3.AppsV1beta3Interface {
+	return &fakeappsv1beta3.FakeAppsV1beta3{Fake: &c.Fake}
 }

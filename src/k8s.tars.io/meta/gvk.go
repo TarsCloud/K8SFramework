@@ -14,12 +14,12 @@ const (
 )
 
 const (
-	KNodeKind    = "Node"
-	KServiceKind = "Service"
+	KNodeKind                  = "Node"
+	KServiceKind               = "Service"
 	KPodKind                   = "Pod"
 	KPersistentVolumeClaimKind = "PersistentVolumeClaim"
 	KStatefulSetKind           = "StatefulSet"
-	KDaemonSetKind           = "Daemonset"
+	KDaemonSetKind             = "Daemonset"
 )
 
 const (

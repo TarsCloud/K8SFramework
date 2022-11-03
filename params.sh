@@ -19,7 +19,7 @@ _TARS_WEB_DIR_=submodule/TarsWeb
 
 _BASES_="cppbase javabase nodejsbase php74base"
 
-_CONTROLLER_SERVERS_="tarscontroller tarsagent"
+_CONTROLLER_SERVERS_="tarscontroller tarswebhook tarsagent"
 
 _FRAMEWORK_SERVERS_="tarskaniko tarsimage  tarsnode tarsAdminRegistry tarsregistry tarsconfig tarslog tarsnotify tarsstat tarsproperty \
                      tarsquerystat tarsqueryproperty tarskevent tarsweb elasticsearch"

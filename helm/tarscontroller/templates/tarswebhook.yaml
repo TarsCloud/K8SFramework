@@ -1,0 +1,105 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tars-webhook
+  namespace: tars-system
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: tars-webhook
+  namespace: tars-system
+rules:
+  - apiGroups: [ coordination.k8s.io ]
+    resources: [ leases ]
+    verbs: [ create, get, list, watch, patch, update ]
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tars-webhook
+  namespace: tars-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: tars-webhook
+subjects:
+  - kind: ServiceAccount
+    name: tars-webhook
+    namespace: tars-system
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: tars-system:tars-webhook
+rules:
+  - apiGroups: [ k8s.tars.io ]
+    resources: [ tservers, ttemplates, tframeworkconfigs ]
+    verbs: [ get, list, watch ]
+  - apiGroups: [ k8s.tars.io ]
+    resources: [ tconfigs ]
+    verbs: [ get, list, watch, patch, update ]
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: tars-system:tars-webhook
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tars-system:tars-webhook
+subjects:
+  - kind: ServiceAccount
+    name: tars-webhook
+    namespace: tars-system
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: tars-webhook-service
+  namespace: tars-system
+spec:
+  ports:
+    - name: webhook
+      port: 443
+      protocol: TCP
+      targetPort: 443
+  selector:
+    tars.io/Webhook: "true"
+  sessionAffinity: ClientIP
+  type: ClusterIP
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tars-webhook-manger
+  namespace: tars-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      tars.io/Webhook: "true"
+  template:
+    metadata:
+      name: tars-webhook
+      labels:
+        tars.io/Webhook: "true"
+    spec:
+      containers:
+        - image: "{{.Values.controller.registry}}/tarswebhook:{{.Values.controller.tag}}"
+          imagePullPolicy: Always
+          name: tars-webhook
+      enableServiceLinks: false
+      restartPolicy: Always
+      serviceAccountName: tars-webhook
+    {{if.Values.controller.secret}}
+      imagePullSecrets:
+        - name: "{{.Values.controller.secret}}"
+    {{end}}

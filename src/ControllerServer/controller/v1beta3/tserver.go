@@ -14,37 +14,35 @@ import (
 	k8sCoreListerV1 "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
-	tarsCrdListerV1beta3 "k8s.tars.io/client-go/listers/crd/v1beta3"
-	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
+	tarsAppsV1beta3 "k8s.tars.io/apps/v1beta3"
+	tarsListerV1beta3 "k8s.tars.io/client-go/listers/apps/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
+	tarsRuntime "k8s.tars.io/runtime"
 	"strings"
 	"tarscontroller/controller"
-	"tarscontroller/util"
 	"time"
 )
 
 type TServerReconciler struct {
-	clients   *util.Clients
 	podLister k8sCoreListerV1.PodLister
-	tsLister  tarsCrdListerV1beta3.TServerLister
+	tsLister  tarsListerV1beta3.TServerLister
 	threads   int
 	queue     workqueue.RateLimitingInterface
 	synced    []cache.InformerSynced
 }
 
-func NewTServerController(clients *util.Clients, factories *util.InformerFactories, threads int) *TServerReconciler {
-	podInformer := factories.K8SInformerFactoryWithTarsFilter.Core().V1().Pods()
-	tsInformer := factories.TarsInformerFactory.Crd().V1beta3().TServers()
+func NewTServerController(threads int) *TServerReconciler {
+	podInformer := tarsRuntime.Factories.K8SInformerFactoryWithTarsFilter.Core().V1().Pods()
+	tsInformer := tarsRuntime.Factories.TarsInformerFactory.Apps().V1beta3().TServers()
 	c := &TServerReconciler{
-		clients:   clients,
 		podLister: podInformer.Lister(),
 		tsLister:  tsInformer.Lister(),
 		threads:   threads,
 		queue:     workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 		synced:    []cache.InformerSynced{tsInformer.Informer().HasSynced},
 	}
-	controller.SetInformerHandlerEvent(tarsMeta.KPodKind, podInformer.Informer(), c)
-	controller.SetInformerHandlerEvent(tarsMeta.TServerKind, tsInformer.Informer(), c)
+	controller.SetInformerEventHandle(tarsMeta.KPodKind, podInformer.Informer(), c)
+	controller.SetInformerEventHandle(tarsMeta.TServerKind, tsInformer.Informer(), c)
 	return c
 }
 
@@ -171,13 +169,13 @@ func (r *TServerReconciler) reconcile(key string) controller.Result {
 	}
 
 	tserverCopy := tserver.DeepCopy()
-	tserverCopy.Status = tarsCrdV1beta3.TServerStatus{
+	tserverCopy.Status = tarsAppsV1beta3.TServerStatus{
 		Selector:        selector.String(),
 		Replicas:        tserver.Spec.K8S.Replicas,
 		ReadyReplicas:   readySize,
 		CurrentReplicas: currentSize,
 	}
-	_, err = r.clients.CrdClient.CrdV1beta3().TServers(namespace).UpdateStatus(context.TODO(), tserverCopy, k8sMetaV1.UpdateOptions{})
+	_, err = tarsRuntime.Clients.CrdClient.AppsV1beta3().TServers(namespace).UpdateStatus(context.TODO(), tserverCopy, k8sMetaV1.UpdateOptions{})
 	if err != nil {
 		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourcePatchError, "tserver", namespace, name, err.Error()))
 		return controller.Retry

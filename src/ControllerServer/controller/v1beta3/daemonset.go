@@ -16,33 +16,31 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
-	tarsCrdListerV1beta3 "k8s.tars.io/client-go/listers/crd/v1beta3"
-	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
+	tarsAppsV1beta3 "k8s.tars.io/apps/v1beta3"
+	tarsListerV1beta3 "k8s.tars.io/client-go/listers/apps/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
+	tarsRuntime "k8s.tars.io/runtime"
 	"tarscontroller/controller"
-	"tarscontroller/util"
 	"time"
 )
 
 type DaemonSetReconciler struct {
-	clients       *util.Clients
 	dsLister      k8sAppsListerV1.DaemonSetLister
-	tsLister      tarsCrdListerV1beta3.TServerLister
+	tsLister      tarsListerV1beta3.TServerLister
 	threads       int
 	queue         workqueue.RateLimitingInterface
 	synced        []cache.InformerSynced
 	eventRecorder record.EventRecorder
 }
 
-func NewDaemonSetController(clients *util.Clients, factories *util.InformerFactories, threads int) *DaemonSetReconciler {
-	dsInformer := factories.K8SInformerFactoryWithTarsFilter.Apps().V1().DaemonSets()
-	tsInformer := factories.TarsInformerFactory.Crd().V1beta3().TServers()
+func NewDaemonSetController(threads int) *DaemonSetReconciler {
+	dsInformer := tarsRuntime.Factories.K8SInformerFactoryWithTarsFilter.Apps().V1().DaemonSets()
+	tsInformer := tarsRuntime.Factories.TarsInformerFactory.Apps().V1beta3().TServers()
 
 	eventBroadcaster := record.NewBroadcaster()
-	eventBroadcaster.StartRecordingToSink(&k8sCoreTypeV1.EventSinkImpl{Interface: clients.K8sClient.CoreV1().Events("")})
+	eventBroadcaster.StartRecordingToSink(&k8sCoreTypeV1.EventSinkImpl{Interface: tarsRuntime.Clients.K8sClient.CoreV1().Events("")})
 
 	c := &DaemonSetReconciler{
-		clients:       clients,
 		dsLister:      dsInformer.Lister(),
 		tsLister:      tsInformer.Lister(),
 		threads:       threads,
@@ -51,8 +49,8 @@ func NewDaemonSetController(clients *util.Clients, factories *util.InformerFacto
 		eventRecorder: eventBroadcaster.NewRecorder(scheme.Scheme, k8sCoreV1.EventSource{Component: "daemonset-controller"}),
 	}
 
-	controller.SetInformerHandlerEvent(tarsMeta.KDaemonSetKind, dsInformer.Informer(), c)
-	controller.SetInformerHandlerEvent(tarsMeta.TServerKind, tsInformer.Informer(), c)
+	controller.SetInformerEventHandle(tarsMeta.KDaemonSetKind, dsInformer.Informer(), c)
+	controller.SetInformerEventHandle(tarsMeta.TServerKind, tsInformer.Informer(), c)
 
 	return c
 }
@@ -98,8 +96,8 @@ func (r *DaemonSetReconciler) processItem() bool {
 
 func (r *DaemonSetReconciler) EnqueueResourceEvent(resourceKind string, resourceEvent k8sWatchV1.EventType, resourceObj interface{}) {
 	switch resourceObj.(type) {
-	case *tarsCrdV1beta3.TServer:
-		tserver := resourceObj.(*tarsCrdV1beta3.TServer)
+	case *tarsAppsV1beta3.TServer:
+		tserver := resourceObj.(*tarsAppsV1beta3.TServer)
 		key := fmt.Sprintf("%s/%s", tserver.Namespace, tserver.Name)
 		r.queue.Add(key)
 	case *k8sAppsV1.DaemonSet:
@@ -145,7 +143,7 @@ func (r *DaemonSetReconciler) reconcile(key string) controller.Result {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "tserver", namespace, name, err.Error()))
 			return controller.Retry
 		}
-		err = r.clients.K8sClient.AppsV1().DaemonSets(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
+		err = tarsRuntime.Clients.K8sClient.AppsV1().DaemonSets(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
 		if err != nil && !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceDeleteError, "daemonset", namespace, name, err.Error()))
 			return controller.Retry
@@ -154,7 +152,7 @@ func (r *DaemonSetReconciler) reconcile(key string) controller.Result {
 	}
 
 	if tserver.DeletionTimestamp != nil || !tserver.Spec.K8S.DaemonSet {
-		err = r.clients.K8sClient.AppsV1().DaemonSets(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
+		err = tarsRuntime.Clients.K8sClient.AppsV1().DaemonSets(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
 		if err != nil && !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceDeleteError, "daemonset", namespace, name, err.Error()))
 			return controller.Retry
@@ -168,9 +166,8 @@ func (r *DaemonSetReconciler) reconcile(key string) controller.Result {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "daemonset", namespace, name, err.Error()))
 			return controller.Retry
 		}
-
-		daemonSet = buildDaemonset(tserver)
-		daemonSetInterface := r.clients.K8sClient.AppsV1().DaemonSets(namespace)
+		daemonSet = tarsRuntime.Translator.BuildDaemonset(tserver)
+		daemonSetInterface := tarsRuntime.Clients.K8sClient.AppsV1().DaemonSets(namespace)
 		if _, err = daemonSetInterface.Create(context.TODO(), daemonSet, k8sMetaV1.CreateOptions{}); err != nil && !errors.IsAlreadyExists(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceCreateError, "daemonset", namespace, name, err.Error()))
 			return controller.Retry
@@ -190,13 +187,10 @@ func (r *DaemonSetReconciler) reconcile(key string) controller.Result {
 		return controller.Retry
 	}
 
-	anyChanged := !EqualTServerAndDaemonSet(tserver, daemonSet)
-
-	if anyChanged {
-		daemonSetCopy := daemonSet.DeepCopy()
-		syncDaemonSet(tserver, daemonSetCopy)
-		daemonSetInterface := r.clients.K8sClient.AppsV1().DaemonSets(namespace)
-		if _, err := daemonSetInterface.Update(context.TODO(), daemonSetCopy, k8sMetaV1.UpdateOptions{}); err != nil {
+	update, target := tarsRuntime.Translator.DryRunSyncDaemonset(tserver, daemonSet)
+	if update {
+		statefulSetInterface := tarsRuntime.Clients.K8sClient.AppsV1().DaemonSets(namespace)
+		if _, err = statefulSetInterface.Update(context.TODO(), target, k8sMetaV1.UpdateOptions{}); err != nil {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceUpdateError, "daemonset", namespace, name, err.Error()))
 			return controller.Retry
 		}

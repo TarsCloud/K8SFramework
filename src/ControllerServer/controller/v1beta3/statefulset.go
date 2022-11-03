@@ -19,68 +19,61 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
-	tarsCrdListerV1beta3 "k8s.tars.io/client-go/listers/crd/v1beta3"
-	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
+	tarsAppsV1beta3 "k8s.tars.io/apps/v1beta3"
+	tarsListerV1beta3 "k8s.tars.io/client-go/listers/apps/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
+	tarsRuntime "k8s.tars.io/runtime"
 	"tarscontroller/controller"
-	"tarscontroller/util"
 	"time"
 )
 
 type StatefulSetReconciler struct {
-	clients       *util.Clients
 	stsLister     k8sAppsListerV1.StatefulSetLister
-	tsLister      tarsCrdListerV1beta3.TServerLister
+	tsLister      tarsListerV1beta3.TServerLister
 	threads       int
 	queue         workqueue.RateLimitingInterface
 	synced        []cache.InformerSynced
 	eventRecorder record.EventRecorder
 }
 
-func diffVolumeClaimTemplate(currents, targets []k8sCoreV1.PersistentVolumeClaim) (bool, []string) {
-	if currents == nil && targets != nil {
+func diffVolumeClaimTemplate(current, target []k8sCoreV1.PersistentVolumeClaim) (bool, []string) {
+	if current == nil && target != nil {
 		return false, nil
 	}
 
-	targetVCS := make(map[string]*k8sCoreV1.PersistentVolumeClaim, len(targets))
-	for i := range targets {
-		targetVCS[targets[i].Name] = &targets[i]
+	tcs := make(map[string]*k8sCoreV1.PersistentVolumeClaim, len(target))
+	for i := range target {
+		tcs[target[i].Name] = &target[i]
 	}
 
 	var equal = true
-	var shouldDelete []string
+	var shouldDeletes []string
 
-	for i := range currents {
-		c := &currents[i]
-		t, ok := targetVCS[c.Name]
-		if !ok {
+	for i := range current {
+		cc := &current[i]
+		tc, ok := tcs[cc.Name]
+		if !ok && cc.Spec.StorageClassName != nil && *cc.Spec.StorageClassName == tarsMeta.TStorageClassName {
 			equal = false
-			shouldDelete = append(shouldDelete, c.Name)
+			shouldDeletes = append(shouldDeletes, cc.Name)
 			continue
 		}
 
 		if equal == true {
-			if !equality.Semantic.DeepEqual(c.ObjectMeta, t.ObjectMeta) {
-				equal = false
-				continue
-			}
-
-			if !equality.Semantic.DeepEqual(c.Spec, t.Spec) {
+			if !equality.Semantic.DeepEqual(cc.ObjectMeta, tc.ObjectMeta) {
 				equal = false
 				continue
 			}
 		}
 	}
-	return equal, shouldDelete
+	return equal, shouldDeletes
 }
 
-func NewStatefulSetController(clients *util.Clients, factories *util.InformerFactories, threads int) *StatefulSetReconciler {
-	stsInformer := factories.K8SInformerFactoryWithTarsFilter.Apps().V1().StatefulSets()
-	tsInformer := factories.TarsInformerFactory.Crd().V1beta3().TServers()
+func NewStatefulSetController(threads int) *StatefulSetReconciler {
+	stsInformer := tarsRuntime.Factories.K8SInformerFactoryWithTarsFilter.Apps().V1().StatefulSets()
+	tsInformer := tarsRuntime.Factories.TarsInformerFactory.Apps().V1beta3().TServers()
 	eventBroadcaster := record.NewBroadcaster()
-	eventBroadcaster.StartRecordingToSink(&k8sCoreTypeV1.EventSinkImpl{Interface: clients.K8sClient.CoreV1().Events("")})
+	eventBroadcaster.StartRecordingToSink(&k8sCoreTypeV1.EventSinkImpl{Interface: tarsRuntime.Clients.K8sClient.CoreV1().Events("")})
 	c := &StatefulSetReconciler{
-		clients:       clients,
 		stsLister:     stsInformer.Lister(),
 		tsLister:      tsInformer.Lister(),
 		threads:       threads,
@@ -88,8 +81,8 @@ func NewStatefulSetController(clients *util.Clients, factories *util.InformerFac
 		synced:        []cache.InformerSynced{stsInformer.Informer().HasSynced, tsInformer.Informer().HasSynced},
 		eventRecorder: eventBroadcaster.NewRecorder(scheme.Scheme, k8sCoreV1.EventSource{Component: "daemonset-controller"}),
 	}
-	controller.SetInformerHandlerEvent(tarsMeta.KStatefulSetKind, stsInformer.Informer(), c)
-	controller.SetInformerHandlerEvent(tarsMeta.TServerKind, tsInformer.Informer(), c)
+	controller.SetInformerEventHandle(tarsMeta.KStatefulSetKind, stsInformer.Informer(), c)
+	controller.SetInformerEventHandle(tarsMeta.TServerKind, tsInformer.Informer(), c)
 	return c
 }
 
@@ -134,8 +127,8 @@ func (r *StatefulSetReconciler) processItem() bool {
 
 func (r *StatefulSetReconciler) EnqueueResourceEvent(resourceKind string, resourceEvent k8sWatchV1.EventType, resourceObj interface{}) {
 	switch resourceObj.(type) {
-	case *tarsCrdV1beta3.TServer:
-		tserver := resourceObj.(*tarsCrdV1beta3.TServer)
+	case *tarsAppsV1beta3.TServer:
+		tserver := resourceObj.(*tarsAppsV1beta3.TServer)
 		key := fmt.Sprintf("%s/%s", tserver.Namespace, tserver.Name)
 		r.queue.Add(key)
 	case *k8sAppsV1.StatefulSet:
@@ -167,35 +160,21 @@ func (r *StatefulSetReconciler) Run(stopCh chan struct{}) {
 	<-stopCh
 }
 
-func (r *StatefulSetReconciler) syncStatefulset(tserver *tarsCrdV1beta3.TServer, statefulSet *k8sAppsV1.StatefulSet, namespace, name string) controller.Result {
-	statefulSetCopy := statefulSet.DeepCopy()
-	syncStatefulSet(tserver, statefulSetCopy)
-	statefulSetInterface := r.clients.K8sClient.AppsV1().StatefulSets(namespace)
-	if _, err := statefulSetInterface.Update(context.TODO(), statefulSetCopy, k8sMetaV1.UpdateOptions{}); err != nil {
-		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceUpdateError, "statefulset", namespace, name, err.Error()))
-		return controller.Retry
-	}
-	return controller.Done
-}
-
-func (r *StatefulSetReconciler) recreateStatefulset(tserver *tarsCrdV1beta3.TServer, shouldDeletePVCS []string) controller.Result {
+func (r *StatefulSetReconciler) rebuildStatefulset(tserver *tarsAppsV1beta3.TServer, shouldDeletes []string) controller.Result {
 	namespace := tserver.Namespace
 	name := tserver.Name
-	err := r.clients.K8sClient.AppsV1().StatefulSets(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
+	err := tarsRuntime.Clients.K8sClient.AppsV1().StatefulSets(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceDeleteError, "statefulset", namespace, name, err.Error()))
 		return controller.Retry
 	}
 
-	if shouldDeletePVCS != nil {
+	if shouldDeletes != nil {
 		appRequirement, _ := labels.NewRequirement(tarsMeta.TServerAppLabel, selection.DoubleEquals, []string{tserver.Spec.App})
 		serverRequirement, _ := labels.NewRequirement(tarsMeta.TServerNameLabel, selection.DoubleEquals, []string{tserver.Spec.Server})
-		labelSelector := labels.NewSelector().Add(*appRequirement, *serverRequirement)
-
-		localVolumeRequirement, _ := labels.NewRequirement(tarsMeta.TLocalVolumeLabel, selection.DoubleEquals, shouldDeletePVCS)
-		labelSelector.Add(*localVolumeRequirement)
-
-		err = r.clients.K8sClient.CoreV1().PersistentVolumeClaims(namespace).DeleteCollection(context.TODO(), k8sMetaV1.DeleteOptions{}, k8sMetaV1.ListOptions{
+		localVolumeRequirement, _ := labels.NewRequirement(tarsMeta.TLocalVolumeLabel, selection.In, shouldDeletes)
+		labelSelector := labels.NewSelector().Add(*appRequirement).Add(*serverRequirement).Add(*localVolumeRequirement)
+		err = tarsRuntime.Clients.K8sClient.CoreV1().PersistentVolumeClaims(namespace).DeleteCollection(context.TODO(), k8sMetaV1.DeleteOptions{}, k8sMetaV1.ListOptions{
 			LabelSelector: labelSelector.String(),
 		})
 
@@ -219,7 +198,7 @@ func (r *StatefulSetReconciler) reconcile(key string) controller.Result {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "tserver", namespace, name, err.Error()))
 			return controller.Retry
 		}
-		err = r.clients.K8sClient.AppsV1().StatefulSets(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
+		err = tarsRuntime.Clients.K8sClient.AppsV1().StatefulSets(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
 		if err != nil && !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceDeleteError, "statefulset", namespace, name, err.Error()))
 			return controller.Retry
@@ -228,7 +207,7 @@ func (r *StatefulSetReconciler) reconcile(key string) controller.Result {
 	}
 
 	if tserver.DeletionTimestamp != nil || tserver.Spec.K8S.DaemonSet {
-		err = r.clients.K8sClient.AppsV1().StatefulSets(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
+		err = tarsRuntime.Clients.K8sClient.AppsV1().StatefulSets(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
 		if err != nil && !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceDeleteError, "statefulset", namespace, name, err.Error()))
 			return controller.Retry
@@ -244,8 +223,8 @@ func (r *StatefulSetReconciler) reconcile(key string) controller.Result {
 		}
 
 		if !tserver.Spec.K8S.DaemonSet {
-			statefulSet = buildStatefulset(tserver)
-			statefulSetInterface := r.clients.K8sClient.AppsV1().StatefulSets(namespace)
+			statefulSet = tarsRuntime.Translator.BuildStatefulset(tserver)
+			statefulSetInterface := tarsRuntime.Clients.K8sClient.AppsV1().StatefulSets(namespace)
 			_, err = statefulSetInterface.Create(context.TODO(), statefulSet, k8sMetaV1.CreateOptions{})
 			if err != nil && !errors.IsAlreadyExists(err) {
 				utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceCreateError, "statefulset", namespace, name, err.Error()))
@@ -266,15 +245,19 @@ func (r *StatefulSetReconciler) reconcile(key string) controller.Result {
 		return controller.Retry
 	}
 
-	volumeClaimTemplates := buildStatefulsetVolumeClaimTemplates(tserver)
-	equal, names := diffVolumeClaimTemplate(statefulSet.Spec.VolumeClaimTemplates, volumeClaimTemplates)
+	volumeClaimTemplates := tarsRuntime.Translator.BuildStatefulsetVolumeClaimTemplates(tserver)
+	equal, shouldDeletes := diffVolumeClaimTemplate(statefulSet.Spec.VolumeClaimTemplates, volumeClaimTemplates)
 	if !equal {
-		return r.recreateStatefulset(tserver, names)
+		return r.rebuildStatefulset(tserver, shouldDeletes)
 	}
 
-	anyChanged := !EqualTServerAndStatefulSet(tserver, statefulSet)
-	if anyChanged {
-		return r.syncStatefulset(tserver, statefulSet, namespace, name)
+	update, target := tarsRuntime.Translator.DryRunSyncStatefulset(tserver, statefulSet)
+	if update {
+		statefulSetInterface := tarsRuntime.Clients.K8sClient.AppsV1().StatefulSets(namespace)
+		if _, err = statefulSetInterface.Update(context.TODO(), target, k8sMetaV1.UpdateOptions{}); err != nil {
+			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceUpdateError, "statefulset", namespace, name, err.Error()))
+			return controller.Retry
+		}
 	}
 	return controller.Done
 }

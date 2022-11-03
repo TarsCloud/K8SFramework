@@ -1,7 +1,7 @@
 apiVersion: v2
 name: tarscontroller
 version: _CHART_VERSION_
-kubeVersion: ">= 1.18.0 < 2.0.0"
+kubeVersion: ">= 1.18.0 < 1.25.0"
 type: application
 keywords: [ tars, tarscontroller ]
 appVersion: _CHART_APPVERSION_

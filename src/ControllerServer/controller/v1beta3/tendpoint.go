@@ -14,31 +14,29 @@ import (
 	k8sCoreListerV1 "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
-	tarsCrdListerV1beta3 "k8s.tars.io/client-go/listers/crd/v1beta3"
-	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
+	tarsAppsV1beta3 "k8s.tars.io/apps/v1beta3"
+	tarsListerV1beta3 "k8s.tars.io/client-go/listers/apps/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
+	tarsRuntime "k8s.tars.io/runtime"
 	"strings"
 	"tarscontroller/controller"
-	"tarscontroller/util"
 	"time"
 )
 
 type TEndpointReconciler struct {
-	clients   *util.Clients
 	podLister k8sCoreListerV1.PodLister
-	teLister  tarsCrdListerV1beta3.TEndpointLister
-	tsLister  tarsCrdListerV1beta3.TServerLister
+	teLister  tarsListerV1beta3.TEndpointLister
+	tsLister  tarsListerV1beta3.TServerLister
 	threads   int
 	queue     workqueue.RateLimitingInterface
 	synced    []cache.InformerSynced
 }
 
-func NewTEndpointController(clients *util.Clients, factories *util.InformerFactories, threads int) *TEndpointReconciler {
-	podInformer := factories.K8SInformerFactoryWithTarsFilter.Core().V1().Pods()
-	teInformer := factories.TarsInformerFactory.Crd().V1beta3().TEndpoints()
-	tsInformer := factories.TarsInformerFactory.Crd().V1beta3().TServers()
+func NewTEndpointController(threads int) *TEndpointReconciler {
+	podInformer := tarsRuntime.Factories.K8SInformerFactoryWithTarsFilter.Core().V1().Pods()
+	teInformer := tarsRuntime.Factories.TarsInformerFactory.Apps().V1beta3().TEndpoints()
+	tsInformer := tarsRuntime.Factories.TarsInformerFactory.Apps().V1beta3().TServers()
 	c := &TEndpointReconciler{
-		clients:   clients,
 		podLister: podInformer.Lister(),
 		teLister:  teInformer.Lister(),
 		tsLister:  tsInformer.Lister(),
@@ -46,9 +44,9 @@ func NewTEndpointController(clients *util.Clients, factories *util.InformerFacto
 		queue:     workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 		synced:    []cache.InformerSynced{podInformer.Informer().HasSynced, teInformer.Informer().HasSynced, tsInformer.Informer().HasSynced},
 	}
-	controller.SetInformerHandlerEvent(tarsMeta.KPodKind, podInformer.Informer(), c)
-	controller.SetInformerHandlerEvent(tarsMeta.TEndpointKind, teInformer.Informer(), c)
-	controller.SetInformerHandlerEvent(tarsMeta.TServerKind, tsInformer.Informer(), c)
+	controller.SetInformerEventHandle(tarsMeta.KPodKind, podInformer.Informer(), c)
+	controller.SetInformerEventHandle(tarsMeta.TEndpointKind, teInformer.Informer(), c)
+	controller.SetInformerEventHandle(tarsMeta.TServerKind, tsInformer.Informer(), c)
 	return c
 }
 
@@ -106,12 +104,12 @@ func (r *TEndpointReconciler) processItem() bool {
 
 func (r *TEndpointReconciler) EnqueueResourceEvent(resourceKind string, resourceEvent k8sWatchV1.EventType, resourceObj interface{}) {
 	switch resourceObj.(type) {
-	case *tarsCrdV1beta3.TServer:
-		tserver := resourceObj.(*tarsCrdV1beta3.TServer)
+	case *tarsAppsV1beta3.TServer:
+		tserver := resourceObj.(*tarsAppsV1beta3.TServer)
 		key := fmt.Sprintf("%s/%s", tserver.Namespace, tserver.Name)
 		r.queue.Add(key)
-	case *tarsCrdV1beta3.TEndpoint:
-		tendpoint := resourceObj.(*tarsCrdV1beta3.TEndpoint)
+	case *tarsAppsV1beta3.TEndpoint:
+		tendpoint := resourceObj.(*tarsAppsV1beta3.TEndpoint)
 		key := fmt.Sprintf("%s/%s", tendpoint.Namespace, tendpoint.Name)
 		r.queue.Add(key)
 	case *k8sCoreV1.Pod:
@@ -164,7 +162,7 @@ func (r *TEndpointReconciler) reconcile(key string) controller.Result {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "tserver", namespace, name, err.Error()))
 			return controller.Retry
 		}
-		err = r.clients.CrdClient.CrdV1beta3().TEndpoints(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
+		err = tarsRuntime.Clients.CrdClient.AppsV1beta3().TEndpoints(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
 		if err != nil && !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceDeleteError, "tendpoint", namespace, name, err.Error()))
 			return controller.Retry
@@ -173,7 +171,7 @@ func (r *TEndpointReconciler) reconcile(key string) controller.Result {
 	}
 
 	if tserver.DeletionTimestamp != nil {
-		err = r.clients.CrdClient.CrdV1beta3().TEndpoints(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
+		err = tarsRuntime.Clients.CrdClient.AppsV1beta3().TEndpoints(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
 		if err != nil && !errors.IsNotFound(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceDeleteError, "tendpoint", namespace, name, err.Error()))
 			return controller.Retry
@@ -187,8 +185,8 @@ func (r *TEndpointReconciler) reconcile(key string) controller.Result {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceGetError, "tendpoint", namespace, name, err.Error()))
 			return controller.Retry
 		}
-		tendpoint = buildTEndpoint(tserver)
-		tendpointInterface := r.clients.CrdClient.CrdV1beta3().TEndpoints(namespace)
+		tendpoint = tarsRuntime.Translator.BuildTEndpoint(tserver)
+		tendpointInterface := tarsRuntime.Clients.CrdClient.AppsV1beta3().TEndpoints(namespace)
 		if _, err = tendpointInterface.Create(context.TODO(), tendpoint, k8sMetaV1.CreateOptions{}); err != nil && !errors.IsAlreadyExists(err) {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceCreateError, "tendpoint", namespace, name, err.Error()))
 			return controller.Retry
@@ -197,19 +195,17 @@ func (r *TEndpointReconciler) reconcile(key string) controller.Result {
 	}
 
 	if !k8sMetaV1.IsControlledBy(tendpoint, tserver) {
-		tendpointInterface := r.clients.CrdClient.CrdV1beta3().TEndpoints(namespace)
+		tendpointInterface := tarsRuntime.Clients.CrdClient.AppsV1beta3().TEndpoints(namespace)
 		if err = tendpointInterface.Delete(context.TODO(), tendpoint.Name, k8sMetaV1.DeleteOptions{}); err != nil {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceUpdateError, "tendpoint", namespace, name, err.Error()))
 		}
 		return controller.Retry
 	}
 
-	anyChanged := !EqualTServerAndTEndpoint(tserver, tendpoint)
-	if anyChanged {
-		tendpointCopy := tendpoint.DeepCopy()
-		syncTEndpoint(tserver, tendpointCopy)
-		tendpointInterface := r.clients.CrdClient.CrdV1beta3().TEndpoints(namespace)
-		if _, err = tendpointInterface.Update(context.TODO(), tendpointCopy, k8sMetaV1.UpdateOptions{}); err != nil {
+	update, target := tarsRuntime.Translator.DryRunSyncTEndpoint(tserver, tendpoint)
+	if update {
+		tendpointInterface := tarsRuntime.Clients.CrdClient.AppsV1beta3().TEndpoints(namespace)
+		if _, err = tendpointInterface.Update(context.TODO(), target, k8sMetaV1.UpdateOptions{}); err != nil {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceUpdateError, "tendpoint", namespace, name, err.Error()))
 			return controller.Retry
 		}
@@ -217,8 +213,8 @@ func (r *TEndpointReconciler) reconcile(key string) controller.Result {
 	return r.updateStatus(tendpoint)
 }
 
-func (r *TEndpointReconciler) buildPodStatus(pod *k8sCoreV1.Pod) *tarsCrdV1beta3.TEndpointPodStatus {
-	podStatus := &tarsCrdV1beta3.TEndpointPodStatus{
+func (r *TEndpointReconciler) buildPodStatus(pod *k8sCoreV1.Pod) *tarsAppsV1beta3.TEndpointPodStatus {
+	podStatus := &tarsAppsV1beta3.TEndpointPodStatus{
 		UID:               string(pod.UID),
 		PID:               "",
 		Name:              pod.Name,
@@ -297,7 +293,7 @@ func (r *TEndpointReconciler) buildPodStatus(pod *k8sCoreV1.Pod) *tarsCrdV1beta3
 	return podStatus
 }
 
-func (r *TEndpointReconciler) updateStatus(tendpoint *tarsCrdV1beta3.TEndpoint) controller.Result {
+func (r *TEndpointReconciler) updateStatus(tendpoint *tarsAppsV1beta3.TEndpoint) controller.Result {
 	namespace := tendpoint.Namespace
 	appRequirement, _ := labels.NewRequirement(tarsMeta.TServerAppLabel, selection.DoubleEquals, []string{tendpoint.Spec.App})
 	serverRequirement, _ := labels.NewRequirement(tarsMeta.TServerNameLabel, selection.DoubleEquals, []string{tendpoint.Spec.Server})
@@ -308,7 +304,7 @@ func (r *TEndpointReconciler) updateStatus(tendpoint *tarsCrdV1beta3.TEndpoint) 
 		return controller.Retry
 	}
 
-	tendpointPodStatuses := make([]*tarsCrdV1beta3.TEndpointPodStatus, 0, len(pods))
+	tendpointPodStatuses := make([]*tarsAppsV1beta3.TEndpointPodStatus, 0, len(pods))
 	for _, pod := range pods {
 		tendpointPodStatuses = append(tendpointPodStatuses, r.buildPodStatus(pod))
 	}
@@ -316,8 +312,7 @@ func (r *TEndpointReconciler) updateStatus(tendpoint *tarsCrdV1beta3.TEndpoint) 
 	tendpointCopy := tendpoint.DeepCopy()
 	tendpointCopy.Status.PodStatus = tendpointPodStatuses
 
-	_, err = r.clients.CrdClient.CrdV1beta3().TEndpoints(namespace).UpdateStatus(context.TODO(), tendpointCopy, k8sMetaV1.UpdateOptions{})
-
+	_, err = tarsRuntime.Clients.CrdClient.AppsV1beta3().TEndpoints(namespace).UpdateStatus(context.TODO(), tendpointCopy, k8sMetaV1.UpdateOptions{})
 	if err != nil {
 		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceUpdateError, "tendpoint", namespace, tendpoint.Name, err.Error()))
 		return controller.Retry
