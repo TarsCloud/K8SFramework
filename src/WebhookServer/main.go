@@ -15,5 +15,5 @@ func main() {
 	}
 	hooks := webhook.New()
 	tarsRuntime.Factories.Start(stopCh)
-	hooks.Start(stopCh)
+	hooks.Run(stopCh)
 }

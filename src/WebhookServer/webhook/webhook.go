@@ -4,6 +4,7 @@ import (
 	"fmt"
 	utilRuntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/tools/cache"
 	tarsAppsV1beta3 "k8s.tars.io/apps/v1beta3"
 	tarsRuntime "k8s.tars.io/runtime"
 	"net/http"
@@ -21,6 +22,7 @@ type Webhook struct {
 	mutating   *mutating.Mutating
 	validating *validating.Validating
 	conversion *conversion.Conversion
+	listers    *informer.Listers
 }
 
 func New() *Webhook {
@@ -47,13 +49,17 @@ func New() *Webhook {
 		conversion: conversion.New(),
 		mutating:   mutating.New(listers),
 		validating: validating.New(listers),
+		listers:    listers,
 	}
 
 	return webhook
 }
 
-func (h *Webhook) Start(stopCh chan struct{}) {
-	go wait.Until(func() {
+func (h *Webhook) Run(stopCh chan struct{}) {
+
+	cache.WaitForCacheSync(stopCh, h.listers.TSSynced, h.listers.TCSynced, h.listers.TRSynced)
+
+	wait.Until(func() {
 		validatingFunc := func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Add("Content-Type", "application/json")
 			w.Header().Add("Connection", "keep-alive")

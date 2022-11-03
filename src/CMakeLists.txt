@@ -52,6 +52,7 @@ add_subdirectory(ImageServer)
 add_subdirectory(AgentServer)
 add_subdirectory(ControllerServer)
 add_subdirectory(KanikoServer)
+add_subdirectory(WebhookServer)
 
 install(DIRECTORY ../builder/deploy DESTINATION ${TARS_PATH}
         PATTERN "*.sh"
