@@ -11,6 +11,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/json"
 	tarsCrdV1Beta2 "k8s.tars.io/apps/v1beta2"
 	tarsMeta "k8s.tars.io/meta"
+	tarsRuntime "k8s.tars.io/runtime"
 
 	"time"
 )
@@ -18,9 +19,8 @@ import (
 var _ = ginkgo.Describe("test ttree", func() {
 
 	opts := &scaffold.Options{
-		Name:      "default",
-		K8SConfig: scaffold.GetK8SConfigFile(),
-		SyncTime:  800 * time.Millisecond,
+		Name:     "default",
+		SyncTime: 800 * time.Millisecond,
 	}
 	s := scaffold.NewScaffold(opts)
 
@@ -57,7 +57,7 @@ var _ = ginkgo.Describe("test ttree", func() {
 				},
 			},
 		}
-		_, err := s.CRDClient.AppsV1beta2().TTrees(s.Namespace).Create(context.TODO(), trLayout, k8sMetaV1.CreateOptions{})
+		_, err := tarsRuntime.Clients.CrdClient.AppsV1beta2().TTrees(s.Namespace).Create(context.TODO(), trLayout, k8sMetaV1.CreateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 	})
 
@@ -94,7 +94,7 @@ var _ = ginkgo.Describe("test ttree", func() {
 				},
 			},
 		}
-		_, err := s.CRDClient.AppsV1beta2().TTrees(s.Namespace).Create(context.TODO(), trLayout, k8sMetaV1.CreateOptions{})
+		_, err := tarsRuntime.Clients.CrdClient.AppsV1beta2().TTrees(s.Namespace).Create(context.TODO(), trLayout, k8sMetaV1.CreateOptions{})
 		assert.NotNil(ginkgo.GinkgoT(), err)
 	})
 
@@ -112,7 +112,7 @@ var _ = ginkgo.Describe("test ttree", func() {
 			},
 		}
 		bs, _ := json.Marshal(jsonPatch)
-		ttree, err := s.CRDClient.AppsV1beta2().TTrees(s.Namespace).Patch(context.TODO(), tarsMeta.FixedTTreeResourceName, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		ttree, err := tarsRuntime.Clients.CrdClient.AppsV1beta2().TTrees(s.Namespace).Patch(context.TODO(), tarsMeta.FixedTTreeResourceName, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), ttree)
 		assert.Equal(ginkgo.GinkgoT(), 2, len(ttree.Apps))
@@ -129,7 +129,7 @@ var _ = ginkgo.Describe("test ttree", func() {
 		}
 		bs, _ := json.Marshal(jsonPatch)
 
-		ttree, err := s.CRDClient.AppsV1beta2().TTrees(s.Namespace).Patch(context.TODO(), tarsMeta.FixedTTreeResourceName, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		ttree, err := tarsRuntime.Clients.CrdClient.AppsV1beta2().TTrees(s.Namespace).Patch(context.TODO(), tarsMeta.FixedTTreeResourceName, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), ttree)
 		assert.Equal(ginkgo.GinkgoT(), 2, len(ttree.Apps))
@@ -145,7 +145,7 @@ var _ = ginkgo.Describe("test ttree", func() {
 		}
 		bs, _ := json.Marshal(jsonPatch)
 
-		_, err := s.CRDClient.AppsV1beta2().TTrees(s.Namespace).Patch(context.TODO(), tarsMeta.FixedTTreeResourceName, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		_, err := tarsRuntime.Clients.CrdClient.AppsV1beta2().TTrees(s.Namespace).Patch(context.TODO(), tarsMeta.FixedTTreeResourceName, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		assert.NotNil(ginkgo.GinkgoT(), err)
 
 		jsonPatch = tarsMeta.JsonPatch{
@@ -156,7 +156,7 @@ var _ = ginkgo.Describe("test ttree", func() {
 			},
 		}
 		bs, _ = json.Marshal(jsonPatch)
-		ttree, err := s.CRDClient.AppsV1beta2().TTrees(s.Namespace).Patch(context.TODO(), tarsMeta.FixedTTreeResourceName, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		ttree, err := tarsRuntime.Clients.CrdClient.AppsV1beta2().TTrees(s.Namespace).Patch(context.TODO(), tarsMeta.FixedTTreeResourceName, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), ttree)
 		assert.Equal(ginkgo.GinkgoT(), 2, len(ttree.Apps))
@@ -170,7 +170,7 @@ var _ = ginkgo.Describe("test ttree", func() {
 			},
 		}
 		bs, _ = json.Marshal(jsonPatch)
-		ttree, err = s.CRDClient.AppsV1beta2().TTrees(s.Namespace).Patch(context.TODO(), tarsMeta.FixedTTreeResourceName, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		ttree, err = tarsRuntime.Clients.CrdClient.AppsV1beta2().TTrees(s.Namespace).Patch(context.TODO(), tarsMeta.FixedTTreeResourceName, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), ttree)
 		assert.Equal(ginkgo.GinkgoT(), 2, len(ttree.Apps))
@@ -200,11 +200,11 @@ var _ = ginkgo.Describe("test ttree", func() {
 				},
 			},
 		}
-		_, err := s.CRDClient.AppsV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
+		_, err := tarsRuntime.Clients.CrdClient.AppsV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 
 		time.Sleep(time.Second * 1)
-		ttree, err := s.CRDClient.AppsV1beta2().TTrees(s.Namespace).Get(context.TODO(), tarsMeta.FixedTTreeResourceName, k8sMetaV1.GetOptions{})
+		ttree, err := tarsRuntime.Clients.CrdClient.AppsV1beta2().TTrees(s.Namespace).Get(context.TODO(), tarsMeta.FixedTTreeResourceName, k8sMetaV1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.Equal(ginkgo.GinkgoT(), 3, len(ttree.Apps))
 		assert.True(ginkgo.GinkgoT(), func() bool {

@@ -15,14 +15,14 @@ import (
 	"k8s.io/apimachinery/pkg/util/json"
 	tarsCrdV1Beta3 "k8s.tars.io/apps/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
+	tarsRuntime "k8s.tars.io/runtime"
 	"time"
 )
 
 var _ = ginkgo.Describe("try create/update tars server and check statefulset", func() {
 	opts := &scaffold.Options{
-		Name:      "default",
-		K8SConfig: scaffold.GetK8SConfigFile(),
-		SyncTime:  800 * time.Millisecond,
+		Name:     "default",
+		SyncTime: 800 * time.Millisecond,
 	}
 
 	s := scaffold.NewScaffold(opts)
@@ -45,7 +45,7 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 				Parent:  Template,
 			},
 		}
-		_, err := s.CRDClient.AppsV1beta3().TTemplates(s.Namespace).Create(context.TODO(), ttLayout, k8sMetaV1.CreateOptions{})
+		_, err := tarsRuntime.Clients.CrdClient.AppsV1beta3().TTemplates(s.Namespace).Create(context.TODO(), ttLayout, k8sMetaV1.CreateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		time.Sleep(s.Opts.SyncTime)
 
@@ -94,17 +94,17 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 				},
 			},
 		}
-		_, err = s.CRDClient.AppsV1beta3().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
+		_, err = tarsRuntime.Clients.CrdClient.AppsV1beta3().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		time.Sleep(s.Opts.SyncTime)
 	})
 
 	ginkgo.AfterEach(func() {
-		_ = s.CRDClient.AppsV1beta3().TServers(s.Namespace).Delete(context.TODO(), Resource, k8sMetaV1.DeleteOptions{})
+		_ = tarsRuntime.Clients.CrdClient.AppsV1beta3().TServers(s.Namespace).Delete(context.TODO(), Resource, k8sMetaV1.DeleteOptions{})
 	})
 
 	ginkgo.It("before update", func() {
-		statefulset, err := s.K8SClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
+		statefulset, err := tarsRuntime.Clients.K8sClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), statefulset)
 
@@ -132,11 +132,11 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 			},
 		}
 		bs, _ := json.Marshal(jsonPatch)
-		_, err := s.CRDClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		_, err := tarsRuntime.Clients.CrdClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		time.Sleep(s.Opts.SyncTime)
 
-		statefulset, err := s.K8SClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
+		statefulset, err := tarsRuntime.Clients.K8sClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), statefulset)
 
@@ -155,11 +155,11 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 			},
 		}
 		bs, _ := json.Marshal(jsonPatch)
-		_, err := s.CRDClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		_, err := tarsRuntime.Clients.CrdClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		time.Sleep(s.Opts.SyncTime)
 
-		statefulset, err := s.K8SClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
+		statefulset, err := tarsRuntime.Clients.K8sClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), statefulset)
 
@@ -178,11 +178,11 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 				},
 			}
 			bs, _ := json.Marshal(jsonPatch)
-			_, err := s.CRDClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+			_, err := tarsRuntime.Clients.CrdClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			time.Sleep(s.Opts.SyncTime)
 
-			statefulset, err := s.K8SClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
+			statefulset, err := tarsRuntime.Clients.K8sClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.NotNil(ginkgo.GinkgoT(), statefulset)
 
@@ -215,11 +215,11 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 				},
 			}
 			bs, _ := json.Marshal(jsonPatch)
-			_, err := s.CRDClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+			_, err := tarsRuntime.Clients.CrdClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			time.Sleep(s.Opts.SyncTime)
 
-			statefulset, err := s.K8SClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
+			statefulset, err := tarsRuntime.Clients.K8sClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.NotNil(ginkgo.GinkgoT(), statefulset)
 
@@ -258,11 +258,11 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 				},
 			}
 			bs, _ := json.Marshal(jsonPatch)
-			_, err := s.CRDClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+			_, err := tarsRuntime.Clients.CrdClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			time.Sleep(s.Opts.SyncTime)
 
-			statefulset, err := s.K8SClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
+			statefulset, err := tarsRuntime.Clients.K8sClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.NotNil(ginkgo.GinkgoT(), statefulset)
 
@@ -299,11 +299,11 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 				},
 			}
 			bs, _ := json.Marshal(jsonPatch)
-			_, err := s.CRDClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+			_, err := tarsRuntime.Clients.CrdClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			time.Sleep(s.Opts.SyncTime)
 
-			statefulset, err := s.K8SClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
+			statefulset, err := tarsRuntime.Clients.K8sClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.NotNil(ginkgo.GinkgoT(), statefulset)
 
@@ -363,11 +363,11 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 			},
 		}
 		bs, _ := json.Marshal(jsonPatch)
-		_, err := s.CRDClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		_, err := tarsRuntime.Clients.CrdClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		time.Sleep(s.Opts.SyncTime)
 
-		_, err = s.K8SClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
+		_, err = tarsRuntime.Clients.K8sClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 		assert.NotNil(ginkgo.GinkgoT(), err)
 		assert.True(ginkgo.GinkgoT(), errors.IsNotFound(err))
 	})
@@ -414,11 +414,11 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 			},
 		}
 		bs, _ := json.Marshal(jsonPatch)
-		_, err := s.CRDClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		_, err := tarsRuntime.Clients.CrdClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		time.Sleep(s.Opts.SyncTime)
 
-		statefulset, err := s.K8SClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
+		statefulset, err := tarsRuntime.Clients.K8sClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), statefulset)
 
@@ -484,11 +484,11 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 			},
 		}
 		bs, _ := json.Marshal(jsonPatch)
-		_, err := s.CRDClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		_, err := tarsRuntime.Clients.CrdClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		time.Sleep(s.Opts.SyncTime)
 
-		statefulset, err := s.K8SClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
+		statefulset, err := tarsRuntime.Clients.K8sClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), statefulset)
 
@@ -527,11 +527,11 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 			},
 		}
 		bs, _ := json.Marshal(jsonPatch)
-		_, err := s.CRDClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		_, err := tarsRuntime.Clients.CrdClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		time.Sleep(s.Opts.SyncTime)
 
-		statefulset, err := s.K8SClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
+		statefulset, err := tarsRuntime.Clients.K8sClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), statefulset)
 
@@ -549,11 +549,11 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 			},
 		}
 		bs, _ := json.Marshal(jsonPatch)
-		_, err := s.CRDClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		_, err := tarsRuntime.Clients.CrdClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		time.Sleep(s.Opts.SyncTime)
 
-		statefulset, err := s.K8SClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
+		statefulset, err := tarsRuntime.Clients.K8sClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), statefulset)
 
@@ -580,11 +580,11 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 			},
 		}
 		bs, _ := json.Marshal(jsonPatch)
-		_, err := s.CRDClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		_, err := tarsRuntime.Clients.CrdClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		time.Sleep(s.Opts.SyncTime)
 
-		statefulset, err := s.K8SClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
+		statefulset, err := tarsRuntime.Clients.K8sClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), statefulset)
 
@@ -707,11 +707,11 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 			},
 		}
 		bs, _ := json.Marshal(jsonPatch)
-		_, err := s.CRDClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		_, err := tarsRuntime.Clients.CrdClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		time.Sleep(s.Opts.SyncTime)
 
-		statefulset, err := s.K8SClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
+		statefulset, err := tarsRuntime.Clients.K8sClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), statefulset)
 
@@ -807,11 +807,11 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 				},
 			}
 			bs, _ := json.Marshal(jsonPatch)
-			_, err := s.CRDClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+			_, err := tarsRuntime.Clients.CrdClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			time.Sleep(s.Opts.SyncTime)
 
-			statefulset, err := s.K8SClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
+			statefulset, err := tarsRuntime.Clients.K8sClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.NotNil(ginkgo.GinkgoT(), statefulset)
 
@@ -882,11 +882,11 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 				},
 			}
 			bs, _ := json.Marshal(jsonPatch)
-			_, err := s.CRDClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+			_, err := tarsRuntime.Clients.CrdClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			time.Sleep(s.Opts.SyncTime)
 
-			statefulset, err := s.K8SClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
+			statefulset, err := tarsRuntime.Clients.K8sClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.NotNil(ginkgo.GinkgoT(), statefulset)
 
@@ -959,11 +959,11 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 				},
 			}
 			bs, _ := json.Marshal(jsonPatch)
-			_, err := s.CRDClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+			_, err := tarsRuntime.Clients.CrdClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			time.Sleep(s.Opts.SyncTime)
 
-			statefulset, err := s.K8SClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
+			statefulset, err := tarsRuntime.Clients.K8sClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.NotNil(ginkgo.GinkgoT(), statefulset)
 
@@ -1037,11 +1037,11 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 			},
 		}
 		bs, _ := json.Marshal(jsonPatch)
-		_, err := s.CRDClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		_, err := tarsRuntime.Clients.CrdClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		time.Sleep(s.Opts.SyncTime)
 
-		statefulset, err := s.K8SClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
+		statefulset, err := tarsRuntime.Clients.K8sClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), statefulset)
 
@@ -1092,11 +1092,11 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 			},
 		}
 		bs, _ := json.Marshal(jsonPatch)
-		_, err := s.CRDClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		_, err := tarsRuntime.Clients.CrdClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		time.Sleep(s.Opts.SyncTime)
 
-		statefulset, err := s.K8SClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
+		statefulset, err := tarsRuntime.Clients.K8sClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), statefulset)
 
@@ -1147,11 +1147,11 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 			},
 		}
 		bs, _ := json.Marshal(jsonPatch)
-		_, err := s.CRDClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		_, err := tarsRuntime.Clients.CrdClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		time.Sleep(s.Opts.SyncTime)
 
-		statefulset, err := s.K8SClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
+		statefulset, err := tarsRuntime.Clients.K8sClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), statefulset)
 
@@ -1202,11 +1202,11 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 			},
 		}
 		bs, _ := json.Marshal(jsonPatch)
-		_, err := s.CRDClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		_, err := tarsRuntime.Clients.CrdClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		time.Sleep(s.Opts.SyncTime)
 
-		statefulset, err := s.K8SClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
+		statefulset, err := tarsRuntime.Clients.K8sClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), statefulset)
 
@@ -1249,7 +1249,7 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 	})
 
 	ginkgo.It("podManagementPolicy", func() {
-		tserver, _ := s.CRDClient.AppsV1beta3().TServers(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
+		tserver, _ := tarsRuntime.Clients.CrdClient.AppsV1beta3().TServers(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 		assert.NotNil(ginkgo.GinkgoT(), tserver)
 		currentPolicy := tserver.Spec.K8S.PodManagementPolicy
 		var targetPolicy k8sAppsV1.PodManagementPolicyType
@@ -1267,13 +1267,13 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 			},
 		}
 		bs, _ := json.Marshal(jsonPatch)
-		tserver, err := s.CRDClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		tserver, err := tarsRuntime.Clients.CrdClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), tserver)
 		assert.Equal(ginkgo.GinkgoT(), targetPolicy, tserver.Spec.K8S.PodManagementPolicy)
 		time.Sleep(s.Opts.SyncTime)
 
-		statefulset, err := s.K8SClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
+		statefulset, err := tarsRuntime.Clients.K8sClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), statefulset)
 
@@ -1285,7 +1285,7 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 
 	ginkgo.Context("readinessGate", func() {
 		ginkgo.It("default readinessGate", func() {
-			statefulset, err := s.K8SClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
+			statefulset, err := tarsRuntime.Clients.K8sClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.NotNil(ginkgo.GinkgoT(), statefulset)
 
@@ -1307,11 +1307,11 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 				},
 			}
 			bs, _ := json.Marshal(jsonPatch)
-			_, err := s.CRDClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+			_, err := tarsRuntime.Clients.CrdClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			time.Sleep(s.Opts.SyncTime)
 
-			statefulset, err := s.K8SClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
+			statefulset, err := tarsRuntime.Clients.K8sClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.NotNil(ginkgo.GinkgoT(), statefulset)
 
@@ -1335,11 +1335,11 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 				},
 			}
 			bs, _ := json.Marshal(jsonPatch)
-			_, err := s.CRDClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+			_, err := tarsRuntime.Clients.CrdClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			time.Sleep(s.Opts.SyncTime)
 
-			statefulset, err := s.K8SClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
+			statefulset, err := tarsRuntime.Clients.K8sClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.NotNil(ginkgo.GinkgoT(), statefulset)
 
@@ -1373,11 +1373,11 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 			}
 
 			bs, _ := json.Marshal(jsonPatch)
-			tserver, err := s.CRDClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+			tserver, err := tarsRuntime.Clients.CrdClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.Equal(ginkgo.GinkgoT(), int32(0), tserver.Spec.K8S.Replicas)
 
-			statefulset, err := s.K8SClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
+			statefulset, err := tarsRuntime.Clients.K8sClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.NotNil(ginkgo.GinkgoT(), statefulset)
 
@@ -1412,11 +1412,11 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 			}
 
 			bs, _ := json.Marshal(jsonPatch)
-			_, err := s.CRDClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+			_, err := tarsRuntime.Clients.CrdClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			time.Sleep(s.Opts.SyncTime)
 
-			statefulset, err := s.K8SClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
+			statefulset, err := tarsRuntime.Clients.K8sClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.NotNil(ginkgo.GinkgoT(), statefulset)
 
@@ -1434,11 +1434,11 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 			},
 		}
 		bs, _ := json.Marshal(jsonPatch)
-		_, err := s.CRDClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		_, err := tarsRuntime.Clients.CrdClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		time.Sleep(s.Opts.SyncTime)
 
-		statefulset, err := s.K8SClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
+		statefulset, err := tarsRuntime.Clients.K8sClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), statefulset)
 
@@ -1465,11 +1465,11 @@ var _ = ginkgo.Describe("try create/update tars server and check statefulset", f
 			},
 		}
 		bs, _ := json.Marshal(jsonPatch)
-		_, err := s.CRDClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		_, err := tarsRuntime.Clients.CrdClient.AppsV1beta3().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		time.Sleep(s.Opts.SyncTime)
 
-		statefulset, err := s.K8SClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
+		statefulset, err := tarsRuntime.Clients.K8sClient.AppsV1().StatefulSets(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), statefulset)
 
