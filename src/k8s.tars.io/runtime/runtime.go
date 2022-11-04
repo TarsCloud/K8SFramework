@@ -14,7 +14,6 @@ import (
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	crdVersioned "k8s.tars.io/client-go/clientset/versioned"
 	crdScheme "k8s.tars.io/client-go/clientset/versioned/scheme"
-	tarsMeta "k8s.tars.io/meta"
 	tarsTranslatorV1beta3 "k8s.tars.io/translator/v1beta3"
 	"os"
 	"time"
@@ -39,6 +38,8 @@ func CreateContext(masterUrl, kubeConfigPath string) error {
 		return err
 	}
 
+	Username = clusterConfig.Username
+
 	k8sClient = kubernetes.NewForConfigOrDie(clusterConfig)
 
 	tarsClient = crdVersioned.NewForConfigOrDie(clusterConfig)
@@ -61,13 +62,7 @@ func CreateContext(masterUrl, kubeConfigPath string) error {
 		Namespace = string(bs)
 	} else {
 		utilRuntime.HandleError(fmt.Errorf("cannot read namespace file : %s", err.Error()))
-		Namespace = tarsMeta.DefaultControllerNamespace
-	}
-
-	if masterUrl != "" || kubeConfigPath != "" {
-		Username = tarsMeta.DefaultUnlawfulAndOnlyForDebugUserName
-	} else {
-		Username = fmt.Sprintf("system:serviceaccount:%s:%s", Namespace, tarsMeta.DefaultControllerUsername)
+		Namespace = "default"
 	}
 
 	TFCConfig = &TFrameworkConfig{}

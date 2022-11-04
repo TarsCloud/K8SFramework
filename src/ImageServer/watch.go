@@ -2,9 +2,9 @@ package main
 
 import (
 	"k8s.io/client-go/tools/cache"
+	tarsAppsV1beta3 "k8s.tars.io/apps/v1beta3"
 	tarsInformers "k8s.tars.io/client-go/informers/externalversions"
-	tarsInformersV1beta3 "k8s.tars.io/client-go/informers/externalversions/crd/v1beta3"
-	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
+	tarsInformersV1beta3 "k8s.tars.io/client-go/informers/externalversions/apps/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 )
 
@@ -20,7 +20,7 @@ type Watcher struct {
 
 func NewWatcher() *Watcher {
 	crdInformerFactory := tarsInformers.NewSharedInformerFactoryWithOptions(glK8sContext.crdClient, 0, tarsInformers.WithNamespace(glK8sContext.namespace))
-	tframeworkconfigInformer := crdInformerFactory.Crd().V1beta3().TFrameworkConfigs()
+	tframeworkconfigInformer := crdInformerFactory.Apps().V1beta3().TFrameworkConfigs()
 	watcher := &Watcher{
 		Informers: Informers{
 			crdInformerFactory:       crdInformerFactory,
@@ -33,8 +33,8 @@ func NewWatcher() *Watcher {
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
 				switch obj.(type) {
-				case *tarsCrdV1beta3.TFrameworkConfig:
-					tfc := obj.(*tarsCrdV1beta3.TFrameworkConfig)
+				case *tarsAppsV1beta3.TFrameworkConfig:
+					tfc := obj.(*tarsAppsV1beta3.TFrameworkConfig)
 					if tfc.Name == tarsMeta.FixedTFrameworkConfigResourceName {
 						setMaxReleases(tfc.RecordLimit.TImageRelease)
 						setExecutor(tfc.ImageBuild.Executor.Image, tfc.ImageBuild.Executor.Secret)
@@ -47,8 +47,8 @@ func NewWatcher() *Watcher {
 			},
 			UpdateFunc: func(oldObj, newObj interface{}) {
 				switch newObj.(type) {
-				case *tarsCrdV1beta3.TFrameworkConfig:
-					tfc := newObj.(*tarsCrdV1beta3.TFrameworkConfig)
+				case *tarsAppsV1beta3.TFrameworkConfig:
+					tfc := newObj.(*tarsAppsV1beta3.TFrameworkConfig)
 					if tfc.Name == tarsMeta.FixedTFrameworkConfigResourceName {
 						setMaxReleases(tfc.RecordLimit.TImageRelease)
 						setExecutor(tfc.ImageBuild.Executor.Image, tfc.ImageBuild.Executor.Secret)
