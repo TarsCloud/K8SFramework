@@ -8,7 +8,7 @@ import (
 	k8sCoreV1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	tarsCrdV1Beta2 "k8s.tars.io/crd/v1beta2"
+	tarsCrdV1Beta2 "k8s.tars.io/apps/v1beta2"
 	tarsMeta "k8s.tars.io/meta"
 
 	"strings"
@@ -38,7 +38,7 @@ var _ = ginkgo.Describe("try create tars server with unexpected filed value", fu
 				Parent:  "tt.cpp",
 			},
 		}
-		_, err := s.CRDClient.CrdV1beta2().TTemplates(s.Namespace).Create(context.TODO(), ttLayout, k8sMetaV1.CreateOptions{})
+		_, err := s.CRDClient.AppsV1beta2().TTemplates(s.Namespace).Create(context.TODO(), ttLayout, k8sMetaV1.CreateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		time.Sleep(s.Opts.SyncTime)
 
@@ -71,26 +71,26 @@ var _ = ginkgo.Describe("try create tars server with unexpected filed value", fu
 	})
 
 	ginkgo.AfterEach(func() {
-		_ = s.CRDClient.CrdV1beta2().TServers(s.Namespace).Delete(context.TODO(), Resource, k8sMetaV1.DeleteOptions{})
+		_ = s.CRDClient.AppsV1beta2().TServers(s.Namespace).Delete(context.TODO(), Resource, k8sMetaV1.DeleteOptions{})
 	})
 
 	ginkgo.It("app", func() {
 		tsLayout.Spec.App = "TestApp"
-		_, err := s.CRDClient.CrdV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
+		_, err := s.CRDClient.AppsV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
 		assert.NotNil(ginkgo.GinkgoT(), err)
 		assert.True(ginkgo.GinkgoT(), strings.Contains(err.Error(), "denied the request:"))
 	})
 
 	ginkgo.It("server", func() {
 		tsLayout.Spec.App = "MTestServer"
-		_, err := s.CRDClient.CrdV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
+		_, err := s.CRDClient.AppsV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
 		assert.NotNil(ginkgo.GinkgoT(), err)
 		assert.True(ginkgo.GinkgoT(), strings.Contains(err.Error(), "denied the request:"))
 	})
 
 	ginkgo.It("tars.template", func() {
 		tsLayout.Spec.Tars.Template = "xxx"
-		_, err := s.CRDClient.CrdV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
+		_, err := s.CRDClient.AppsV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
 		assert.NotNil(ginkgo.GinkgoT(), err)
 		assert.True(ginkgo.GinkgoT(), strings.Contains(err.Error(), "denied the request:"))
 	})
@@ -124,7 +124,7 @@ var _ = ginkgo.Describe("try create tars server with unexpected filed value", fu
 			tsLayout.Spec.Tars.Servants[1].Name = "SecondObj"
 			tsLayout.Spec.Tars.Servants[1].Port = 3000
 
-			_, err := s.CRDClient.CrdV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
+			_, err := s.CRDClient.AppsV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
 			assert.NotNil(ginkgo.GinkgoT(), err)
 			assert.True(ginkgo.GinkgoT(), strings.Contains(err.Error(), "denied the request:"))
 		})
@@ -136,7 +136,7 @@ var _ = ginkgo.Describe("try create tars server with unexpected filed value", fu
 			tsLayout.Spec.Tars.Servants[1].Name = "firstObj"
 			tsLayout.Spec.Tars.Servants[1].Port = 3001
 
-			_, err := s.CRDClient.CrdV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
+			_, err := s.CRDClient.AppsV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
 			assert.NotNil(ginkgo.GinkgoT(), err)
 			assert.True(ginkgo.GinkgoT(), strings.Contains(err.Error(), "denied the request:"))
 		})
@@ -148,7 +148,7 @@ var _ = ginkgo.Describe("try create tars server with unexpected filed value", fu
 			tsLayout.Spec.Tars.Servants[1].Name = "SecondObj"
 			tsLayout.Spec.Tars.Servants[1].Port = 3000
 
-			_, err := s.CRDClient.CrdV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
+			_, err := s.CRDClient.AppsV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
 			assert.NotNil(ginkgo.GinkgoT(), err)
 			assert.True(ginkgo.GinkgoT(), strings.Contains(err.Error(), "denied the request:"))
 		})
@@ -173,7 +173,7 @@ var _ = ginkgo.Describe("try create tars server with unexpected filed value", fu
 			tsLayout.Spec.Tars.Ports[1].Name = "second"
 			tsLayout.Spec.Tars.Ports[1].Port = 3001
 
-			_, err := s.CRDClient.CrdV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
+			_, err := s.CRDClient.AppsV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
 			assert.NotNil(ginkgo.GinkgoT(), err)
 			assert.True(ginkgo.GinkgoT(), strings.Contains(err.Error(), "denied the request:"))
 		})
@@ -185,7 +185,7 @@ var _ = ginkgo.Describe("try create tars server with unexpected filed value", fu
 			tsLayout.Spec.Tars.Ports[1].Name = "first"
 			tsLayout.Spec.Tars.Ports[1].Port = 3001
 
-			_, err := s.CRDClient.CrdV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
+			_, err := s.CRDClient.AppsV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
 			assert.NotNil(ginkgo.GinkgoT(), err)
 			assert.True(ginkgo.GinkgoT(), strings.Contains(err.Error(), "denied the request:"))
 		})
@@ -197,7 +197,7 @@ var _ = ginkgo.Describe("try create tars server with unexpected filed value", fu
 			tsLayout.Spec.Tars.Ports[1].Name = "second"
 			tsLayout.Spec.Tars.Ports[1].Port = 3000
 
-			_, err := s.CRDClient.CrdV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
+			_, err := s.CRDClient.AppsV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
 			assert.NotNil(ginkgo.GinkgoT(), err)
 			assert.True(ginkgo.GinkgoT(), strings.Contains(err.Error(), "denied the request:"))
 		})
@@ -228,7 +228,7 @@ var _ = ginkgo.Describe("try create tars server with unexpected filed value", fu
 			tsLayout.Spec.Tars.Ports[0].Name = "firstobj"
 			tsLayout.Spec.Tars.Ports[0].Port = 30001
 
-			_, err := s.CRDClient.CrdV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
+			_, err := s.CRDClient.AppsV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
 			assert.NotNil(ginkgo.GinkgoT(), err)
 			assert.True(ginkgo.GinkgoT(), strings.Contains(err.Error(), "denied the request:"))
 		})
@@ -240,7 +240,7 @@ var _ = ginkgo.Describe("try create tars server with unexpected filed value", fu
 			tsLayout.Spec.Tars.Ports[0].Name = "secondobj"
 			tsLayout.Spec.Tars.Ports[0].Port = 3000
 
-			_, err := s.CRDClient.CrdV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
+			_, err := s.CRDClient.AppsV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
 			assert.NotNil(ginkgo.GinkgoT(), err)
 			assert.True(ginkgo.GinkgoT(), strings.Contains(err.Error(), "denied the request:"))
 		})
@@ -279,7 +279,7 @@ var _ = ginkgo.Describe("try create tars server with unexpected filed value", fu
 					Port:    99,
 				},
 			}
-			_, err := s.CRDClient.CrdV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
+			_, err := s.CRDClient.AppsV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
 			assert.NotNil(ginkgo.GinkgoT(), err)
 			assert.True(ginkgo.GinkgoT(), strings.Contains(err.Error(), "denied the request:"))
 		})
@@ -295,7 +295,7 @@ var _ = ginkgo.Describe("try create tars server with unexpected filed value", fu
 					Port:    100,
 				},
 			}
-			_, err := s.CRDClient.CrdV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
+			_, err := s.CRDClient.AppsV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
 			assert.NotNil(ginkgo.GinkgoT(), err)
 			assert.True(ginkgo.GinkgoT(), strings.Contains(err.Error(), "denied the request:"))
 		})
@@ -311,7 +311,7 @@ var _ = ginkgo.Describe("try create tars server with unexpected filed value", fu
 					Port:    99,
 				},
 			}
-			_, err := s.CRDClient.CrdV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
+			_, err := s.CRDClient.AppsV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
 			assert.NotNil(ginkgo.GinkgoT(), err)
 			assert.True(ginkgo.GinkgoT(), strings.Contains(err.Error(), "denied the request:"))
 		})
@@ -337,7 +337,7 @@ var _ = ginkgo.Describe("try create tars server with unexpected filed value", fu
 					MountPath: "/data/2",
 				},
 			}
-			_, err := s.CRDClient.CrdV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
+			_, err := s.CRDClient.AppsV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
 			assert.NotNil(ginkgo.GinkgoT(), err)
 			assert.True(ginkgo.GinkgoT(), strings.Contains(err.Error(), "denied the request:"))
 		})
@@ -353,7 +353,7 @@ var _ = ginkgo.Describe("try create tars server with unexpected filed value", fu
 					MountPath: "/tlv",
 				},
 			}
-			_, err := s.CRDClient.CrdV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
+			_, err := s.CRDClient.AppsV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
 			assert.NotNil(ginkgo.GinkgoT(), err)
 			assert.True(ginkgo.GinkgoT(), strings.Contains(err.Error(), "denied the request:"))
 		})
@@ -398,7 +398,7 @@ var _ = ginkgo.Describe("try create tars server with unexpected filed value", fu
 					MountPath: "/pvct",
 				},
 			}
-			_, err := s.CRDClient.CrdV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
+			_, err := s.CRDClient.AppsV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
 			assert.NotNil(ginkgo.GinkgoT(), err)
 			assert.True(ginkgo.GinkgoT(), strings.Contains(err.Error(), "denied the request:"))
 		})

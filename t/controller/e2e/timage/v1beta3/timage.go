@@ -8,7 +8,7 @@ import (
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	patchTypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
-	tarsCrdV1Beta3 "k8s.tars.io/crd/v1beta3"
+	tarsCrdV1Beta3 "k8s.tars.io/apps/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	"time"
 )
@@ -36,7 +36,7 @@ var _ = ginkgo.Describe("test timage", func() {
 				},
 			},
 		}
-		timage, err := s.CRDClient.CrdV1beta3().TImages(s.Namespace).Create(context.TODO(), tiLayout, k8sMetaV1.CreateOptions{})
+		timage, err := s.CRDClient.AppsV1beta3().TImages(s.Namespace).Create(context.TODO(), tiLayout, k8sMetaV1.CreateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), timage)
 		assert.NotNil(ginkgo.GinkgoT(), timage.Releases[0].CreateTime)
@@ -77,7 +77,7 @@ var _ = ginkgo.Describe("test timage", func() {
 				},
 			},
 		}
-		timage, err := s.CRDClient.CrdV1beta3().TImages(s.Namespace).Create(context.TODO(), tiLayout, k8sMetaV1.CreateOptions{})
+		timage, err := s.CRDClient.AppsV1beta3().TImages(s.Namespace).Create(context.TODO(), tiLayout, k8sMetaV1.CreateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), timage)
 		assert.Equal(ginkgo.GinkgoT(), 3, len(timage.Releases))
@@ -98,7 +98,7 @@ var _ = ginkgo.Describe("test timage", func() {
 			},
 		}
 		bs, _ := json.Marshal(jsonPatch)
-		timage, err = s.CRDClient.CrdV1beta3().TImages(s.Namespace).Patch(context.TODO(), "test-testserver", patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		timage, err = s.CRDClient.AppsV1beta3().TImages(s.Namespace).Patch(context.TODO(), "test-testserver", patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), timage)
 		assert.Equal(ginkgo.GinkgoT(), 1, len(timage.Releases))

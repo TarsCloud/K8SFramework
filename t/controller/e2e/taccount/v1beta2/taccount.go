@@ -12,7 +12,7 @@ import (
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	patchTypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
-	tarsCrdV1Beta2 "k8s.tars.io/crd/v1beta2"
+	tarsCrdV1Beta2 "k8s.tars.io/apps/v1beta2"
 	tarsMeta "k8s.tars.io/meta"
 	"time"
 )
@@ -53,14 +53,14 @@ var _ = ginkgo.Describe("test account", func() {
 			},
 		}
 		var taccount *tarsCrdV1Beta2.TAccount
-		taccount, err := s.CRDClient.CrdV1beta2().TAccounts(s.Namespace).Create(context.TODO(), taccountLayout, k8sMetaV1.CreateOptions{})
+		taccount, err := s.CRDClient.AppsV1beta2().TAccounts(s.Namespace).Create(context.TODO(), taccountLayout, k8sMetaV1.CreateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), taccount)
 		time.Sleep(s.Opts.SyncTime)
 	})
 
 	ginkgo.It("check bcrypt password ", func() {
-		taccount, err := s.CRDClient.CrdV1beta2().TAccounts(s.Namespace).Get(context.TODO(), ResourceName, k8sMetaV1.GetOptions{})
+		taccount, err := s.CRDClient.AppsV1beta2().TAccounts(s.Namespace).Get(context.TODO(), ResourceName, k8sMetaV1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), taccount)
 		assert.Nil(ginkgo.GinkgoT(), taccount.Spec.Authentication.Password)
@@ -70,7 +70,7 @@ var _ = ginkgo.Describe("test account", func() {
 	})
 
 	ginkgo.It("try update password", func() {
-		taccount, err := s.CRDClient.CrdV1beta2().TAccounts(s.Namespace).Get(context.TODO(), ResourceName, k8sMetaV1.GetOptions{})
+		taccount, err := s.CRDClient.AppsV1beta2().TAccounts(s.Namespace).Get(context.TODO(), ResourceName, k8sMetaV1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		const updateTimes = 3
 		for i := 0; i < updateTimes; i++ {
@@ -105,7 +105,7 @@ var _ = ginkgo.Describe("test account", func() {
 				},
 			}
 			tokensPatchContent, _ := json.Marshal(tokensPatch)
-			taccount, err = s.CRDClient.CrdV1beta2().TAccounts(s.Namespace).Patch(context.TODO(), ResourceName, patchTypes.JSONPatchType, tokensPatchContent, k8sMetaV1.PatchOptions{})
+			taccount, err = s.CRDClient.AppsV1beta2().TAccounts(s.Namespace).Patch(context.TODO(), ResourceName, patchTypes.JSONPatchType, tokensPatchContent, k8sMetaV1.PatchOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.NotNil(ginkgo.GinkgoT(), taccount)
 			assert.Equal(ginkgo.GinkgoT(), len(taccount.Spec.Authentication.Tokens), 3)
@@ -119,7 +119,7 @@ var _ = ginkgo.Describe("test account", func() {
 			}
 
 			patchContent, _ := json.Marshal(jsonPatch)
-			taccount, err = s.CRDClient.CrdV1beta2().TAccounts(s.Namespace).Patch(context.TODO(), ResourceName, patchTypes.JSONPatchType, patchContent, k8sMetaV1.PatchOptions{})
+			taccount, err = s.CRDClient.AppsV1beta2().TAccounts(s.Namespace).Patch(context.TODO(), ResourceName, patchTypes.JSONPatchType, patchContent, k8sMetaV1.PatchOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.NotNil(ginkgo.GinkgoT(), taccount)
 			assert.Nil(ginkgo.GinkgoT(), taccount.Spec.Authentication.Password)
@@ -131,7 +131,7 @@ var _ = ginkgo.Describe("test account", func() {
 	})
 
 	ginkgo.It("try update bcryptPassword", func() {
-		taccount, err := s.CRDClient.CrdV1beta2().TAccounts(s.Namespace).Get(context.TODO(), ResourceName, k8sMetaV1.GetOptions{})
+		taccount, err := s.CRDClient.AppsV1beta2().TAccounts(s.Namespace).Get(context.TODO(), ResourceName, k8sMetaV1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		const updateTimes = 3
 		for i := 0; i < updateTimes; i++ {
@@ -166,7 +166,7 @@ var _ = ginkgo.Describe("test account", func() {
 				},
 			}
 			tokensPatchContent, _ := json.Marshal(tokensPatch)
-			taccount, err = s.CRDClient.CrdV1beta2().TAccounts(s.Namespace).Patch(context.TODO(), ResourceName, patchTypes.JSONPatchType, tokensPatchContent, k8sMetaV1.PatchOptions{})
+			taccount, err = s.CRDClient.AppsV1beta2().TAccounts(s.Namespace).Patch(context.TODO(), ResourceName, patchTypes.JSONPatchType, tokensPatchContent, k8sMetaV1.PatchOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.NotNil(ginkgo.GinkgoT(), taccount)
 			assert.Equal(ginkgo.GinkgoT(), len(taccount.Spec.Authentication.Tokens), 3)
@@ -182,7 +182,7 @@ var _ = ginkgo.Describe("test account", func() {
 			}
 
 			patchContent, _ := json.Marshal(jsonPatch)
-			taccount, err = s.CRDClient.CrdV1beta2().TAccounts(s.Namespace).Patch(context.TODO(), ResourceName, patchTypes.JSONPatchType, patchContent, k8sMetaV1.PatchOptions{})
+			taccount, err = s.CRDClient.AppsV1beta2().TAccounts(s.Namespace).Patch(context.TODO(), ResourceName, patchTypes.JSONPatchType, patchContent, k8sMetaV1.PatchOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.NotNil(ginkgo.GinkgoT(), taccount)
 			assert.Nil(ginkgo.GinkgoT(), taccount.Spec.Authentication.Password)

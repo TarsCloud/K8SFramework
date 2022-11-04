@@ -10,7 +10,7 @@ import (
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	patchTypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
-	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
+	tarsAppsV1beta3 "k8s.tars.io/apps/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 
 	"time"
@@ -24,41 +24,41 @@ var _ = ginkgo.Describe("ttemplate", func() {
 	}
 	s := scaffold.NewScaffold(opts)
 
-	defaultTTLayout := &tarsCrdV1beta3.TTemplate{
+	defaultTTLayout := &tarsAppsV1beta3.TTemplate{
 		ObjectMeta: k8sMetaV1.ObjectMeta{
 			Name:      "tt.default",
 			Namespace: s.Namespace,
 		},
-		Spec: tarsCrdV1beta3.TTemplateSpec{
+		Spec: tarsAppsV1beta3.TTemplateSpec{
 			Content: "tt.default content",
 			Parent:  "tt.default",
 		},
 	}
 
-	cppTTLayout := &tarsCrdV1beta3.TTemplate{
+	cppTTLayout := &tarsAppsV1beta3.TTemplate{
 		ObjectMeta: k8sMetaV1.ObjectMeta{
 			Name:      "tt.cpp",
 			Namespace: s.Namespace,
 		},
-		Spec: tarsCrdV1beta3.TTemplateSpec{
+		Spec: tarsAppsV1beta3.TTemplateSpec{
 			Content: "tt.cpp content",
 			Parent:  "tt.default",
 		},
 	}
 
 	ginkgo.BeforeEach(func() {
-		defaultTT, err := s.CRDClient.CrdV1beta3().TTemplates(s.Namespace).Create(context.TODO(), defaultTTLayout, k8sMetaV1.CreateOptions{})
+		defaultTT, err := s.CRDClient.AppsV1beta3().TTemplates(s.Namespace).Create(context.TODO(), defaultTTLayout, k8sMetaV1.CreateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), defaultTT)
 		time.Sleep(s.Opts.SyncTime)
-		cppTT, err := s.CRDClient.CrdV1beta3().TTemplates(s.Namespace).Create(context.TODO(), cppTTLayout, k8sMetaV1.CreateOptions{})
+		cppTT, err := s.CRDClient.AppsV1beta3().TTemplates(s.Namespace).Create(context.TODO(), cppTTLayout, k8sMetaV1.CreateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), cppTT)
 		time.Sleep(s.Opts.SyncTime)
 	})
 
 	ginkgo.It("check labels", func() {
-		defaultTT, err := s.CRDClient.CrdV1beta3().TTemplates(s.Namespace).Get(context.TODO(), defaultTTLayout.Name, k8sMetaV1.GetOptions{})
+		defaultTT, err := s.CRDClient.AppsV1beta3().TTemplates(s.Namespace).Get(context.TODO(), defaultTTLayout.Name, k8sMetaV1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), defaultTT)
 
@@ -67,7 +67,7 @@ var _ = ginkgo.Describe("ttemplate", func() {
 			assert.False(ginkgo.GinkgoT(), ok)
 		}
 
-		cppTT, err := s.CRDClient.CrdV1beta3().TTemplates(s.Namespace).Get(context.TODO(), cppTTLayout.Name, k8sMetaV1.GetOptions{})
+		cppTT, err := s.CRDClient.AppsV1beta3().TTemplates(s.Namespace).Get(context.TODO(), cppTTLayout.Name, k8sMetaV1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), defaultTT)
 		exceptedCppTTLabels := map[string]string{
@@ -77,17 +77,17 @@ var _ = ginkgo.Describe("ttemplate", func() {
 	})
 
 	ginkgo.It("create ttemplate and parent not exist", func() {
-		xxLayout := &tarsCrdV1beta3.TTemplate{
+		xxLayout := &tarsAppsV1beta3.TTemplate{
 			ObjectMeta: k8sMetaV1.ObjectMeta{
 				Name:      "tt.xxx",
 				Namespace: s.Namespace,
 			},
-			Spec: tarsCrdV1beta3.TTemplateSpec{
+			Spec: tarsAppsV1beta3.TTemplateSpec{
 				Content: "tt.xxx Content",
 				Parent:  "tt.parent",
 			},
 		}
-		_, err := s.CRDClient.CrdV1beta3().TTemplates(s.Namespace).Create(context.TODO(), xxLayout, k8sMetaV1.CreateOptions{})
+		_, err := s.CRDClient.AppsV1beta3().TTemplates(s.Namespace).Create(context.TODO(), xxLayout, k8sMetaV1.CreateOptions{})
 		assert.NotNil(ginkgo.GinkgoT(), err)
 	})
 
@@ -100,12 +100,12 @@ var _ = ginkgo.Describe("ttemplate", func() {
 			},
 		}
 		bs, _ := json.Marshal(jsonPatch)
-		defaultXX, err := s.CRDClient.CrdV1beta3().TTemplates(s.Namespace).Patch(context.TODO(), defaultTTLayout.Name, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		defaultXX, err := s.CRDClient.AppsV1beta3().TTemplates(s.Namespace).Patch(context.TODO(), defaultTTLayout.Name, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), defaultXX)
 		assert.True(ginkgo.GinkgoT(), defaultXX.Spec.Content == "new content")
 
-		cppTT, err := s.CRDClient.CrdV1beta3().TTemplates(s.Namespace).Patch(context.TODO(), cppTTLayout.Name, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		cppTT, err := s.CRDClient.AppsV1beta3().TTemplates(s.Namespace).Patch(context.TODO(), cppTTLayout.Name, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), cppTT)
 		assert.True(ginkgo.GinkgoT(), cppTT.Spec.Content == "new content")
@@ -113,26 +113,26 @@ var _ = ginkgo.Describe("ttemplate", func() {
 
 	ginkgo.Context("delete ttemplate ", func() {
 		ginkgo.It("reference by another ttemplate ", func() {
-			err := s.CRDClient.CrdV1beta3().TTemplates(s.Namespace).Delete(context.TODO(), defaultTTLayout.Name, k8sMetaV1.DeleteOptions{})
+			err := s.CRDClient.AppsV1beta3().TTemplates(s.Namespace).Delete(context.TODO(), defaultTTLayout.Name, k8sMetaV1.DeleteOptions{})
 			assert.NotNil(ginkgo.GinkgoT(), err)
 		})
 
 		ginkgo.It("reference by another tserver", func() {
-			tsLayout := &tarsCrdV1beta3.TServer{
+			tsLayout := &tarsAppsV1beta3.TServer{
 				ObjectMeta: k8sMetaV1.ObjectMeta{
 					Name:      "test-testserver",
 					Namespace: s.Namespace,
 				},
-				Spec: tarsCrdV1beta3.TServerSpec{
+				Spec: tarsAppsV1beta3.TServerSpec{
 					App:       "Test",
 					Server:    "TestServer",
 					SubType:   "tars",
 					Important: 1,
-					Tars: &tarsCrdV1beta3.TServerTars{
+					Tars: &tarsAppsV1beta3.TServerTars{
 						Template:    cppTTLayout.Name,
 						Profile:     "",
 						AsyncThread: 3,
-						Servants: []*tarsCrdV1beta3.TServerServant{
+						Servants: []*tarsAppsV1beta3.TServerServant{
 							{
 								Name:       "TestObj",
 								Port:       10000,
@@ -145,37 +145,37 @@ var _ = ginkgo.Describe("ttemplate", func() {
 							},
 						},
 					},
-					K8S: tarsCrdV1beta3.TServerK8S{
+					K8S: tarsAppsV1beta3.TServerK8S{
 						NodeSelector:    []k8sCoreV1.NodeSelectorRequirement{},
-						AbilityAffinity: tarsCrdV1beta3.AppRequired,
+						AbilityAffinity: tarsAppsV1beta3.AppRequired,
 						Resources:       k8sCoreV1.ResourceRequirements{},
 						UpdateStrategy:  k8sAppsV1.StatefulSetUpdateStrategy{},
 						ImagePullPolicy: k8sCoreV1.PullAlways,
 						LauncherType:    tarsMeta.Background,
 					},
-					Release: &tarsCrdV1beta3.TServerRelease{
+					Release: &tarsAppsV1beta3.TServerRelease{
 						ID:    "202201",
 						Image: "xxxx.com/test.teserver:v1",
-						TServerReleaseNode: &tarsCrdV1beta3.TServerReleaseNode{
+						TServerReleaseNode: &tarsAppsV1beta3.TServerReleaseNode{
 							Image: "xxxx.com/tafnode:v1",
 						},
 					},
 				},
 			}
-			_, err := s.CRDClient.CrdV1beta3().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
+			_, err := s.CRDClient.AppsV1beta3().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			time.Sleep(s.Opts.SyncTime)
 
-			err = s.CRDClient.CrdV1beta3().TTemplates(s.Namespace).Delete(context.TODO(), cppTTLayout.Name, k8sMetaV1.DeleteOptions{})
+			err = s.CRDClient.AppsV1beta3().TTemplates(s.Namespace).Delete(context.TODO(), cppTTLayout.Name, k8sMetaV1.DeleteOptions{})
 			assert.NotNil(ginkgo.GinkgoT(), err)
 		})
 
 		ginkgo.It("not referenced", func() {
-			err := s.CRDClient.CrdV1beta3().TTemplates(s.Namespace).Delete(context.TODO(), cppTTLayout.Name, k8sMetaV1.DeleteOptions{})
+			err := s.CRDClient.AppsV1beta3().TTemplates(s.Namespace).Delete(context.TODO(), cppTTLayout.Name, k8sMetaV1.DeleteOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			time.Sleep(s.Opts.SyncTime)
 
-			err = s.CRDClient.CrdV1beta3().TTemplates(s.Namespace).Delete(context.TODO(), defaultTTLayout.Name, k8sMetaV1.DeleteOptions{})
+			err = s.CRDClient.AppsV1beta3().TTemplates(s.Namespace).Delete(context.TODO(), defaultTTLayout.Name, k8sMetaV1.DeleteOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 		})
 	})

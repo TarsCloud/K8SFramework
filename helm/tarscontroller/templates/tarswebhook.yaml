@@ -36,8 +36,11 @@ kind: ClusterRole
 metadata:
   name: tars-system:tars-webhook
 rules:
+  - apiGroups: [ apps ]
+    resources: [ statefulsets,daemonsets ]
+    verbs: [ get, list,watch ]
   - apiGroups: [ k8s.tars.io ]
-    resources: [ tservers, ttemplates, tframeworkconfigs ]
+    resources: [ tservers, ttrees, ttemplates, timages, tframeworkconfigs ]
     verbs: [ get, list, watch ]
   - apiGroups: [ k8s.tars.io ]
     resources: [ tconfigs ]

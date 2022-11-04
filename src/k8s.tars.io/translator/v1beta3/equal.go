@@ -760,17 +760,6 @@ func equalTServerAndDaemonSet(tserver *tarsApisV1beta3.TServer, daemonSet *k8sAp
 }
 
 func equalTServerAndStatefulset(tserver *tarsApisV1beta3.TServer, statefulSet *k8sAppsV1.StatefulSet) bool {
-	l := k8sAppsV1.StatefulSet{
-		Spec: k8sAppsV1.StatefulSetSpec{
-			VolumeClaimTemplates: nil,
-		},
-	}
-	r := buildStatefulset(tserver)
-
-	if *l.Spec.Replicas != *r.Spec.Replicas {
-		return false
-	}
-
 	/*
 		Because updates to statefulset spec for fields other than 'replicas', 'template', 'updateStrategy' and 'minReadySeconds' are forbidden,
 		We skip compare spec.K8S.PodManagementPolicy with statefulSet.Spec.PodManagementPolicy

@@ -47,7 +47,7 @@ func (*Translator) DryRunSyncService(tserver *tarsAppsV1beta3.TServer, service *
 		syncService(tserver, cp)
 		return true, cp
 	}
-	return true, nil
+	return false, nil
 }
 
 func (*Translator) DryRunSyncStatefulset(tserver *tarsAppsV1beta3.TServer, statefulset *k8sAppsV1.StatefulSet) (bool, *k8sAppsV1.StatefulSet) {
@@ -57,7 +57,7 @@ func (*Translator) DryRunSyncStatefulset(tserver *tarsAppsV1beta3.TServer, state
 		return true, cp
 	}
 
-	return true, nil
+	return false, nil
 }
 
 func (*Translator) DryRunSyncDaemonset(tserver *tarsAppsV1beta3.TServer, daemonset *k8sAppsV1.DaemonSet) (bool, *k8sAppsV1.DaemonSet) {
@@ -66,7 +66,7 @@ func (*Translator) DryRunSyncDaemonset(tserver *tarsAppsV1beta3.TServer, daemons
 		syncDaemonSet(tserver, cp)
 		return true, cp
 	}
-	return true, nil
+	return false, nil
 }
 
 func (*Translator) DryRunSyncTEndpoint(tserver *tarsAppsV1beta3.TServer, tendpoint *tarsAppsV1beta3.TEndpoint) (bool, *tarsAppsV1beta3.TEndpoint) {
@@ -75,5 +75,5 @@ func (*Translator) DryRunSyncTEndpoint(tserver *tarsAppsV1beta3.TServer, tendpoi
 		syncTEndpoint(tserver, cp)
 		return true, cp
 	}
-	return true, nil
+	return false, nil
 }

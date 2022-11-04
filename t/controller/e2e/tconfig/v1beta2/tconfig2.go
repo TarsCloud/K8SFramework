@@ -9,7 +9,7 @@ import (
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	patchTypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
-	tarsCrdV1beta2 "k8s.tars.io/crd/v1beta2"
+	tarsAppsV1beta2 "k8s.tars.io/apps/v1beta2"
 	tarsMeta "k8s.tars.io/meta"
 
 	"strings"
@@ -31,7 +31,7 @@ var _ = ginkgo.Describe("test server level config", func() {
 	ConfigContent := "Config Content"
 
 	ginkgo.BeforeEach(func() {
-		tconfigLayout := &tarsCrdV1beta2.TConfig{
+		tconfigLayout := &tarsAppsV1beta2.TConfig{
 			ObjectMeta: k8sMetaV1.ObjectMeta{
 				Name:      ResourceName,
 				Namespace: s.Namespace,
@@ -44,14 +44,14 @@ var _ = ginkgo.Describe("test server level config", func() {
 			Activated:     false,
 			UpdateTime:    k8sMetaV1.Now(),
 		}
-		tconfig, err := s.CRDClient.CrdV1beta2().TConfigs(s.Namespace).Create(context.TODO(), tconfigLayout, k8sMetaV1.CreateOptions{})
+		tconfig, err := s.CRDClient.AppsV1beta2().TConfigs(s.Namespace).Create(context.TODO(), tconfigLayout, k8sMetaV1.CreateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), tconfig)
 		time.Sleep(s.Opts.SyncTime)
 	})
 
 	ginkgo.It("valid labels ", func() {
-		tconfig, err := s.CRDClient.CrdV1beta2().TConfigs(s.Namespace).Get(context.TODO(), ResourceName, k8sMetaV1.GetOptions{})
+		tconfig, err := s.CRDClient.AppsV1beta2().TConfigs(s.Namespace).Get(context.TODO(), ResourceName, k8sMetaV1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), tconfig)
 
@@ -65,7 +65,7 @@ var _ = ginkgo.Describe("test server level config", func() {
 	})
 
 	ginkgo.It("remove labels ", func() {
-		tconfig, err := s.CRDClient.CrdV1beta2().TConfigs(s.Namespace).Get(context.TODO(), ResourceName, k8sMetaV1.GetOptions{})
+		tconfig, err := s.CRDClient.AppsV1beta2().TConfigs(s.Namespace).Get(context.TODO(), ResourceName, k8sMetaV1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), tconfig)
 
@@ -86,14 +86,14 @@ var _ = ginkgo.Describe("test server level config", func() {
 				},
 			}
 			bs, _ := json.Marshal(jsonPath)
-			tconfig, err := s.CRDClient.CrdV1beta2().TConfigs(s.Namespace).Patch(context.TODO(), ResourceName, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+			tconfig, err := s.CRDClient.AppsV1beta2().TConfigs(s.Namespace).Patch(context.TODO(), ResourceName, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.True(ginkgo.GinkgoT(), scaffold.CheckLeftInRight(expectedLabels, tconfig.Labels))
 		}
 	})
 
 	ginkgo.It("update labels ", func() {
-		tconfig, err := s.CRDClient.CrdV1beta2().TConfigs(s.Namespace).Get(context.TODO(), ResourceName, k8sMetaV1.GetOptions{})
+		tconfig, err := s.CRDClient.AppsV1beta2().TConfigs(s.Namespace).Get(context.TODO(), ResourceName, k8sMetaV1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), tconfig)
 
@@ -116,14 +116,14 @@ var _ = ginkgo.Describe("test server level config", func() {
 				},
 			}
 			bs, _ := json.Marshal(jsonPath)
-			tconfig, err := s.CRDClient.CrdV1beta2().TConfigs(s.Namespace).Patch(context.TODO(), tconfig.Name, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+			tconfig, err := s.CRDClient.AppsV1beta2().TConfigs(s.Namespace).Patch(context.TODO(), tconfig.Name, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.True(ginkgo.GinkgoT(), scaffold.CheckLeftInRight(expectedLabels, tconfig.Labels))
 		}
 	})
 
 	ginkgo.It("update immutable filed", func() {
-		tconfig, err := s.CRDClient.CrdV1beta2().TConfigs(s.Namespace).Get(context.TODO(), ResourceName, k8sMetaV1.GetOptions{})
+		tconfig, err := s.CRDClient.AppsV1beta2().TConfigs(s.Namespace).Get(context.TODO(), ResourceName, k8sMetaV1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), tconfig)
 
@@ -143,7 +143,7 @@ var _ = ginkgo.Describe("test server level config", func() {
 				},
 			}
 			bs, _ := json.Marshal(jsonPath)
-			_, err = s.CRDClient.CrdV1beta2().TConfigs(s.Namespace).Patch(context.TODO(), tconfig.Name, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+			_, err = s.CRDClient.AppsV1beta2().TConfigs(s.Namespace).Patch(context.TODO(), tconfig.Name, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 			assert.NotNil(ginkgo.GinkgoT(), err)
 		}
 	})
@@ -158,7 +158,7 @@ var _ = ginkgo.Describe("test server level config", func() {
 		}
 
 		bs, _ := json.Marshal(jsonPath)
-		tconfig, err := s.CRDClient.CrdV1beta2().TConfigs(s.Namespace).Patch(context.TODO(), ResourceName, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		tconfig, err := s.CRDClient.AppsV1beta2().TConfigs(s.Namespace).Patch(context.TODO(), ResourceName, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), tconfig)
 		expectedLabels := map[string]string{
@@ -177,14 +177,14 @@ var _ = ginkgo.Describe("test server level config", func() {
 			},
 		}
 		bs, _ = json.Marshal(jsonPath)
-		tconfig, err = s.CRDClient.CrdV1beta2().TConfigs(s.Namespace).Patch(context.TODO(), ResourceName, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		tconfig, err = s.CRDClient.AppsV1beta2().TConfigs(s.Namespace).Patch(context.TODO(), ResourceName, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		assert.NotNil(ginkgo.GinkgoT(), err)
 	})
 
 	ginkgo.Context("new version of server level config", func() {
 		NewResourceName := "app.config.2"
 		NewConfigContent := "New Config Content"
-		newTConfigLayout := &tarsCrdV1beta2.TConfig{
+		newTConfigLayout := &tarsAppsV1beta2.TConfig{
 			ObjectMeta: k8sMetaV1.ObjectMeta{
 				Name:      NewResourceName,
 				Namespace: s.Namespace,
@@ -207,7 +207,7 @@ var _ = ginkgo.Describe("test server level config", func() {
 				},
 			}
 			bs, _ := json.Marshal(jsonPath)
-			tconfig, err := s.CRDClient.CrdV1beta2().TConfigs(s.Namespace).Patch(context.TODO(), ResourceName, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+			tconfig, err := s.CRDClient.AppsV1beta2().TConfigs(s.Namespace).Patch(context.TODO(), ResourceName, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.NotNil(ginkgo.GinkgoT(), tconfig)
 
@@ -221,7 +221,7 @@ var _ = ginkgo.Describe("test server level config", func() {
 		})
 
 		ginkgo.It("create/delete new version tconfig", func() {
-			newTConfig, err := s.CRDClient.CrdV1beta2().TConfigs(s.Namespace).Create(context.TODO(), newTConfigLayout, k8sMetaV1.CreateOptions{})
+			newTConfig, err := s.CRDClient.AppsV1beta2().TConfigs(s.Namespace).Create(context.TODO(), newTConfigLayout, k8sMetaV1.CreateOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.NotNil(ginkgo.GinkgoT(), newTConfig)
 			exceptedNewTConfigLabels := map[string]string{
@@ -233,7 +233,7 @@ var _ = ginkgo.Describe("test server level config", func() {
 			assert.True(ginkgo.GinkgoT(), scaffold.CheckLeftInRight(exceptedNewTConfigLabels, newTConfig.Labels))
 
 			time.Sleep(s.Opts.SyncTime)
-			oldTConfig, err := s.CRDClient.CrdV1beta2().TConfigs(s.Namespace).Get(context.TODO(), ResourceName, k8sMetaV1.GetOptions{})
+			oldTConfig, err := s.CRDClient.AppsV1beta2().TConfigs(s.Namespace).Get(context.TODO(), ResourceName, k8sMetaV1.GetOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.NotNil(ginkgo.GinkgoT(), oldTConfig)
 			expected := !oldTConfig.Activated || k8sMetaV1.HasLabel(oldTConfig.ObjectMeta, tarsMeta.TConfigDeactivateLabel)
@@ -243,16 +243,16 @@ var _ = ginkgo.Describe("test server level config", func() {
 			}
 			assert.True(ginkgo.GinkgoT(), expected)
 
-			err = s.CRDClient.CrdV1beta2().TConfigs(s.Namespace).Delete(context.TODO(), NewResourceName, k8sMetaV1.DeleteOptions{})
+			err = s.CRDClient.AppsV1beta2().TConfigs(s.Namespace).Delete(context.TODO(), NewResourceName, k8sMetaV1.DeleteOptions{})
 			assert.NotNil(ginkgo.GinkgoT(), err)
 			assert.True(ginkgo.GinkgoT(), strings.Contains(err.Error(), "during deletion guard time"))
 
 			time.Sleep(50 * time.Second) //skip tconfig deletion guard time
-			err = s.CRDClient.CrdV1beta2().TConfigs(s.Namespace).Delete(context.TODO(), NewResourceName, k8sMetaV1.DeleteOptions{})
+			err = s.CRDClient.AppsV1beta2().TConfigs(s.Namespace).Delete(context.TODO(), NewResourceName, k8sMetaV1.DeleteOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 
 			time.Sleep(s.Opts.SyncTime)
-			oldTConfig, err = s.CRDClient.CrdV1beta2().TConfigs(s.Namespace).Get(context.TODO(), ResourceName, k8sMetaV1.GetOptions{})
+			oldTConfig, err = s.CRDClient.AppsV1beta2().TConfigs(s.Namespace).Get(context.TODO(), ResourceName, k8sMetaV1.GetOptions{})
 			if err == nil {
 				assert.True(ginkgo.GinkgoT(), k8sMetaV1.HasLabel(oldTConfig.ObjectMeta, tarsMeta.TConfigDeletingLabel))
 			}
@@ -263,7 +263,7 @@ var _ = ginkgo.Describe("test server level config", func() {
 
 		slaveResourceName := "slave.app.config"
 		slaveConfigContent := "Slave Config Content"
-		slaveTConfigLayout := &tarsCrdV1beta2.TConfig{
+		slaveTConfigLayout := &tarsAppsV1beta2.TConfig{
 			ObjectMeta: k8sMetaV1.ObjectMeta{
 				Name:      slaveResourceName,
 				Namespace: s.Namespace,
@@ -286,7 +286,7 @@ var _ = ginkgo.Describe("test server level config", func() {
 				},
 			}
 			bs, _ := json.Marshal(jsonPath)
-			oldTConfig, err := s.CRDClient.CrdV1beta2().TConfigs(s.Namespace).Patch(context.TODO(), ResourceName, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+			oldTConfig, err := s.CRDClient.AppsV1beta2().TConfigs(s.Namespace).Patch(context.TODO(), ResourceName, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.NotNil(ginkgo.GinkgoT(), oldTConfig)
 
@@ -303,13 +303,13 @@ var _ = ginkgo.Describe("test server level config", func() {
 		ginkgo.It("no master config", func() {
 			slaveTConfigLayout.ConfigName = "NoMasterTConfig"
 			var err error
-			_, err = s.CRDClient.CrdV1beta2().TConfigs(s.Namespace).Create(context.TODO(), slaveTConfigLayout, k8sMetaV1.CreateOptions{})
+			_, err = s.CRDClient.AppsV1beta2().TConfigs(s.Namespace).Create(context.TODO(), slaveTConfigLayout, k8sMetaV1.CreateOptions{})
 			assert.NotNil(ginkgo.GinkgoT(), err)
 		})
 
 		ginkgo.It("create/delete slave tconfig", func() {
 			slaveTConfigLayout.ConfigName = ConfigName
-			slaveTConfig, err := s.CRDClient.CrdV1beta2().TConfigs(s.Namespace).Create(context.TODO(), slaveTConfigLayout, k8sMetaV1.CreateOptions{})
+			slaveTConfig, err := s.CRDClient.AppsV1beta2().TConfigs(s.Namespace).Create(context.TODO(), slaveTConfigLayout, k8sMetaV1.CreateOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.NotNil(ginkgo.GinkgoT(), slaveTConfig)
 			slaveConfigExceptedLabels := map[string]string{
@@ -322,14 +322,14 @@ var _ = ginkgo.Describe("test server level config", func() {
 
 			time.Sleep(50 * time.Second) //skip tconfig deletion guard time
 
-			err = s.CRDClient.CrdV1beta2().TConfigs(s.Namespace).Delete(context.TODO(), ResourceName, k8sMetaV1.DeleteOptions{})
+			err = s.CRDClient.AppsV1beta2().TConfigs(s.Namespace).Delete(context.TODO(), ResourceName, k8sMetaV1.DeleteOptions{})
 			assert.NotNil(ginkgo.GinkgoT(), err)
 
-			err = s.CRDClient.CrdV1beta2().TConfigs(s.Namespace).Delete(context.TODO(), slaveResourceName, k8sMetaV1.DeleteOptions{})
+			err = s.CRDClient.AppsV1beta2().TConfigs(s.Namespace).Delete(context.TODO(), slaveResourceName, k8sMetaV1.DeleteOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			time.Sleep(s.Opts.SyncTime)
 
-			err = s.CRDClient.CrdV1beta2().TConfigs(s.Namespace).Delete(context.TODO(), ResourceName, k8sMetaV1.DeleteOptions{})
+			err = s.CRDClient.AppsV1beta2().TConfigs(s.Namespace).Delete(context.TODO(), ResourceName, k8sMetaV1.DeleteOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 		})
 	})

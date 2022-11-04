@@ -9,7 +9,7 @@ import (
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	patchTypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
-	tarsCrdV1Beta3 "k8s.tars.io/crd/v1beta3"
+	tarsCrdV1Beta3 "k8s.tars.io/apps/v1beta3"
 	crdMetaTools "k8s.tars.io/meta"
 	tarsMeta "k8s.tars.io/meta"
 	"time"
@@ -43,7 +43,7 @@ var _ = ginkgo.Describe("try create tars server and check filed", func() {
 				Parent:  Template,
 			},
 		}
-		_, err := s.CRDClient.CrdV1beta3().TTemplates(s.Namespace).Create(context.TODO(), ttLayout, k8sMetaV1.CreateOptions{})
+		_, err := s.CRDClient.AppsV1beta3().TTemplates(s.Namespace).Create(context.TODO(), ttLayout, k8sMetaV1.CreateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		time.Sleep(s.Opts.SyncTime)
 
@@ -92,17 +92,17 @@ var _ = ginkgo.Describe("try create tars server and check filed", func() {
 				},
 			},
 		}
-		_, err = s.CRDClient.CrdV1beta3().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
+		_, err = s.CRDClient.AppsV1beta3().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		time.Sleep(s.Opts.SyncTime)
 	})
 
 	ginkgo.AfterEach(func() {
-		_ = s.CRDClient.CrdV1beta3().TServers(s.Namespace).Delete(context.TODO(), Resource, k8sMetaV1.DeleteOptions{})
+		_ = s.CRDClient.AppsV1beta3().TServers(s.Namespace).Delete(context.TODO(), Resource, k8sMetaV1.DeleteOptions{})
 	})
 
 	ginkgo.It("check filed value", func() {
-		tserver, err := s.CRDClient.CrdV1beta3().TServers(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
+		tserver, err := s.CRDClient.AppsV1beta3().TServers(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), tserver)
 
@@ -149,7 +149,7 @@ var _ = ginkgo.Describe("try create tars server and check filed", func() {
 				},
 			}
 			bs, _ := json.Marshal(jsonPath)
-			_, err := s.CRDClient.CrdV1beta3().TConfigs(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+			_, err := s.CRDClient.AppsV1beta3().TConfigs(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 			assert.NotNil(ginkgo.GinkgoT(), err)
 		}
 	})
@@ -169,7 +169,7 @@ var _ = ginkgo.Describe("try create tars server and check filed", func() {
 				},
 			}
 			bs, _ := json.Marshal(jsonPath)
-			_, err := s.CRDClient.CrdV1beta3().TConfigs(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+			_, err := s.CRDClient.AppsV1beta3().TConfigs(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 			assert.NotNil(ginkgo.GinkgoT(), err)
 		}
 	})
@@ -194,7 +194,7 @@ var _ = ginkgo.Describe("try create tars server and check filed", func() {
 			},
 		}
 		bs, _ := json.Marshal(jsonPath)
-		_, err := s.CRDClient.CrdV1beta3().TConfigs(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		_, err := s.CRDClient.AppsV1beta3().TConfigs(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		assert.NotNil(ginkgo.GinkgoT(), err)
 	})
 })
