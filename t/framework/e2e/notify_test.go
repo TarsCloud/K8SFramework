@@ -10,7 +10,7 @@ import (
 	"github.com/elastic/go-elasticsearch/v7"
 	"github.com/elastic/go-elasticsearch/v7/esapi"
 	"github.com/stretchr/testify/assert"
-	tarsCrdV1Beta3 "k8s.tars.io/crd/v1beta3"
+	tarsAppsV1Beta3 "k8s.tars.io/apps/v1beta3"
 	"sigs.k8s.io/e2e-framework/klient/k8s/resources"
 	"sigs.k8s.io/e2e-framework/pkg/envconf"
 	"sigs.k8s.io/e2e-framework/pkg/features"
@@ -61,9 +61,9 @@ func TestNotifyObj(t *testing.T) {
 		Setup(func(ctx context.Context, t *testing.T, config *envconf.Config) context.Context {
 
 			r, _ = resources.New(config.Client().RESTConfig())
-			_ = tarsCrdV1Beta3.AddToScheme(r.GetScheme())
+			_ = tarsAppsV1Beta3.AddToScheme(r.GetScheme())
 
-			tt := &tarsCrdV1Beta3.TTemplate{}
+			tt := &tarsAppsV1Beta3.TTemplate{}
 			err := r.Get(ctx, "tars.es", namespace, tt)
 			assert.Nil(t, err, "unexpected error")
 
