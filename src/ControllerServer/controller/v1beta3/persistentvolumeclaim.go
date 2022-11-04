@@ -25,6 +25,20 @@ import (
 	"time"
 )
 
+func containLabel(l, r map[string]string) bool {
+	if len(l) > len(r) {
+		return false
+	}
+
+	for lk, lv := range l {
+		if rv, ok := r[lk]; !ok || rv != lv {
+			return false
+		}
+	}
+
+	return true
+}
+
 type PVCReconciler struct {
 	pvcLister k8sCoreListerV1.PersistentVolumeClaimLister
 	tsLister  tarsListerV1beta3.TServerLister
@@ -168,10 +182,10 @@ func (r *PVCReconciler) reconcile(key string) controller.Result {
 		return controller.Done
 	}
 
-	annotations := buildPVCAnnotations(tserver)
+	expectedAnnotations := buildPVCAnnotations(tserver)
 	retry := false
 
-	for volumeName, volumeProperties := range annotations {
+	for volumeName, expectedAnnotation := range expectedAnnotations {
 		appRequirement, _ := labels.NewRequirement(tarsMeta.TServerAppLabel, selection.DoubleEquals, []string{tserver.Spec.App})
 		serverRequirement, _ := labels.NewRequirement(tarsMeta.TServerNameLabel, selection.DoubleEquals, []string{tserver.Spec.Server})
 		localVolumeRequirement, _ := labels.NewRequirement(tarsMeta.TLocalVolumeLabel, selection.DoubleEquals, []string{volumeName})
@@ -186,17 +200,16 @@ func (r *PVCReconciler) reconcile(key string) controller.Result {
 		}
 
 		for _, pvc := range pvcs {
-			//if pvc.DeletionTimestamp != nil || ContainLabel(pvc.Annotations, volumeProperties) {
-			if pvc.DeletionTimestamp != nil {
+			if pvc.DeletionTimestamp != nil || containLabel(pvc.Annotations, expectedAnnotation) {
 				continue
 			}
 			pvcCopy := pvc.DeepCopy()
 			if pvcCopy.Annotations != nil {
-				for k, v := range volumeProperties {
+				for k, v := range expectedAnnotation {
 					pvcCopy.Annotations[k] = v
 				}
 			} else {
-				pvcCopy.Annotations = volumeProperties
+				pvcCopy.Annotations = expectedAnnotation
 			}
 			_, err = tarsRuntime.Clients.K8sClient.CoreV1().PersistentVolumeClaims(namespace).Update(context.TODO(), pvcCopy, k8sMetaV1.UpdateOptions{})
 			if err == nil {

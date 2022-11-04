@@ -5,9 +5,9 @@ import (
 	k8sCoreV1 "k8s.io/api/core/v1"
 )
 
-const DefaultUnlawfulAndOnlyForDebugUserName = "(^_^)"
 const DefaultControllerNamespace = "tars-system"
 const DefaultControllerUsername = "tars-controller"
+const DefaultControllerServiceAccount = "system:serviceaccount:" + DefaultControllerNamespace + ":" + "tars-controller"
 const DefaultMaxRecordLen = 60
 const DefaultMaxTConfigHistory = 10
 const DefaultMaxTImageRelease = 32

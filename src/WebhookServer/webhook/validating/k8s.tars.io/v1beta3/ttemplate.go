@@ -9,7 +9,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/json"
 	tarsAppsV1beta3 "k8s.tars.io/apps/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
-	tarsRuntime "k8s.tars.io/runtime"
 	"strings"
 	"tarswebhook/webhook/informer"
 )
@@ -58,14 +57,13 @@ func validUpdateTTemplate(informers *informer.Listers, view *k8sAdmissionV1.Admi
 }
 
 func validDeleteTTemplate(listers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
-	username := view.Request.UserInfo.Username
-	controllerUserName := tarsRuntime.Username
-
-	if controllerUserName == username || controllerUserName == tarsMeta.DefaultUnlawfulAndOnlyForDebugUserName {
+	requestServiceAccount := view.Request.UserInfo.Username
+	controllerUserName := tarsMeta.DefaultControllerServiceAccount
+	if requestServiceAccount == controllerUserName {
 		return nil
 	}
 
-	if strings.HasPrefix(username, tarsMeta.KubernetesSystemAccountPrefix) {
+	if strings.HasPrefix(requestServiceAccount, tarsMeta.KubernetesSystemAccountPrefix) {
 		return nil
 	}
 

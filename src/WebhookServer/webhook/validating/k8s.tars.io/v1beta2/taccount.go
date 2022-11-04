@@ -7,7 +7,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/json"
 	tarsAppsV1beta2 "k8s.tars.io/apps/v1beta2"
 	tarsMeta "k8s.tars.io/meta"
-	tarsRuntime "k8s.tars.io/runtime"
 	"tarswebhook/webhook/informer"
 )
 
@@ -26,8 +25,9 @@ func validCreateTAccount(listers *informer.Listers, view *k8sAdmissionV1.Admissi
 }
 
 func validUpdateTAccount(listers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
-	controllerUserName := tarsRuntime.Username
-	if controllerUserName == view.Request.UserInfo.Username || controllerUserName == tarsMeta.DefaultUnlawfulAndOnlyForDebugUserName {
+	requestServiceAccount := view.Request.UserInfo.Username
+	controllerUserName := tarsMeta.DefaultControllerServiceAccount
+	if requestServiceAccount == controllerUserName {
 		return nil
 	}
 

@@ -6,7 +6,6 @@ import (
 	k8sAppsV1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/util/json"
 	tarsMeta "k8s.tars.io/meta"
-	tarsRuntime "k8s.tars.io/runtime"
 	translatorV1beta3 "k8s.tars.io/translator/v1beta3"
 	"tarswebhook/webhook/informer"
 )
@@ -31,8 +30,9 @@ func validStatefulSet(newStatefulset *k8sAppsV1.StatefulSet, oldStatefulset *k8s
 }
 
 func validCreateStatefulSet(listers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
-	controllerUserName := tarsRuntime.Username
-	if controllerUserName == view.Request.UserInfo.Username || controllerUserName == tarsMeta.DefaultUnlawfulAndOnlyForDebugUserName {
+	requestServiceAccount := view.Request.UserInfo.Username
+	controllerUserName := tarsMeta.DefaultControllerServiceAccount
+	if requestServiceAccount == controllerUserName {
 		return nil
 	}
 
@@ -40,8 +40,9 @@ func validCreateStatefulSet(listers *informer.Listers, view *k8sAdmissionV1.Admi
 }
 
 func validUpdateStatefulSet(listers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
-	controllerUserName := tarsRuntime.Username
-	if controllerUserName == view.Request.UserInfo.Username || controllerUserName == tarsMeta.DefaultUnlawfulAndOnlyForDebugUserName {
+	requestServiceAccount := view.Request.UserInfo.Username
+	controllerUserName := tarsMeta.DefaultControllerServiceAccount
+	if requestServiceAccount == controllerUserName {
 		return nil
 	}
 

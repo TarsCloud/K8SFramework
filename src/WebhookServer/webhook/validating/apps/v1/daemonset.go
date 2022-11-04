@@ -30,16 +30,18 @@ func validDaemonset(newDaemonset, oldDaemonset *k8sAppsV1.DaemonSet, listers *in
 }
 
 func validCreateDaemonSet(listers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
-	controllerUserName := tarsRuntime.Username
-	if controllerUserName == view.Request.UserInfo.Username || controllerUserName == tarsMeta.DefaultUnlawfulAndOnlyForDebugUserName {
+	requestServiceAccount := view.Request.UserInfo.Username
+	controllerUserName := tarsMeta.DefaultControllerServiceAccount
+	if requestServiceAccount == controllerUserName {
 		return nil
 	}
 	return fmt.Errorf("only use authorized account can create daemonset")
 }
 
 func validUpdateDaemonSet(listers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
-	controllerUserName := tarsRuntime.Username
-	if controllerUserName == view.Request.UserInfo.Username || controllerUserName == tarsMeta.DefaultUnlawfulAndOnlyForDebugUserName {
+	requestServiceAccount := view.Request.UserInfo.Username
+	controllerUserName := tarsMeta.DefaultControllerServiceAccount
+	if requestServiceAccount == controllerUserName {
 		return nil
 	}
 

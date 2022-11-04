@@ -40,7 +40,7 @@ func equalServicePort(l, r []k8sCoreV1.ServicePort) bool {
 	return true
 }
 
-func ContainLabel(l, r map[string]string) bool {
+func containLabel(l, r map[string]string) bool {
 	if len(l) > len(r) {
 		return false
 	}
@@ -594,7 +594,7 @@ func equalTServerAndService(tserver *tarsApisV1beta3.TServer, service *k8sCoreV1
 		tarsMeta.TServerNameLabel: tserverSpec.Server,
 	}
 
-	if !ContainLabel(targetLabels, service.Labels) {
+	if !containLabel(targetLabels, service.Labels) {
 		return false
 	}
 
@@ -617,7 +617,7 @@ func equalTServerAndDaemonSet(tserver *tarsApisV1beta3.TServer, daemonSet *k8sAp
 		tarsMeta.TServerNameLabel: tserver.Spec.Server,
 	}
 
-	if !ContainLabel(targetLabels, daemonSet.Labels) {
+	if !containLabel(targetLabels, daemonSet.Labels) {
 		return false
 	}
 
@@ -632,7 +632,7 @@ func equalTServerAndDaemonSet(tserver *tarsApisV1beta3.TServer, daemonSet *k8sAp
 		targetTemplateLabels[tarsMeta.TServerIdLabel] = tserver.Spec.Release.ID
 	}
 
-	if !ContainLabel(targetTemplateLabels, daemonSet.Spec.Template.Labels) {
+	if !containLabel(targetTemplateLabels, daemonSet.Spec.Template.Labels) {
 		return false
 	}
 
@@ -771,7 +771,7 @@ func equalTServerAndStatefulset(tserver *tarsApisV1beta3.TServer, statefulSet *k
 		tarsMeta.TServerNameLabel: tserver.Spec.Server,
 	}
 
-	if !ContainLabel(targetLabels, statefulSet.Labels) {
+	if !containLabel(targetLabels, statefulSet.Labels) {
 		return false
 	}
 
@@ -786,7 +786,7 @@ func equalTServerAndStatefulset(tserver *tarsApisV1beta3.TServer, statefulSet *k
 		targetTemplateLabels[tarsMeta.TServerIdLabel] = tserver.Spec.Release.ID
 	}
 
-	if !ContainLabel(targetTemplateLabels, statefulSet.Spec.Template.Labels) {
+	if !containLabel(targetTemplateLabels, statefulSet.Spec.Template.Labels) {
 		return false
 	}
 

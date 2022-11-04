@@ -225,8 +225,9 @@ func validCreateTConfig(listers *informer.Listers, view *k8sAdmissionV1.Admissio
 }
 
 func validUpdateTConfig(listers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
-	controllerUserName := tarsRuntime.Username
-	if controllerUserName == view.Request.UserInfo.Username || controllerUserName == tarsMeta.DefaultUnlawfulAndOnlyForDebugUserName {
+	requestServiceAccount := view.Request.UserInfo.Username
+	controllerUserName := tarsMeta.DefaultControllerServiceAccount
+	if requestServiceAccount == controllerUserName {
 		return nil
 	}
 	newTConfig := &tarsAppsV1beta3.TConfig{}
@@ -279,14 +280,14 @@ func validUpdateTConfig(listers *informer.Listers, view *k8sAdmissionV1.Admissio
 }
 
 func validDeleteTConfig(informers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
-	username := view.Request.UserInfo.Username
-	controllerUserName := tarsRuntime.Username
+	requestServiceAccount := view.Request.UserInfo.Username
+	controllerUserName := tarsMeta.DefaultControllerServiceAccount
 
-	if controllerUserName == username || controllerUserName == tarsMeta.DefaultUnlawfulAndOnlyForDebugUserName {
+	if requestServiceAccount == controllerUserName {
 		return nil
 	}
 
-	if strings.HasPrefix(username, tarsMeta.KubernetesSystemAccountPrefix) {
+	if strings.HasPrefix(requestServiceAccount, tarsMeta.KubernetesSystemAccountPrefix) {
 		return nil
 	}
 

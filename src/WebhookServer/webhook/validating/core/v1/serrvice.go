@@ -30,8 +30,9 @@ func validService(newService *k8sCoreV1.Service, oldService *k8sCoreV1.Service, 
 }
 
 func validCreateService(listers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
-	controllerUserName := tarsRuntime.Username
-	if controllerUserName == view.Request.UserInfo.Username || controllerUserName == tarsMeta.DefaultUnlawfulAndOnlyForDebugUserName {
+	requestServiceAccount := view.Request.UserInfo.Username
+	controllerUserName := tarsMeta.DefaultControllerServiceAccount
+	if requestServiceAccount == controllerUserName {
 		return nil
 	}
 
@@ -39,8 +40,9 @@ func validCreateService(listers *informer.Listers, view *k8sAdmissionV1.Admissio
 }
 
 func validUpdateService(informer *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
-	controllerUserName := tarsRuntime.Username
-	if controllerUserName == view.Request.UserInfo.Username || controllerUserName == tarsMeta.DefaultUnlawfulAndOnlyForDebugUserName {
+	requestServiceAccount := view.Request.UserInfo.Username
+	controllerUserName := tarsMeta.DefaultControllerServiceAccount
+	if requestServiceAccount == controllerUserName {
 		return nil
 	}
 

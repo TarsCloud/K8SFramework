@@ -10,7 +10,6 @@ import (
 	utilRuntime "k8s.io/apimachinery/pkg/util/runtime"
 	tarsAppsV1beta2 "k8s.tars.io/apps/v1beta2"
 	tarsMeta "k8s.tars.io/meta"
-	tarsRuntime "k8s.tars.io/runtime"
 	"strings"
 	"tarswebhook/webhook/informer"
 )
@@ -91,8 +90,9 @@ func validCreateTTree(listers *informer.Listers, view *k8sAdmissionV1.AdmissionR
 }
 
 func validUpdateTTree(informers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
-	controllerUserName := tarsRuntime.Username
-	if controllerUserName == view.Request.UserInfo.Username || controllerUserName == tarsMeta.DefaultUnlawfulAndOnlyForDebugUserName {
+	requestServiceAccount := view.Request.UserInfo.Username
+	controllerUserName := tarsMeta.DefaultControllerServiceAccount
+	if requestServiceAccount == controllerUserName {
 		return nil
 	}
 
@@ -106,14 +106,13 @@ func validUpdateTTree(informers *informer.Listers, view *k8sAdmissionV1.Admissio
 }
 
 func validDeleteTTree(listers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
-	username := view.Request.UserInfo.Username
-	controllerUserName := tarsRuntime.Username
-
-	if controllerUserName == username || controllerUserName == tarsMeta.DefaultUnlawfulAndOnlyForDebugUserName {
+	requestServiceAccount := view.Request.UserInfo.Username
+	controllerUserName := tarsMeta.DefaultControllerServiceAccount
+	if requestServiceAccount == controllerUserName {
 		return nil
 	}
 
-	if strings.HasPrefix(username, tarsMeta.KubernetesSystemAccountPrefix) {
+	if strings.HasPrefix(requestServiceAccount, tarsMeta.KubernetesSystemAccountPrefix) {
 		return nil
 	}
 
