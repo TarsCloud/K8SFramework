@@ -8,7 +8,7 @@ if [ ! -f "${_IMAGE_BIND_ENVIRONMENT_FILE_}" ]; then
   exit 255
 fi
 
-source "${_IMAGE_BIND_ENVIRONMENT_FILE_}"
+. "${_IMAGE_BIND_ENVIRONMENT_FILE_}"
 
 declare -a ExpectENVKeyList=(
   PodName
@@ -38,7 +38,7 @@ for KEY in "${ExpectENVKeyList[@]}"; do
   fi
 done
 
-source "${TimezoneLauncherFile}"
+. "${TimezoneLauncherFile}"
 
 echo "${PodIP}" "${PodName}" >>/etc/hosts
 echo "${PodIP}" "${ListenAddress}" >>/etc/hosts
@@ -58,21 +58,19 @@ case ${ServerType} in
   if [ ! -f "$ServerLauncherFile" ]; then
     echo "$ServerLauncherFile file not exist, choose file Server"
 
-      IsExeExists="false"
-      for exe in `find $ServerBinDir/ -executable -type f -name "*Server"`
-      do
-        IsExeExists="true"
-        ExeName=`basename ${exe}`
-        export ServerLauncherFile="${ServerBinDir}/${ExeName}"
-        break;
-      done
+    IsExeExists="false"
+    for exe in $(find $ServerBinDir/ -executable -type f -name "*Server"); do
+      IsExeExists="true"
+      ExeName=$(basename ${exe})
+      export ServerLauncherFile="${ServerBinDir}/${ExeName}"
+      break
+    done
 
-      if [ "$IsExeExists" == "false" ]; then
-         echo "$ServerLauncherFile file not exist"
-         exit 255
-      fi
+    if [ "$IsExeExists" == "false" ]; then
+      echo "$ServerLauncherFile file not exist"
+      exit 255
+    fi
   fi
-
 
   chmod +x "${ServerLauncherFile}"
 

@@ -17,16 +17,16 @@ fi
 declare -l _LISTEN_ADDRESS_=${_K8S_POD_NAME_}.tars-tarsregistry
 echo "${_K8S_POD_IP_}" "${_LISTEN_ADDRESS_}" >>/etc/hosts
 
-REGISTRY_EXECUTION_FILE=/usr/local/app/tars/tarsregistry/bin/tarsregistry
+EXECUTION_FILE=/usr/local/app/tars/tarsregistry/bin/tarsregistry
 
-REGISTRY_CONFIG_FILE=/usr/local/app/tars/tarsregistry/conf/tarsregistry.conf
+CONFIG_FILE=/usr/local/app/tars/tarsregistry/conf/tarsregistry.conf
 
 declare -a ReplaceKeyList=(
   _LISTEN_ADDRESS_
 )
 
 declare -a ReplaceFileList=(
-  "${REGISTRY_CONFIG_FILE}"
+  "${CONFIG_FILE}"
 )
 
 for KEY in "${ReplaceKeyList[@]}"; do
@@ -38,5 +38,5 @@ for KEY in "${ReplaceKeyList[@]}"; do
   done
 done
 
-chmod +x ${REGISTRY_EXECUTION_FILE}
-exec ${REGISTRY_EXECUTION_FILE} --config=${REGISTRY_CONFIG_FILE}
+chmod +x ${EXECUTION_FILE}
+exec ${EXECUTION_FILE} --config=${CONFIG_FILE}
