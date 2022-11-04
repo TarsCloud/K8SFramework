@@ -98,13 +98,13 @@ func selfSigneCert() (*tls.Certificate, error) {
 
 	commonName := fmt.Sprintf("%s.%s.svc", ServiceName, tarsRuntime.Namespace)
 	template := &x509.Certificate{
-		SerialNumber: big.NewInt(2022),
+		SerialNumber: big.NewInt(int64(time.Now().Second())),
 		Subject: pkix.Name{
 			Organization: []string{"WebhookService"},
 			CommonName:   commonName,
 		},
-		KeyUsage:    x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
-		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageAny},
+		KeyUsage:    x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign | x509.KeyUsageKeyEncipherment,
+		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageClientAuth},
 		NotBefore:   time.Now(),
 		NotAfter:    time.Now().AddDate(1, 1, 1),
 		IsCA:        false,
