@@ -211,7 +211,7 @@ func buildPodAffinity(tserver *tarsApisV1beta3.TServer) *k8sCoreV1.Affinity {
 
 func buildPodTemplate(tserver *tarsApisV1beta3.TServer) k8sCoreV1.PodTemplateSpec {
 	var enableServiceLinks = false
-	var FixedDNSConfigNDOTS = "2"
+	var fixedDNSConfigNDOTS = "2"
 
 	var dnsPolicy = k8sCoreV1.DNSClusterFirst
 	if tserver.Spec.K8S.HostNetwork {
@@ -249,19 +249,19 @@ func buildPodTemplate(tserver *tarsApisV1beta3.TServer) k8sCoreV1.PodTemplateSpe
 					ImagePullPolicy: tserver.Spec.K8S.ImagePullPolicy,
 				},
 			},
-			RestartPolicy:      k8sCoreV1.RestartPolicyAlways,
-			DNSPolicy:          dnsPolicy,
-			ServiceAccountName: tserver.Spec.K8S.ServiceAccount,
-			HostNetwork:        tserver.Spec.K8S.HostNetwork,
-			HostPID:            false,
-			HostIPC:            tserver.Spec.K8S.HostIPC,
-			ImagePullSecrets:   buildPodImagePullSecrets(tserver),
-			Affinity:           buildPodAffinity(tserver),
+			EphemeralContainers: nil,
+			RestartPolicy:       k8sCoreV1.RestartPolicyAlways,
+			DNSPolicy:           dnsPolicy,
+			ServiceAccountName:  tserver.Spec.K8S.ServiceAccount,
+			HostNetwork:         tserver.Spec.K8S.HostNetwork,
+			HostIPC:             tserver.Spec.K8S.HostIPC,
+			ImagePullSecrets:    buildPodImagePullSecrets(tserver),
+			Affinity:            buildPodAffinity(tserver),
 			DNSConfig: &k8sCoreV1.PodDNSConfig{
 				Options: []k8sCoreV1.PodDNSConfigOption{
 					{
 						Name:  "ndots",
-						Value: &FixedDNSConfigNDOTS,
+						Value: &fixedDNSConfigNDOTS,
 					},
 				},
 			},

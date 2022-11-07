@@ -222,7 +222,8 @@ func (s *RestfulServer) Start(stopCh chan struct{}) {
 		// the returned error is ErrServerClosed.
 		if err != nil {
 			utilRuntime.HandleError(fmt.Errorf("will exist because : %s \n", err.Error()))
-			os.Exit(-1)
+			close(stopCh)
+			return
 		}
 	}()
 }

@@ -10,7 +10,6 @@ import (
 )
 
 func buildServicePorts(tserver *tarsApisV1beta3.TServer) []k8sCoreV1.ServicePort {
-	var ports []k8sCoreV1.ServicePort
 
 	getProtocol := func(isTcp bool) k8sCoreV1.Protocol {
 		if isTcp {
@@ -19,6 +18,7 @@ func buildServicePorts(tserver *tarsApisV1beta3.TServer) []k8sCoreV1.ServicePort
 		return k8sCoreV1.ProtocolUDP
 	}
 
+	var ports []k8sCoreV1.ServicePort
 	if tserver.Spec.Tars != nil {
 		for _, v := range tserver.Spec.Tars.Servants {
 			ports = append(ports, k8sCoreV1.ServicePort{
@@ -36,7 +36,9 @@ func buildServicePorts(tserver *tarsApisV1beta3.TServer) []k8sCoreV1.ServicePort
 				TargetPort: intstr.FromInt(int(v.Port)),
 			})
 		}
-	} else if tserver.Spec.Normal != nil {
+	}
+
+	if tserver.Spec.Normal != nil {
 		for _, v := range tserver.Spec.Normal.Ports {
 			ports = append(ports, k8sCoreV1.ServicePort{
 				Name:       strings.ToLower(v.Name),
@@ -63,13 +65,13 @@ func buildService(tserver *tarsApisV1beta3.TServer) *k8sCoreV1.Service {
 			},
 		},
 		Spec: k8sCoreV1.ServiceSpec{
+			Ports: buildServicePorts(tserver),
 			Selector: map[string]string{
 				tarsMeta.TServerAppLabel:  tserver.Spec.App,
 				tarsMeta.TServerNameLabel: tserver.Spec.Server,
 			},
 			ClusterIP: k8sCoreV1.ClusterIPNone,
 			Type:      k8sCoreV1.ServiceTypeClusterIP,
-			Ports:     buildServicePorts(tserver),
 		},
 	}
 	return service

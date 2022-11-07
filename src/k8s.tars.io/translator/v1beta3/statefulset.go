@@ -76,7 +76,8 @@ func buildStatefulsetUpdateStrategy(tserver *tarsApisV1beta3.TServer) k8sAppsV1.
 }
 
 func buildStatefulset(tserver *tarsApisV1beta3.TServer) *k8sAppsV1.StatefulSet {
-	var statefulSet = &k8sAppsV1.StatefulSet{
+	historyLimit := tarsMeta.DefaultWorkloadHistoryLimit
+	statefulSet := &k8sAppsV1.StatefulSet{
 		TypeMeta: k8sMetaV1.TypeMeta{},
 		ObjectMeta: k8sMetaV1.ObjectMeta{
 			Name:      tserver.Name,
@@ -102,7 +103,7 @@ func buildStatefulset(tserver *tarsApisV1beta3.TServer) *k8sAppsV1.StatefulSet {
 			ServiceName:          tserver.Name,
 			PodManagementPolicy:  tserver.Spec.K8S.PodManagementPolicy,
 			UpdateStrategy:       buildStatefulsetUpdateStrategy(tserver),
-			RevisionHistoryLimit: nil,
+			RevisionHistoryLimit: &historyLimit,
 		},
 	}
 	return statefulSet

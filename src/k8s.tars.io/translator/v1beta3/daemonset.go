@@ -9,7 +9,40 @@ import (
 	tarsMeta "k8s.tars.io/meta"
 )
 
+func buildDaemonsetUpdateStrategy(tserver *tarsApisV1beta3.TServer) k8sAppsV1.DaemonSetUpdateStrategy {
+	us := k8sAppsV1.DaemonSetUpdateStrategy{
+		Type: k8sAppsV1.DaemonSetUpdateStrategyType(tserver.Spec.K8S.UpdateStrategy.Type),
+	}
+	if tserver.Spec.K8S.UpdateStrategy.RollingUpdate != nil && tserver.Spec.K8S.UpdateStrategy.RollingUpdate.Partition != nil {
+		intValue := intstr.IntOrString{
+			Type:   0,
+			IntVal: integer.Int32Max(*tserver.Spec.K8S.UpdateStrategy.RollingUpdate.Partition, 1),
+		}
+		us.RollingUpdate = &k8sAppsV1.RollingUpdateDaemonSet{
+			MaxUnavailable: &intValue,
+		}
+	}
+	return us
+}
+
+func syncDaemonSet(tserver *tarsApisV1beta3.TServer, daemonSet *k8sAppsV1.DaemonSet) {
+	var sst = buildPodTemplate(tserver)
+	for _, v := range daemonSet.Spec.Template.Spec.Containers {
+		if v.Name != tserver.Name {
+			sst.Spec.Containers = append(sst.Spec.Containers, *v.DeepCopy())
+		}
+	}
+
+	for _, v := range daemonSet.Spec.Template.Spec.InitContainers {
+		if v.Name != "tarsnode" {
+			sst.Spec.Containers = append(sst.Spec.InitContainers, *v.DeepCopy())
+		}
+	}
+	daemonSet.Spec.Template = sst
+}
+
 func buildDaemonset(tserver *tarsApisV1beta3.TServer) *k8sAppsV1.DaemonSet {
+	historyLimit := tarsMeta.DefaultWorkloadHistoryLimit
 	daemonSet := &k8sAppsV1.DaemonSet{
 		TypeMeta: k8sMetaV1.TypeMeta{},
 		ObjectMeta: k8sMetaV1.ObjectMeta{
@@ -30,41 +63,11 @@ func buildDaemonset(tserver *tarsApisV1beta3.TServer) *k8sAppsV1.DaemonSet {
 					tarsMeta.TServerNameLabel: tserver.Spec.Server,
 				},
 			},
-			Template:       buildPodTemplate(tserver),
-			UpdateStrategy: buildDaemonsetUpdateStrategy(tserver),
+			Template:             buildPodTemplate(tserver),
+			UpdateStrategy:       buildDaemonsetUpdateStrategy(tserver),
+			MinReadySeconds:      tarsMeta.DefaultMinReadySeconds,
+			RevisionHistoryLimit: &historyLimit,
 		},
 	}
 	return daemonSet
-}
-
-func syncDaemonSet(tserver *tarsApisV1beta3.TServer, daemonSet *k8sAppsV1.DaemonSet) {
-	var sst = buildPodTemplate(tserver)
-	for _, v := range daemonSet.Spec.Template.Spec.Containers {
-		if v.Name != tserver.Name {
-			sst.Spec.Containers = append(sst.Spec.Containers, *v.DeepCopy())
-		}
-	}
-
-	for _, v := range daemonSet.Spec.Template.Spec.InitContainers {
-		if v.Name != "tarsnode" {
-			sst.Spec.Containers = append(sst.Spec.InitContainers, *v.DeepCopy())
-		}
-	}
-	daemonSet.Spec.Template = sst
-}
-
-func buildDaemonsetUpdateStrategy(tserver *tarsApisV1beta3.TServer) k8sAppsV1.DaemonSetUpdateStrategy {
-	us := k8sAppsV1.DaemonSetUpdateStrategy{
-		Type: k8sAppsV1.DaemonSetUpdateStrategyType(tserver.Spec.K8S.UpdateStrategy.Type),
-	}
-	if tserver.Spec.K8S.UpdateStrategy.RollingUpdate != nil && tserver.Spec.K8S.UpdateStrategy.RollingUpdate.Partition != nil {
-		intValue := intstr.IntOrString{
-			Type:   0,
-			IntVal: integer.Int32Max(*tserver.Spec.K8S.UpdateStrategy.RollingUpdate.Partition, 1),
-		}
-		us.RollingUpdate = &k8sAppsV1.RollingUpdateDaemonSet{
-			MaxUnavailable: &intValue,
-		}
-	}
-	return us
 }

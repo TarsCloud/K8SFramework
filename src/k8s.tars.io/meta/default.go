@@ -14,6 +14,8 @@ const DefaultMaxTImageRelease = 32
 const DefaultMaxImageBuildTime = 480 //second
 const DefaultLauncherType = Background
 const DefaultImagePullPolicy = k8sCoreV1.PullAlways
+const DefaultMinReadySeconds = 3
+const DefaultWorkloadHistoryLimit = int32(1)
 
 var defaultStatefulsetPartition = int32(0)
 

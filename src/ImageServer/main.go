@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"k8s.io/apimachinery/pkg/util/runtime"
+	tarsRuntime "k8s.tars.io/runtime"
 	"log"
 	"os"
 	"os/signal"
@@ -20,10 +22,8 @@ var (
 
 	glStopChan chan struct{}
 
-	glK8sContext *K8SContext
-	glEngine     *Engine
-	glWatcher    *Watcher
-	glRestful    *RestfulServer
+	glEngine  *Engine
+	glRestful *RestfulServer
 )
 
 func init() {
@@ -71,14 +71,11 @@ func init() {
 }
 
 func main() {
+	runtime.Must(tarsRuntime.CreateContext("", ""))
 
 	glStopChan = make(chan struct{})
 
-	glK8sContext = CreateK8SContext("", "")
-
-	glWatcher = NewWatcher()
-	glWatcher.Start(glStopChan)
-	glWatcher.WaitSync(glStopChan)
+	tarsRuntime.Factories.Start(glStopChan)
 
 	glEngine = NewEngine()
 	glEngine.Start(glStopChan, MaximumConcurrencyBuildTask)

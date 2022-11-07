@@ -1,3 +1,21 @@
+## 1.4.0 20221106
+
+## en
+
+- feat: upgrade client-go to v0.20.15
+- feat: stopped v1beta1 support
+- feat: split the webhook from the controller
+- feat: refactored some golang and package structure
+- feat: fix some bugs related to TarsLocalVolume
+
+## cn
+
+- feat: 升级 client-go 到 v0.20.15
+- feat: 停止了 v1beta1 支持
+- feat: 将 Webhook 从 Controller 中拆分 
+- feat: 重构了 GoLang 代码和一些包结构
+- feat: 修复了一些 TarsLocalVolume 特性相关的 Bug
+
 ## 1.3.12 20220915
 
 ## en

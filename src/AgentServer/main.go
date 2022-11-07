@@ -1,7 +1,9 @@
 package main
 
 import (
+	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/klog/v2"
+	tarsRuntime "k8s.tars.io/runtime"
 	"os"
 	"tarsagent/gflag"
 	"tarsagent/runner"
@@ -24,6 +26,7 @@ func init() {
 }
 
 func main() {
+	runtime.Must(tarsRuntime.CreateContext("", ""))
 
 	stopCh := make(chan struct{})
 
@@ -37,6 +40,7 @@ func main() {
 			return
 		}
 	}
+	tarsRuntime.Factories.Start(stopCh)
 
 	for _, r := range runners {
 		r.Start(stopCh)
