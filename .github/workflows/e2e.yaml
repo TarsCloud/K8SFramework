@@ -16,6 +16,29 @@ on:
       - ".github/workflows/build-deploy*.yml"
 
 jobs:
+  bases:
+    runs-on: ubuntu-latest
+    env:
+      LocalRegistryName: local-registry
+      LocalRegistryPort: 5000
+
+      DOCKER_RUN_WITHOUT_IT: 1
+      REGISTRY_URL: localhost:5000/e2e
+      BUILD_VERSION: 1.4.0-e2e
+      CHART_VERSION: 1.4.0-e2e
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Create Local Registry
+        run: ./util/create-local-registry.sh ${{env.LocalRegistryName}} ${{env.LocalRegistryPort}}
+
+      - name: Build Compiler
+        run: make base
+
+      - name: Display Images
+        run: docker images | grep ${{env.BUILD_VERSION}}
+
   prepare-controller:
     runs-on: ubuntu-latest
     timeout-minutes: 90
