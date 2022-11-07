@@ -19,7 +19,7 @@
 
 ## 设计
 
-**TarsCloud K8SFramework** 使用 **Kubernetes Operator** 模式支持 Tars 服务在 K8S 集群的部署和运维.  
+**TarsCloud K8SFramework** 使用 **Kubernetes Operator** 模式支持 Tars 服务在 Kubernetes 集群的部署和运维.  
 具体由 CRD, Controller, Framework 三部分组成, 其关系如下:
 
 ### CRD
@@ -92,9 +92,6 @@ Kubernetes 集群管理员可以通过<<[云原生运维](docs/zh/kubectl.md)>> 
 您可以通过 Tars社区, Issue, Pr 等任意可用方式与我们沟通交流
 
 ## Todo
-
-+ 时区处理:
-  当前 **TarsCloud K8SFramework** 是通过在 Pod 中挂载 宿主机 /etc/localtime 文件尝试解决时区同步问题, 但是在某些宿主机无法按预期工作,我们正在探索更好的办法.
 
 + Tars SSL 支持:  
   当前 **TarsCloud K8SFramework** 未支持 Tars SSL, 我们会在后续版本提供支持

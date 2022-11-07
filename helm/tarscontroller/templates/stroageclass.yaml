@@ -3,5 +3,5 @@ kind: StorageClass
 metadata:
   name: tars-storage-class
 provisioner: kubernetes.io/no-provisioner
-reclaimPolicy: Retain
+reclaimPolicy: Delete
 volumeBindingMode: WaitForFirstConsumer

@@ -33,7 +33,7 @@ jobs:
       - name: Create Local Registry
         run: ./util/create-local-registry.sh ${{env.LocalRegistryName}} ${{env.LocalRegistryPort}}
 
-      - name: Build Compiler
+      - name: Build Bases
         run: make base
 
       - name: Display Images
