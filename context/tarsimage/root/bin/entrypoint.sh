@@ -1,5 +1,5 @@
 #! /bin/bash
 
-TARSIMAGE_EXECUTION_FILE="/usr/local/app/tars/tarsimage/bin/tarsimage"
-chmod +x ${TARSIMAGE_EXECUTION_FILE}
-exec ${TARSIMAGE_EXECUTION_FILE}
+EXECUTION_FILE="/usr/local/app/tars/tarsimage/bin/tarsimage"
+chmod +x ${EXECUTION_FILE}
+exec ${EXECUTION_FILE}

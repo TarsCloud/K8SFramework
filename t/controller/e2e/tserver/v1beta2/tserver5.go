@@ -10,18 +10,18 @@ import (
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	patchTypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
-	tarsCrdV1Beta2 "k8s.tars.io/crd/v1beta2"
-	tarsMetaTools "k8s.tars.io/meta/tools"
-	tarsMetaV1Beta2 "k8s.tars.io/meta/v1beta2"
+	tarsCrdV1Beta2 "k8s.tars.io/apps/v1beta2"
+	tarsMeta "k8s.tars.io/meta"
+	tarsRuntime "k8s.tars.io/runtime"
+
 	"strings"
 	"time"
 )
 
 var _ = ginkgo.Describe("try create/update tars server and check service", func() {
 	opts := &scaffold.Options{
-		Name:      "default",
-		K8SConfig: scaffold.GetK8SConfigFile(),
-		SyncTime:  1500 * time.Millisecond,
+		Name:     "default",
+		SyncTime: 800 * time.Millisecond,
 	}
 
 	s := scaffold.NewScaffold(opts)
@@ -44,7 +44,7 @@ var _ = ginkgo.Describe("try create/update tars server and check service", func(
 				Parent:  Template,
 			},
 		}
-		_, err := s.CRDClient.CrdV1beta2().TTemplates(s.Namespace).Create(context.TODO(), ttLayout, k8sMetaV1.CreateOptions{})
+		_, err := tarsRuntime.Clients.CrdClient.AppsV1beta2().TTemplates(s.Namespace).Create(context.TODO(), ttLayout, k8sMetaV1.CreateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		time.Sleep(s.Opts.SyncTime)
 
@@ -89,23 +89,27 @@ var _ = ginkgo.Describe("try create/update tars server and check service", func(
 					AbilityAffinity: tarsCrdV1Beta2.None,
 					NodeSelector:    []k8sCoreV1.NodeSelectorRequirement{},
 					ImagePullPolicy: k8sCoreV1.PullAlways,
-					LauncherType:    tarsCrdV1Beta2.Background,
+					LauncherType:    tarsMeta.Background,
 				},
 			},
 		}
-		_, err = s.CRDClient.CrdV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
+		_, err = tarsRuntime.Clients.CrdClient.AppsV1beta2().TServers(s.Namespace).Create(context.TODO(), tsLayout, k8sMetaV1.CreateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		time.Sleep(s.Opts.SyncTime)
 	})
 
+	ginkgo.AfterEach(func() {
+		_ = tarsRuntime.Clients.CrdClient.AppsV1beta2().TServers(s.Namespace).Delete(context.TODO(), Resource, k8sMetaV1.DeleteOptions{})
+	})
+
 	ginkgo.It("before update", func() {
-		service, err := s.K8SClient.CoreV1().Services(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
+		service, err := tarsRuntime.Clients.K8sClient.CoreV1().Services(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), service)
 
 		expectedLabels := map[string]string{
-			tarsMetaV1Beta2.TServerAppLabel:  App,
-			tarsMetaV1Beta2.TServerNameLabel: Server,
+			tarsMeta.TServerAppLabel:  App,
+			tarsMeta.TServerNameLabel: Server,
 		}
 		assert.True(ginkgo.GinkgoT(), scaffold.CheckLeftInRight(expectedLabels, service.Labels))
 		assert.True(ginkgo.GinkgoT(), scaffold.CheckLeftInRight(expectedLabels, service.Spec.Selector))
@@ -135,9 +139,9 @@ var _ = ginkgo.Describe("try create/update tars server and check service", func(
 
 	ginkgo.It("add servant", func() {
 		var ThirdObj = "ThirdObj"
-		jsonPatch := tarsMetaTools.JsonPatch{
+		jsonPatch := tarsMeta.JsonPatch{
 			{
-				OP:   tarsMetaTools.JsonPatchAdd,
+				OP:   tarsMeta.JsonPatchAdd,
 				Path: "/spec/tars/servants/0",
 				Value: &tarsCrdV1Beta2.TServerServant{
 					Name:       ThirdObj,
@@ -152,17 +156,17 @@ var _ = ginkgo.Describe("try create/update tars server and check service", func(
 			},
 		}
 		bs, _ := json.Marshal(jsonPatch)
-		_, err := s.CRDClient.CrdV1beta2().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		_, err := tarsRuntime.Clients.CrdClient.AppsV1beta2().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		time.Sleep(s.Opts.SyncTime)
 
-		service, err := s.K8SClient.CoreV1().Services(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
+		service, err := tarsRuntime.Clients.K8sClient.CoreV1().Services(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), service)
 
 		expectedLabels := map[string]string{
-			tarsMetaV1Beta2.TServerAppLabel:  App,
-			tarsMetaV1Beta2.TServerNameLabel: Server,
+			tarsMeta.TServerAppLabel:  App,
+			tarsMeta.TServerNameLabel: Server,
 		}
 		assert.True(ginkgo.GinkgoT(), scaffold.CheckLeftInRight(expectedLabels, service.Labels))
 		assert.True(ginkgo.GinkgoT(), scaffold.CheckLeftInRight(expectedLabels, service.Spec.Selector))
@@ -201,9 +205,9 @@ var _ = ginkgo.Describe("try create/update tars server and check service", func(
 
 	ginkgo.It("update servant", func() {
 		var ThirdObj = "ThirdObj"
-		jsonPatch := tarsMetaTools.JsonPatch{
+		jsonPatch := tarsMeta.JsonPatch{
 			{
-				OP:   tarsMetaTools.JsonPatchReplace,
+				OP:   tarsMeta.JsonPatchReplace,
 				Path: "/spec/tars/servants/1",
 				Value: &tarsCrdV1Beta2.TServerServant{
 					Name:       ThirdObj,
@@ -218,17 +222,17 @@ var _ = ginkgo.Describe("try create/update tars server and check service", func(
 			},
 		}
 		bs, _ := json.Marshal(jsonPatch)
-		_, err := s.CRDClient.CrdV1beta2().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		_, err := tarsRuntime.Clients.CrdClient.AppsV1beta2().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		time.Sleep(s.Opts.SyncTime)
 
-		service, err := s.K8SClient.CoreV1().Services(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
+		service, err := tarsRuntime.Clients.K8sClient.CoreV1().Services(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), service)
 
 		expectedLabels := map[string]string{
-			tarsMetaV1Beta2.TServerAppLabel:  App,
-			tarsMetaV1Beta2.TServerNameLabel: Server,
+			tarsMeta.TServerAppLabel:  App,
+			tarsMeta.TServerNameLabel: Server,
 		}
 		assert.True(ginkgo.GinkgoT(), scaffold.CheckLeftInRight(expectedLabels, service.Labels))
 		assert.True(ginkgo.GinkgoT(), scaffold.CheckLeftInRight(expectedLabels, service.Spec.Selector))
@@ -257,24 +261,24 @@ var _ = ginkgo.Describe("try create/update tars server and check service", func(
 	})
 
 	ginkgo.It("delete servant", func() {
-		jsonPatch := tarsMetaTools.JsonPatch{
+		jsonPatch := tarsMeta.JsonPatch{
 			{
-				OP:   tarsMetaTools.JsonPatchRemove,
+				OP:   tarsMeta.JsonPatchRemove,
 				Path: "/spec/tars/servants/1",
 			},
 		}
 		bs, _ := json.Marshal(jsonPatch)
-		_, err := s.CRDClient.CrdV1beta2().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		_, err := tarsRuntime.Clients.CrdClient.AppsV1beta2().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		time.Sleep(s.Opts.SyncTime)
 
-		service, err := s.K8SClient.CoreV1().Services(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
+		service, err := tarsRuntime.Clients.K8sClient.CoreV1().Services(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), service)
 
 		expectedLabels := map[string]string{
-			tarsMetaV1Beta2.TServerAppLabel:  App,
-			tarsMetaV1Beta2.TServerNameLabel: Server,
+			tarsMeta.TServerAppLabel:  App,
+			tarsMeta.TServerNameLabel: Server,
 		}
 		assert.True(ginkgo.GinkgoT(), scaffold.CheckLeftInRight(expectedLabels, service.Labels))
 		assert.True(ginkgo.GinkgoT(), scaffold.CheckLeftInRight(expectedLabels, service.Spec.Selector))
@@ -295,19 +299,19 @@ var _ = ginkgo.Describe("try create/update tars server and check service", func(
 	})
 
 	ginkgo.It("daemonset", func() {
-		jsonPatch := tarsMetaTools.JsonPatch{
+		jsonPatch := tarsMeta.JsonPatch{
 			{
-				OP:    tarsMetaTools.JsonPatchAdd,
+				OP:    tarsMeta.JsonPatchAdd,
 				Path:  "/spec/k8s/daemonSet",
 				Value: true,
 			},
 		}
 		bs, _ := json.Marshal(jsonPatch)
-		_, err := s.CRDClient.CrdV1beta2().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		_, err := tarsRuntime.Clients.CrdClient.AppsV1beta2().TServers(s.Namespace).Patch(context.TODO(), Resource, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		time.Sleep(s.Opts.SyncTime)
 
-		_, err = s.K8SClient.CoreV1().Services(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
+		_, err = tarsRuntime.Clients.K8sClient.CoreV1().Services(s.Namespace).Get(context.TODO(), Resource, k8sMetaV1.GetOptions{})
 		assert.NotNil(ginkgo.GinkgoT(), err)
 		assert.True(ginkgo.GinkgoT(), errors.IsNotFound(err))
 	})

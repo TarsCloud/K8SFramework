@@ -9,9 +9,9 @@ import (
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	k8sWatchV1 "k8s.io/apimachinery/pkg/watch"
-	tarsV1beta3 "k8s.tars.io/crd/v1beta3"
-	tarsMetaTools "k8s.tars.io/meta/tools"
-	tarsMetaV1beta3 "k8s.tars.io/meta/v1beta3"
+	tarsAppsV1beta3 "k8s.tars.io/apps/v1beta3"
+	tarsMeta "k8s.tars.io/meta"
+	tarsRuntime "k8s.tars.io/runtime"
 	"log"
 	"os"
 	"os/exec"
@@ -62,11 +62,11 @@ type Task struct {
 	image                 string
 	userParams            TaskUserParams
 	paths                 TaskPaths
-	taskBuildRunningState tarsV1beta3.TImageBuildState
+	taskBuildRunningState tarsAppsV1beta3.TImageBuildState
 	waitChan              chan error
 	handler               string
 	kanikoPodName         string
-	timage                *tarsV1beta3.TImage
+	timage                *tarsAppsV1beta3.TImage
 	repository            string
 	registrySecret        string
 	executorImage         string
@@ -179,9 +179,9 @@ func secret(task *Task) error {
 		if resource == "" {
 			continue
 		}
-		secretSnap, err := glK8sContext.k8sClient.CoreV1().Secrets(glK8sContext.namespace).Get(context.TODO(), resource, k8sMetaV1.GetOptions{})
+		secretSnap, err := tarsRuntime.Clients.K8sClient.CoreV1().Secrets(tarsRuntime.Namespace).Get(context.TODO(), resource, k8sMetaV1.GetOptions{})
 		if err != nil {
-			err = fmt.Errorf("get resource %s %s/%s error: %s", "secrets", glK8sContext.namespace, resource, err.Error())
+			err = fmt.Errorf("get resource %s %s/%s error: %s", "secrets", tarsRuntime.Namespace, resource, err.Error())
 			return err
 		}
 		if v, ok := secretSnap.Data[".dockerconfigjson"]; ok {
@@ -235,11 +235,11 @@ func submit(task *Task) error {
 	podLayout := &k8sCoreV1.Pod{
 		ObjectMeta: k8sMetaV1.ObjectMeta{
 			Name:      task.kanikoPodName,
-			Namespace: glK8sContext.namespace,
+			Namespace: tarsRuntime.Namespace,
 			Labels: map[string]string{
-				tarsMetaV1beta3.TServerAppLabel:  "tars",
-				tarsMetaV1beta3.TServerNameLabel: "tarskaniko",
-				tarsMetaV1beta3.TServerIdLabel:   task.id,
+				tarsMeta.TServerAppLabel:  "tars",
+				tarsMeta.TServerNameLabel: "tarskaniko",
+				tarsMeta.TServerIdLabel:   task.id,
 			},
 		},
 		Spec: k8sCoreV1.PodSpec{
@@ -304,8 +304,8 @@ func submit(task *Task) error {
 								"statefulset.kubernetes.io/pod-name": glPodName,
 							},
 						},
-						Namespaces:  []string{glK8sContext.namespace},
-						TopologyKey: tarsMetaV1beta3.K8SHostNameLabel,
+						Namespaces:  []string{tarsRuntime.Namespace},
+						TopologyKey: tarsMeta.K8SHostNameLabel,
 					},
 				},
 			}},
@@ -321,7 +321,7 @@ func submit(task *Task) error {
 		}
 	}
 
-	_, err := glK8sContext.k8sClient.CoreV1().Pods(glK8sContext.namespace).Create(context.TODO(), podLayout, k8sMetaV1.CreateOptions{})
+	_, err := tarsRuntime.Clients.K8sClient.CoreV1().Pods(tarsRuntime.Namespace).Create(context.TODO(), podLayout, k8sMetaV1.CreateOptions{})
 	if err != nil {
 		err = fmt.Errorf("create pod failed: %s", err.Error())
 		return err
@@ -329,7 +329,7 @@ func submit(task *Task) error {
 
 	go func() {
 		time.Sleep(time.Minute * 15)
-		_ = glK8sContext.k8sClient.CoreV1().Pods(glK8sContext.namespace).Delete(context.TODO(), task.kanikoPodName, k8sMetaV1.DeleteOptions{})
+		_ = tarsRuntime.Clients.K8sClient.CoreV1().Pods(tarsRuntime.Namespace).Delete(context.TODO(), task.kanikoPodName, k8sMetaV1.DeleteOptions{})
 	}()
 
 	return nil
@@ -337,7 +337,7 @@ func submit(task *Task) error {
 
 func watch(task *Task) error {
 	log.Printf("task|%s: watching...\n", task.id)
-	watchInterface, err := glK8sContext.k8sClient.CoreV1().Pods(glK8sContext.namespace).Watch(context.TODO(), k8sMetaV1.ListOptions{
+	watchInterface, err := tarsRuntime.Clients.K8sClient.CoreV1().Pods(tarsRuntime.Namespace).Watch(context.TODO(), k8sMetaV1.ListOptions{
 		FieldSelector: fmt.Sprintf("metadata.name=%s", task.kanikoPodName),
 		Watch:         true,
 	})
@@ -424,7 +424,7 @@ func NewEngine() *Engine {
 func pushBuildRunningState(task *Task) error {
 	task.timage.Build.Running = &task.taskBuildRunningState
 	var err error
-	task.timage, err = glK8sContext.crdClient.CrdV1beta3().TImages(glK8sContext.namespace).Update(context.TODO(), task.timage, k8sMetaV1.UpdateOptions{})
+	task.timage, err = tarsRuntime.Clients.CrdClient.AppsV1beta3().TImages(tarsRuntime.Namespace).Update(context.TODO(), task.timage, k8sMetaV1.UpdateOptions{})
 	if err != nil {
 		var message = fmt.Sprintf("update running state failed: %s", err.Error())
 		log.Printf("task|%s: %s\n", task.id, message)
@@ -442,14 +442,14 @@ func (e *Engine) onBuildFailed(task *Task, err error) {
 	task.taskBuildRunningState.Phase = BuildPhaseFailed
 	task.taskBuildRunningState.Message = err.Error()
 
-	buildState := tarsV1beta3.TImageBuild{
+	buildState := tarsAppsV1beta3.TImageBuild{
 		Running: nil,
 		Last:    &task.taskBuildRunningState,
 	}
 
-	jsonPatch := tarsMetaTools.JsonPatch{
+	jsonPatch := tarsMeta.JsonPatch{
 		{
-			OP:    tarsMetaTools.JsonPatchAdd,
+			OP:    tarsMeta.JsonPatchAdd,
 			Path:  "/build",
 			Value: buildState,
 		},
@@ -458,7 +458,7 @@ func (e *Engine) onBuildFailed(task *Task, err error) {
 	bs, _ := json.Marshal(jsonPatch)
 
 	for i := 1; i < 3; i++ {
-		_, err = glK8sContext.crdClient.CrdV1beta3().TImages(glK8sContext.namespace).Patch(context.TODO(), task.timage.Name, types.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		_, err = tarsRuntime.Clients.CrdClient.AppsV1beta3().TImages(tarsRuntime.Namespace).Patch(context.TODO(), task.timage.Name, types.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		if err != nil {
 			time.Sleep(time.Second * 1)
 			continue
@@ -478,12 +478,12 @@ func (e *Engine) onBuildSuccess(task *Task) {
 	task.taskBuildRunningState.Phase = BuildPhaseDone
 	task.taskBuildRunningState.Message = "Success"
 
-	buildState := tarsV1beta3.TImageBuild{
+	buildState := tarsAppsV1beta3.TImageBuild{
 		Running: nil,
 		Last:    &task.taskBuildRunningState,
 	}
 
-	releases := []*tarsV1beta3.TImageRelease{
+	releases := []*tarsAppsV1beta3.TImageRelease{
 		{
 			ID:           task.taskBuildRunningState.ID,
 			Image:        task.taskBuildRunningState.Image,
@@ -504,14 +504,14 @@ func (e *Engine) onBuildSuccess(task *Task) {
 		}
 	}
 
-	jsonPatch := tarsMetaTools.JsonPatch{
+	jsonPatch := tarsMeta.JsonPatch{
 		{
-			OP:    tarsMetaTools.JsonPatchAdd,
+			OP:    tarsMeta.JsonPatchAdd,
 			Path:  "/build",
 			Value: buildState,
 		},
 		{
-			OP:    tarsMetaTools.JsonPatchAdd,
+			OP:    tarsMeta.JsonPatchAdd,
 			Path:  "/releases",
 			Value: releases,
 		},
@@ -521,7 +521,7 @@ func (e *Engine) onBuildSuccess(task *Task) {
 	bs, _ := json.Marshal(jsonPatch)
 
 	for i := 1; i < 3; i++ {
-		_, err = glK8sContext.crdClient.CrdV1beta3().TImages(glK8sContext.namespace).Patch(context.TODO(), task.timage.Name, types.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		_, err = tarsRuntime.Clients.CrdClient.AppsV1beta3().TImages(tarsRuntime.Namespace).Patch(context.TODO(), task.timage.Name, types.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		if err != nil {
 			time.Sleep(time.Second * 1)
 			continue
@@ -554,12 +554,17 @@ func (e *Engine) PostTask(task *Task) (string, error) {
 	}
 	task.image = fmt.Sprintf("%s/%s.%s:%s", task.repository, strings.ToLower(task.userParams.ServerApp), strings.ToLower(task.userParams.ServerName), task.userParams.ServerTag)
 
-	task.executorImage, task.executorSecret = getExecutor()
+	tfc := tarsRuntime.TFCConfig.GetTFrameworkConfig(tarsRuntime.Namespace)
+	if tfc == nil {
+		return "", fmt.Errorf("no execute image value set")
+	}
+
+	task.executorImage, task.executorSecret = tfc.ImageBuild.Executor.Image, tfc.ImageBuild.Executor.Secret
 	if task.executorImage == "" {
 		return "", fmt.Errorf("no execute image value set")
 	}
 
-	task.taskBuildRunningState = tarsV1beta3.TImageBuildState{
+	task.taskBuildRunningState = tarsAppsV1beta3.TImageBuildState{
 		ID:              task.id,
 		BaseImage:       task.userParams.BaseImage,
 		BaseImageSecret: task.userParams.BaseImageSecret,
@@ -575,9 +580,9 @@ func (e *Engine) PostTask(task *Task) (string, error) {
 	}
 
 	var err error
-	task.timage, err = glK8sContext.crdClient.CrdV1beta3().TImages(glK8sContext.namespace).Get(context.TODO(), task.userParams.Timage, k8sMetaV1.GetOptions{})
+	task.timage, err = tarsRuntime.Clients.CrdClient.AppsV1beta3().TImages(tarsRuntime.Namespace).Get(context.TODO(), task.userParams.Timage, k8sMetaV1.GetOptions{})
 	if err != nil {
-		return "", fmt.Errorf("get resource %s %s/%s failed: %s", "timage", glK8sContext.namespace, task.userParams.Timage, err.Error())
+		return "", fmt.Errorf("get resource %s %s/%s failed: %s", "timage", tarsRuntime.Namespace, task.userParams.Timage, err.Error())
 	}
 
 	if task.timage.ImageType != TImageTypeServer {
@@ -589,14 +594,14 @@ func (e *Engine) PostTask(task *Task) (string, error) {
 	}
 
 	if task.timage.Build == nil {
-		task.timage.Build = &tarsV1beta3.TImageBuild{
+		task.timage.Build = &tarsAppsV1beta3.TImageBuild{
 			Running: &task.taskBuildRunningState,
 		}
 	} else {
 		task.timage.Build.Running = &task.taskBuildRunningState
 	}
 
-	task.timage, err = glK8sContext.crdClient.CrdV1beta3().TImages(glK8sContext.namespace).Update(context.TODO(), task.timage, k8sMetaV1.UpdateOptions{})
+	task.timage, err = tarsRuntime.Clients.CrdClient.AppsV1beta3().TImages(tarsRuntime.Namespace).Update(context.TODO(), task.timage, k8sMetaV1.UpdateOptions{})
 	if err != nil {
 		return "", fmt.Errorf("update running state failed: %s\n", err.Error())
 	}

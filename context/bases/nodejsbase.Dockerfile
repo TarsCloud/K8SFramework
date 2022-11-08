@@ -3,9 +3,7 @@ FROM node:lts-bullseye
 ENV LANG C.UTF-8
 ENV LANGUAGE C.UTF-8
 
-RUN rm -rf /bin/ls                                                                        \
-# image debian:bullseye had "ls bug", we use busybox ls instead                           \
-    && apt update                                                                         \
+RUN apt update                                                                            \
     && apt install                                                                        \
        ca-certificates openssl telnet curl wget default-mysql-client                      \
        gnupg iputils-ping vim tcpdump net-tools binutils procps tree                      \

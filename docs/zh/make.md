@@ -56,7 +56,7 @@ base: cppbase javabase nodejsbase php74base
 controller 是 **TarsCloud K8SFramework** 项目中 Controller 包含的服务集合名,具体包括
 
 ```
-controlelr: tarscontroller tarsagent
+controlelr: tarscontroller tarswebhook tarsagent
 ```
 
 您也可以执行 make tarscontroller , make tarsagent 构建指定服务镜像

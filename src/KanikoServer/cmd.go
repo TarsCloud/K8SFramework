@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	tarsCrdV1beta3 "k8s.tars.io/crd/v1beta3"
+	tarsAppsV1beta3 "k8s.tars.io/apps/v1beta3"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -41,11 +41,11 @@ import (
 )
 
 var (
-	opts                              = &config.KanikoOptions{}
-	id                                = ""
-	timageName                        = ""
-	timageSnap *tarsCrdV1beta3.TImage = nil
-	k8sContext *K8SContext            = nil
+	opts                               = &config.KanikoOptions{}
+	id                                 = ""
+	timageName                         = ""
+	timageSnap *tarsAppsV1beta3.TImage = nil
+	k8sContext *K8SContext             = nil
 )
 
 func init() {
@@ -79,7 +79,7 @@ func pushStateOrDie(phase string, message string) {
 	timageSnap.Build.Running.Message = message
 	var err error
 	for i := 0; i < 3; i++ {
-		timageSnap, err = k8sContext.crdClient.CrdV1beta3().TImages(k8sContext.namespace).Update(context.TODO(), timageSnap, k8sMetaV1.UpdateOptions{})
+		timageSnap, err = k8sContext.crdClient.AppsV1beta3().TImages(k8sContext.namespace).Update(context.TODO(), timageSnap, k8sMetaV1.UpdateOptions{})
 		if err == nil {
 			return
 		}
@@ -141,7 +141,7 @@ var RootCmd = &cobra.Command{
 			exit(fmt.Errorf("create k8s context error: %s", err.Error()))
 		}
 
-		timageSnap, err = k8sContext.crdClient.CrdV1beta3().TImages(k8sContext.namespace).Get(context.TODO(), timageName, k8sMetaV1.GetOptions{})
+		timageSnap, err = k8sContext.crdClient.AppsV1beta3().TImages(k8sContext.namespace).Get(context.TODO(), timageName, k8sMetaV1.GetOptions{})
 		if err != nil {
 			exit(fmt.Errorf("get timage %s/%s error: %s", k8sContext.namespace, timageName, err.Error()))
 		}

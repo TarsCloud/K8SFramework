@@ -30,8 +30,7 @@ COPY --from=First /usr/local /usr/local
 ENV LANG C.UTF-8
 ENV LANGUAGE C.UTF-8
 
-RUN rm -rf /bin/ls                                                                        \
-# image debian:bullseye had "ls bug", we use busybox ls instead                           \
+RUN apt update                                                                            \
     && apt update                                                                         \
     && apt install                                                                        \
        ca-certificates openssl telnet curl wget default-mysql-client                      \

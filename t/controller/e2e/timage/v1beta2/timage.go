@@ -8,16 +8,15 @@ import (
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	patchTypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
-	tarsCrdV1Beta2 "k8s.tars.io/crd/v1beta2"
-	tarsMetaTools "k8s.tars.io/meta/tools"
+	tarsCrdV1Beta2 "k8s.tars.io/apps/v1beta2"
+	tarsMeta "k8s.tars.io/meta"
+	tarsRuntime "k8s.tars.io/runtime"
 	"time"
 )
 
 var _ = ginkgo.Describe("test timage", func() {
 	opts := &scaffold.Options{
-		Name:      "default",
-		K8SConfig: scaffold.GetK8SConfigFile(),
-		SyncTime:  1500 * time.Millisecond,
+		Name: "default", SyncTime: 1500 * time.Millisecond,
 	}
 	s := scaffold.NewScaffold(opts)
 
@@ -36,7 +35,7 @@ var _ = ginkgo.Describe("test timage", func() {
 				},
 			},
 		}
-		timage, err := s.CRDClient.CrdV1beta2().TImages(s.Namespace).Create(context.TODO(), tiLayout, k8sMetaV1.CreateOptions{})
+		timage, err := tarsRuntime.Clients.CrdClient.AppsV1beta2().TImages(s.Namespace).Create(context.TODO(), tiLayout, k8sMetaV1.CreateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), timage)
 		assert.NotNil(ginkgo.GinkgoT(), timage.Releases[0].CreateTime)
@@ -77,7 +76,7 @@ var _ = ginkgo.Describe("test timage", func() {
 				},
 			},
 		}
-		timage, err := s.CRDClient.CrdV1beta2().TImages(s.Namespace).Create(context.TODO(), tiLayout, k8sMetaV1.CreateOptions{})
+		timage, err := tarsRuntime.Clients.CrdClient.AppsV1beta2().TImages(s.Namespace).Create(context.TODO(), tiLayout, k8sMetaV1.CreateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), timage)
 		assert.Equal(ginkgo.GinkgoT(), 3, len(timage.Releases))
@@ -85,20 +84,20 @@ var _ = ginkgo.Describe("test timage", func() {
 		assert.Equal(ginkgo.GinkgoT(), "testserver:v2", timage.Releases[1].Image)
 		assert.Equal(ginkgo.GinkgoT(), "testserver:v3", timage.Releases[2].Image)
 
-		jsonPatch := tarsMetaTools.JsonPatch{
+		jsonPatch := tarsMeta.JsonPatch{
 			{
-				OP:    tarsMetaTools.JsonPatchReplace,
+				OP:    tarsMeta.JsonPatchReplace,
 				Path:  "/releases/1/id",
 				Value: "202201",
 			},
 			{
-				OP:    tarsMetaTools.JsonPatchReplace,
+				OP:    tarsMeta.JsonPatchReplace,
 				Path:  "/releases/2/id",
 				Value: "202201",
 			},
 		}
 		bs, _ := json.Marshal(jsonPatch)
-		timage, err = s.CRDClient.CrdV1beta2().TImages(s.Namespace).Patch(context.TODO(), "test-testserver", patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		timage, err = tarsRuntime.Clients.CrdClient.AppsV1beta2().TImages(s.Namespace).Patch(context.TODO(), "test-testserver", patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), timage)
 		assert.Equal(ginkgo.GinkgoT(), 1, len(timage.Releases))

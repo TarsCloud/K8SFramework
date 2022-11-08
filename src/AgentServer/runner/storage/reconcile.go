@@ -3,17 +3,16 @@ package storage
 import (
 	"context"
 	"fmt"
-	"golang.org/x/time/rate"
 	k8sCoreV1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
-	k8sInformersCoreV1 "k8s.io/client-go/informers/core/v1"
-	"k8s.io/client-go/kubernetes"
+	k8sCoreListerV1 "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/klog/v2"
+	tarsRuntime "k8s.tars.io/runtime"
 	"time"
 )
 
@@ -46,10 +45,8 @@ const (
 )
 
 type Reconciler struct {
-	k8sClient kubernetes.Interface
-
-	claimInformer  k8sInformersCoreV1.PersistentVolumeClaimInformer
-	volumeInformer k8sInformersCoreV1.PersistentVolumeInformer
+	claimLister  k8sCoreListerV1.PersistentVolumeClaimLister
+	volumeLister k8sCoreListerV1.PersistentVolumeLister
 
 	provision *TLocalProvisioner
 
@@ -108,7 +105,7 @@ func (r *Reconciler) reconcileClaim(key string) (Result, *time.Duration) {
 		return AllOk, nil
 	}
 
-	claim, err := r.claimInformer.Lister().PersistentVolumeClaims(namespace).Get(name)
+	claim, err := r.claimLister.PersistentVolumeClaims(namespace).Get(name)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			klog.Infof("observed claim(%s) deleted", key)
@@ -132,7 +129,7 @@ func (r *Reconciler) reconcileClaim(key string) (Result, *time.Duration) {
 			return AllOk, nil
 		}
 
-		volume, err := r.volumeInformer.Lister().Get(volumeName)
+		volume, err := r.volumeLister.Get(volumeName)
 		if err != nil {
 			if !errors.IsNotFound(err) {
 				klog.Infof("get the volume(%s) bound to terminating claim(%s) failed: %s", volumeName, key, err.Error())
@@ -143,7 +140,7 @@ func (r *Reconciler) reconcileClaim(key string) (Result, *time.Duration) {
 			klog.Infof("begin to remove finalizer(%s) for terminating claim(%s)", PVCProtectionFinalizer, key)
 			newClaim := claim.DeepCopy()
 			newClaim.Finalizers = removeFinalizer(claim.Finalizers, PVCProtectionFinalizer)
-			_, err = r.k8sClient.CoreV1().PersistentVolumeClaims(namespace).Update(context.TODO(), newClaim, k8sMetaV1.UpdateOptions{})
+			_, err = tarsRuntime.Clients.K8sClient.CoreV1().PersistentVolumeClaims(namespace).Update(context.TODO(), newClaim, k8sMetaV1.UpdateOptions{})
 
 			if err == nil {
 				klog.Infof("remove finalizer(%s) for terminating claim(%s) success", PVCProtectionFinalizer, key)
@@ -161,7 +158,7 @@ func (r *Reconciler) reconcileClaim(key string) (Result, *time.Duration) {
 
 		if volume.DeletionTimestamp == nil {
 			klog.Infof("begin to delete volume(%s) for terminating claim(%s)", volumeName, key)
-			_ = r.k8sClient.CoreV1().PersistentVolumes().Delete(context.TODO(), volumeName, k8sMetaV1.DeleteOptions{})
+			_ = tarsRuntime.Clients.K8sClient.CoreV1().PersistentVolumes().Delete(context.TODO(), volumeName, k8sMetaV1.DeleteOptions{})
 		} else {
 			klog.Infof("observed the volume(%s) bound to terminating claim(%s) already in terminating", volumeName, key)
 			r.volumeQueue.Add(volumeName)
@@ -178,7 +175,7 @@ func (r *Reconciler) reconcileClaim(key string) (Result, *time.Duration) {
 			return AllOk, nil
 		}
 
-		_, err = r.volumeInformer.Lister().Get(volumeName)
+		_, err = r.volumeLister.Get(volumeName)
 		if err == nil {
 			/*
 				Imagine that we have a group of claims [ claim-0, claim-1, claim-2], and claim-0 has bound a volume,
@@ -219,7 +216,7 @@ func (r *Reconciler) reconcileClaim(key string) (Result, *time.Duration) {
 		klog.Infof("provision volume(%s) for claim(%s) success", volumeName, key)
 
 		klog.Infof("begin to create persistentvolumes(%s) for claim(%s)", volumeName, key)
-		_, err = r.k8sClient.CoreV1().PersistentVolumes().Create(context.TODO(), volume, k8sMetaV1.CreateOptions{})
+		_, err = tarsRuntime.Clients.K8sClient.CoreV1().PersistentVolumes().Create(context.TODO(), volume, k8sMetaV1.CreateOptions{})
 
 		if err != nil {
 			if errors.IsAlreadyExists(err) {
@@ -263,7 +260,7 @@ func (r *Reconciler) reconcileClaim(key string) (Result, *time.Duration) {
 
 func (r *Reconciler) reconcileVolume(key string) (Result, *time.Duration) {
 	name := key
-	volume, err := r.volumeInformer.Lister().Get(name)
+	volume, err := r.volumeLister.Get(name)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			klog.Infof("observed volume(%s) deleted", key)
@@ -281,7 +278,7 @@ func (r *Reconciler) reconcileVolume(key string) (Result, *time.Duration) {
 
 		claimRef := volume.Spec.ClaimRef
 		if claimRef != nil {
-			claim, err := r.claimInformer.Lister().PersistentVolumeClaims(claimRef.Namespace).Get(claimRef.Name)
+			claim, err := r.claimLister.PersistentVolumeClaims(claimRef.Namespace).Get(claimRef.Name)
 			if err != nil && !errors.IsNotFound(err) {
 				klog.Errorf("get the the claim(%s/%s) referenced by volume(%s) failed: %s, try times(%d)", claimRef.Namespace, claimRef.Name, key, err.Error(), r.claimQueue.NumRequeues(key))
 				return RateLimit, nil
@@ -304,7 +301,7 @@ func (r *Reconciler) reconcileVolume(key string) (Result, *time.Duration) {
 		newVolume := volume.DeepCopy()
 		newVolume.Finalizers = removeFinalizer(volume.Finalizers, PVProtectionFinalizer)
 		klog.Infof("begin to remove finalizer(%s) for terminating volume(%s)", PVProtectionFinalizer, key)
-		_, err = r.k8sClient.CoreV1().PersistentVolumes().Update(context.TODO(), newVolume, k8sMetaV1.UpdateOptions{})
+		_, err = tarsRuntime.Clients.K8sClient.CoreV1().PersistentVolumes().Update(context.TODO(), newVolume, k8sMetaV1.UpdateOptions{})
 		if err == nil {
 			klog.Infof("remove finalizer(%s) for terminating volume(%s) success", PVProtectionFinalizer, key)
 			return AllOk, nil
@@ -323,7 +320,7 @@ func (r *Reconciler) reconcileVolume(key string) (Result, *time.Duration) {
 		klog.Infof("observed volume(%s) available", key)
 		if volume.CreationTimestamp.Add(24 * time.Hour).Before(time.Now()) {
 			klog.Infof("observed volume(%s) idle for over 24 hours, will release it", key)
-			_ = r.k8sClient.CoreV1().PersistentVolumes().Delete(context.TODO(), volume.Name, k8sMetaV1.DeleteOptions{})
+			_ = tarsRuntime.Clients.K8sClient.CoreV1().PersistentVolumes().Delete(context.TODO(), volume.Name, k8sMetaV1.DeleteOptions{})
 		}
 		duration := time.Minute * 10
 		return AddAfter, &duration
@@ -336,18 +333,13 @@ func (r *Reconciler) Start(stopCh chan struct{}) {
 	go wait.Until(func() { r.processItem(r.volumeQueue, r.reconcileVolume) }, time.Second, stopCh)
 }
 
-func NewReconciler(k8sClient kubernetes.Interface, claimInformer k8sInformersCoreV1.PersistentVolumeClaimInformer, volumeInformer k8sInformersCoreV1.PersistentVolumeInformer, provision *TLocalProvisioner) *Reconciler {
-	rateLimiter := workqueue.NewMaxOfRateLimiter(
-		workqueue.NewItemExponentialFailureRateLimiter(15*time.Second, 15*time.Second),
-		&workqueue.BucketRateLimiter{Limiter: rate.NewLimiter(rate.Limit(10), 100)},
-	)
-
+func NewReconciler(claimLister k8sCoreListerV1.PersistentVolumeClaimLister, volumeLister k8sCoreListerV1.PersistentVolumeLister, provision *TLocalProvisioner) *Reconciler {
+	rateLimiter := workqueue.NewItemExponentialFailureRateLimiter(1*time.Second, 30*time.Second)
 	return &Reconciler{
-		k8sClient:      k8sClient,
-		claimInformer:  claimInformer,
-		volumeInformer: volumeInformer,
-		provision:      provision,
-		claimQueue:     workqueue.NewNamedRateLimitingQueue(rateLimiter, "claims"),
-		volumeQueue:    workqueue.NewNamedRateLimitingQueue(rateLimiter, "volumes"),
+		claimLister:  claimLister,
+		volumeLister: volumeLister,
+		provision:    provision,
+		claimQueue:   workqueue.NewRateLimitingQueue(rateLimiter),
+		volumeQueue:  workqueue.NewRateLimitingQueue(rateLimiter),
 	}
 }

@@ -6,11 +6,11 @@ _REGISTRY_URL_=""
 _REGISTRY_USER_=""
 _REGISTRY_PASSWORD_=""
 
-_CHART_VERSION_=1.3.0-master
+_CHART_VERSION_=1.4.0-master
 _CHART_APPVERSION_=v1beta3
 _CHART_DST_=charts
 
-_BUILD_VERSION_=v1.3.0-master
+_BUILD_VERSION_=v1.4.0-master
 
 #########################################################################################################################
 ### Please Do Not Edit This Block Unless You Know What You Are Doing ###
@@ -19,12 +19,12 @@ _TARS_WEB_DIR_=submodule/TarsWeb
 
 _BASES_="cppbase javabase nodejsbase php74base"
 
-_CONTROLLER_SERVERS_="tarscontroller tarsagent"
+_CONTROLLER_SERVERS_="tarscontroller tarswebhook tarsagent"
 
 _FRAMEWORK_SERVERS_="tarskaniko tarsimage  tarsnode tarsAdminRegistry tarsregistry tarsconfig tarslog tarsnotify tarsstat tarsproperty \
                      tarsquerystat tarsqueryproperty tarskevent tarsweb elasticsearch"
 
-_CRD_SERVED_VERSIONS_="v1beta1 v1beta2 v1beta3"
+_CRD_SERVED_VERSIONS_="v1beta2 v1beta3"
 _CRD_STORAGE_VERSION_="v1beta3"
 
 _PARAMS_="TARS_CPP_DIR TARS_WEB_DIR                                                                                  \

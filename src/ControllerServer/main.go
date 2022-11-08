@@ -4,57 +4,41 @@ import (
 	"context"
 	"fmt"
 	"k8s.io/client-go/tools/leaderelection"
+	tarsRuntime "k8s.tars.io/runtime"
 	"os"
 	"tarscontroller/controller"
-	"tarscontroller/reconcile"
-	"tarscontroller/reconcile/v1beta3"
-	"tarscontroller/webhook"
-	"time"
+	"tarscontroller/controller/v1beta3"
 )
 
 func main() {
-
 	stopCh := make(chan struct{})
-
-	clients, informers, err := controller.CreateContext("", "")
+	err := tarsRuntime.CreateContext("", "")
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
 
-	hooks := webhook.New(clients, informers)
-	//call webhook.start() before informers.start(),because informers.start() depend on conversion webhook service
-
-	hooks.Start(stopCh)
-	time.Sleep(time.Second * 1)
-
-	// new reconcile should before call informers.start() => because reconcile should registry into informers
-	reconciles := []reconcile.Reconcile{
-		v1beta3.NewNodeReconciler(clients, informers, 1),
-		v1beta3.NewDaemonSetReconciler(clients, informers, 1),
-		v1beta3.NewTTreeReconciler(clients, informers, 1),
-		v1beta3.NewServiceReconciler(clients, informers, 1),
-		v1beta3.NewTExitedPodReconciler(clients, informers, 1),
-		v1beta3.NewStatefulSetReconciler(clients, informers, 3),
-		v1beta3.NewTServerReconciler(clients, informers, 3),
-		v1beta3.NewTEndpointReconciler(clients, informers, 3),
-		v1beta3.NewTAccountReconciler(clients, informers, 1),
-		v1beta3.NewTConfigReconciler(clients, informers, 1),
-		v1beta3.NewTImageReconciler(clients, informers, 1),
-		v1beta3.NewPVCReconciler(clients, informers, 1),
-		v1beta3.NewTFrameworkConfigReconciler(clients, informers, 1),
+	controllers := []controller.Controller{
+		v1beta3.NewNodeController(1),
+		v1beta3.NewDaemonSetController(1),
+		v1beta3.NewTTreeController(1),
+		v1beta3.NewServiceController(1),
+		v1beta3.NewTExitedPodController(1),
+		v1beta3.NewStatefulSetController(5),
+		v1beta3.NewTServerController(3),
+		v1beta3.NewTEndpointController(3),
+		v1beta3.NewTAccountController(1),
+		v1beta3.NewTConfigController(3),
+		v1beta3.NewTImageController(1),
+		v1beta3.NewPVCController(1),
 	}
 
-	informers.Start(stopCh)
-	if !informers.WaitForCacheSync(stopCh) {
-		fmt.Println("WaitForCacheSync Error")
-		return
-	}
+	tarsRuntime.Factories.Start(stopCh)
 
 	callbacks := leaderelection.LeaderCallbacks{
 		OnStartedLeading: func(ctx context.Context) {
-			for _, reconciler := range reconciles {
-				reconciler.Start(stopCh)
+			for _, c := range controllers {
+				go c.Run(stopCh)
 			}
 		},
 		OnStoppedLeading: func() {
@@ -64,5 +48,5 @@ func main() {
 		},
 	}
 
-	controller.LeaderElectAndRun(callbacks)
+	tarsRuntime.LeaderElectAndRun(callbacks, tarsRuntime.Namespace, "tars-controller-manger")
 }

@@ -28,7 +28,7 @@ import (
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 	versioned "k8s.tars.io/client-go/clientset/versioned"
-	crd "k8s.tars.io/client-go/informers/externalversions/crd"
+	apps "k8s.tars.io/client-go/informers/externalversions/apps"
 	internalinterfaces "k8s.tars.io/client-go/informers/externalversions/internalinterfaces"
 )
 
@@ -172,9 +172,9 @@ type SharedInformerFactory interface {
 	ForResource(resource schema.GroupVersionResource) (GenericInformer, error)
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
-	Crd() crd.Interface
+	Apps() apps.Interface
 }
 
-func (f *sharedInformerFactory) Crd() crd.Interface {
-	return crd.New(f, f.namespace, f.tweakListOptions)
+func (f *sharedInformerFactory) Apps() apps.Interface {
+	return apps.New(f, f.namespace, f.tweakListOptions)
 }

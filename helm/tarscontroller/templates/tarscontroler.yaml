@@ -73,24 +73,6 @@ subjects:
     namespace: tars-system
 ---
 
-apiVersion: v1
-kind: Service
-metadata:
-  name: tars-webhook-service
-  namespace: tars-system
-spec:
-  ports:
-    - name: webhook
-      port: 443
-      protocol: TCP
-      targetPort: 443
-  selector:
-    tars.io/Controller: "true"
-  sessionAffinity: ClientIP
-  type: ClusterIP
-
----
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:

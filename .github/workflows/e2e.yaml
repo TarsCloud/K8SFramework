@@ -16,6 +16,29 @@ on:
       - ".github/workflows/build-deploy*.yml"
 
 jobs:
+  bases:
+    runs-on: ubuntu-latest
+    env:
+      LocalRegistryName: local-registry
+      LocalRegistryPort: 5000
+
+      DOCKER_RUN_WITHOUT_IT: 1
+      REGISTRY_URL: localhost:5000/e2e
+      BUILD_VERSION: 1.4.0-e2e
+      CHART_VERSION: 1.4.0-e2e
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Create Local Registry
+        run: ./util/create-local-registry.sh ${{env.LocalRegistryName}} ${{env.LocalRegistryPort}}
+
+      - name: Build Bases
+        run: make base
+
+      - name: Display Images
+        run: docker images | grep ${{env.BUILD_VERSION}}
+
   prepare-controller:
     runs-on: ubuntu-latest
     timeout-minutes: 90
@@ -26,8 +49,8 @@ jobs:
 
       DOCKER_RUN_WITHOUT_IT: 1
       REGISTRY_URL: localhost:5000/e2e
-      BUILD_VERSION: 1.3.0-e2e
-      CHART_VERSION: 1.3.0-e2e
+      BUILD_VERSION: 1.4.0-e2e
+      CHART_VERSION: 1.4.0-e2e
 
     steps:
       - name: Checkout Repo
@@ -63,7 +86,7 @@ jobs:
       fail-fast: false
       matrix:
         kindest: [ v1.18.20,v1.19.16,v1.20.15,v1.21.12,v1.22.7,v1.23.6,v1.24.3 ]
-        storage: [ v1beta1,v1beta2,v1beta3 ]
+        storage: [ v1beta2,v1beta3 ]
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
@@ -76,8 +99,8 @@ jobs:
       WITHOUT_DEPENDS_CHECK: 1
 
       REGISTRY_URL: localhost:5000/e2e
-      BUILD_VERSION: 1.3.0-e2e
-      CHART_VERSION: 1.3.0-e2e
+      BUILD_VERSION: 1.4.0-e2e
+      CHART_VERSION: 1.4.0-e2e
 
     steps:
       - name: Checkout Repo
@@ -113,6 +136,10 @@ jobs:
       - name: Run e2e.controller test
         run: make e2e.controller
 
+      - name: Show Controller logs
+        if: ${{ failure() }}
+        run: kubectl get pods -n tars-system |grep tars |awk '{system("kubectl logs -n tars-system " $1)}'
+
   prepare-framework:
     runs-on: ubuntu-latest
     timeout-minutes: 90
@@ -123,8 +150,8 @@ jobs:
 
       DOCKER_RUN_WITHOUT_IT: 1
       REGISTRY_URL: localhost:5000/e2e
-      BUILD_VERSION: 1.3.0-e2e
-      CHART_VERSION: 1.3.0-e2e
+      BUILD_VERSION: 1.4.0-e2e
+      CHART_VERSION: 1.4.0-e2e
 
     steps:
       - name: Checkout Repo
@@ -175,8 +202,8 @@ jobs:
       WITHOUT_DEPENDS_CHECK: 1
 
       REGISTRY_URL: localhost:5000/e2e
-      BUILD_VERSION: 1.3.0-e2e
-      CHART_VERSION: 1.3.0-e2e
+      BUILD_VERSION: 1.4.0-e2e
+      CHART_VERSION: 1.4.0-e2e
 
     steps:
       - name: Checkout Repo
@@ -226,3 +253,8 @@ jobs:
 
       - name: Run e2e.framework test
         run: make e2e.framework NAMESPACE=tars
+
+      - name: Show Controller logs
+        if: ${{ failure() }}
+        run:
+          kubectl get pods -n tars-system |grep tars |awk '{system("kubectl logs -n tars-system " $1)}'
