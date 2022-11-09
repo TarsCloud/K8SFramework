@@ -15,8 +15,8 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
-	tarsAppsV1beta3 "k8s.tars.io/apps/v1beta3"
-	tarsListerV1beta3 "k8s.tars.io/client-go/listers/apps/v1beta3"
+	tarsV1beta3 "k8s.tars.io/apis/tars/v1beta3"
+	tarsListerV1beta3 "k8s.tars.io/client-go/listers/tars/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	tarsRuntime "k8s.tars.io/runtime"
 	"tarscontroller/controller"
@@ -34,7 +34,7 @@ type ServiceReconciler struct {
 
 func NewServiceController(threads int) *ServiceReconciler {
 	svcInformer := tarsRuntime.Factories.K8SInformerFactoryWithTarsFilter.Core().V1().Services()
-	tsInformer := tarsRuntime.Factories.TarsInformerFactory.Apps().V1beta3().TServers()
+	tsInformer := tarsRuntime.Factories.TarsInformerFactory.Tars().V1beta3().TServers()
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartRecordingToSink(&k8sCoreTypeV1.EventSinkImpl{Interface: tarsRuntime.Clients.K8sClient.CoreV1().Events("")})
 
@@ -92,8 +92,8 @@ func (r *ServiceReconciler) processItem() bool {
 
 func (r *ServiceReconciler) EnqueueResourceEvent(resourceKind string, resourceEvent k8sWatchV1.EventType, resourceObj interface{}) {
 	switch resourceObj.(type) {
-	case *tarsAppsV1beta3.TServer:
-		tserver := resourceObj.(*tarsAppsV1beta3.TServer)
+	case *tarsV1beta3.TServer:
+		tserver := resourceObj.(*tarsV1beta3.TServer)
 		key := fmt.Sprintf("%s/%s", tserver.Namespace, tserver.Name)
 		r.queue.Add(key)
 	case *k8sCoreV1.Service:

@@ -28,8 +28,8 @@ import (
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 	versioned "k8s.tars.io/client-go/clientset/versioned"
-	apps "k8s.tars.io/client-go/informers/externalversions/apps"
 	internalinterfaces "k8s.tars.io/client-go/informers/externalversions/internalinterfaces"
+	tars "k8s.tars.io/client-go/informers/externalversions/tars"
 )
 
 // SharedInformerOption defines the functional option type for SharedInformerFactory.
@@ -172,9 +172,9 @@ type SharedInformerFactory interface {
 	ForResource(resource schema.GroupVersionResource) (GenericInformer, error)
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
-	Apps() apps.Interface
+	Tars() tars.Interface
 }
 
-func (f *sharedInformerFactory) Apps() apps.Interface {
-	return apps.New(f, f.namespace, f.tweakListOptions)
+func (f *sharedInformerFactory) Tars() tars.Interface {
+	return tars.New(f, f.namespace, f.tweakListOptions)
 }

@@ -2,24 +2,24 @@ package v1beta3
 
 import (
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	tarsApisV1beta3 "k8s.tars.io/apps/v1beta3"
+	tarsV1beta3 "k8s.tars.io/apis/tars/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 )
 
-func buildTEndpoint(tserver *tarsApisV1beta3.TServer) *tarsApisV1beta3.TEndpoint {
-	endpoint := &tarsApisV1beta3.TEndpoint{
+func buildTEndpoint(tserver *tarsV1beta3.TServer) *tarsV1beta3.TEndpoint {
+	endpoint := &tarsV1beta3.TEndpoint{
 		ObjectMeta: k8sMetaV1.ObjectMeta{
 			Name:      tserver.Name,
 			Namespace: tserver.Namespace,
 			OwnerReferences: []k8sMetaV1.OwnerReference{
-				*k8sMetaV1.NewControllerRef(tserver, tarsApisV1beta3.SchemeGroupVersion.WithKind(tarsMeta.TServerKind)),
+				*k8sMetaV1.NewControllerRef(tserver, tarsV1beta3.SchemeGroupVersion.WithKind(tarsMeta.TServerKind)),
 			},
 			Labels: map[string]string{
 				tarsMeta.TServerAppLabel:  tserver.Spec.App,
 				tarsMeta.TServerNameLabel: tserver.Spec.Server,
 			},
 		},
-		Spec: tarsApisV1beta3.TEndpointSpec{
+		Spec: tarsV1beta3.TEndpointSpec{
 			App:       tserver.Spec.App,
 			Server:    tserver.Spec.Server,
 			SubType:   tserver.Spec.SubType,
@@ -33,10 +33,10 @@ func buildTEndpoint(tserver *tarsApisV1beta3.TServer) *tarsApisV1beta3.TEndpoint
 	return endpoint
 }
 
-func syncTEndpoint(tserver *tarsApisV1beta3.TServer, endpoint *tarsApisV1beta3.TEndpoint) {
+func syncTEndpoint(tserver *tarsV1beta3.TServer, endpoint *tarsV1beta3.TEndpoint) {
 	endpoint.Labels = tserver.Labels
 	endpoint.OwnerReferences = []k8sMetaV1.OwnerReference{
-		*k8sMetaV1.NewControllerRef(tserver, tarsApisV1beta3.SchemeGroupVersion.WithKind(tarsMeta.TServerKind)),
+		*k8sMetaV1.NewControllerRef(tserver, tarsV1beta3.SchemeGroupVersion.WithKind(tarsMeta.TServerKind)),
 	}
 	endpoint.Spec.App = tserver.Spec.App
 	endpoint.Spec.Server = tserver.Spec.Server

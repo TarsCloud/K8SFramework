@@ -4,12 +4,12 @@ import (
 	k8sCoreV1 "k8s.io/api/core/v1"
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	tarsApisV1beta3 "k8s.tars.io/apps/v1beta3"
+	tarsV1beta3 "k8s.tars.io/apis/tars/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	"strings"
 )
 
-func buildServicePorts(tserver *tarsApisV1beta3.TServer) []k8sCoreV1.ServicePort {
+func buildServicePorts(tserver *tarsV1beta3.TServer) []k8sCoreV1.ServicePort {
 
 	getProtocol := func(isTcp bool) k8sCoreV1.Protocol {
 		if isTcp {
@@ -51,7 +51,7 @@ func buildServicePorts(tserver *tarsApisV1beta3.TServer) []k8sCoreV1.ServicePort
 	return ports
 }
 
-func buildService(tserver *tarsApisV1beta3.TServer) *k8sCoreV1.Service {
+func buildService(tserver *tarsV1beta3.TServer) *k8sCoreV1.Service {
 	service := &k8sCoreV1.Service{
 		ObjectMeta: k8sMetaV1.ObjectMeta{
 			Name:      tserver.Name,
@@ -61,7 +61,7 @@ func buildService(tserver *tarsApisV1beta3.TServer) *k8sCoreV1.Service {
 				tarsMeta.TServerNameLabel: tserver.Spec.Server,
 			},
 			OwnerReferences: []k8sMetaV1.OwnerReference{
-				*k8sMetaV1.NewControllerRef(tserver, tarsApisV1beta3.SchemeGroupVersion.WithKind(tarsMeta.TServerKind)),
+				*k8sMetaV1.NewControllerRef(tserver, tarsV1beta3.SchemeGroupVersion.WithKind(tarsMeta.TServerKind)),
 			},
 		},
 		Spec: k8sCoreV1.ServiceSpec{
@@ -77,6 +77,6 @@ func buildService(tserver *tarsApisV1beta3.TServer) *k8sCoreV1.Service {
 	return service
 }
 
-func syncService(tserver *tarsApisV1beta3.TServer, service *k8sCoreV1.Service) {
+func syncService(tserver *tarsV1beta3.TServer, service *k8sCoreV1.Service) {
 	service.Spec.Ports = buildServicePorts(tserver)
 }

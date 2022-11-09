@@ -4,12 +4,12 @@ import (
 	"fmt"
 	k8sAdmissionV1 "k8s.io/api/admission/v1"
 	"k8s.io/apimachinery/pkg/util/json"
-	tarsAppsV1beta2 "k8s.tars.io/apps/v1beta2"
+	tarsV1beta2 "k8s.tars.io/apis/tars/v1beta2"
 	tarsMeta "k8s.tars.io/meta"
 )
 
 func mutatingCreateTTree(requestAdmissionView *k8sAdmissionV1.AdmissionReview) ([]byte, error) {
-	newTTree := &tarsAppsV1beta2.TTree{}
+	newTTree := &tarsV1beta2.TTree{}
 	_ = json.Unmarshal(requestAdmissionView.Request.Object.Raw, newTTree)
 
 	businessMap := make(map[string]interface{}, len(newTTree.Businesses))

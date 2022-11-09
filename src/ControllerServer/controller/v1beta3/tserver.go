@@ -14,8 +14,8 @@ import (
 	k8sCoreListerV1 "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
-	tarsAppsV1beta3 "k8s.tars.io/apps/v1beta3"
-	tarsListerV1beta3 "k8s.tars.io/client-go/listers/apps/v1beta3"
+	tarsV1beta3 "k8s.tars.io/apis/tars/v1beta3"
+	tarsListerV1beta3 "k8s.tars.io/client-go/listers/tars/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	tarsRuntime "k8s.tars.io/runtime"
 	"strings"
@@ -33,7 +33,7 @@ type TServerReconciler struct {
 
 func NewTServerController(threads int) *TServerReconciler {
 	podInformer := tarsRuntime.Factories.K8SInformerFactoryWithTarsFilter.Core().V1().Pods()
-	tsInformer := tarsRuntime.Factories.TarsInformerFactory.Apps().V1beta3().TServers()
+	tsInformer := tarsRuntime.Factories.TarsInformerFactory.Tars().V1beta3().TServers()
 	c := &TServerReconciler{
 		podLister: podInformer.Lister(),
 		tsLister:  tsInformer.Lister(),
@@ -169,13 +169,13 @@ func (r *TServerReconciler) reconcile(key string) controller.Result {
 	}
 
 	tserverCopy := tserver.DeepCopy()
-	tserverCopy.Status = tarsAppsV1beta3.TServerStatus{
+	tserverCopy.Status = tarsV1beta3.TServerStatus{
 		Selector:        selector.String(),
 		Replicas:        tserver.Spec.K8S.Replicas,
 		ReadyReplicas:   readySize,
 		CurrentReplicas: currentSize,
 	}
-	_, err = tarsRuntime.Clients.CrdClient.AppsV1beta3().TServers(namespace).UpdateStatus(context.TODO(), tserverCopy, k8sMetaV1.UpdateOptions{})
+	_, err = tarsRuntime.Clients.CrdClient.TarsV1beta3().TServers(namespace).UpdateStatus(context.TODO(), tserverCopy, k8sMetaV1.UpdateOptions{})
 	if err != nil {
 		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourcePatchError, "tserver", namespace, name, err.Error()))
 		return controller.Retry

@@ -5,13 +5,13 @@ import (
 	k8sAdmissionV1 "k8s.io/api/admission/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/json"
-	tarsAppsV1beta3 "k8s.tars.io/apps/v1beta3"
+	tarsV1beta3 "k8s.tars.io/apis/tars/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	"strings"
 	"tarswebhook/webhook/informer"
 )
 
-func validTServer(newTServer, oldTServer *tarsAppsV1beta3.TServer, listers *informer.Listers) error {
+func validTServer(newTServer, oldTServer *tarsV1beta3.TServer, listers *informer.Listers) error {
 
 	if oldTServer != nil {
 		if newTServer.Spec.App != oldTServer.Spec.App {
@@ -170,16 +170,16 @@ func validTServer(newTServer, oldTServer *tarsAppsV1beta3.TServer, listers *info
 }
 
 func validCreateTServer(informers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
-	newTServer := &tarsAppsV1beta3.TServer{}
+	newTServer := &tarsV1beta3.TServer{}
 	_ = json.Unmarshal(view.Request.Object.Raw, newTServer)
 	return validTServer(newTServer, nil, informers)
 }
 
 func validUpdateTServer(informers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
-	newTServer := &tarsAppsV1beta3.TServer{}
+	newTServer := &tarsV1beta3.TServer{}
 	_ = json.Unmarshal(view.Request.Object.Raw, newTServer)
 
-	oldTServer := &tarsAppsV1beta3.TServer{}
+	oldTServer := &tarsV1beta3.TServer{}
 	_ = json.Unmarshal(view.Request.OldObject.Raw, oldTServer)
 
 	return validTServer(newTServer, oldTServer, informers)

@@ -3,7 +3,7 @@ package e2e
 import (
 	"context"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/statf"
-	tarsAppsV1Beta3 "k8s.tars.io/apps/v1beta3"
+	tarsV1Beta3 "k8s.tars.io/apis/tars/v1beta3"
 	"sigs.k8s.io/e2e-framework/klient/k8s/resources"
 	"sigs.k8s.io/e2e-framework/pkg/envconf"
 	"sigs.k8s.io/e2e-framework/pkg/features"
@@ -22,7 +22,7 @@ func TestStat(t *testing.T) {
 	feature := features.New("Testing "+statObjId).WithLabel("crd-version", "v1beta3").
 		Setup(func(ctx context.Context, t *testing.T, config *envconf.Config) context.Context {
 			r, _ = resources.New(config.Client().RESTConfig())
-			_ = tarsAppsV1Beta3.AddToScheme(r.GetScheme())
+			_ = tarsV1Beta3.AddToScheme(r.GetScheme())
 
 			return ctx
 		}).

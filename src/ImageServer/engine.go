@@ -9,7 +9,7 @@ import (
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	k8sWatchV1 "k8s.io/apimachinery/pkg/watch"
-	tarsAppsV1beta3 "k8s.tars.io/apps/v1beta3"
+	tarsV1beta3 "k8s.tars.io/apis/tars/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	tarsRuntime "k8s.tars.io/runtime"
 	"log"
@@ -62,11 +62,11 @@ type Task struct {
 	image                 string
 	userParams            TaskUserParams
 	paths                 TaskPaths
-	taskBuildRunningState tarsAppsV1beta3.TImageBuildState
+	taskBuildRunningState tarsV1beta3.TImageBuildState
 	waitChan              chan error
 	handler               string
 	kanikoPodName         string
-	timage                *tarsAppsV1beta3.TImage
+	timage                *tarsV1beta3.TImage
 	repository            string
 	registrySecret        string
 	executorImage         string
@@ -424,7 +424,7 @@ func NewEngine() *Engine {
 func pushBuildRunningState(task *Task) error {
 	task.timage.Build.Running = &task.taskBuildRunningState
 	var err error
-	task.timage, err = tarsRuntime.Clients.CrdClient.AppsV1beta3().TImages(tarsRuntime.Namespace).Update(context.TODO(), task.timage, k8sMetaV1.UpdateOptions{})
+	task.timage, err = tarsRuntime.Clients.CrdClient.TarsV1beta3().TImages(tarsRuntime.Namespace).Update(context.TODO(), task.timage, k8sMetaV1.UpdateOptions{})
 	if err != nil {
 		var message = fmt.Sprintf("update running state failed: %s", err.Error())
 		log.Printf("task|%s: %s\n", task.id, message)
@@ -442,7 +442,7 @@ func (e *Engine) onBuildFailed(task *Task, err error) {
 	task.taskBuildRunningState.Phase = BuildPhaseFailed
 	task.taskBuildRunningState.Message = err.Error()
 
-	buildState := tarsAppsV1beta3.TImageBuild{
+	buildState := tarsV1beta3.TImageBuild{
 		Running: nil,
 		Last:    &task.taskBuildRunningState,
 	}
@@ -458,7 +458,7 @@ func (e *Engine) onBuildFailed(task *Task, err error) {
 	bs, _ := json.Marshal(jsonPatch)
 
 	for i := 1; i < 3; i++ {
-		_, err = tarsRuntime.Clients.CrdClient.AppsV1beta3().TImages(tarsRuntime.Namespace).Patch(context.TODO(), task.timage.Name, types.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		_, err = tarsRuntime.Clients.CrdClient.TarsV1beta3().TImages(tarsRuntime.Namespace).Patch(context.TODO(), task.timage.Name, types.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		if err != nil {
 			time.Sleep(time.Second * 1)
 			continue
@@ -478,12 +478,12 @@ func (e *Engine) onBuildSuccess(task *Task) {
 	task.taskBuildRunningState.Phase = BuildPhaseDone
 	task.taskBuildRunningState.Message = "Success"
 
-	buildState := tarsAppsV1beta3.TImageBuild{
+	buildState := tarsV1beta3.TImageBuild{
 		Running: nil,
 		Last:    &task.taskBuildRunningState,
 	}
 
-	releases := []*tarsAppsV1beta3.TImageRelease{
+	releases := []*tarsV1beta3.TImageRelease{
 		{
 			ID:           task.taskBuildRunningState.ID,
 			Image:        task.taskBuildRunningState.Image,
@@ -521,7 +521,7 @@ func (e *Engine) onBuildSuccess(task *Task) {
 	bs, _ := json.Marshal(jsonPatch)
 
 	for i := 1; i < 3; i++ {
-		_, err = tarsRuntime.Clients.CrdClient.AppsV1beta3().TImages(tarsRuntime.Namespace).Patch(context.TODO(), task.timage.Name, types.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		_, err = tarsRuntime.Clients.CrdClient.TarsV1beta3().TImages(tarsRuntime.Namespace).Patch(context.TODO(), task.timage.Name, types.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		if err != nil {
 			time.Sleep(time.Second * 1)
 			continue
@@ -564,7 +564,7 @@ func (e *Engine) PostTask(task *Task) (string, error) {
 		return "", fmt.Errorf("no execute image value set")
 	}
 
-	task.taskBuildRunningState = tarsAppsV1beta3.TImageBuildState{
+	task.taskBuildRunningState = tarsV1beta3.TImageBuildState{
 		ID:              task.id,
 		BaseImage:       task.userParams.BaseImage,
 		BaseImageSecret: task.userParams.BaseImageSecret,
@@ -580,7 +580,7 @@ func (e *Engine) PostTask(task *Task) (string, error) {
 	}
 
 	var err error
-	task.timage, err = tarsRuntime.Clients.CrdClient.AppsV1beta3().TImages(tarsRuntime.Namespace).Get(context.TODO(), task.userParams.Timage, k8sMetaV1.GetOptions{})
+	task.timage, err = tarsRuntime.Clients.CrdClient.TarsV1beta3().TImages(tarsRuntime.Namespace).Get(context.TODO(), task.userParams.Timage, k8sMetaV1.GetOptions{})
 	if err != nil {
 		return "", fmt.Errorf("get resource %s %s/%s failed: %s", "timage", tarsRuntime.Namespace, task.userParams.Timage, err.Error())
 	}
@@ -594,14 +594,14 @@ func (e *Engine) PostTask(task *Task) (string, error) {
 	}
 
 	if task.timage.Build == nil {
-		task.timage.Build = &tarsAppsV1beta3.TImageBuild{
+		task.timage.Build = &tarsV1beta3.TImageBuild{
 			Running: &task.taskBuildRunningState,
 		}
 	} else {
 		task.timage.Build.Running = &task.taskBuildRunningState
 	}
 
-	task.timage, err = tarsRuntime.Clients.CrdClient.AppsV1beta3().TImages(tarsRuntime.Namespace).Update(context.TODO(), task.timage, k8sMetaV1.UpdateOptions{})
+	task.timage, err = tarsRuntime.Clients.CrdClient.TarsV1beta3().TImages(tarsRuntime.Namespace).Update(context.TODO(), task.timage, k8sMetaV1.UpdateOptions{})
 	if err != nil {
 		return "", fmt.Errorf("update running state failed: %s\n", err.Error())
 	}

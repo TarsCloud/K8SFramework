@@ -6,20 +6,20 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/json"
 	utilRuntime "k8s.io/apimachinery/pkg/util/runtime"
-	tarsAppsV1beta2 "k8s.tars.io/apps/v1beta2"
-	tarsAppsV1beta3 "k8s.tars.io/apps/v1beta3"
+	tarsV1beta2 "k8s.tars.io/apis/tars/v1beta2"
+	tarsV1beta3 "k8s.tars.io/apis/tars/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 )
 
-func conversionUpChainV1b2ToV1b3(src map[string][]*tarsAppsV1beta2.TFrameworkTarsEndpoint) (dst map[string][]*tarsAppsV1beta3.TFrameworkTarsEndpoint) {
+func conversionUpChainV1b2ToV1b3(src map[string][]*tarsV1beta2.TFrameworkTarsEndpoint) (dst map[string][]*tarsV1beta3.TFrameworkTarsEndpoint) {
 	if src == nil {
 		return nil
 	}
-	dst = map[string][]*tarsAppsV1beta3.TFrameworkTarsEndpoint{}
+	dst = map[string][]*tarsV1beta3.TFrameworkTarsEndpoint{}
 	for k, v := range src {
-		var nv []*tarsAppsV1beta3.TFrameworkTarsEndpoint
+		var nv []*tarsV1beta3.TFrameworkTarsEndpoint
 		for _, p := range v {
-			nv = append(nv, (*tarsAppsV1beta3.TFrameworkTarsEndpoint)(p))
+			nv = append(nv, (*tarsV1beta3.TFrameworkTarsEndpoint)(p))
 		}
 		dst[k] = nv
 	}
@@ -29,26 +29,26 @@ func conversionUpChainV1b2ToV1b3(src map[string][]*tarsAppsV1beta2.TFrameworkTar
 func CvTFC1b2To1b3(s []runtime.RawExtension) []runtime.RawExtension {
 	d := make([]runtime.RawExtension, len(s), len(s))
 	for i := range s {
-		var src = &tarsAppsV1beta2.TFrameworkConfig{}
+		var src = &tarsV1beta2.TFrameworkConfig{}
 		_ = json.Unmarshal(s[i].Raw, src)
 
-		dst := &tarsAppsV1beta3.TFrameworkConfig{
+		dst := &tarsV1beta3.TFrameworkConfig{
 			TypeMeta: k8sMetaV1.TypeMeta{
 				APIVersion: tarsMeta.TarsGroupVersionV1B1,
 				Kind:       tarsMeta.TFrameworkConfigKind,
 			},
 			ObjectMeta: src.ObjectMeta,
-			ImageBuild: tarsAppsV1beta3.TFrameworkImageBuild{
+			ImageBuild: tarsV1beta3.TFrameworkImageBuild{
 				MaxBuildTime: src.ImageBuild.MaxBuildTime,
 				TagFormat:    src.ImageBuild.TagFormat,
-				Executor:     tarsAppsV1beta3.TFrameworkImage{},
+				Executor:     tarsV1beta3.TFrameworkImage{},
 			},
-			ImageUpload: tarsAppsV1beta3.TFrameworkImageUpload{
+			ImageUpload: tarsV1beta3.TFrameworkImageUpload{
 				Registry: src.ImageRegistry.Registry,
 				Secret:   src.ImageRegistry.Secret,
 			},
-			RecordLimit: tarsAppsV1beta3.TFrameworkRecordLimit(src.RecordLimit),
-			NodeImage:   tarsAppsV1beta3.TFrameworkImage(src.NodeImage),
+			RecordLimit: tarsV1beta3.TFrameworkRecordLimit(src.RecordLimit),
+			NodeImage:   tarsV1beta3.TFrameworkImage(src.NodeImage),
 			UPChain:     conversionUpChainV1b2ToV1b3(src.UPChain),
 			Expand:      src.Expand,
 		}
@@ -76,15 +76,15 @@ func CvTFC1b2To1b3(s []runtime.RawExtension) []runtime.RawExtension {
 	return d
 }
 
-func conversionUpChainV1b3ToV1b2(src map[string][]*tarsAppsV1beta3.TFrameworkTarsEndpoint) (dst map[string][]*tarsAppsV1beta2.TFrameworkTarsEndpoint) {
+func conversionUpChainV1b3ToV1b2(src map[string][]*tarsV1beta3.TFrameworkTarsEndpoint) (dst map[string][]*tarsV1beta2.TFrameworkTarsEndpoint) {
 	if src == nil {
 		return nil
 	}
-	dst = map[string][]*tarsAppsV1beta2.TFrameworkTarsEndpoint{}
+	dst = map[string][]*tarsV1beta2.TFrameworkTarsEndpoint{}
 	for k, v := range src {
-		var nv []*tarsAppsV1beta2.TFrameworkTarsEndpoint
+		var nv []*tarsV1beta2.TFrameworkTarsEndpoint
 		for _, p := range v {
-			nv = append(nv, (*tarsAppsV1beta2.TFrameworkTarsEndpoint)(p))
+			nv = append(nv, (*tarsV1beta2.TFrameworkTarsEndpoint)(p))
 		}
 		dst[k] = nv
 	}
@@ -94,25 +94,25 @@ func conversionUpChainV1b3ToV1b2(src map[string][]*tarsAppsV1beta3.TFrameworkTar
 func CvTFC1b3To1b2(s []runtime.RawExtension) []runtime.RawExtension {
 	d := make([]runtime.RawExtension, len(s), len(s))
 	for i := range s {
-		var src = &tarsAppsV1beta3.TFrameworkConfig{}
+		var src = &tarsV1beta3.TFrameworkConfig{}
 		_ = json.Unmarshal(s[i].Raw, src)
 
-		dst := &tarsAppsV1beta2.TFrameworkConfig{
+		dst := &tarsV1beta2.TFrameworkConfig{
 			TypeMeta: k8sMetaV1.TypeMeta{
 				APIVersion: tarsMeta.TarsGroupVersionV1B2,
 				Kind:       tarsMeta.TFrameworkConfigKind,
 			},
 			ObjectMeta: src.ObjectMeta,
-			ImageBuild: tarsAppsV1beta2.TFrameworkImageBuild{
+			ImageBuild: tarsV1beta2.TFrameworkImageBuild{
 				MaxBuildTime: src.ImageBuild.MaxBuildTime,
 				TagFormat:    src.ImageBuild.TagFormat,
 			},
-			ImageRegistry: tarsAppsV1beta2.TFrameworkImageRegistry{
+			ImageRegistry: tarsV1beta2.TFrameworkImageRegistry{
 				Registry: src.ImageUpload.Registry,
 				Secret:   src.ImageUpload.Secret,
 			},
-			RecordLimit: tarsAppsV1beta2.TFrameworkRecordLimit(src.RecordLimit),
-			NodeImage:   tarsAppsV1beta2.TFrameworkNodeImage(src.NodeImage),
+			RecordLimit: tarsV1beta2.TFrameworkRecordLimit(src.RecordLimit),
+			NodeImage:   tarsV1beta2.TFrameworkNodeImage(src.NodeImage),
 			UPChain:     conversionUpChainV1b3ToV1b2(src.UPChain),
 			Expand:      src.Expand,
 		}

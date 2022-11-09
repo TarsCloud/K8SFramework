@@ -11,8 +11,8 @@ import (
 	k8sWatchV1 "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
-	tarsAppsV1beta3 "k8s.tars.io/apps/v1beta3"
-	tarsListerV1beta3 "k8s.tars.io/client-go/listers/apps/v1beta3"
+	tarsV1beta3 "k8s.tars.io/apis/tars/v1beta3"
+	tarsListerV1beta3 "k8s.tars.io/client-go/listers/tars/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	tarsRuntime "k8s.tars.io/runtime"
 	"tarscontroller/controller"
@@ -27,8 +27,8 @@ type TTreeReconciler struct {
 }
 
 func NewTTreeController(threads int) *TTreeReconciler {
-	trInformer := tarsRuntime.Factories.TarsInformerFactory.Apps().V1beta3().TTrees()
-	tsInformer := tarsRuntime.Factories.TarsInformerFactory.Apps().V1beta3().TServers()
+	trInformer := tarsRuntime.Factories.TarsInformerFactory.Tars().V1beta3().TTrees()
+	tsInformer := tarsRuntime.Factories.TarsInformerFactory.Tars().V1beta3().TServers()
 	c := &TTreeReconciler{
 		trLister: trInformer.Lister(),
 		threads:  threads,
@@ -78,8 +78,8 @@ func (r *TTreeReconciler) processItem() bool {
 
 func (r *TTreeReconciler) EnqueueResourceEvent(resourceKind string, resourceEvent k8sWatchV1.EventType, resourceObj interface{}) {
 	switch resourceObj.(type) {
-	case *tarsAppsV1beta3.TServer:
-		tserver := resourceObj.(*tarsAppsV1beta3.TServer)
+	case *tarsV1beta3.TServer:
+		tserver := resourceObj.(*tarsV1beta3.TServer)
 		key := fmt.Sprintf("%s/%s", tserver.Namespace, tserver.Spec.App)
 		r.queue.Add(key)
 	default:
@@ -127,7 +127,7 @@ func (r *TTreeReconciler) reconcile(key string) controller.Result {
 		}
 	}
 
-	newTressApp := &tarsAppsV1beta3.TTreeApp{
+	newTressApp := &tarsV1beta3.TTreeApp{
 		Name:         app,
 		BusinessRef:  "",
 		CreatePerson: "",
@@ -143,7 +143,7 @@ func (r *TTreeReconciler) reconcile(key string) controller.Result {
 	}
 
 	patchContent, _ := json.Marshal(jsonPatch)
-	_, err = tarsRuntime.Clients.CrdClient.AppsV1beta3().TTrees(namespace).Patch(context.TODO(), tarsMeta.FixedTTreeResourceName, patchTypes.JSONPatchType, patchContent, k8sMetaV1.PatchOptions{})
+	_, err = tarsRuntime.Clients.CrdClient.TarsV1beta3().TTrees(namespace).Patch(context.TODO(), tarsMeta.FixedTTreeResourceName, patchTypes.JSONPatchType, patchContent, k8sMetaV1.PatchOptions{})
 	if err != nil {
 		return controller.Retry
 	}

@@ -6,7 +6,7 @@ import (
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/utils/integer"
-	tarsAppsV1beta2 "k8s.tars.io/apps/v1beta2"
+	tarsV1beta2 "k8s.tars.io/apis/tars/v1beta2"
 	tarsMeta "k8s.tars.io/meta"
 	tarsRuntime "k8s.tars.io/runtime"
 	"math"
@@ -15,7 +15,7 @@ import (
 )
 
 func mutatingCreateTServer(requestAdmissionView *k8sAdmissionV1.AdmissionReview) ([]byte, error) {
-	tserver := &tarsAppsV1beta2.TServer{}
+	tserver := &tarsV1beta2.TServer{}
 	_ = json.Unmarshal(requestAdmissionView.Request.Object.Raw, tserver)
 
 	var jsonPatch tarsMeta.JsonPatch
@@ -75,7 +75,7 @@ func mutatingCreateTServer(requestAdmissionView *k8sAdmissionV1.AdmissionReview)
 			jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
 				OP:    tarsMeta.JsonPatchAdd,
 				Path:  "/spec/normal/ports",
-				Value: make([]tarsAppsV1beta2.TServerPort, 0),
+				Value: make([]tarsV1beta2.TServerPort, 0),
 			})
 		}
 	}

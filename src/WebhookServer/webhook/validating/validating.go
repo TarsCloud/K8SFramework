@@ -10,8 +10,8 @@ import (
 	"tarswebhook/webhook/informer"
 	validatingAppsV1 "tarswebhook/webhook/validating/apps/v1"
 	validatingCoreV1 "tarswebhook/webhook/validating/core/v1"
-	validatingAppsV1Beta2 "tarswebhook/webhook/validating/k8s.tars.io/v1beta2"
-	validatingAppsV1Beta3 "tarswebhook/webhook/validating/k8s.tars.io/v1beta3"
+	validatingTarsV1beta2 "tarswebhook/webhook/validating/k8s.tars.io/v1beta2"
+	validatingTarsV1beta3 "tarswebhook/webhook/validating/k8s.tars.io/v1beta3"
 )
 
 type Validating struct {
@@ -31,8 +31,8 @@ func init() {
 		"core/v1":                     validatingCoreV1.Handler,
 		"/v1":                         validatingCoreV1.Handler,
 		"apps/v1":                     validatingAppsV1.Handler,
-		tarsMeta.TarsGroupVersionV1B2: validatingAppsV1Beta2.Handler,
-		tarsMeta.TarsGroupVersionV1B3: validatingAppsV1Beta3.Handler,
+		tarsMeta.TarsGroupVersionV1B2: validatingTarsV1beta2.Handler,
+		tarsMeta.TarsGroupVersionV1B3: validatingTarsV1beta3.Handler,
 	}
 }
 

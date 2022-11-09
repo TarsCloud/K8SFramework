@@ -8,7 +8,7 @@ import (
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	patchTypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
-	tarsCrdV1Beta3 "k8s.tars.io/apps/v1beta3"
+	tarsV1Beta3 "k8s.tars.io/apis/tars/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	tarsRuntime "k8s.tars.io/runtime"
 	"time"
@@ -22,35 +22,35 @@ var _ = ginkgo.Describe("test timage", func() {
 	s := scaffold.NewScaffold(opts)
 
 	ginkgo.It("try create timage", func() {
-		tiLayout := &tarsCrdV1Beta3.TImage{
+		tiLayout := &tarsV1Beta3.TImage{
 			ObjectMeta: k8sMetaV1.ObjectMeta{
 				Name:      "test-testserver",
 				Namespace: s.Namespace,
 			},
 			ImageType:     "server",
 			SupportedType: []string{"go", "cpp"},
-			Releases: []*tarsCrdV1Beta3.TImageRelease{
+			Releases: []*tarsV1Beta3.TImageRelease{
 				{
 					ID:    "202201",
 					Image: "testserver:v1",
 				},
 			},
 		}
-		timage, err := tarsRuntime.Clients.CrdClient.AppsV1beta3().TImages(s.Namespace).Create(context.TODO(), tiLayout, k8sMetaV1.CreateOptions{})
+		timage, err := tarsRuntime.Clients.CrdClient.TarsV1beta3().TImages(s.Namespace).Create(context.TODO(), tiLayout, k8sMetaV1.CreateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), timage)
 		assert.NotNil(ginkgo.GinkgoT(), timage.Releases[0].CreateTime)
 	})
 
 	ginkgo.It("try create/update timage with duplicate id ", func() {
-		tiLayout := &tarsCrdV1Beta3.TImage{
+		tiLayout := &tarsV1Beta3.TImage{
 			ObjectMeta: k8sMetaV1.ObjectMeta{
 				Name:      "test-testserver",
 				Namespace: s.Namespace,
 			},
 			ImageType:     "server",
 			SupportedType: []string{"go", "cpp"},
-			Releases: []*tarsCrdV1Beta3.TImageRelease{
+			Releases: []*tarsV1Beta3.TImageRelease{
 				{
 					ID:    "202201",
 					Image: "testserver:v1",
@@ -77,7 +77,7 @@ var _ = ginkgo.Describe("test timage", func() {
 				},
 			},
 		}
-		timage, err := tarsRuntime.Clients.CrdClient.AppsV1beta3().TImages(s.Namespace).Create(context.TODO(), tiLayout, k8sMetaV1.CreateOptions{})
+		timage, err := tarsRuntime.Clients.CrdClient.TarsV1beta3().TImages(s.Namespace).Create(context.TODO(), tiLayout, k8sMetaV1.CreateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), timage)
 		assert.Equal(ginkgo.GinkgoT(), 3, len(timage.Releases))
@@ -98,7 +98,7 @@ var _ = ginkgo.Describe("test timage", func() {
 			},
 		}
 		bs, _ := json.Marshal(jsonPatch)
-		timage, err = tarsRuntime.Clients.CrdClient.AppsV1beta3().TImages(s.Namespace).Patch(context.TODO(), "test-testserver", patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		timage, err = tarsRuntime.Clients.CrdClient.TarsV1beta3().TImages(s.Namespace).Patch(context.TODO(), "test-testserver", patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), timage)
 		assert.Equal(ginkgo.GinkgoT(), 1, len(timage.Releases))

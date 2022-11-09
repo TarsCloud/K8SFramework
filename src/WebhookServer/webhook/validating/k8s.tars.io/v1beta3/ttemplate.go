@@ -7,13 +7,13 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/apimachinery/pkg/util/json"
-	tarsAppsV1beta3 "k8s.tars.io/apps/v1beta3"
+	tarsV1beta3 "k8s.tars.io/apis/tars/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	"strings"
 	"tarswebhook/webhook/informer"
 )
 
-func validTTemplate(newTTemplate *tarsAppsV1beta3.TTemplate, oldTTemplate *tarsAppsV1beta3.TTemplate, listers *informer.Listers) error {
+func validTTemplate(newTTemplate *tarsV1beta3.TTemplate, oldTTemplate *tarsV1beta3.TTemplate, listers *informer.Listers) error {
 
 	parentName := newTTemplate.Spec.Parent
 	if parentName == "" {
@@ -41,16 +41,16 @@ func validTTemplate(newTTemplate *tarsAppsV1beta3.TTemplate, oldTTemplate *tarsA
 }
 
 func validCreateTTemplate(informers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
-	newTTemplate := &tarsAppsV1beta3.TTemplate{}
+	newTTemplate := &tarsV1beta3.TTemplate{}
 	_ = json.Unmarshal(view.Request.Object.Raw, newTTemplate)
 	return validTTemplate(newTTemplate, nil, informers)
 }
 
 func validUpdateTTemplate(informers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
-	newTTemplate := &tarsAppsV1beta3.TTemplate{}
+	newTTemplate := &tarsV1beta3.TTemplate{}
 	_ = json.Unmarshal(view.Request.Object.Raw, newTTemplate)
 
-	oldTTemplate := &tarsAppsV1beta3.TTemplate{}
+	oldTTemplate := &tarsV1beta3.TTemplate{}
 	_ = json.Unmarshal(view.Request.OldObject.Raw, oldTTemplate)
 
 	return validTTemplate(newTTemplate, oldTTemplate, informers)
@@ -67,7 +67,7 @@ func validDeleteTTemplate(listers *informer.Listers, view *k8sAdmissionV1.Admiss
 		return nil
 	}
 
-	ttemplate := &tarsAppsV1beta3.TTemplate{}
+	ttemplate := &tarsV1beta3.TTemplate{}
 	_ = json.Unmarshal(view.Request.OldObject.Raw, ttemplate)
 	namespace := ttemplate.Namespace
 

@@ -5,13 +5,13 @@ import (
 	k8sAdmissionV1 "k8s.io/api/admission/v1"
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/json"
-	tarsAppsV1beta3 "k8s.tars.io/apps/v1beta3"
+	tarsV1beta3 "k8s.tars.io/apis/tars/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	"strings"
 )
 
 func mutatingCreateTImage(requestAdmissionView *k8sAdmissionV1.AdmissionReview) ([]byte, error) {
-	timage := &tarsAppsV1beta3.TImage{}
+	timage := &tarsV1beta3.TImage{}
 	_ = json.Unmarshal(requestAdmissionView.Request.Object.Raw, timage)
 
 	var jsonPatch tarsMeta.JsonPatch

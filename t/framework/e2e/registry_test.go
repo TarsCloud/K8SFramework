@@ -9,7 +9,7 @@ import (
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
-	tarsAppsV1Beta3 "k8s.tars.io/apps/v1beta3"
+	tarsV1Beta3 "k8s.tars.io/apis/tars/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	"sigs.k8s.io/e2e-framework/klient/decoder"
 	"sigs.k8s.io/e2e-framework/klient/k8s"
@@ -30,7 +30,7 @@ func TestQueryObj(t *testing.T) {
 	feature := features.New("Testing "+queryObjId).WithLabel("crd-version", "v1beta3").
 		Setup(func(ctx context.Context, t *testing.T, config *envconf.Config) context.Context {
 			r, _ = resources.New(config.Client().RESTConfig())
-			_ = tarsAppsV1Beta3.AddToScheme(r.GetScheme())
+			_ = tarsV1Beta3.AddToScheme(r.GetScheme())
 
 			queryProxy = new(queryf.QueryF)
 			comm.StringToProxy(queryObjId, queryProxy)
@@ -45,7 +45,7 @@ func TestQueryObj(t *testing.T) {
 			assert.Nil(t, err, "unexpected rcp error")
 			assert.Equal(t, int32(0), ret, "unexpected ret code: %d", ret)
 
-			var te tarsAppsV1Beta3.TEndpoint
+			var te tarsV1Beta3.TEndpoint
 			err = r.Get(ctx, "tars-tarsconfig", namespace, &te)
 			assert.Nil(t, err, "unexpected get error")
 			assert.NotNil(t, te)
@@ -60,7 +60,7 @@ func TestQueryObj(t *testing.T) {
 					inactivatePodInTe[s.Name+".tars-tarsconfig"] = nil
 				}
 			}
-			var servant *tarsAppsV1Beta3.TServerServant
+			var servant *tarsV1Beta3.TServerServant
 			for _, s := range te.Spec.Tars.Servants {
 				if s.Name == "ConfigObj" {
 					servant = s
@@ -102,7 +102,7 @@ func TestQueryObj(t *testing.T) {
 			var falseValue = false
 			var trueValue = true
 
-			upChain := map[string][]tarsAppsV1Beta3.TFrameworkTarsEndpoint{
+			upChain := map[string][]tarsV1Beta3.TFrameworkTarsEndpoint{
 				"default": {
 					{
 						Host: "default.1",
@@ -129,7 +129,7 @@ func TestQueryObj(t *testing.T) {
 					},
 				},
 			}
-			tfc := &tarsAppsV1Beta3.TFrameworkConfig{}
+			tfc := &tarsV1Beta3.TFrameworkConfig{}
 			patch := tarsMeta.JsonPatch{
 				{
 					OP:    tarsMeta.JsonPatchReplace,
@@ -138,13 +138,13 @@ func TestQueryObj(t *testing.T) {
 				},
 			}
 
-			tfc = &tarsAppsV1Beta3.TFrameworkConfig{
+			tfc = &tarsV1Beta3.TFrameworkConfig{
 				ObjectMeta: k8sMetaV1.ObjectMeta{
 					Name:      "tars-framework",
 					Namespace: scaffold.Namespace,
 				},
 			}
-			tafLayout := &tarsAppsV1Beta3.TFrameworkConfig{}
+			tafLayout := &tarsV1Beta3.TFrameworkConfig{}
 			err := decoder.DecodeString(ObjLayoutToString(tafLayout, namespace), tfc)
 			patchBS, _ := json.Marshal(patch)
 			err = r.Patch(ctx, tfc, k8s.Patch{

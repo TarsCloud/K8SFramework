@@ -8,13 +8,13 @@ import (
 	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/apimachinery/pkg/util/json"
 	utilRuntime "k8s.io/apimachinery/pkg/util/runtime"
-	tarsAppsV1beta3 "k8s.tars.io/apps/v1beta3"
+	tarsV1beta3 "k8s.tars.io/apis/tars/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	"strings"
 	"tarswebhook/webhook/informer"
 )
 
-func validTTree(newTTree *tarsAppsV1beta3.TTree, oldTTree *tarsAppsV1beta3.TTree, listers *informer.Listers) error {
+func validTTree(newTTree *tarsV1beta3.TTree, oldTTree *tarsV1beta3.TTree, listers *informer.Listers) error {
 	namespace := newTTree.Namespace
 
 	businessMap := make(map[string]interface{}, len(newTTree.Businesses))
@@ -65,7 +65,7 @@ func validTTree(newTTree *tarsAppsV1beta3.TTree, oldTTree *tarsAppsV1beta3.TTree
 }
 
 func validCreateTTree(listers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
-	newTTree := &tarsAppsV1beta3.TTree{}
+	newTTree := &tarsV1beta3.TTree{}
 	_ = json.Unmarshal(view.Request.Object.Raw, newTTree)
 
 	if newTTree.Name != tarsMeta.FixedTTreeResourceName {
@@ -96,10 +96,10 @@ func validUpdateTTree(informers *informer.Listers, view *k8sAdmissionV1.Admissio
 		return nil
 	}
 
-	ttree := &tarsAppsV1beta3.TTree{}
+	ttree := &tarsV1beta3.TTree{}
 	_ = json.Unmarshal(view.Request.Object.Raw, ttree)
 
-	oldTTree := &tarsAppsV1beta3.TTree{}
+	oldTTree := &tarsV1beta3.TTree{}
 	_ = json.Unmarshal(view.Request.OldObject.Raw, oldTTree)
 
 	return validTTree(ttree, oldTTree, informers)
@@ -116,7 +116,7 @@ func validDeleteTTree(listers *informer.Listers, view *k8sAdmissionV1.AdmissionR
 		return nil
 	}
 
-	ttree := &tarsAppsV1beta3.TTree{}
+	ttree := &tarsV1beta3.TTree{}
 	_ = json.Unmarshal(view.Request.OldObject.Raw, ttree)
 
 	if ttree.Name == tarsMeta.FixedTTreeResourceName {

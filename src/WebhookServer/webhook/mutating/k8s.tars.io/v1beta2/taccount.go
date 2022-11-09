@@ -7,7 +7,7 @@ import (
 	k8sAdmissionV1 "k8s.io/api/admission/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/util/json"
-	tarsAppsV1beta2 "k8s.tars.io/apps/v1beta2"
+	tarsV1beta2 "k8s.tars.io/apis/tars/v1beta2"
 	tarsMeta "k8s.tars.io/meta"
 	"regexp"
 )
@@ -24,7 +24,7 @@ const UnsafeTAccountAnnotationKey = "kubectl.kubernetes.io/last-applied-configur
 const UnsafeTAccountAnnotationPath = "/metadata/annotations/kubectl.kubernetes.io~1last-applied-configuration"
 
 func mutatingCreateTAccount(requestAdmissionView *k8sAdmissionV1.AdmissionReview) ([]byte, error) {
-	newTAccount := &tarsAppsV1beta2.TAccount{}
+	newTAccount := &tarsV1beta2.TAccount{}
 	_ = json.Unmarshal(requestAdmissionView.Request.Object.Raw, newTAccount)
 
 	var jsonPatch tarsMeta.JsonPatch
@@ -49,7 +49,7 @@ func mutatingCreateTAccount(requestAdmissionView *k8sAdmissionV1.AdmissionReview
 		})
 	}
 
-	tokens := make([]tarsAppsV1beta2.TAccountAuthenticationToken, 0, 0)
+	tokens := make([]tarsV1beta2.TAccountAuthenticationToken, 0, 0)
 	jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
 		OP:    tarsMeta.JsonPatchAdd,
 		Path:  "/spec/authentication/tokens",
@@ -72,10 +72,10 @@ func mutatingCreateTAccount(requestAdmissionView *k8sAdmissionV1.AdmissionReview
 }
 
 func mutatingUpdateTAccount(requestAdmissionView *k8sAdmissionV1.AdmissionReview) ([]byte, error) {
-	newTAccount := &tarsAppsV1beta2.TAccount{}
+	newTAccount := &tarsV1beta2.TAccount{}
 	_ = json.Unmarshal(requestAdmissionView.Request.Object.Raw, newTAccount)
 
-	oldTAccount := &tarsAppsV1beta2.TAccount{}
+	oldTAccount := &tarsV1beta2.TAccount{}
 	_ = json.Unmarshal(requestAdmissionView.Request.OldObject.Raw, oldTAccount)
 
 	var jsonPatch tarsMeta.JsonPatch
@@ -123,7 +123,7 @@ func mutatingUpdateTAccount(requestAdmissionView *k8sAdmissionV1.AdmissionReview
 	}
 
 	if passwordChanged {
-		tokens := make([]tarsAppsV1beta2.TAccountAuthenticationToken, 0, 0)
+		tokens := make([]tarsV1beta2.TAccountAuthenticationToken, 0, 0)
 		jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
 			OP:    tarsMeta.JsonPatchAdd,
 			Path:  "/spec/authentication/tokens",

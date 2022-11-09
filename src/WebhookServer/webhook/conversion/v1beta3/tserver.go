@@ -6,63 +6,63 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/json"
 	utilRuntime "k8s.io/apimachinery/pkg/util/runtime"
-	tarsAppsV1beta1 "k8s.tars.io/apps/v1beta1"
-	tarsAppsV1beta2 "k8s.tars.io/apps/v1beta2"
-	tarsAppsV1beta3 "k8s.tars.io/apps/v1beta3"
+	tarsV1beta1 "k8s.tars.io/apis/tars/v1beta1"
+	tarsV1beta2 "k8s.tars.io/apis/tars/v1beta2"
+	tarsV1beta3 "k8s.tars.io/apis/tars/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	"unsafe"
 )
 
-func conversionTars1b1To1b3(src *tarsAppsV1beta1.TServerTars) *tarsAppsV1beta3.TServerTars {
+func conversionTars1b1To1b3(src *tarsV1beta1.TServerTars) *tarsV1beta3.TServerTars {
 	if src == nil {
 		return nil
 	}
-	dst := &tarsAppsV1beta3.TServerTars{
+	dst := &tarsV1beta3.TServerTars{
 		Template:    src.Template,
 		Profile:     src.Profile,
 		AsyncThread: src.AsyncThread,
-		Servants:    []*tarsAppsV1beta3.TServerServant{},
-		Ports:       []*tarsAppsV1beta3.TServerPort{},
+		Servants:    []*tarsV1beta3.TServerServant{},
+		Ports:       []*tarsV1beta3.TServerPort{},
 	}
 
 	for _, p := range src.Servants {
-		dst.Servants = append(dst.Servants, (*tarsAppsV1beta3.TServerServant)(p))
+		dst.Servants = append(dst.Servants, (*tarsV1beta3.TServerServant)(p))
 	}
 	for _, p := range src.Ports {
-		dst.Ports = append(dst.Ports, (*tarsAppsV1beta3.TServerPort)(p))
+		dst.Ports = append(dst.Ports, (*tarsV1beta3.TServerPort)(p))
 	}
 	return dst
 }
 
-func conversionNormal1b1To1b3(src *tarsAppsV1beta1.TServerNormal) *tarsAppsV1beta3.TServerNormal {
+func conversionNormal1b1To1b3(src *tarsV1beta1.TServerNormal) *tarsV1beta3.TServerNormal {
 	if src == nil {
 		return nil
 	}
-	dst := &tarsAppsV1beta3.TServerNormal{
-		Ports: []*tarsAppsV1beta3.TServerPort{},
+	dst := &tarsV1beta3.TServerNormal{
+		Ports: []*tarsV1beta3.TServerPort{},
 	}
 	for _, p := range src.Ports {
-		dst.Ports = append(dst.Ports, (*tarsAppsV1beta3.TServerPort)(p))
+		dst.Ports = append(dst.Ports, (*tarsV1beta3.TServerPort)(p))
 	}
 	return dst
 }
 
-func conversionMount1b1To1b3(src []tarsAppsV1beta1.TK8SMount) []tarsAppsV1beta3.TK8SMount {
+func conversionMount1b1To1b3(src []tarsV1beta1.TK8SMount) []tarsV1beta3.TK8SMount {
 	if src == nil {
 		return nil
 	}
 	bs, _ := json.Marshal(src)
-	var dst []tarsAppsV1beta3.TK8SMount
+	var dst []tarsV1beta3.TK8SMount
 	_ = json.Unmarshal(bs, &dst)
 	return dst
 }
 
-func conversionHostPorts1b1To1b3(src []*tarsAppsV1beta1.TK8SHostPort) []*tarsAppsV1beta3.TK8SHostPort {
+func conversionHostPorts1b1To1b3(src []*tarsV1beta1.TK8SHostPort) []*tarsV1beta3.TK8SHostPort {
 	if src == nil {
 		return nil
 	}
 	bs, _ := json.Marshal(src)
-	var dst []*tarsAppsV1beta3.TK8SHostPort
+	var dst []*tarsV1beta3.TK8SHostPort
 	_ = json.Unmarshal(bs, &dst)
 	return dst
 }
@@ -70,23 +70,23 @@ func conversionHostPorts1b1To1b3(src []*tarsAppsV1beta1.TK8SHostPort) []*tarsApp
 func CvTServer1b1To1b3(s []runtime.RawExtension) []runtime.RawExtension {
 	d := make([]runtime.RawExtension, len(s), len(s))
 	for i := range s {
-		var src = &tarsAppsV1beta1.TServer{}
+		var src = &tarsV1beta1.TServer{}
 		_ = json.Unmarshal(s[i].Raw, src)
 
-		var dst = &tarsAppsV1beta3.TServer{
+		var dst = &tarsV1beta3.TServer{
 			TypeMeta: k8sMetaV1.TypeMeta{
 				APIVersion: tarsMeta.TarsGroupVersionV1B3,
 				Kind:       tarsMeta.TServerKind,
 			},
 			ObjectMeta: src.ObjectMeta,
-			Spec: tarsAppsV1beta3.TServerSpec{
+			Spec: tarsV1beta3.TServerSpec{
 				App:       src.Spec.App,
 				Server:    src.Spec.Server,
-				SubType:   tarsAppsV1beta3.TServerSubType(src.Spec.SubType),
+				SubType:   tarsV1beta3.TServerSubType(src.Spec.SubType),
 				Important: src.Spec.Important,
 				Tars:      conversionTars1b1To1b3(src.Spec.Tars),
 				Normal:    conversionNormal1b1To1b3(src.Spec.Normal),
-				K8S: tarsAppsV1beta3.TServerK8S{
+				K8S: tarsV1beta3.TServerK8S{
 					ServiceAccount:      src.Spec.K8S.ServiceAccount,
 					Args:                []string{},
 					Command:             []string{},
@@ -98,7 +98,7 @@ func CvTServer1b1To1b3(s []runtime.RawExtension) []runtime.RawExtension {
 					Mounts:              conversionMount1b1To1b3(src.Spec.K8S.Mounts),
 					DaemonSet:           src.Spec.K8S.DaemonSet,
 					NodeSelector:        src.Spec.K8S.NodeSelector,
-					AbilityAffinity:     tarsAppsV1beta3.AbilityAffinityType(src.Spec.K8S.AbilityAffinity),
+					AbilityAffinity:     tarsV1beta3.AbilityAffinityType(src.Spec.K8S.AbilityAffinity),
 					NotStacked:          src.Spec.K8S.NotStacked,
 					PodManagementPolicy: src.Spec.K8S.PodManagementPolicy,
 					Replicas:            src.Spec.K8S.Replicas,
@@ -110,11 +110,11 @@ func CvTServer1b1To1b3(s []runtime.RawExtension) []runtime.RawExtension {
 				},
 				Release: nil,
 			},
-			Status: tarsAppsV1beta3.TServerStatus(src.Status),
+			Status: tarsV1beta3.TServerStatus(src.Status),
 		}
 
 		if src.Spec.Release != nil {
-			dst.Spec.Release = &tarsAppsV1beta3.TServerRelease{
+			dst.Spec.Release = &tarsV1beta3.TServerRelease{
 				ID:     src.Spec.Release.ID,
 				Image:  src.Spec.Release.Image,
 				Secret: src.Spec.Release.Secret,
@@ -157,56 +157,56 @@ func CvTServer1b1To1b3(s []runtime.RawExtension) []runtime.RawExtension {
 	return d
 }
 
-func conversionTars1b3To1b1(src *tarsAppsV1beta3.TServerTars) *tarsAppsV1beta1.TServerTars {
+func conversionTars1b3To1b1(src *tarsV1beta3.TServerTars) *tarsV1beta1.TServerTars {
 	if src == nil {
 		return nil
 	}
-	dst := &tarsAppsV1beta1.TServerTars{
+	dst := &tarsV1beta1.TServerTars{
 		Template:    src.Template,
 		Profile:     src.Profile,
 		AsyncThread: src.AsyncThread,
-		Servants:    []*tarsAppsV1beta1.TServerServant{},
-		Ports:       []*tarsAppsV1beta1.TServerPort{},
+		Servants:    []*tarsV1beta1.TServerServant{},
+		Ports:       []*tarsV1beta1.TServerPort{},
 	}
 
 	for _, p := range src.Servants {
-		dst.Servants = append(dst.Servants, (*tarsAppsV1beta1.TServerServant)(p))
+		dst.Servants = append(dst.Servants, (*tarsV1beta1.TServerServant)(p))
 	}
 	for _, p := range src.Ports {
-		dst.Ports = append(dst.Ports, (*tarsAppsV1beta1.TServerPort)(p))
+		dst.Ports = append(dst.Ports, (*tarsV1beta1.TServerPort)(p))
 	}
 	return dst
 }
 
-func conversionNormal1b3To1b1(src *tarsAppsV1beta3.TServerNormal) *tarsAppsV1beta1.TServerNormal {
+func conversionNormal1b3To1b1(src *tarsV1beta3.TServerNormal) *tarsV1beta1.TServerNormal {
 	if src == nil {
 		return nil
 	}
-	dst := &tarsAppsV1beta1.TServerNormal{
-		Ports: []*tarsAppsV1beta1.TServerPort{},
+	dst := &tarsV1beta1.TServerNormal{
+		Ports: []*tarsV1beta1.TServerPort{},
 	}
 	for _, p := range src.Ports {
-		dst.Ports = append(dst.Ports, (*tarsAppsV1beta1.TServerPort)(p))
+		dst.Ports = append(dst.Ports, (*tarsV1beta1.TServerPort)(p))
 	}
 	return dst
 }
 
-func conversionHostPorts1b3To1b1(src []*tarsAppsV1beta3.TK8SHostPort) []*tarsAppsV1beta1.TK8SHostPort {
+func conversionHostPorts1b3To1b1(src []*tarsV1beta3.TK8SHostPort) []*tarsV1beta1.TK8SHostPort {
 	if src == nil {
 		return nil
 	}
 	bs, _ := json.Marshal(src)
-	var dst []*tarsAppsV1beta1.TK8SHostPort
+	var dst []*tarsV1beta1.TK8SHostPort
 	_ = json.Unmarshal(bs, &dst)
 	return dst
 }
 
-func conversionMount1b3To1b1(src []tarsAppsV1beta3.TK8SMount) []tarsAppsV1beta1.TK8SMount {
+func conversionMount1b3To1b1(src []tarsV1beta3.TK8SMount) []tarsV1beta1.TK8SMount {
 	if src == nil {
 		return nil
 	}
 	bs, _ := json.Marshal(src)
-	var dst []tarsAppsV1beta1.TK8SMount
+	var dst []tarsV1beta1.TK8SMount
 	_ = json.Unmarshal(bs, &dst)
 	return dst
 }
@@ -221,23 +221,23 @@ func conversionReadinessGate1b3To1b1(src []string) string {
 func CvTServer1b3To1b1(s []runtime.RawExtension) []runtime.RawExtension {
 	d := make([]runtime.RawExtension, len(s), len(s))
 	for i := range s {
-		var src = &tarsAppsV1beta3.TServer{}
+		var src = &tarsV1beta3.TServer{}
 		_ = json.Unmarshal(s[i].Raw, src)
 
-		var dst = &tarsAppsV1beta1.TServer{
+		var dst = &tarsV1beta1.TServer{
 			TypeMeta: k8sMetaV1.TypeMeta{
 				APIVersion: tarsMeta.TarsGroupVersionV1B1,
 				Kind:       tarsMeta.TServerKind,
 			},
 			ObjectMeta: src.ObjectMeta,
-			Spec: tarsAppsV1beta1.TServerSpec{
+			Spec: tarsV1beta1.TServerSpec{
 				App:       src.Spec.App,
 				Server:    src.Spec.Server,
-				SubType:   tarsAppsV1beta1.TServerSubType(src.Spec.SubType),
+				SubType:   tarsV1beta1.TServerSubType(src.Spec.SubType),
 				Important: src.Spec.Important,
 				Tars:      conversionTars1b3To1b1(src.Spec.Tars),
 				Normal:    conversionNormal1b3To1b1(src.Spec.Normal),
-				K8S: tarsAppsV1beta1.TServerK8S{
+				K8S: tarsV1beta1.TServerK8S{
 					ServiceAccount:      src.Spec.K8S.ServiceAccount,
 					Env:                 src.Spec.K8S.Env,
 					EnvFrom:             src.Spec.K8S.EnvFrom,
@@ -247,7 +247,7 @@ func CvTServer1b3To1b1(s []runtime.RawExtension) []runtime.RawExtension {
 					Mounts:              conversionMount1b3To1b1(src.Spec.K8S.Mounts),
 					DaemonSet:           src.Spec.K8S.DaemonSet,
 					NodeSelector:        src.Spec.K8S.NodeSelector,
-					AbilityAffinity:     tarsAppsV1beta1.AbilityAffinityType(src.Spec.K8S.AbilityAffinity),
+					AbilityAffinity:     tarsV1beta1.AbilityAffinityType(src.Spec.K8S.AbilityAffinity),
 					NotStacked:          src.Spec.K8S.NotStacked,
 					PodManagementPolicy: src.Spec.K8S.PodManagementPolicy,
 					Replicas:            src.Spec.K8S.Replicas,
@@ -256,11 +256,11 @@ func CvTServer1b3To1b1(s []runtime.RawExtension) []runtime.RawExtension {
 				},
 				Release: nil,
 			},
-			Status: tarsAppsV1beta1.TServerStatus(src.Status),
+			Status: tarsV1beta1.TServerStatus(src.Status),
 		}
 
 		if src.Spec.Release != nil {
-			dst.Spec.Release = &tarsAppsV1beta1.TServerRelease{
+			dst.Spec.Release = &tarsV1beta1.TServerRelease{
 				ID:     src.Spec.Release.ID,
 				Image:  src.Spec.Release.Image,
 				Secret: src.Spec.Release.Secret,
@@ -296,56 +296,56 @@ func CvTServer1b3To1b1(s []runtime.RawExtension) []runtime.RawExtension {
 	return d
 }
 
-func conversionTars1b2To1b3(src *tarsAppsV1beta2.TServerTars) *tarsAppsV1beta3.TServerTars {
+func conversionTars1b2To1b3(src *tarsV1beta2.TServerTars) *tarsV1beta3.TServerTars {
 	if src == nil {
 		return nil
 	}
-	dst := &tarsAppsV1beta3.TServerTars{
+	dst := &tarsV1beta3.TServerTars{
 		Template:    src.Template,
 		Profile:     src.Profile,
 		AsyncThread: src.AsyncThread,
-		Servants:    []*tarsAppsV1beta3.TServerServant{},
-		Ports:       []*tarsAppsV1beta3.TServerPort{},
+		Servants:    []*tarsV1beta3.TServerServant{},
+		Ports:       []*tarsV1beta3.TServerPort{},
 	}
 
 	for _, p := range src.Servants {
-		dst.Servants = append(dst.Servants, (*tarsAppsV1beta3.TServerServant)(p))
+		dst.Servants = append(dst.Servants, (*tarsV1beta3.TServerServant)(p))
 	}
 	for _, p := range src.Ports {
-		dst.Ports = append(dst.Ports, (*tarsAppsV1beta3.TServerPort)(p))
+		dst.Ports = append(dst.Ports, (*tarsV1beta3.TServerPort)(p))
 	}
 	return dst
 }
 
-func conversionNormal1b2To1b3(src *tarsAppsV1beta2.TServerNormal) *tarsAppsV1beta3.TServerNormal {
+func conversionNormal1b2To1b3(src *tarsV1beta2.TServerNormal) *tarsV1beta3.TServerNormal {
 	if src == nil {
 		return nil
 	}
-	dst := &tarsAppsV1beta3.TServerNormal{
-		Ports: []*tarsAppsV1beta3.TServerPort{},
+	dst := &tarsV1beta3.TServerNormal{
+		Ports: []*tarsV1beta3.TServerPort{},
 	}
 	for _, p := range src.Ports {
-		dst.Ports = append(dst.Ports, (*tarsAppsV1beta3.TServerPort)(p))
+		dst.Ports = append(dst.Ports, (*tarsV1beta3.TServerPort)(p))
 	}
 	return dst
 }
 
-func conversionMount1b2To1b3(src []tarsAppsV1beta2.TK8SMount) []tarsAppsV1beta3.TK8SMount {
+func conversionMount1b2To1b3(src []tarsV1beta2.TK8SMount) []tarsV1beta3.TK8SMount {
 	if src == nil {
 		return nil
 	}
 	bs, _ := json.Marshal(src)
-	var dst []tarsAppsV1beta3.TK8SMount
+	var dst []tarsV1beta3.TK8SMount
 	_ = json.Unmarshal(bs, &dst)
 	return dst
 }
 
-func conversionHostPorts1b2To1b3(src []*tarsAppsV1beta2.TK8SHostPort) []*tarsAppsV1beta3.TK8SHostPort {
+func conversionHostPorts1b2To1b3(src []*tarsV1beta2.TK8SHostPort) []*tarsV1beta3.TK8SHostPort {
 	if src == nil {
 		return nil
 	}
 	bs, _ := json.Marshal(src)
-	var dst []*tarsAppsV1beta3.TK8SHostPort
+	var dst []*tarsV1beta3.TK8SHostPort
 	_ = json.Unmarshal(bs, &dst)
 	return dst
 }
@@ -353,23 +353,23 @@ func conversionHostPorts1b2To1b3(src []*tarsAppsV1beta2.TK8SHostPort) []*tarsApp
 func CvTServer1b2To1b3(s []runtime.RawExtension) []runtime.RawExtension {
 	d := make([]runtime.RawExtension, len(s), len(s))
 	for i := range s {
-		var src = &tarsAppsV1beta2.TServer{}
+		var src = &tarsV1beta2.TServer{}
 		_ = json.Unmarshal(s[i].Raw, src)
 
-		var dst = &tarsAppsV1beta3.TServer{
+		var dst = &tarsV1beta3.TServer{
 			TypeMeta: k8sMetaV1.TypeMeta{
 				APIVersion: tarsMeta.TarsGroupVersionV1B3,
 				Kind:       tarsMeta.TServerKind,
 			},
 			ObjectMeta: src.ObjectMeta,
-			Spec: tarsAppsV1beta3.TServerSpec{
+			Spec: tarsV1beta3.TServerSpec{
 				App:       src.Spec.App,
 				Server:    src.Spec.Server,
-				SubType:   tarsAppsV1beta3.TServerSubType(src.Spec.SubType),
+				SubType:   tarsV1beta3.TServerSubType(src.Spec.SubType),
 				Important: src.Spec.Important,
 				Tars:      conversionTars1b2To1b3(src.Spec.Tars),
 				Normal:    conversionNormal1b2To1b3(src.Spec.Normal),
-				K8S: tarsAppsV1beta3.TServerK8S{
+				K8S: tarsV1beta3.TServerK8S{
 					ServiceAccount:      src.Spec.K8S.ServiceAccount,
 					Args:                []string{},
 					Command:             []string{},
@@ -381,7 +381,7 @@ func CvTServer1b2To1b3(s []runtime.RawExtension) []runtime.RawExtension {
 					Mounts:              conversionMount1b2To1b3(src.Spec.K8S.Mounts),
 					DaemonSet:           src.Spec.K8S.DaemonSet,
 					NodeSelector:        src.Spec.K8S.NodeSelector,
-					AbilityAffinity:     tarsAppsV1beta3.AbilityAffinityType(src.Spec.K8S.AbilityAffinity),
+					AbilityAffinity:     tarsV1beta3.AbilityAffinityType(src.Spec.K8S.AbilityAffinity),
 					NotStacked:          src.Spec.K8S.NotStacked,
 					PodManagementPolicy: src.Spec.K8S.PodManagementPolicy,
 					Replicas:            src.Spec.K8S.Replicas,
@@ -393,11 +393,11 @@ func CvTServer1b2To1b3(s []runtime.RawExtension) []runtime.RawExtension {
 				},
 				Release: nil,
 			},
-			Status: tarsAppsV1beta3.TServerStatus(src.Status),
+			Status: tarsV1beta3.TServerStatus(src.Status),
 		}
 
 		if src.Spec.Release != nil {
-			dst.Spec.Release = (*tarsAppsV1beta3.TServerRelease)(unsafe.Pointer(src.Spec.Release))
+			dst.Spec.Release = (*tarsV1beta3.TServerRelease)(unsafe.Pointer(src.Spec.Release))
 		}
 
 		if src.Spec.K8S.ReadinessGate != "" {
@@ -432,46 +432,46 @@ func CvTServer1b2To1b3(s []runtime.RawExtension) []runtime.RawExtension {
 	return d
 }
 
-func conversionTars1b3To1b2(src *tarsAppsV1beta3.TServerTars) *tarsAppsV1beta2.TServerTars {
+func conversionTars1b3To1b2(src *tarsV1beta3.TServerTars) *tarsV1beta2.TServerTars {
 	if src == nil {
 		return nil
 	}
-	dst := &tarsAppsV1beta2.TServerTars{
+	dst := &tarsV1beta2.TServerTars{
 		Template:    src.Template,
 		Profile:     src.Profile,
 		AsyncThread: src.AsyncThread,
-		Servants:    []*tarsAppsV1beta2.TServerServant{},
-		Ports:       []*tarsAppsV1beta2.TServerPort{},
+		Servants:    []*tarsV1beta2.TServerServant{},
+		Ports:       []*tarsV1beta2.TServerPort{},
 	}
 
 	for _, p := range src.Servants {
-		dst.Servants = append(dst.Servants, (*tarsAppsV1beta2.TServerServant)(p))
+		dst.Servants = append(dst.Servants, (*tarsV1beta2.TServerServant)(p))
 	}
 	for _, p := range src.Ports {
-		dst.Ports = append(dst.Ports, (*tarsAppsV1beta2.TServerPort)(p))
+		dst.Ports = append(dst.Ports, (*tarsV1beta2.TServerPort)(p))
 	}
 	return dst
 }
 
-func conversionNormal1b3To1b2(src *tarsAppsV1beta3.TServerNormal) *tarsAppsV1beta2.TServerNormal {
+func conversionNormal1b3To1b2(src *tarsV1beta3.TServerNormal) *tarsV1beta2.TServerNormal {
 	if src == nil {
 		return nil
 	}
-	dst := &tarsAppsV1beta2.TServerNormal{
-		Ports: []*tarsAppsV1beta2.TServerPort{},
+	dst := &tarsV1beta2.TServerNormal{
+		Ports: []*tarsV1beta2.TServerPort{},
 	}
 	for _, p := range src.Ports {
-		dst.Ports = append(dst.Ports, (*tarsAppsV1beta2.TServerPort)(p))
+		dst.Ports = append(dst.Ports, (*tarsV1beta2.TServerPort)(p))
 	}
 	return dst
 }
 
-func conversionHostPorts1b3To1b2(src []*tarsAppsV1beta3.TK8SHostPort) []*tarsAppsV1beta2.TK8SHostPort {
+func conversionHostPorts1b3To1b2(src []*tarsV1beta3.TK8SHostPort) []*tarsV1beta2.TK8SHostPort {
 	if src == nil {
 		return nil
 	}
 	bs, _ := json.Marshal(src)
-	var dst []*tarsAppsV1beta2.TK8SHostPort
+	var dst []*tarsV1beta2.TK8SHostPort
 	_ = json.Unmarshal(bs, &dst)
 	return dst
 }
@@ -483,12 +483,12 @@ func conversionReadinessGate1b3To1b2(src []string) string {
 	return ""
 }
 
-func conversionMount1b3To1b2(src []tarsAppsV1beta3.TK8SMount) []tarsAppsV1beta2.TK8SMount {
+func conversionMount1b3To1b2(src []tarsV1beta3.TK8SMount) []tarsV1beta2.TK8SMount {
 	if src == nil {
 		return nil
 	}
 	bs, _ := json.Marshal(src)
-	var dst []tarsAppsV1beta2.TK8SMount
+	var dst []tarsV1beta2.TK8SMount
 	_ = json.Unmarshal(bs, &dst)
 	return dst
 }
@@ -496,23 +496,23 @@ func conversionMount1b3To1b2(src []tarsAppsV1beta3.TK8SMount) []tarsAppsV1beta2.
 func CvTServer1b3To1b2(s []runtime.RawExtension) []runtime.RawExtension {
 	d := make([]runtime.RawExtension, len(s), len(s))
 	for i := range s {
-		var src = &tarsAppsV1beta3.TServer{}
+		var src = &tarsV1beta3.TServer{}
 		_ = json.Unmarshal(s[i].Raw, src)
 
-		var dst = &tarsAppsV1beta2.TServer{
+		var dst = &tarsV1beta2.TServer{
 			TypeMeta: k8sMetaV1.TypeMeta{
 				APIVersion: tarsMeta.TarsGroupVersionV1B2,
 				Kind:       tarsMeta.TServerKind,
 			},
 			ObjectMeta: src.ObjectMeta,
-			Spec: tarsAppsV1beta2.TServerSpec{
+			Spec: tarsV1beta2.TServerSpec{
 				App:       src.Spec.App,
 				Server:    src.Spec.Server,
-				SubType:   tarsAppsV1beta2.TServerSubType(src.Spec.SubType),
+				SubType:   tarsV1beta2.TServerSubType(src.Spec.SubType),
 				Important: src.Spec.Important,
 				Tars:      conversionTars1b3To1b2(src.Spec.Tars),
 				Normal:    conversionNormal1b3To1b2(src.Spec.Normal),
-				K8S: tarsAppsV1beta2.TServerK8S{
+				K8S: tarsV1beta2.TServerK8S{
 					ServiceAccount:      src.Spec.K8S.ServiceAccount,
 					Env:                 src.Spec.K8S.Env,
 					EnvFrom:             src.Spec.K8S.EnvFrom,
@@ -522,7 +522,7 @@ func CvTServer1b3To1b2(s []runtime.RawExtension) []runtime.RawExtension {
 					Mounts:              conversionMount1b3To1b2(src.Spec.K8S.Mounts),
 					DaemonSet:           src.Spec.K8S.DaemonSet,
 					NodeSelector:        src.Spec.K8S.NodeSelector,
-					AbilityAffinity:     tarsAppsV1beta2.AbilityAffinityType(src.Spec.K8S.AbilityAffinity),
+					AbilityAffinity:     tarsV1beta2.AbilityAffinityType(src.Spec.K8S.AbilityAffinity),
 					NotStacked:          src.Spec.K8S.NotStacked,
 					PodManagementPolicy: src.Spec.K8S.PodManagementPolicy,
 					Replicas:            src.Spec.K8S.Replicas,
@@ -534,11 +534,11 @@ func CvTServer1b3To1b2(s []runtime.RawExtension) []runtime.RawExtension {
 				},
 				Release: nil,
 			},
-			Status: tarsAppsV1beta2.TServerStatus(src.Status),
+			Status: tarsV1beta2.TServerStatus(src.Status),
 		}
 
 		if src.Spec.Release != nil {
-			dst.Spec.Release = (*tarsAppsV1beta2.TServerRelease)(unsafe.Pointer(src.Spec.Release))
+			dst.Spec.Release = (*tarsV1beta2.TServerRelease)(unsafe.Pointer(src.Spec.Release))
 		}
 
 		diff := TServerConversion1b21b3{

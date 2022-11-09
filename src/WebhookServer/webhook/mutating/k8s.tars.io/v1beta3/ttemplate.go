@@ -3,12 +3,12 @@ package v1beta3
 import (
 	k8sAdmissionV1 "k8s.io/api/admission/v1"
 	"k8s.io/apimachinery/pkg/util/json"
-	tarsAppsV1beta3 "k8s.tars.io/apps/v1beta3"
+	tarsV1beta3 "k8s.tars.io/apis/tars/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 )
 
 func mutatingCreateTTemplate(requestAdmissionView *k8sAdmissionV1.AdmissionReview) ([]byte, error) {
-	ttemplate := &tarsAppsV1beta3.TTemplate{}
+	ttemplate := &tarsV1beta3.TTemplate{}
 	_ = json.Unmarshal(requestAdmissionView.Request.Object.Raw, ttemplate)
 
 	var jsonPatch tarsMeta.JsonPatch

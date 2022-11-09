@@ -5,17 +5,17 @@ import (
 	k8sCoreV1 "k8s.io/api/core/v1"
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilRuntime "k8s.io/apimachinery/pkg/util/runtime"
-	tarsApisV1beta3 "k8s.tars.io/apps/v1beta3"
+	tarsV1beta3 "k8s.tars.io/apis/tars/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 )
 
-func buildContainerPorts(tserver *tarsApisV1beta3.TServer) []k8sCoreV1.ContainerPort {
+func buildContainerPorts(tserver *tarsV1beta3.TServer) []k8sCoreV1.ContainerPort {
 
 	var containerPorts []k8sCoreV1.ContainerPort
 
-	var tserverPorts = map[string]*tarsApisV1beta3.TServerPort{}
-	var tserverServants = map[string]*tarsApisV1beta3.TServerServant{}
-	var tk8sHostPorts = map[string]*tarsApisV1beta3.TK8SHostPort{}
+	var tserverPorts = map[string]*tarsV1beta3.TServerPort{}
+	var tserverServants = map[string]*tarsV1beta3.TServerServant{}
+	var tk8sHostPorts = map[string]*tarsV1beta3.TK8SHostPort{}
 
 	if tserver.Spec.Tars != nil {
 		for _, servant := range tserver.Spec.Tars.Servants {
@@ -73,7 +73,7 @@ func buildContainerPorts(tserver *tarsApisV1beta3.TServer) []k8sCoreV1.Container
 	return containerPorts
 }
 
-func buildContainerVolumeMounts(tserver *tarsApisV1beta3.TServer) []k8sCoreV1.VolumeMount {
+func buildContainerVolumeMounts(tserver *tarsV1beta3.TServer) []k8sCoreV1.VolumeMount {
 	mounts := tserver.Spec.K8S.Mounts
 	var volumeMounts []k8sCoreV1.VolumeMount
 
@@ -99,7 +99,7 @@ func buildContainerVolumeMounts(tserver *tarsApisV1beta3.TServer) []k8sCoreV1.Vo
 		MountPath: "/etc/localtime",
 	})
 
-	if tserver.Spec.SubType == tarsApisV1beta3.TARS {
+	if tserver.Spec.SubType == tarsV1beta3.TARS {
 		volumeMounts = append(volumeMounts, k8sCoreV1.VolumeMount{
 			Name:      "tarsnode-work-dir",
 			MountPath: "/usr/local/app/tars/tarsnode",
@@ -108,7 +108,7 @@ func buildContainerVolumeMounts(tserver *tarsApisV1beta3.TServer) []k8sCoreV1.Vo
 	return volumeMounts
 }
 
-func buildPodReadinessGates(tserver *tarsApisV1beta3.TServer) []k8sCoreV1.PodReadinessGate {
+func buildPodReadinessGates(tserver *tarsV1beta3.TServer) []k8sCoreV1.PodReadinessGate {
 	var gates []k8sCoreV1.PodReadinessGate
 	for _, v := range tserver.Spec.K8S.ReadinessGates {
 		gates = append(gates, k8sCoreV1.PodReadinessGate{
@@ -118,7 +118,7 @@ func buildPodReadinessGates(tserver *tarsApisV1beta3.TServer) []k8sCoreV1.PodRea
 	return gates
 }
 
-func buildPodAffinity(tserver *tarsApisV1beta3.TServer) *k8sCoreV1.Affinity {
+func buildPodAffinity(tserver *tarsV1beta3.TServer) *k8sCoreV1.Affinity {
 	var nodeSelectorTerm []k8sCoreV1.NodeSelectorRequirement
 	for _, selector := range tserver.Spec.K8S.NodeSelector {
 		nodeSelectorTerm = append(nodeSelectorTerm, selector)
@@ -136,21 +136,21 @@ func buildPodAffinity(tserver *tarsApisV1beta3.TServer) *k8sCoreV1.Affinity {
 
 	if !tserver.Spec.K8S.DaemonSet {
 		switch tserver.Spec.K8S.AbilityAffinity {
-		case tarsApisV1beta3.AppRequired:
+		case tarsV1beta3.AppRequired:
 			nodeSelectorTerm = append(nodeSelectorTerm,
 				k8sCoreV1.NodeSelectorRequirement{
 					Key:      fmt.Sprintf("%s.%s.%s", tarsMeta.TarsAbilityLabelPrefix, tserver.Namespace, tserver.Spec.App),
 					Operator: k8sCoreV1.NodeSelectorOpExists,
 				},
 			)
-		case tarsApisV1beta3.ServerRequired:
+		case tarsV1beta3.ServerRequired:
 			nodeSelectorTerm = append(nodeSelectorTerm,
 				k8sCoreV1.NodeSelectorRequirement{
 					Key:      fmt.Sprintf("%s.%s.%s-%s", tarsMeta.TarsAbilityLabelPrefix, tserver.Namespace, tserver.Spec.App, tserver.Spec.Server),
 					Operator: k8sCoreV1.NodeSelectorOpExists,
 				},
 			)
-		case tarsApisV1beta3.AppOrServerPreferred:
+		case tarsV1beta3.AppOrServerPreferred:
 			preferredSchedulingTerms = []k8sCoreV1.PreferredSchedulingTerm{
 				{
 					Weight: 60,
@@ -175,7 +175,7 @@ func buildPodAffinity(tserver *tarsApisV1beta3.TServer) *k8sCoreV1.Affinity {
 					},
 				},
 			}
-		case tarsApisV1beta3.None:
+		case tarsV1beta3.None:
 		}
 		if tserver.Spec.K8S.NotStacked {
 			podAntiAffinity = &k8sCoreV1.PodAntiAffinity{
@@ -209,7 +209,7 @@ func buildPodAffinity(tserver *tarsApisV1beta3.TServer) *k8sCoreV1.Affinity {
 	return affinity
 }
 
-func buildPodTemplate(tserver *tarsApisV1beta3.TServer) k8sCoreV1.PodTemplateSpec {
+func buildPodTemplate(tserver *tarsV1beta3.TServer) k8sCoreV1.PodTemplateSpec {
 	var enableServiceLinks = false
 	var fixedDNSConfigNDOTS = "2"
 
@@ -277,7 +277,7 @@ func buildPodTemplate(tserver *tarsApisV1beta3.TServer) k8sCoreV1.PodTemplateSpe
 	return spec
 }
 
-func buildPodVolumes(tserver *tarsApisV1beta3.TServer) []k8sCoreV1.Volume {
+func buildPodVolumes(tserver *tarsV1beta3.TServer) []k8sCoreV1.Volume {
 	mounts := tserver.Spec.K8S.Mounts
 	var volumes []k8sCoreV1.Volume
 
@@ -307,7 +307,7 @@ func buildPodVolumes(tserver *tarsApisV1beta3.TServer) []k8sCoreV1.Volume {
 			},
 		}})
 
-	if tserver.Spec.SubType == tarsApisV1beta3.TARS {
+	if tserver.Spec.SubType == tarsV1beta3.TARS {
 		volumes = append(volumes, k8sCoreV1.Volume{
 			Name: "tarsnode-work-dir",
 			VolumeSource: k8sCoreV1.VolumeSource{
@@ -317,8 +317,8 @@ func buildPodVolumes(tserver *tarsApisV1beta3.TServer) []k8sCoreV1.Volume {
 	return volumes
 }
 
-func buildPodInitContainers(tserver *tarsApisV1beta3.TServer) []k8sCoreV1.Container {
-	if tserver.Spec.SubType != tarsApisV1beta3.TARS {
+func buildPodInitContainers(tserver *tarsV1beta3.TServer) []k8sCoreV1.Container {
+	if tserver.Spec.SubType != tarsV1beta3.TARS {
 		return nil
 	}
 
@@ -395,7 +395,7 @@ func buildPodInitContainers(tserver *tarsApisV1beta3.TServer) []k8sCoreV1.Contai
 	return containers
 }
 
-func buildPodImagePullSecrets(tserver *tarsApisV1beta3.TServer) []k8sCoreV1.LocalObjectReference {
+func buildPodImagePullSecrets(tserver *tarsV1beta3.TServer) []k8sCoreV1.LocalObjectReference {
 	var secret string
 	var nodeSecret string
 

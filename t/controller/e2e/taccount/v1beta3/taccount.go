@@ -12,7 +12,7 @@ import (
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	patchTypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
-	tarsCrdV1Beta3 "k8s.tars.io/apps/v1beta3"
+	tarsV1Beta3 "k8s.tars.io/apis/tars/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	tarsRuntime "k8s.tars.io/runtime"
 	"time"
@@ -37,30 +37,30 @@ var _ = ginkgo.Describe("test account", func() {
 	Password := scaffold.RandStringRunes(10)
 
 	ginkgo.BeforeEach(func() {
-		taccountLayout := &tarsCrdV1Beta3.TAccount{
+		taccountLayout := &tarsV1Beta3.TAccount{
 			TypeMeta: k8sMetaV1.TypeMeta{},
 			ObjectMeta: k8sMetaV1.ObjectMeta{
 				Name:      ResourceName,
 				Namespace: s.Namespace,
 			},
-			Spec: tarsCrdV1Beta3.TAccountSpec{
+			Spec: tarsV1Beta3.TAccountSpec{
 				Username: Username,
-				Authentication: tarsCrdV1Beta3.TAccountAuthentication{
+				Authentication: tarsV1Beta3.TAccountAuthentication{
 					Password:  &Password,
 					Activated: true,
 				},
-				Authorization: []*tarsCrdV1Beta3.TAccountAuthorization{},
+				Authorization: []*tarsV1Beta3.TAccountAuthorization{},
 			},
 		}
-		var taccount *tarsCrdV1Beta3.TAccount
-		taccount, err := tarsRuntime.Clients.CrdClient.AppsV1beta3().TAccounts(s.Namespace).Create(context.TODO(), taccountLayout, k8sMetaV1.CreateOptions{})
+		var taccount *tarsV1Beta3.TAccount
+		taccount, err := tarsRuntime.Clients.CrdClient.TarsV1beta3().TAccounts(s.Namespace).Create(context.TODO(), taccountLayout, k8sMetaV1.CreateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), taccount)
 		time.Sleep(s.Opts.SyncTime)
 	})
 
 	ginkgo.It("check bcrypt password ", func() {
-		taccount, err := tarsRuntime.Clients.CrdClient.AppsV1beta3().TAccounts(s.Namespace).Get(context.TODO(), ResourceName, k8sMetaV1.GetOptions{})
+		taccount, err := tarsRuntime.Clients.CrdClient.TarsV1beta3().TAccounts(s.Namespace).Get(context.TODO(), ResourceName, k8sMetaV1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), taccount)
 		assert.Nil(ginkgo.GinkgoT(), taccount.Spec.Authentication.Password)
@@ -70,7 +70,7 @@ var _ = ginkgo.Describe("test account", func() {
 	})
 
 	ginkgo.It("try update password", func() {
-		taccount, err := tarsRuntime.Clients.CrdClient.AppsV1beta3().TAccounts(s.Namespace).Get(context.TODO(), ResourceName, k8sMetaV1.GetOptions{})
+		taccount, err := tarsRuntime.Clients.CrdClient.TarsV1beta3().TAccounts(s.Namespace).Get(context.TODO(), ResourceName, k8sMetaV1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		const updateTimes = 3
 		for i := 0; i < updateTimes; i++ {
@@ -79,7 +79,7 @@ var _ = ginkgo.Describe("test account", func() {
 				{
 					OP:   tarsMeta.JsonPatchAdd,
 					Path: "/spec/authentication/tokens",
-					Value: []tarsCrdV1Beta3.TAccountAuthenticationToken{
+					Value: []tarsV1Beta3.TAccountAuthenticationToken{
 						{
 							Name:           "v1",
 							Content:        scaffold.RandStringRunes(50),
@@ -105,7 +105,7 @@ var _ = ginkgo.Describe("test account", func() {
 				},
 			}
 			tokensPatchContent, _ := json.Marshal(tokensPatch)
-			taccount, err = tarsRuntime.Clients.CrdClient.AppsV1beta3().TAccounts(s.Namespace).Patch(context.TODO(), ResourceName, patchTypes.JSONPatchType, tokensPatchContent, k8sMetaV1.PatchOptions{})
+			taccount, err = tarsRuntime.Clients.CrdClient.TarsV1beta3().TAccounts(s.Namespace).Patch(context.TODO(), ResourceName, patchTypes.JSONPatchType, tokensPatchContent, k8sMetaV1.PatchOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.NotNil(ginkgo.GinkgoT(), taccount)
 			assert.Equal(ginkgo.GinkgoT(), len(taccount.Spec.Authentication.Tokens), 3)
@@ -119,7 +119,7 @@ var _ = ginkgo.Describe("test account", func() {
 			}
 
 			patchContent, _ := json.Marshal(jsonPatch)
-			taccount, err = tarsRuntime.Clients.CrdClient.AppsV1beta3().TAccounts(s.Namespace).Patch(context.TODO(), ResourceName, patchTypes.JSONPatchType, patchContent, k8sMetaV1.PatchOptions{})
+			taccount, err = tarsRuntime.Clients.CrdClient.TarsV1beta3().TAccounts(s.Namespace).Patch(context.TODO(), ResourceName, patchTypes.JSONPatchType, patchContent, k8sMetaV1.PatchOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.NotNil(ginkgo.GinkgoT(), taccount)
 			assert.Nil(ginkgo.GinkgoT(), taccount.Spec.Authentication.Password)
@@ -131,7 +131,7 @@ var _ = ginkgo.Describe("test account", func() {
 	})
 
 	ginkgo.It("try update bcryptPassword", func() {
-		taccount, err := tarsRuntime.Clients.CrdClient.AppsV1beta3().TAccounts(s.Namespace).Get(context.TODO(), ResourceName, k8sMetaV1.GetOptions{})
+		taccount, err := tarsRuntime.Clients.CrdClient.TarsV1beta3().TAccounts(s.Namespace).Get(context.TODO(), ResourceName, k8sMetaV1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 		const updateTimes = 3
 		for i := 0; i < updateTimes; i++ {
@@ -140,7 +140,7 @@ var _ = ginkgo.Describe("test account", func() {
 				{
 					OP:   tarsMeta.JsonPatchAdd,
 					Path: "/spec/authentication/tokens",
-					Value: []tarsCrdV1Beta3.TAccountAuthenticationToken{
+					Value: []tarsV1Beta3.TAccountAuthenticationToken{
 						{
 							Name:           "v1",
 							Content:        scaffold.RandStringRunes(50),
@@ -166,7 +166,7 @@ var _ = ginkgo.Describe("test account", func() {
 				},
 			}
 			tokensPatchContent, _ := json.Marshal(tokensPatch)
-			taccount, err = tarsRuntime.Clients.CrdClient.AppsV1beta3().TAccounts(s.Namespace).Patch(context.TODO(), ResourceName, patchTypes.JSONPatchType, tokensPatchContent, k8sMetaV1.PatchOptions{})
+			taccount, err = tarsRuntime.Clients.CrdClient.TarsV1beta3().TAccounts(s.Namespace).Patch(context.TODO(), ResourceName, patchTypes.JSONPatchType, tokensPatchContent, k8sMetaV1.PatchOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.NotNil(ginkgo.GinkgoT(), taccount)
 			assert.Equal(ginkgo.GinkgoT(), len(taccount.Spec.Authentication.Tokens), 3)
@@ -182,7 +182,7 @@ var _ = ginkgo.Describe("test account", func() {
 			}
 
 			patchContent, _ := json.Marshal(jsonPatch)
-			taccount, err = tarsRuntime.Clients.CrdClient.AppsV1beta3().TAccounts(s.Namespace).Patch(context.TODO(), ResourceName, patchTypes.JSONPatchType, patchContent, k8sMetaV1.PatchOptions{})
+			taccount, err = tarsRuntime.Clients.CrdClient.TarsV1beta3().TAccounts(s.Namespace).Patch(context.TODO(), ResourceName, patchTypes.JSONPatchType, patchContent, k8sMetaV1.PatchOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err)
 			assert.NotNil(ginkgo.GinkgoT(), taccount)
 			assert.Nil(ginkgo.GinkgoT(), taccount.Spec.Authentication.Password)

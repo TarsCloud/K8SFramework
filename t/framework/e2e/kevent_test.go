@@ -5,7 +5,7 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/util/conf"
 	"github.com/elastic/go-elasticsearch/v7"
 	"github.com/stretchr/testify/assert"
-	tarsAppsV1Beta3 "k8s.tars.io/apps/v1beta3"
+	tarsV1Beta3 "k8s.tars.io/apis/tars/v1beta3"
 	"sigs.k8s.io/e2e-framework/klient/k8s/resources"
 	"sigs.k8s.io/e2e-framework/pkg/envconf"
 	"sigs.k8s.io/e2e-framework/pkg/features"
@@ -23,9 +23,9 @@ func TestKEvent(t *testing.T) {
 		Setup(func(ctx context.Context, t *testing.T, config *envconf.Config) context.Context {
 
 			r, _ = resources.New(config.Client().RESTConfig())
-			_ = tarsAppsV1Beta3.AddToScheme(r.GetScheme())
+			_ = tarsV1Beta3.AddToScheme(r.GetScheme())
 
-			tt := &tarsAppsV1Beta3.TTemplate{}
+			tt := &tarsV1Beta3.TTemplate{}
 			err := r.Get(ctx, "tars.es", namespace, tt)
 			assert.Nil(t, err, "unexpected error")
 

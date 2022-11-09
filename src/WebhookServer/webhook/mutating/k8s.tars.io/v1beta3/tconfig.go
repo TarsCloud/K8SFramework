@@ -6,13 +6,13 @@ import (
 	k8sAdmissionV1 "k8s.io/api/admission/v1"
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/json"
-	tarsAppsV1beta3 "k8s.tars.io/apps/v1beta3"
+	tarsV1beta3 "k8s.tars.io/apis/tars/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	"time"
 )
 
 func mutatingCreateTConfig(requestAdmissionView *k8sAdmissionV1.AdmissionReview) ([]byte, error) {
-	tconfig := &tarsAppsV1beta3.TConfig{}
+	tconfig := &tarsV1beta3.TConfig{}
 	_ = json.Unmarshal(requestAdmissionView.Request.Object.Raw, tconfig)
 
 	var jsonPatch tarsMeta.JsonPatch
@@ -82,7 +82,7 @@ func mutatingCreateTConfig(requestAdmissionView *k8sAdmissionV1.AdmissionReview)
 }
 
 func mutatingUpdateTConfig(requestAdmissionView *k8sAdmissionV1.AdmissionReview) ([]byte, error) {
-	tconfig := &tarsAppsV1beta3.TConfig{}
+	tconfig := &tarsV1beta3.TConfig{}
 	_ = json.Unmarshal(requestAdmissionView.Request.Object.Raw, tconfig)
 
 	var jsonPatch tarsMeta.JsonPatch

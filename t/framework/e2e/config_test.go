@@ -7,7 +7,7 @@ import (
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
-	tarsAppsV1Beta3 "k8s.tars.io/apps/v1beta3"
+	tarsV1Beta3 "k8s.tars.io/apis/tars/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	"sigs.k8s.io/e2e-framework/klient/decoder"
 	"sigs.k8s.io/e2e-framework/klient/k8s"
@@ -23,7 +23,7 @@ const configObjId = "tars.tarsconfig.ConfigObj"
 
 func TestAppLevelTConfig(t *testing.T) {
 
-	var layout1 = &tarsAppsV1Beta3.TConfig{
+	var layout1 = &tarsV1Beta3.TConfig{
 		ObjectMeta: k8sMetaV1.ObjectMeta{
 			Name: "v1",
 		},
@@ -37,7 +37,7 @@ func TestAppLevelTConfig(t *testing.T) {
 		Activated:     false,
 	}
 
-	var layout2 = &tarsAppsV1Beta3.TConfig{
+	var layout2 = &tarsV1Beta3.TConfig{
 		ObjectMeta: k8sMetaV1.ObjectMeta{
 			Name: "v2",
 		},
@@ -53,18 +53,18 @@ func TestAppLevelTConfig(t *testing.T) {
 	comm.StringToProxy(configObjId, configProxy)
 
 	var r *resources.Resources
-	var v1Tconfig *tarsAppsV1Beta3.TConfig
-	var v2Tconfig *tarsAppsV1Beta3.TConfig
+	var v1Tconfig *tarsV1Beta3.TConfig
+	var v2Tconfig *tarsV1Beta3.TConfig
 
 	feature := features.New("Testing "+configObjId).WithLabel("crd-version", "v1beta3").
 		Setup(func(ctx context.Context, t *testing.T, config *envconf.Config) context.Context {
 			r, _ = resources.New(config.Client().RESTConfig())
-			_ = tarsAppsV1Beta3.AddToScheme(r.GetScheme())
-			v1Tconfig = &tarsAppsV1Beta3.TConfig{}
+			_ = tarsV1Beta3.AddToScheme(r.GetScheme())
+			v1Tconfig = &tarsV1Beta3.TConfig{}
 			err := decoder.DecodeString(ObjLayoutToString(layout1, namespace), v1Tconfig)
 			assert.Nil(t, err, "decode tconfig layout failed")
 
-			v2Tconfig = &tarsAppsV1Beta3.TConfig{}
+			v2Tconfig = &tarsV1Beta3.TConfig{}
 			err = decoder.DecodeString(ObjLayoutToString(layout2, namespace), v2Tconfig)
 			assert.Nil(t, err, "decode tconfig layout failed")
 
@@ -165,7 +165,7 @@ func TestAppLevelTConfig(t *testing.T) {
 
 func TestServerLevelTConfig(t *testing.T) {
 
-	var layout1 = &tarsAppsV1Beta3.TConfig{
+	var layout1 = &tarsV1Beta3.TConfig{
 		ObjectMeta: k8sMetaV1.ObjectMeta{
 			Name: "v1",
 		},
@@ -178,7 +178,7 @@ func TestServerLevelTConfig(t *testing.T) {
 		Activated:     false,
 	}
 
-	var layout2 = &tarsAppsV1Beta3.TConfig{
+	var layout2 = &tarsV1Beta3.TConfig{
 		ObjectMeta: k8sMetaV1.ObjectMeta{
 			Name: "v2",
 		},
@@ -190,7 +190,7 @@ func TestServerLevelTConfig(t *testing.T) {
 		Activated:     true,
 	}
 
-	var layoutSlave = &tarsAppsV1Beta3.TConfig{
+	var layoutSlave = &tarsV1Beta3.TConfig{
 		ObjectMeta: k8sMetaV1.ObjectMeta{
 			Name: "slave",
 		},
@@ -206,23 +206,23 @@ func TestServerLevelTConfig(t *testing.T) {
 	comm.StringToProxy(configObjId, configProxy)
 
 	var r *resources.Resources
-	var v1Tconfig *tarsAppsV1Beta3.TConfig
-	var v2Tconfig *tarsAppsV1Beta3.TConfig
-	var slaveTconfig *tarsAppsV1Beta3.TConfig
+	var v1Tconfig *tarsV1Beta3.TConfig
+	var v2Tconfig *tarsV1Beta3.TConfig
+	var slaveTconfig *tarsV1Beta3.TConfig
 
 	feature := features.New("Testing "+configObjId).WithLabel("crd-version", "v1beta3").
 		Setup(func(ctx context.Context, t *testing.T, config *envconf.Config) context.Context {
 			r, _ = resources.New(config.Client().RESTConfig())
-			_ = tarsAppsV1Beta3.AddToScheme(r.GetScheme())
-			v1Tconfig = &tarsAppsV1Beta3.TConfig{}
+			_ = tarsV1Beta3.AddToScheme(r.GetScheme())
+			v1Tconfig = &tarsV1Beta3.TConfig{}
 			err := decoder.DecodeString(ObjLayoutToString(layout1, namespace), v1Tconfig)
 			assert.Nil(t, err, "decode tconfig layout failed")
 
-			v2Tconfig = &tarsAppsV1Beta3.TConfig{}
+			v2Tconfig = &tarsV1Beta3.TConfig{}
 			err = decoder.DecodeString(ObjLayoutToString(layout2, namespace), v2Tconfig)
 			assert.Nil(t, err, "decode tconfig layout failed")
 
-			slaveTconfig = &tarsAppsV1Beta3.TConfig{}
+			slaveTconfig = &tarsV1Beta3.TConfig{}
 			err = decoder.DecodeString(ObjLayoutToString(layoutSlave, namespace), slaveTconfig)
 			assert.Nil(t, err, "decode tconfig layout failed")
 

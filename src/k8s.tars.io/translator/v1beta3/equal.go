@@ -4,7 +4,7 @@ import (
 	k8sAppsV1 "k8s.io/api/apps/v1"
 	k8sCoreV1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
-	tarsApisV1beta3 "k8s.tars.io/apps/v1beta3"
+	tarsV1beta3 "k8s.tars.io/apis/tars/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 )
 
@@ -429,7 +429,7 @@ func equalContainerPorts(l, r []k8sCoreV1.ContainerPort) bool {
 	return true
 }
 
-func equalTarsServants(l, r []*tarsApisV1beta3.TServerServant) bool {
+func equalTarsServants(l, r []*tarsV1beta3.TServerServant) bool {
 	if len(l) != len(r) {
 		return false
 	}
@@ -461,7 +461,7 @@ func equalTarsServants(l, r []*tarsApisV1beta3.TServerServant) bool {
 	return true
 }
 
-func equalTars(l, r *tarsApisV1beta3.TServerTars) bool {
+func equalTars(l, r *tarsV1beta3.TServerTars) bool {
 
 	if l == nil {
 		if r == nil {
@@ -497,7 +497,7 @@ func equalTars(l, r *tarsApisV1beta3.TServerTars) bool {
 	return true
 }
 
-func equalTServerPorts(l, r []*tarsApisV1beta3.TServerPort) bool {
+func equalTServerPorts(l, r []*tarsV1beta3.TServerPort) bool {
 
 	if len(l) != len(r) {
 		return false
@@ -514,7 +514,7 @@ func equalTServerPorts(l, r []*tarsApisV1beta3.TServerPort) bool {
 	return true
 }
 
-func equalNormal(l, r *tarsApisV1beta3.TServerNormal) bool {
+func equalNormal(l, r *tarsV1beta3.TServerNormal) bool {
 	if l == nil {
 		if r == nil {
 			return true
@@ -533,7 +533,7 @@ func equalNormal(l, r *tarsApisV1beta3.TServerNormal) bool {
 	return true
 }
 
-func equalK8SHostPorts(l, r []*tarsApisV1beta3.TK8SHostPort) bool {
+func equalK8SHostPorts(l, r []*tarsV1beta3.TK8SHostPort) bool {
 	if len(l) != len(r) {
 		return false
 	}
@@ -548,7 +548,7 @@ func equalK8SHostPorts(l, r []*tarsApisV1beta3.TK8SHostPort) bool {
 	return true
 }
 
-func equalTServerAndTEndpoint(tserver *tarsApisV1beta3.TServer, endpoint *tarsApisV1beta3.TEndpoint) bool {
+func equalTServerAndTEndpoint(tserver *tarsV1beta3.TServer, endpoint *tarsV1beta3.TEndpoint) bool {
 
 	if tserver.Spec.App != endpoint.Spec.App {
 		return false
@@ -571,9 +571,9 @@ func equalTServerAndTEndpoint(tserver *tarsApisV1beta3.TServer, endpoint *tarsAp
 	}
 
 	switch tserver.Spec.SubType {
-	case tarsApisV1beta3.TARS:
+	case tarsV1beta3.TARS:
 		return equalTars(tserver.Spec.Tars, endpoint.Spec.Tars)
-	case tarsApisV1beta3.Normal:
+	case tarsV1beta3.Normal:
 		return equalNormal(tserver.Spec.Normal, endpoint.Spec.Normal)
 	}
 
@@ -581,7 +581,7 @@ func equalTServerAndTEndpoint(tserver *tarsApisV1beta3.TServer, endpoint *tarsAp
 	return false
 }
 
-func equalTServerAndService(tserver *tarsApisV1beta3.TServer, service *k8sCoreV1.Service) bool {
+func equalTServerAndService(tserver *tarsV1beta3.TServer, service *k8sCoreV1.Service) bool {
 	tserverSpec := &tserver.Spec
 	serviceSpec := &service.Spec
 
@@ -610,7 +610,7 @@ func equalTServerAndService(tserver *tarsApisV1beta3.TServer, service *k8sCoreV1
 	return true
 }
 
-func equalTServerAndDaemonSet(tserver *tarsApisV1beta3.TServer, daemonSet *k8sAppsV1.DaemonSet) bool {
+func equalTServerAndDaemonSet(tserver *tarsV1beta3.TServer, daemonSet *k8sAppsV1.DaemonSet) bool {
 
 	targetLabels := map[string]string{
 		tarsMeta.TServerAppLabel:  tserver.Spec.App,
@@ -682,11 +682,11 @@ func equalTServerAndDaemonSet(tserver *tarsApisV1beta3.TServer, daemonSet *k8sAp
 		}
 	}
 
-	if tserver.Spec.SubType == tarsApisV1beta3.TARS && initContainer == nil {
+	if tserver.Spec.SubType == tarsV1beta3.TARS && initContainer == nil {
 		return false
 	}
 
-	if tserver.Spec.SubType == tarsApisV1beta3.Normal && initContainer != nil {
+	if tserver.Spec.SubType == tarsV1beta3.Normal && initContainer != nil {
 		return false
 	}
 
@@ -759,7 +759,7 @@ func equalTServerAndDaemonSet(tserver *tarsApisV1beta3.TServer, daemonSet *k8sAp
 	return true
 }
 
-func equalTServerAndStatefulset(tserver *tarsApisV1beta3.TServer, statefulSet *k8sAppsV1.StatefulSet) bool {
+func equalTServerAndStatefulset(tserver *tarsV1beta3.TServer, statefulSet *k8sAppsV1.StatefulSet) bool {
 	/*
 		Because updates to statefulset spec for fields other than 'replicas', 'template', 'updateStrategy' and 'minReadySeconds' are forbidden,
 		We skip compare spec.K8S.PodManagementPolicy with statefulSet.Spec.PodManagementPolicy
@@ -836,11 +836,11 @@ func equalTServerAndStatefulset(tserver *tarsApisV1beta3.TServer, statefulSet *k
 		}
 	}
 
-	if tserver.Spec.SubType == tarsApisV1beta3.TARS && initContainer == nil {
+	if tserver.Spec.SubType == tarsV1beta3.TARS && initContainer == nil {
 		return false
 	}
 
-	if tserver.Spec.SubType == tarsApisV1beta3.Normal && initContainer != nil {
+	if tserver.Spec.SubType == tarsV1beta3.Normal && initContainer != nil {
 		return false
 	}
 

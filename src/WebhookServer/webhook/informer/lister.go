@@ -2,11 +2,11 @@ package informer
 
 import (
 	"k8s.io/client-go/tools/cache"
-	tarsAppsListerV1beta3 "k8s.tars.io/client-go/listers/apps/v1beta3"
+	tarsListerV1beta3 "k8s.tars.io/client-go/listers/tars/v1beta3"
 )
 
 type Listers struct {
-	TSLister tarsAppsListerV1beta3.TServerLister
+	TSLister tarsListerV1beta3.TServerLister
 	TSSynced cache.InformerSynced
 
 	TTLister cache.GenericLister

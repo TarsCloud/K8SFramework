@@ -12,8 +12,8 @@ import (
 	k8sWatchV1 "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
-	tarsAppsV1beta3 "k8s.tars.io/apps/v1beta3"
-	tarsListerV1beta3 "k8s.tars.io/client-go/listers/apps/v1beta3"
+	tarsV1beta3 "k8s.tars.io/apis/tars/v1beta3"
+	tarsListerV1beta3 "k8s.tars.io/client-go/listers/tars/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	tarsRuntime "k8s.tars.io/runtime"
 	"strings"
@@ -31,7 +31,7 @@ type TImageReconciler struct {
 }
 
 func NewTImageController(threads int) *TImageReconciler {
-	tiInformer := tarsRuntime.Factories.TarsInformerFactory.Apps().V1beta3().TImages()
+	tiInformer := tarsRuntime.Factories.TarsInformerFactory.Tars().V1beta3().TImages()
 	c := &TImageReconciler{
 		tiLister: tiInformer.Lister(),
 		threads:  threads,
@@ -44,8 +44,8 @@ func NewTImageController(threads int) *TImageReconciler {
 
 func (r *TImageReconciler) EnqueueResourceEvent(resourceKind string, resourceEvent k8sWatchV1.EventType, resourceObj interface{}) {
 	switch resourceObj.(type) {
-	case *tarsAppsV1beta3.TImage:
-		timage := resourceObj.(*tarsAppsV1beta3.TImage)
+	case *tarsV1beta3.TImage:
+		timage := resourceObj.(*tarsV1beta3.TImage)
 		if timage.ImageType == "node" {
 		}
 		if timage.ImageType == "server" {
@@ -141,8 +141,8 @@ func (r *TImageReconciler) reconcile(key string) controller.Result {
 		if timage.Build == nil || timage.Build.Running == nil || value != timage.Build.Running.ID {
 			return controller.Done
 		}
-		buildState := tarsAppsV1beta3.TImageBuild{
-			Last: &tarsAppsV1beta3.TImageBuildState{
+		buildState := tarsV1beta3.TImageBuild{
+			Last: &tarsV1beta3.TImageBuildState{
 				ID:              timage.Build.Running.ID,
 				BaseImage:       timage.Build.Running.BaseImage,
 				BaseImageSecret: timage.Build.Running.BaseImageSecret,
@@ -165,7 +165,7 @@ func (r *TImageReconciler) reconcile(key string) controller.Result {
 
 	if jsonPatch != nil {
 		bs, _ := json.Marshal(jsonPatch)
-		_, err = tarsRuntime.Clients.CrdClient.AppsV1beta3().TImages(namespace).Patch(context.TODO(), name, types.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
+		_, err = tarsRuntime.Clients.CrdClient.TarsV1beta3().TImages(namespace).Patch(context.TODO(), name, types.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		if err != nil {
 			utilRuntime.HandleError(err)
 			return controller.Retry

@@ -14,7 +14,7 @@ import (
 	k8sWatchV1 "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
-	tarsAppsV1beta3 "k8s.tars.io/apps/v1beta3"
+	tarsV1beta3 "k8s.tars.io/apis/tars/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	tarsRuntime "k8s.tars.io/runtime"
 	"sort"
@@ -109,7 +109,7 @@ func (r *TConfigReconciler) reconcileAdded(key string) controller.Result {
 	}
 	sort.Strings(versions)
 	name := versionNameMap[versions[0]]
-	err = tarsRuntime.Clients.CrdClient.AppsV1beta3().TConfigs(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
+	err = tarsRuntime.Clients.CrdClient.TarsV1beta3().TConfigs(namespace).Delete(context.TODO(), name, k8sMetaV1.DeleteOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourceDeleteError, "tconfig", namespace, name, err.Error()))
 		return controller.Retry
@@ -148,7 +148,7 @@ func (r *TConfigReconciler) reconcileModified(key string) controller.Result {
 	for _, tconfig := range tconfigs {
 		v := tconfig.(k8sMetaV1.Object)
 		name := v.GetName()
-		_, err = tarsRuntime.Clients.CrdClient.AppsV1beta3().TConfigs(namespace).Patch(context.TODO(), name, patchTypes.JSONPatchType, patchContent, k8sMetaV1.PatchOptions{})
+		_, err = tarsRuntime.Clients.CrdClient.TarsV1beta3().TConfigs(namespace).Patch(context.TODO(), name, patchTypes.JSONPatchType, patchContent, k8sMetaV1.PatchOptions{})
 		if err != nil {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourcePatchError, "tconfig", namespace, name, err.Error()))
 			retry = true
@@ -165,7 +165,7 @@ func (r *TConfigReconciler) reconcileDeleted(key string) controller.Result {
 	namespace := key
 	deletingRequirement, _ := labels.NewRequirement(tarsMeta.TConfigDeletingLabel, selection.Exists, nil)
 	deletingLabelSelector := labels.NewSelector().Add(*deletingRequirement)
-	err := tarsRuntime.Clients.CrdClient.AppsV1beta3().TConfigs(namespace).DeleteCollection(context.TODO(), k8sMetaV1.DeleteOptions{}, k8sMetaV1.ListOptions{
+	err := tarsRuntime.Clients.CrdClient.TarsV1beta3().TConfigs(namespace).DeleteCollection(context.TODO(), k8sMetaV1.DeleteOptions{}, k8sMetaV1.ListOptions{
 		LabelSelector: deletingLabelSelector.String(),
 	})
 	if err != nil {
@@ -235,7 +235,7 @@ func (r *TConfigReconciler) processItem(queue workqueue.RateLimitingInterface, r
 }
 
 func NewTConfigController(threads int) *TConfigReconciler {
-	tcInformer := tarsRuntime.Factories.MetadataInformerFactor.ForResource(tarsAppsV1beta3.SchemeGroupVersion.WithResource("tconfigs"))
+	tcInformer := tarsRuntime.Factories.MetadataInformerFactor.ForResource(tarsV1beta3.SchemeGroupVersion.WithResource("tconfigs"))
 	c := &TConfigReconciler{
 		tcLister:    tcInformer.Lister(),
 		threads:     threads,

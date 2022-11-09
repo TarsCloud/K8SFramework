@@ -11,7 +11,7 @@ import (
 	"io/ioutil"
 	utilRuntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
-	tarsAppsV1beta3 "k8s.tars.io/apps/v1beta3"
+	tarsV1beta3 "k8s.tars.io/apis/tars/v1beta3"
 	tarsRuntime "k8s.tars.io/runtime"
 	"math/big"
 	"net/http"
@@ -35,10 +35,10 @@ type Webhook struct {
 }
 
 func New() *Webhook {
-	tsInformer := tarsRuntime.Factories.TarsInformerFactory.Apps().V1beta3().TServers()
-	ttInformer := tarsRuntime.Factories.MetadataInformerFactor.ForResource(tarsAppsV1beta3.SchemeGroupVersion.WithResource("ttemplates"))
-	tcInformer := tarsRuntime.Factories.MetadataInformerFactor.ForResource(tarsAppsV1beta3.SchemeGroupVersion.WithResource("tconfigs"))
-	trInformer := tarsRuntime.Factories.MetadataInformerFactor.ForResource(tarsAppsV1beta3.SchemeGroupVersion.WithResource("ttrees"))
+	tsInformer := tarsRuntime.Factories.TarsInformerFactory.Tars().V1beta3().TServers()
+	ttInformer := tarsRuntime.Factories.MetadataInformerFactor.ForResource(tarsV1beta3.SchemeGroupVersion.WithResource("ttemplates"))
+	tcInformer := tarsRuntime.Factories.MetadataInformerFactor.ForResource(tarsV1beta3.SchemeGroupVersion.WithResource("tconfigs"))
+	trInformer := tarsRuntime.Factories.MetadataInformerFactor.ForResource(tarsV1beta3.SchemeGroupVersion.WithResource("ttrees"))
 
 	listers := &informer.Listers{
 		TSLister: tsInformer.Lister(),

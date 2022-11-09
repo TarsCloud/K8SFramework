@@ -11,7 +11,7 @@ import (
 	patchTypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
 	utilRuntime "k8s.io/apimachinery/pkg/util/runtime"
-	tarsAppsV1beta2 "k8s.tars.io/apps/v1beta2"
+	tarsV1beta2 "k8s.tars.io/apis/tars/v1beta2"
 	tarsMeta "k8s.tars.io/meta"
 	tarsRuntime "k8s.tars.io/runtime"
 	"strings"
@@ -19,7 +19,7 @@ import (
 	"time"
 )
 
-func prepareActiveTConfig(newTConfig *tarsAppsV1beta2.TConfig, listers *informer.Listers) error {
+func prepareActiveTConfig(newTConfig *tarsV1beta2.TConfig, listers *informer.Listers) error {
 	if !listers.TCSynced() {
 		return fmt.Errorf("tconfig infomer has not finished syncing")
 	}
@@ -69,7 +69,7 @@ func prepareActiveTConfig(newTConfig *tarsAppsV1beta2.TConfig, listers *informer
 		},
 	}
 	patchContent, _ := json.Marshal(jsonPatch)
-	_, err = tarsRuntime.Clients.CrdClient.AppsV1beta2().TConfigs(namespace).Patch(context.TODO(), names[0], patchTypes.JSONPatchType, patchContent, k8sMetaV1.PatchOptions{})
+	_, err = tarsRuntime.Clients.CrdClient.TarsV1beta2().TConfigs(namespace).Patch(context.TODO(), names[0], patchTypes.JSONPatchType, patchContent, k8sMetaV1.PatchOptions{})
 	if err != nil {
 		err = fmt.Errorf(tarsMeta.ResourcePatchError, "tconfig", namespace, names[0], err.Error())
 		utilRuntime.HandleError(err)
@@ -78,7 +78,7 @@ func prepareActiveTConfig(newTConfig *tarsAppsV1beta2.TConfig, listers *informer
 	return nil
 }
 
-func prepareDeleteTConfig(tconfig *tarsAppsV1beta2.TConfig, listers *informer.Listers) error {
+func prepareDeleteTConfig(tconfig *tarsV1beta2.TConfig, listers *informer.Listers) error {
 	if !listers.TCSynced() {
 		return fmt.Errorf("tconfig infomer has not finished syncing")
 	}
@@ -120,7 +120,7 @@ func prepareDeleteTConfig(tconfig *tarsAppsV1beta2.TConfig, listers *informer.Li
 				continue
 			}
 
-			_, err = tarsRuntime.Clients.CrdClient.AppsV1beta2().TConfigs(namespace).Patch(context.TODO(), name, patchTypes.JSONPatchType, patchContent, k8sMetaV1.PatchOptions{})
+			_, err = tarsRuntime.Clients.CrdClient.TarsV1beta2().TConfigs(namespace).Patch(context.TODO(), name, patchTypes.JSONPatchType, patchContent, k8sMetaV1.PatchOptions{})
 			if err != nil {
 				err = fmt.Errorf(tarsMeta.ResourcePatchError, "tconfig", namespace, name, err.Error())
 				utilRuntime.HandleError(err)
@@ -164,7 +164,7 @@ func prepareDeleteTConfig(tconfig *tarsAppsV1beta2.TConfig, listers *informer.Li
 	}
 
 	for _, name := range willMarkDeletingTConfig {
-		_, err = tarsRuntime.Clients.CrdClient.AppsV1beta2().TConfigs(namespace).Patch(context.TODO(), name, patchTypes.JSONPatchType, patchContent, k8sMetaV1.PatchOptions{})
+		_, err = tarsRuntime.Clients.CrdClient.TarsV1beta2().TConfigs(namespace).Patch(context.TODO(), name, patchTypes.JSONPatchType, patchContent, k8sMetaV1.PatchOptions{})
 		if err != nil {
 			err = fmt.Errorf(tarsMeta.ResourcePatchError, "tconfig", namespace, name, err.Error())
 			utilRuntime.HandleError(err)
@@ -176,7 +176,7 @@ func prepareDeleteTConfig(tconfig *tarsAppsV1beta2.TConfig, listers *informer.Li
 }
 
 func validCreateTConfig(listers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
-	newTConfig := &tarsAppsV1beta2.TConfig{}
+	newTConfig := &tarsV1beta2.TConfig{}
 	_ = json.Unmarshal(view.Request.Object.Raw, newTConfig)
 
 	if _, ok := newTConfig.Labels[tarsMeta.TConfigDeactivateLabel]; ok {
@@ -231,10 +231,10 @@ func validUpdateTConfig(listers *informer.Listers, view *k8sAdmissionV1.Admissio
 		return nil
 	}
 
-	newTConfig := &tarsAppsV1beta2.TConfig{}
+	newTConfig := &tarsV1beta2.TConfig{}
 	_ = json.Unmarshal(view.Request.Object.Raw, newTConfig)
 
-	oldTConfig := &tarsAppsV1beta2.TConfig{}
+	oldTConfig := &tarsV1beta2.TConfig{}
 	_ = json.Unmarshal(view.Request.OldObject.Raw, oldTConfig)
 
 	if _, ok := oldTConfig.Labels[tarsMeta.TConfigDeletingLabel]; ok {
@@ -291,7 +291,7 @@ func validDeleteTConfig(informers *informer.Listers, view *k8sAdmissionV1.Admiss
 		return nil
 	}
 
-	tconfig := &tarsAppsV1beta2.TConfig{}
+	tconfig := &tarsV1beta2.TConfig{}
 	_ = json.Unmarshal(view.Request.OldObject.Raw, tconfig)
 
 	if !tconfig.Activated {

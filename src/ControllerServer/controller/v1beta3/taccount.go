@@ -10,8 +10,8 @@ import (
 	k8sWatchV1 "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
-	tarsAppsV1beta3 "k8s.tars.io/apps/v1beta3"
-	tarsListerV1beta3 "k8s.tars.io/client-go/listers/apps/v1beta3"
+	tarsV1beta3 "k8s.tars.io/apis/tars/v1beta3"
+	tarsListerV1beta3 "k8s.tars.io/client-go/listers/tars/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	tarsRuntime "k8s.tars.io/runtime"
 	"tarscontroller/controller"
@@ -27,8 +27,8 @@ type TAccountReconciler struct {
 
 func (r *TAccountReconciler) EnqueueResourceEvent(resourceKind string, resourceEvent k8sWatchV1.EventType, resourceObj interface{}) {
 	switch resourceObj.(type) {
-	case *tarsAppsV1beta3.TAccount:
-		taccount := resourceObj.(*tarsAppsV1beta3.TAccount)
+	case *tarsV1beta3.TAccount:
+		taccount := resourceObj.(*tarsV1beta3.TAccount)
 		key := fmt.Sprintf("%s/%s", taccount.Namespace, taccount.Name)
 		r.queue.Add(key)
 	default:
@@ -57,7 +57,7 @@ func (r *TAccountReconciler) Run(stopCh chan struct{}) {
 }
 
 func NewTAccountController(threads int) *TAccountReconciler {
-	taInformer := tarsRuntime.Factories.TarsInformerFactory.Apps().V1beta3().TAccounts()
+	taInformer := tarsRuntime.Factories.TarsInformerFactory.Tars().V1beta3().TAccounts()
 	c := &TAccountReconciler{
 		taLister: taInformer.Lister(),
 		threads:  threads,
@@ -133,7 +133,7 @@ func (r *TAccountReconciler) reconcile(key string) (controller.Result, *time.Dur
 	var minDuration *time.Duration
 
 	shouldUpdate := false
-	newTokens := make([]*tarsAppsV1beta3.TAccountAuthenticationToken, 0, len(taccount.Spec.Authentication.Tokens))
+	newTokens := make([]*tarsV1beta3.TAccountAuthenticationToken, 0, len(taccount.Spec.Authentication.Tokens))
 
 	for _, token := range taccount.Spec.Authentication.Tokens {
 		duration := token.ExpirationTime.Time.Sub(currentTime.Time)
@@ -154,7 +154,7 @@ func (r *TAccountReconciler) reconcile(key string) (controller.Result, *time.Dur
 	if shouldUpdate {
 		newTaccount := taccount.DeepCopy()
 		newTaccount.Spec.Authentication.Tokens = newTokens
-		_, err = tarsRuntime.Clients.CrdClient.AppsV1beta3().TAccounts(namespace).Update(context.TODO(), newTaccount, k8sMetaV1.UpdateOptions{})
+		_, err = tarsRuntime.Clients.CrdClient.TarsV1beta3().TAccounts(namespace).Update(context.TODO(), newTaccount, k8sMetaV1.UpdateOptions{})
 		if err != nil {
 			utilRuntime.HandleError(fmt.Errorf(tarsMeta.ResourcePatchError, "taccount", namespace, name, err.Error()))
 			return controller.Retry, nil

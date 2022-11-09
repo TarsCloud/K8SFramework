@@ -23,9 +23,9 @@ import (
 
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
-	v1beta1 "k8s.tars.io/apps/v1beta1"
-	v1beta2 "k8s.tars.io/apps/v1beta2"
-	v1beta3 "k8s.tars.io/apps/v1beta3"
+	v1beta1 "k8s.tars.io/apis/tars/v1beta1"
+	v1beta2 "k8s.tars.io/apis/tars/v1beta2"
+	v1beta3 "k8s.tars.io/apis/tars/v1beta3"
 )
 
 // GenericInformer is type of SharedIndexInformer which will locate and delegate to other
@@ -54,63 +54,63 @@ func (f *genericInformer) Lister() cache.GenericLister {
 // TODO extend this to unknown resources with a client pool
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
-	// Group=k8s.tars.io, Version=v1beta1
+	// Group=tars.k8s.tars.io, Version=v1beta1
 	case v1beta1.SchemeGroupVersion.WithResource("taccounts"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Apps().V1beta1().TAccounts().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Tars().V1beta1().TAccounts().Informer()}, nil
 	case v1beta1.SchemeGroupVersion.WithResource("tconfigs"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Apps().V1beta1().TConfigs().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Tars().V1beta1().TConfigs().Informer()}, nil
 	case v1beta1.SchemeGroupVersion.WithResource("tendpoints"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Apps().V1beta1().TEndpoints().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Tars().V1beta1().TEndpoints().Informer()}, nil
 	case v1beta1.SchemeGroupVersion.WithResource("texitedrecords"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Apps().V1beta1().TExitedRecords().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Tars().V1beta1().TExitedRecords().Informer()}, nil
 	case v1beta1.SchemeGroupVersion.WithResource("timages"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Apps().V1beta1().TImages().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Tars().V1beta1().TImages().Informer()}, nil
 	case v1beta1.SchemeGroupVersion.WithResource("tservers"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Apps().V1beta1().TServers().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Tars().V1beta1().TServers().Informer()}, nil
 	case v1beta1.SchemeGroupVersion.WithResource("ttemplates"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Apps().V1beta1().TTemplates().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Tars().V1beta1().TTemplates().Informer()}, nil
 	case v1beta1.SchemeGroupVersion.WithResource("ttrees"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Apps().V1beta1().TTrees().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Tars().V1beta1().TTrees().Informer()}, nil
 
-		// Group=k8s.tars.io, Version=v1beta2
+		// Group=tars.k8s.tars.io, Version=v1beta2
 	case v1beta2.SchemeGroupVersion.WithResource("taccounts"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Apps().V1beta2().TAccounts().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Tars().V1beta2().TAccounts().Informer()}, nil
 	case v1beta2.SchemeGroupVersion.WithResource("tconfigs"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Apps().V1beta2().TConfigs().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Tars().V1beta2().TConfigs().Informer()}, nil
 	case v1beta2.SchemeGroupVersion.WithResource("tendpoints"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Apps().V1beta2().TEndpoints().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Tars().V1beta2().TEndpoints().Informer()}, nil
 	case v1beta2.SchemeGroupVersion.WithResource("texitedrecords"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Apps().V1beta2().TExitedRecords().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Tars().V1beta2().TExitedRecords().Informer()}, nil
 	case v1beta2.SchemeGroupVersion.WithResource("tframeworkconfigs"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Apps().V1beta2().TFrameworkConfigs().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Tars().V1beta2().TFrameworkConfigs().Informer()}, nil
 	case v1beta2.SchemeGroupVersion.WithResource("timages"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Apps().V1beta2().TImages().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Tars().V1beta2().TImages().Informer()}, nil
 	case v1beta2.SchemeGroupVersion.WithResource("tservers"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Apps().V1beta2().TServers().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Tars().V1beta2().TServers().Informer()}, nil
 	case v1beta2.SchemeGroupVersion.WithResource("ttemplates"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Apps().V1beta2().TTemplates().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Tars().V1beta2().TTemplates().Informer()}, nil
 	case v1beta2.SchemeGroupVersion.WithResource("ttrees"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Apps().V1beta2().TTrees().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Tars().V1beta2().TTrees().Informer()}, nil
 
-		// Group=k8s.tars.io, Version=v1beta3
+		// Group=tars.k8s.tars.io, Version=v1beta3
 	case v1beta3.SchemeGroupVersion.WithResource("taccounts"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Apps().V1beta3().TAccounts().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Tars().V1beta3().TAccounts().Informer()}, nil
 	case v1beta3.SchemeGroupVersion.WithResource("tconfigs"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Apps().V1beta3().TConfigs().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Tars().V1beta3().TConfigs().Informer()}, nil
 	case v1beta3.SchemeGroupVersion.WithResource("tendpoints"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Apps().V1beta3().TEndpoints().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Tars().V1beta3().TEndpoints().Informer()}, nil
 	case v1beta3.SchemeGroupVersion.WithResource("texitedrecords"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Apps().V1beta3().TExitedRecords().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Tars().V1beta3().TExitedRecords().Informer()}, nil
 	case v1beta3.SchemeGroupVersion.WithResource("tframeworkconfigs"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Apps().V1beta3().TFrameworkConfigs().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Tars().V1beta3().TFrameworkConfigs().Informer()}, nil
 	case v1beta3.SchemeGroupVersion.WithResource("timages"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Apps().V1beta3().TImages().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Tars().V1beta3().TImages().Informer()}, nil
 	case v1beta3.SchemeGroupVersion.WithResource("tservers"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Apps().V1beta3().TServers().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Tars().V1beta3().TServers().Informer()}, nil
 	case v1beta3.SchemeGroupVersion.WithResource("ttemplates"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Apps().V1beta3().TTemplates().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Tars().V1beta3().TTemplates().Informer()}, nil
 	case v1beta3.SchemeGroupVersion.WithResource("ttrees"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Apps().V1beta3().TTrees().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Tars().V1beta3().TTrees().Informer()}, nil
 
 	}
 

@@ -5,11 +5,11 @@ import (
 	k8sCoreV1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	tarsApisV1beta3 "k8s.tars.io/apps/v1beta3"
+	tarsV1beta3 "k8s.tars.io/apis/tars/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 )
 
-func buildTVolumeClaimTemplates(tserver *tarsApisV1beta3.TServer, name string) *k8sCoreV1.PersistentVolumeClaim {
+func buildTVolumeClaimTemplates(tserver *tarsV1beta3.TServer, name string) *k8sCoreV1.PersistentVolumeClaim {
 	storageClassName := tarsMeta.TStorageClassName
 	volumeMode := k8sCoreV1.PersistentVolumeFilesystem
 	quantity, _ := resource.ParseQuantity("1G")
@@ -27,7 +27,7 @@ func buildTVolumeClaimTemplates(tserver *tarsApisV1beta3.TServer, name string) *
 				tarsMeta.TLocalVolumeLabel: name,
 			},
 			OwnerReferences: []k8sMetaV1.OwnerReference{
-				*k8sMetaV1.NewControllerRef(tserver, tarsApisV1beta3.SchemeGroupVersion.WithKind(tarsMeta.TServerKind)),
+				*k8sMetaV1.NewControllerRef(tserver, tarsV1beta3.SchemeGroupVersion.WithKind(tarsMeta.TServerKind)),
 			},
 		},
 		Spec: k8sCoreV1.PersistentVolumeClaimSpec{
@@ -51,7 +51,7 @@ func buildTVolumeClaimTemplates(tserver *tarsApisV1beta3.TServer, name string) *
 	return pvc
 }
 
-func buildStatefulsetVolumeClaimTemplates(tserver *tarsApisV1beta3.TServer) []k8sCoreV1.PersistentVolumeClaim {
+func buildStatefulsetVolumeClaimTemplates(tserver *tarsV1beta3.TServer) []k8sCoreV1.PersistentVolumeClaim {
 	var volumeClaimTemplates []k8sCoreV1.PersistentVolumeClaim
 	for _, mount := range tserver.Spec.K8S.Mounts {
 		if mount.Source.PersistentVolumeClaimTemplate != nil {
@@ -71,11 +71,11 @@ func buildStatefulsetVolumeClaimTemplates(tserver *tarsApisV1beta3.TServer) []k8
 	return volumeClaimTemplates
 }
 
-func buildStatefulsetUpdateStrategy(tserver *tarsApisV1beta3.TServer) k8sAppsV1.StatefulSetUpdateStrategy {
+func buildStatefulsetUpdateStrategy(tserver *tarsV1beta3.TServer) k8sAppsV1.StatefulSetUpdateStrategy {
 	return tserver.Spec.K8S.UpdateStrategy
 }
 
-func buildStatefulset(tserver *tarsApisV1beta3.TServer) *k8sAppsV1.StatefulSet {
+func buildStatefulset(tserver *tarsV1beta3.TServer) *k8sAppsV1.StatefulSet {
 	historyLimit := tarsMeta.DefaultWorkloadHistoryLimit
 	statefulSet := &k8sAppsV1.StatefulSet{
 		TypeMeta: k8sMetaV1.TypeMeta{},
@@ -87,7 +87,7 @@ func buildStatefulset(tserver *tarsApisV1beta3.TServer) *k8sAppsV1.StatefulSet {
 				tarsMeta.TServerNameLabel: tserver.Spec.Server,
 			},
 			OwnerReferences: []k8sMetaV1.OwnerReference{
-				*k8sMetaV1.NewControllerRef(tserver, tarsApisV1beta3.SchemeGroupVersion.WithKind(tarsMeta.TServerKind)),
+				*k8sMetaV1.NewControllerRef(tserver, tarsV1beta3.SchemeGroupVersion.WithKind(tarsMeta.TServerKind)),
 			},
 		},
 		Spec: k8sAppsV1.StatefulSetSpec{
@@ -109,7 +109,7 @@ func buildStatefulset(tserver *tarsApisV1beta3.TServer) *k8sAppsV1.StatefulSet {
 	return statefulSet
 }
 
-func syncStatefulSet(tserver *tarsApisV1beta3.TServer, statefulSet *k8sAppsV1.StatefulSet) {
+func syncStatefulSet(tserver *tarsV1beta3.TServer, statefulSet *k8sAppsV1.StatefulSet) {
 
 	statefulSet.Spec.Replicas = &tserver.Spec.K8S.Replicas
 	statefulSet.Spec.UpdateStrategy = tserver.Spec.K8S.UpdateStrategy

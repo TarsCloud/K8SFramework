@@ -16,8 +16,8 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
-	tarsAppsV1beta3 "k8s.tars.io/apps/v1beta3"
-	tarsListerV1beta3 "k8s.tars.io/client-go/listers/apps/v1beta3"
+	tarsV1beta3 "k8s.tars.io/apis/tars/v1beta3"
+	tarsListerV1beta3 "k8s.tars.io/client-go/listers/tars/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	tarsRuntime "k8s.tars.io/runtime"
 	"strings"
@@ -49,7 +49,7 @@ type PVCReconciler struct {
 
 func NewPVCController(threads int) *PVCReconciler {
 	pvcInformer := tarsRuntime.Factories.K8SInformerFactoryWithTarsFilter.Core().V1().PersistentVolumeClaims()
-	tsInformer := tarsRuntime.Factories.TarsInformerFactory.Apps().V1beta3().TServers()
+	tsInformer := tarsRuntime.Factories.TarsInformerFactory.Tars().V1beta3().TServers()
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartRecordingToSink(&k8sCoreTypeV1.EventSinkImpl{Interface: tarsRuntime.Clients.K8sClient.CoreV1().Events("")})
 	c := &PVCReconciler{
@@ -105,8 +105,8 @@ func (r *PVCReconciler) processItem() bool {
 
 func (r *PVCReconciler) EnqueueResourceEvent(resourceKind string, resourceEvent k8sWatchV1.EventType, resourceObj interface{}) {
 	switch resourceObj.(type) {
-	case *tarsAppsV1beta3.TServer:
-		tserver := resourceObj.(*tarsAppsV1beta3.TServer)
+	case *tarsV1beta3.TServer:
+		tserver := resourceObj.(*tarsV1beta3.TServer)
 		key := fmt.Sprintf("%s/%s", tserver.Namespace, tserver.Name)
 		r.queue.Add(key)
 	case *k8sCoreV1.PersistentVolumeClaim:
@@ -146,7 +146,7 @@ func (r *PVCReconciler) Run(stopCh chan struct{}) {
 	<-stopCh
 }
 
-func buildPVCAnnotations(tserver *tarsAppsV1beta3.TServer) map[string]map[string]string {
+func buildPVCAnnotations(tserver *tarsV1beta3.TServer) map[string]map[string]string {
 	var annotations = make(map[string]map[string]string, 0)
 	if tserver.Spec.K8S.Mounts != nil {
 		for _, mount := range tserver.Spec.K8S.Mounts {

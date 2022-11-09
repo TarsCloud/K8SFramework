@@ -24,40 +24,40 @@ import (
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
-	appsv1beta1 "k8s.tars.io/client-go/clientset/versioned/typed/apps/v1beta1"
-	appsv1beta2 "k8s.tars.io/client-go/clientset/versioned/typed/apps/v1beta2"
-	appsv1beta3 "k8s.tars.io/client-go/clientset/versioned/typed/apps/v1beta3"
+	tarsv1beta1 "k8s.tars.io/client-go/clientset/versioned/typed/tars/v1beta1"
+	tarsv1beta2 "k8s.tars.io/client-go/clientset/versioned/typed/tars/v1beta2"
+	tarsv1beta3 "k8s.tars.io/client-go/clientset/versioned/typed/tars/v1beta3"
 )
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
-	AppsV1beta1() appsv1beta1.AppsV1beta1Interface
-	AppsV1beta2() appsv1beta2.AppsV1beta2Interface
-	AppsV1beta3() appsv1beta3.AppsV1beta3Interface
+	TarsV1beta1() tarsv1beta1.TarsV1beta1Interface
+	TarsV1beta2() tarsv1beta2.TarsV1beta2Interface
+	TarsV1beta3() tarsv1beta3.TarsV1beta3Interface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
 // version included in a Clientset.
 type Clientset struct {
 	*discovery.DiscoveryClient
-	appsV1beta1 *appsv1beta1.AppsV1beta1Client
-	appsV1beta2 *appsv1beta2.AppsV1beta2Client
-	appsV1beta3 *appsv1beta3.AppsV1beta3Client
+	tarsV1beta1 *tarsv1beta1.TarsV1beta1Client
+	tarsV1beta2 *tarsv1beta2.TarsV1beta2Client
+	tarsV1beta3 *tarsv1beta3.TarsV1beta3Client
 }
 
-// AppsV1beta1 retrieves the AppsV1beta1Client
-func (c *Clientset) AppsV1beta1() appsv1beta1.AppsV1beta1Interface {
-	return c.appsV1beta1
+// TarsV1beta1 retrieves the TarsV1beta1Client
+func (c *Clientset) TarsV1beta1() tarsv1beta1.TarsV1beta1Interface {
+	return c.tarsV1beta1
 }
 
-// AppsV1beta2 retrieves the AppsV1beta2Client
-func (c *Clientset) AppsV1beta2() appsv1beta2.AppsV1beta2Interface {
-	return c.appsV1beta2
+// TarsV1beta2 retrieves the TarsV1beta2Client
+func (c *Clientset) TarsV1beta2() tarsv1beta2.TarsV1beta2Interface {
+	return c.tarsV1beta2
 }
 
-// AppsV1beta3 retrieves the AppsV1beta3Client
-func (c *Clientset) AppsV1beta3() appsv1beta3.AppsV1beta3Interface {
-	return c.appsV1beta3
+// TarsV1beta3 retrieves the TarsV1beta3Client
+func (c *Clientset) TarsV1beta3() tarsv1beta3.TarsV1beta3Interface {
+	return c.tarsV1beta3
 }
 
 // Discovery retrieves the DiscoveryClient
@@ -81,15 +81,15 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	}
 	var cs Clientset
 	var err error
-	cs.appsV1beta1, err = appsv1beta1.NewForConfig(&configShallowCopy)
+	cs.tarsV1beta1, err = tarsv1beta1.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
 	}
-	cs.appsV1beta2, err = appsv1beta2.NewForConfig(&configShallowCopy)
+	cs.tarsV1beta2, err = tarsv1beta2.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
 	}
-	cs.appsV1beta3, err = appsv1beta3.NewForConfig(&configShallowCopy)
+	cs.tarsV1beta3, err = tarsv1beta3.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -105,9 +105,9 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 // panics if there is an error in the config.
 func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
-	cs.appsV1beta1 = appsv1beta1.NewForConfigOrDie(c)
-	cs.appsV1beta2 = appsv1beta2.NewForConfigOrDie(c)
-	cs.appsV1beta3 = appsv1beta3.NewForConfigOrDie(c)
+	cs.tarsV1beta1 = tarsv1beta1.NewForConfigOrDie(c)
+	cs.tarsV1beta2 = tarsv1beta2.NewForConfigOrDie(c)
+	cs.tarsV1beta3 = tarsv1beta3.NewForConfigOrDie(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClientForConfigOrDie(c)
 	return &cs
@@ -116,9 +116,9 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 // New creates a new Clientset for the given RESTClient.
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
-	cs.appsV1beta1 = appsv1beta1.New(c)
-	cs.appsV1beta2 = appsv1beta2.New(c)
-	cs.appsV1beta3 = appsv1beta3.New(c)
+	cs.tarsV1beta1 = tarsv1beta1.New(c)
+	cs.tarsV1beta2 = tarsv1beta2.New(c)
+	cs.tarsV1beta3 = tarsv1beta3.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &cs
