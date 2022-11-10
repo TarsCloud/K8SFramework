@@ -7,10 +7,11 @@ import (
 	"k8s.io/apimachinery/pkg/util/json"
 	tarsMeta "k8s.tars.io/meta"
 	translatorV1beta3 "k8s.tars.io/translator/v1beta3"
-	"tarswebhook/webhook/informer"
+	"tarswebhook/webhook/lister"
+	"tarswebhook/webhook/validating"
 )
 
-func validStatefulSet(newStatefulset *k8sAppsV1.StatefulSet, oldStatefulset *k8sAppsV1.StatefulSet, listers *informer.Listers) error {
+func validStatefulSet(newStatefulset *k8sAppsV1.StatefulSet, oldStatefulset *k8sAppsV1.StatefulSet, listers *lister.Listers) error {
 	if !listers.TSSynced() {
 		return fmt.Errorf("tserver infomer has not finished syncing")
 	}
@@ -29,7 +30,7 @@ func validStatefulSet(newStatefulset *k8sAppsV1.StatefulSet, oldStatefulset *k8s
 	return nil
 }
 
-func validCreateStatefulSet(listers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
+func validCreateStatefulSet(listers *lister.Listers, view *k8sAdmissionV1.AdmissionReview) error {
 	requestServiceAccount := view.Request.UserInfo.Username
 	controllerUserName := tarsMeta.DefaultControllerServiceAccount
 	if requestServiceAccount == controllerUserName {
@@ -39,7 +40,7 @@ func validCreateStatefulSet(listers *informer.Listers, view *k8sAdmissionV1.Admi
 	return fmt.Errorf("only use authorized account can create statefulset")
 }
 
-func validUpdateStatefulSet(listers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
+func validUpdateStatefulSet(listers *lister.Listers, view *k8sAdmissionV1.AdmissionReview) error {
 	requestServiceAccount := view.Request.UserInfo.Username
 	controllerUserName := tarsMeta.DefaultControllerServiceAccount
 	if requestServiceAccount == controllerUserName {
@@ -51,6 +52,13 @@ func validUpdateStatefulSet(listers *informer.Listers, view *k8sAdmissionV1.Admi
 	return validStatefulSet(newStatefulset, nil, listers)
 }
 
-func validDeleteStatefulSet(listers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
+func validDeleteStatefulSet(listers *lister.Listers, view *k8sAdmissionV1.AdmissionReview) error {
 	return nil
+}
+
+func init() {
+	gvr := k8sAppsV1.SchemeGroupVersion.WithResource("statefulsets")
+	validating.Registry(k8sAdmissionV1.Create, &gvr, validCreateStatefulSet)
+	validating.Registry(k8sAdmissionV1.Update, &gvr, validUpdateStatefulSet)
+	validating.Registry(k8sAdmissionV1.Delete, &gvr, validDeleteStatefulSet)
 }

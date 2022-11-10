@@ -7,10 +7,11 @@ import (
 	"k8s.io/apimachinery/pkg/util/json"
 	tarsMeta "k8s.tars.io/meta"
 	tarsRuntime "k8s.tars.io/runtime"
-	"tarswebhook/webhook/informer"
+	"tarswebhook/webhook/lister"
+	"tarswebhook/webhook/validating"
 )
 
-func validDaemonset(newDaemonset, oldDaemonset *k8sAppsV1.DaemonSet, listers *informer.Listers) error {
+func validDaemonset(newDaemonset, oldDaemonset *k8sAppsV1.DaemonSet, listers *lister.Listers) error {
 	if !listers.TSSynced() {
 		return fmt.Errorf("tserver infomer has not finished syncing")
 	}
@@ -29,7 +30,7 @@ func validDaemonset(newDaemonset, oldDaemonset *k8sAppsV1.DaemonSet, listers *in
 	return nil
 }
 
-func validCreateDaemonSet(listers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
+func validCreateDaemonSet(listers *lister.Listers, view *k8sAdmissionV1.AdmissionReview) error {
 	requestServiceAccount := view.Request.UserInfo.Username
 	controllerUserName := tarsMeta.DefaultControllerServiceAccount
 	if requestServiceAccount == controllerUserName {
@@ -38,7 +39,7 @@ func validCreateDaemonSet(listers *informer.Listers, view *k8sAdmissionV1.Admiss
 	return fmt.Errorf("only use authorized account can create daemonset")
 }
 
-func validUpdateDaemonSet(listers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
+func validUpdateDaemonSet(listers *lister.Listers, view *k8sAdmissionV1.AdmissionReview) error {
 	requestServiceAccount := view.Request.UserInfo.Username
 	controllerUserName := tarsMeta.DefaultControllerServiceAccount
 	if requestServiceAccount == controllerUserName {
@@ -51,6 +52,13 @@ func validUpdateDaemonSet(listers *informer.Listers, view *k8sAdmissionV1.Admiss
 	return validDaemonset(newDaemonset, nil, listers)
 }
 
-func validDeleteDaemonSet(listers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
+func validDeleteDaemonSet(listers *lister.Listers, view *k8sAdmissionV1.AdmissionReview) error {
 	return nil
+}
+
+func init() {
+	gvr := k8sAppsV1.SchemeGroupVersion.WithResource("daemonsets")
+	validating.Registry(k8sAdmissionV1.Create, &gvr, validCreateDaemonSet)
+	validating.Registry(k8sAdmissionV1.Update, &gvr, validUpdateDaemonSet)
+	validating.Registry(k8sAdmissionV1.Delete, &gvr, validDeleteDaemonSet)
 }

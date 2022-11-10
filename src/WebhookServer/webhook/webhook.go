@@ -9,15 +9,15 @@ import (
 	"encoding/pem"
 	"fmt"
 	"io/ioutil"
-	utilRuntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/klog/v2"
 	tarsV1beta3 "k8s.tars.io/apis/tars/v1beta3"
 	tarsRuntime "k8s.tars.io/runtime"
 	"math/big"
 	"net/http"
 	"os"
 	"tarswebhook/webhook/conversion"
-	"tarswebhook/webhook/informer"
+	"tarswebhook/webhook/lister"
 	"tarswebhook/webhook/mutating"
 	"tarswebhook/webhook/validating"
 	"time"
@@ -31,7 +31,7 @@ type Webhook struct {
 	mutating   *mutating.Mutating
 	validating *validating.Validating
 	conversion *conversion.Conversion
-	listers    *informer.Listers
+	listers    *lister.Listers
 }
 
 func New() *Webhook {
@@ -40,7 +40,7 @@ func New() *Webhook {
 	tcInformer := tarsRuntime.Factories.MetadataInformerFactor.ForResource(tarsV1beta3.SchemeGroupVersion.WithResource("tconfigs"))
 	trInformer := tarsRuntime.Factories.MetadataInformerFactor.ForResource(tarsV1beta3.SchemeGroupVersion.WithResource("ttrees"))
 
-	listers := &informer.Listers{
+	listers := &lister.Listers{
 		TSLister: tsInformer.Lister(),
 		TSSynced: tsInformer.Informer().HasSynced,
 
@@ -152,7 +152,7 @@ func (h *Webhook) Run(stopCh chan struct{}) {
 
 		cert, err := selfSigneCert()
 		if err != nil {
-			utilRuntime.HandleError(fmt.Errorf("will exist because: %s \n", err.Error()))
+			klog.Errorf("will exist because: %s \n", err.Error())
 			os.Exit(-1)
 		}
 
@@ -171,7 +171,7 @@ func (h *Webhook) Run(stopCh chan struct{}) {
 		// the returned error is ErrServerClosed.
 		err = srv.ListenAndServeTLS("", "")
 		if err != nil {
-			utilRuntime.HandleError(fmt.Errorf("will exist because: %s \n", err.Error()))
+			klog.Errorf("will exist because: %s \n", err.Error())
 		}
 	}, time.Second, stopCh)
 }

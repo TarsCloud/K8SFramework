@@ -5,34 +5,33 @@ import (
 	"fmt"
 	k8sAdmissionV1 "k8s.io/api/admission/v1"
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	tarsMeta "k8s.tars.io/meta"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/klog/v2"
 	"net/http"
-	"tarswebhook/webhook/informer"
-	validatingAppsV1 "tarswebhook/webhook/validating/apps/v1"
-	validatingCoreV1 "tarswebhook/webhook/validating/core/v1"
-	validatingTarsV1beta2 "tarswebhook/webhook/validating/k8s.tars.io/v1beta2"
-	validatingTarsV1beta3 "tarswebhook/webhook/validating/k8s.tars.io/v1beta3"
+	"tarswebhook/webhook/lister"
 )
 
-type Validating struct {
-	listers *informer.Listers
+type Validator func(listers *lister.Listers, view *k8sAdmissionV1.AdmissionReview) error
+
+var handlers = map[string]Validator{}
+
+func generateKey(operator k8sAdmissionV1.Operation, gvr string) string {
+	return fmt.Sprintf("%s %s", operator, gvr)
 }
 
-func New(listers *informer.Listers) *Validating {
+func Registry(operator k8sAdmissionV1.Operation, gvr *schema.GroupVersionResource, handler Validator) {
+	key := generateKey(operator, gvr.String())
+	klog.Infof("registry validating key: [%s]\n", key)
+	handlers[key] = handler
+}
+
+type Validating struct {
+	listers *lister.Listers
+}
+
+func New(listers *lister.Listers) *Validating {
 	return &Validating{
 		listers: listers,
-	}
-}
-
-var handlers = map[string]func(*informer.Listers, *k8sAdmissionV1.AdmissionReview) error{}
-
-func init() {
-	handlers = map[string]func(*informer.Listers, *k8sAdmissionV1.AdmissionReview) error{
-		"core/v1":                     validatingCoreV1.Handler,
-		"/v1":                         validatingCoreV1.Handler,
-		"apps/v1":                     validatingAppsV1.Handler,
-		tarsMeta.TarsGroupVersionV1B2: validatingTarsV1beta2.Handler,
-		tarsMeta.TarsGroupVersionV1B3: validatingTarsV1beta3.Handler,
 	}
 }
 
@@ -44,11 +43,12 @@ func (v *Validating) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	gv := fmt.Sprintf("%s/%s", requestView.Request.Kind.Group, requestView.Request.Kind.Version)
-	if fun, ok := handlers[gv]; !ok {
-		err = fmt.Errorf("unsupported validating %s.%s", gv, requestView.Request.Kind.Kind)
+	key := generateKey(requestView.Request.Operation, requestView.Request.RequestResource.String())
+	klog.Infof("receiver validating request, key is [%s]", key)
+	if validator, ok := handlers[key]; !ok || validator == nil {
+		err = fmt.Errorf("unsupported validating [%s]", key)
 	} else {
-		err = fun(v.listers, requestView)
+		err = validator(v.listers, requestView)
 	}
 
 	var responseView = &k8sAdmissionV1.AdmissionReview{

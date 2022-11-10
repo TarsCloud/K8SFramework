@@ -7,7 +7,7 @@ import (
 	tarsRuntime "k8s.tars.io/runtime"
 	"os"
 	"tarscontroller/controller"
-	"tarscontroller/controller/v1beta3"
+	tarsControllerV1beta3 "tarscontroller/controller/tars/v1beta3"
 )
 
 func main() {
@@ -19,18 +19,18 @@ func main() {
 	}
 
 	controllers := []controller.Controller{
-		v1beta3.NewNodeController(1),
-		v1beta3.NewDaemonSetController(1),
-		v1beta3.NewTTreeController(1),
-		v1beta3.NewServiceController(1),
-		v1beta3.NewTExitedPodController(1),
-		v1beta3.NewStatefulSetController(5),
-		v1beta3.NewTServerController(3),
-		v1beta3.NewTEndpointController(3),
-		v1beta3.NewTAccountController(1),
-		v1beta3.NewTConfigController(3),
-		v1beta3.NewTImageController(1),
-		v1beta3.NewPVCController(1),
+		tarsControllerV1beta3.NewNodeController(1),
+		tarsControllerV1beta3.NewDaemonSetController(1),
+		tarsControllerV1beta3.NewTTreeController(1),
+		tarsControllerV1beta3.NewServiceController(1),
+		tarsControllerV1beta3.NewTExitedPodController(1),
+		tarsControllerV1beta3.NewStatefulSetController(5),
+		tarsControllerV1beta3.NewTServerController(3),
+		tarsControllerV1beta3.NewTEndpointController(3),
+		tarsControllerV1beta3.NewTAccountController(1),
+		tarsControllerV1beta3.NewTConfigController(3),
+		tarsControllerV1beta3.NewTImageController(1),
+		tarsControllerV1beta3.NewPVCController(1),
 	}
 
 	tarsRuntime.Factories.Start(stopCh)

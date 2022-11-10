@@ -7,10 +7,11 @@ import (
 	"k8s.io/apimachinery/pkg/util/json"
 	tarsMeta "k8s.tars.io/meta"
 	tarsRuntime "k8s.tars.io/runtime"
-	"tarswebhook/webhook/informer"
+	"tarswebhook/webhook/lister"
+	"tarswebhook/webhook/validating"
 )
 
-func validService(newService *k8sCoreV1.Service, oldService *k8sCoreV1.Service, listers *informer.Listers) error {
+func validService(newService *k8sCoreV1.Service, oldService *k8sCoreV1.Service, listers *lister.Listers) error {
 	if !listers.TSSynced() {
 		return fmt.Errorf("tserver infomer has not finished syncing")
 	}
@@ -29,7 +30,7 @@ func validService(newService *k8sCoreV1.Service, oldService *k8sCoreV1.Service, 
 	return nil
 }
 
-func validCreateService(listers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
+func validCreateService(listers *lister.Listers, view *k8sAdmissionV1.AdmissionReview) error {
 	requestServiceAccount := view.Request.UserInfo.Username
 	controllerUserName := tarsMeta.DefaultControllerServiceAccount
 	if requestServiceAccount == controllerUserName {
@@ -39,7 +40,7 @@ func validCreateService(listers *informer.Listers, view *k8sAdmissionV1.Admissio
 	return fmt.Errorf("only use authorized account can create service")
 }
 
-func validUpdateService(informer *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
+func validUpdateService(informer *lister.Listers, view *k8sAdmissionV1.AdmissionReview) error {
 	requestServiceAccount := view.Request.UserInfo.Username
 	controllerUserName := tarsMeta.DefaultControllerServiceAccount
 	if requestServiceAccount == controllerUserName {
@@ -52,6 +53,13 @@ func validUpdateService(informer *informer.Listers, view *k8sAdmissionV1.Admissi
 	return validService(newService, nil, informer)
 }
 
-func validDeleteService(listers *informer.Listers, view *k8sAdmissionV1.AdmissionReview) error {
+func validDeleteService(listers *lister.Listers, view *k8sAdmissionV1.AdmissionReview) error {
 	return nil
+}
+
+func init() {
+	gvr := k8sCoreV1.SchemeGroupVersion.WithResource("services")
+	validating.Registry(k8sAdmissionV1.Create, &gvr, validCreateService)
+	validating.Registry(k8sAdmissionV1.Update, &gvr, validUpdateService)
+	validating.Registry(k8sAdmissionV1.Delete, &gvr, validDeleteService)
 }
