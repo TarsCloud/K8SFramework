@@ -8,15 +8,16 @@ on:
       - ".github/workflows/build-compiler-master.yml"
       - "compiler/tools/**"
       - "compiler/base-compiler-bullseye.Dockerfile"
-      - "submodule/TarsCpp/**"
+      - "submodule/TarsCpp"
   pull_request:
     branches:
       - master
     paths:
       - ".github/workflows/build-compiler-master.yml"
       - "compiler/tools/**"
+      - "submodule/TarsCpp/Changelist-3.x.md"
       - "compiler/base-compiler-bullseye.Dockerfile"
-      - "submodule/TarsCpp/**"
+      - "submodule/TarsCpp"
 
 jobs:
   build:

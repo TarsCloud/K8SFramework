@@ -8,7 +8,7 @@ on:
       - ".github/workflows/build-compiler-master-buster.yml"
       - "compiler/tools/**"
       - "compiler/base-compiler-buster.Dockerfile"
-      - "submodule/TarsCpp/**"
+      - "submodule/TarsCpp"
   pull_request:
     branches:
       - master
@@ -16,7 +16,7 @@ on:
       - ".github/workflows/build-compiler-master-buster.yml"
       - "compiler/tools/**"
       - "compiler/base-compiler-buster.Dockerfile"
-      - "submodule/TarsCpp/**"
+      - "submodule/TarsCpp"
 
 jobs:
   build:

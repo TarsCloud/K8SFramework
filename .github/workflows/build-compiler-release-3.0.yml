@@ -7,16 +7,18 @@ on:
     paths:
       - ".github/workflows/build-compiler-release-3.0.yml"
       - "compiler/tools/**"
-      - "compiler/base-compiler-bullseye.Dockerfile"
-      - "submodule/TarsCpp/**"
+      - "compiler/base-compil"
+      - "compiler/base-compier-bullseye.Dockerfile"
+      - "submodule/TarsCpp"
   pull_request:
     branches:
       - master
     paths:
       - ".github/workflows/build-compiler-release-3.0.yml"
       - "compiler/tools/**"
+      - "submodule/TarsCpp/Changelist-3.x.md"
       - "compiler/base-compiler-bullseye.Dockerfile"
-      - "submodule/TarsCpp/**"
+      - "submodule/TarsCpp"
 
 jobs:
   build:

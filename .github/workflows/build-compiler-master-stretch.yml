@@ -8,15 +8,15 @@ on:
       - ".github/workflows/build-compiler-master-stretch.yml"
       - "compiler/tools/**"
       - "compiler/base-compiler-stretch.Dockerfile"
-      - "submodule/TarsCpp/**"
+      - "submodule/TarsCpp"
   pull_request:
     branches:
       - master
     paths:
       - ".github/workflows/build-compiler-master-stretch.yml"
       - "compiler/tools/**"
+      - "submodule/TarsCpp"
       - "compiler/base-compiler-stretch.Dockerfile"
-      - "submodule/TarsCpp/**"
 
 jobs:
   build:
