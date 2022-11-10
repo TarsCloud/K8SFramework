@@ -1,4 +1,4 @@
-name: build-compiler-master-bullseye
+name: build-compiler-master
 
 on:
   push:
@@ -37,7 +37,7 @@ jobs:
         with:
           context: "{{defaultContext}}:compiler"
           push: true
-          tags: tarscloud/base-compiler-bullseye:latest
+          tags: tarscloud/base-compiler:latest
           file: base-compiler-bullseye.Dockerfile
           build-args: |
             BRANCH=master
@@ -61,11 +61,9 @@ jobs:
         with:
           context: "{{defaultContext}}:compiler"
           push: true
-          tags: tarscloud/base-compiler-bullseye-ssl:latest
+          tags: tarscloud/base-compiler-ssl:latest
           file: base-compiler-bullseye.Dockerfile
           build-args: |
             BRANCH=master
             TARS_SSL=ON
           platforms: linux/amd64,linux/arm64
-      # - name: Build docker
-      #   run: cd compiler && docker buildx build . -f base-compiler.Dockerfile -t tarscloud/base-compiler:latest --build-arg BRANCH=master --platform=linux/amd64,linux/arm64 --push
