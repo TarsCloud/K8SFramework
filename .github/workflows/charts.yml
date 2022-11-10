@@ -32,6 +32,9 @@ jobs:
         run:
           echo ::set-output name=BUILD_VERSION::${GITHUB_REF/refs\/tags\//}
 
+      - name: Build Base Images
+        run: make base CHART_VERSION=${{ steps.chart-version.outputs.CHART_VERSION }} BUILD_VERSION=${{ steps.build-version.outputs.BUILD_VERSION }} PLATFORMS='linux/amd64 linux/arm64'
+
       - name: Build TarsController Chart
         run: make chart.controller CHART_VERSION=${{ steps.chart-version.outputs.CHART_VERSION }} BUILD_VERSION=${{ steps.build-version.outputs.BUILD_VERSION }} PLATFORMS='linux/amd64 linux/arm64'
 
