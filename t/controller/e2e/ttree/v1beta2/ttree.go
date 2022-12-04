@@ -12,6 +12,7 @@ import (
 	tarsV1Beta2 "k8s.tars.io/apis/tars/v1beta2"
 	tarsMeta "k8s.tars.io/meta"
 	tarsRuntime "k8s.tars.io/runtime"
+	tarsTool "k8s.tars.io/tool"
 
 	"time"
 )
@@ -99,14 +100,14 @@ var _ = ginkgo.Describe("test ttree", func() {
 	})
 
 	ginkgo.It("try update business", func() {
-		jsonPatch := tarsMeta.JsonPatch{
+		jsonPatch := tarsTool.JsonPatch{
 			{
-				OP:    tarsMeta.JsonPatchReplace,
+				OP:    tarsTool.JsonPatchReplace,
 				Path:  "/businesses/0/name",
 				Value: "MFrameWork",
 			},
 			{
-				OP:    tarsMeta.JsonPatchReplace,
+				OP:    tarsTool.JsonPatchReplace,
 				Path:  "/businesses/1/name",
 				Value: "MBase",
 			},
@@ -121,9 +122,9 @@ var _ = ginkgo.Describe("test ttree", func() {
 	})
 
 	ginkgo.It("try delete business", func() {
-		jsonPatch := tarsMeta.JsonPatch{
+		jsonPatch := tarsTool.JsonPatch{
 			{
-				OP:   tarsMeta.JsonPatchRemove,
+				OP:   tarsTool.JsonPatchRemove,
 				Path: "/businesses/1",
 			},
 		}
@@ -137,9 +138,9 @@ var _ = ginkgo.Describe("test ttree", func() {
 	})
 
 	ginkgo.It("try update app.businessRef", func() {
-		jsonPatch := tarsMeta.JsonPatch{
+		jsonPatch := tarsTool.JsonPatch{
 			{
-				OP:   tarsMeta.JsonPatchRemove,
+				OP:   tarsTool.JsonPatchRemove,
 				Path: "/apps/1/businessRef",
 			},
 		}
@@ -148,9 +149,9 @@ var _ = ginkgo.Describe("test ttree", func() {
 		_, err := tarsRuntime.Clients.CrdClient.TarsV1beta2().TTrees(s.Namespace).Patch(context.TODO(), tarsMeta.FixedTTreeResourceName, patchTypes.JSONPatchType, bs, k8sMetaV1.PatchOptions{})
 		assert.NotNil(ginkgo.GinkgoT(), err)
 
-		jsonPatch = tarsMeta.JsonPatch{
+		jsonPatch = tarsTool.JsonPatch{
 			{
-				OP:    tarsMeta.JsonPatchReplace,
+				OP:    tarsTool.JsonPatchReplace,
 				Path:  "/apps/1/businessRef",
 				Value: "notExist",
 			},
@@ -162,9 +163,9 @@ var _ = ginkgo.Describe("test ttree", func() {
 		assert.Equal(ginkgo.GinkgoT(), 2, len(ttree.Apps))
 		assert.Equal(ginkgo.GinkgoT(), "", ttree.Apps[1].BusinessRef)
 
-		jsonPatch = tarsMeta.JsonPatch{
+		jsonPatch = tarsTool.JsonPatch{
 			{
-				OP:    tarsMeta.JsonPatchReplace,
+				OP:    tarsTool.JsonPatchReplace,
 				Path:  "/apps/1/businessRef",
 				Value: "Framework",
 			},

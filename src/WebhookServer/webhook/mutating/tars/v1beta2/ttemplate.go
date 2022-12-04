@@ -5,6 +5,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/json"
 	tarsV1beta2 "k8s.tars.io/apis/tars/v1beta2"
 	tarsMeta "k8s.tars.io/meta"
+	tarsTool "k8s.tars.io/tool"
 	"tarswebhook/webhook/lister"
 	"tarswebhook/webhook/mutating"
 )
@@ -13,7 +14,7 @@ func mutatingCreateTTemplate(listers *lister.Listers, requestAdmissionView *k8sA
 	ttemplate := &tarsV1beta2.TTemplate{}
 	_ = json.Unmarshal(requestAdmissionView.Request.Object.Raw, ttemplate)
 
-	var jsonPatch tarsMeta.JsonPatch
+	var jsonPatch tarsTool.JsonPatch
 
 	for i := 0; i < 1; i++ {
 
@@ -22,8 +23,8 @@ func mutatingCreateTTemplate(listers *lister.Listers, requestAdmissionView *k8sA
 		if fatherless {
 			if ttemplate.Labels != nil {
 				if _, ok := ttemplate.Labels[tarsMeta.TTemplateParentLabel]; ok {
-					jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
-						OP:   tarsMeta.JsonPatchRemove,
+					jsonPatch = append(jsonPatch, tarsTool.JsonPatchItem{
+						OP:   tarsTool.JsonPatchRemove,
 						Path: "/metadata/labels/tars.io~1Parent",
 					})
 				}
@@ -33,15 +34,15 @@ func mutatingCreateTTemplate(listers *lister.Listers, requestAdmissionView *k8sA
 
 		if ttemplate.Labels == nil {
 			labels := map[string]string{}
-			jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
-				OP:    tarsMeta.JsonPatchAdd,
+			jsonPatch = append(jsonPatch, tarsTool.JsonPatchItem{
+				OP:    tarsTool.JsonPatchAdd,
 				Path:  "/metadata/labels",
 				Value: labels,
 			})
 		}
 
-		jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
-			OP:    tarsMeta.JsonPatchAdd,
+		jsonPatch = append(jsonPatch, tarsTool.JsonPatchItem{
+			OP:    tarsTool.JsonPatchAdd,
 			Path:  "/metadata/labels/tars.io~1Parent",
 			Value: ttemplate.Spec.Parent,
 		})

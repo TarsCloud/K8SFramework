@@ -16,6 +16,7 @@ import (
 	tarsListerV1beta3 "k8s.tars.io/client-go/listers/tars/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	tarsRuntime "k8s.tars.io/runtime"
+	tarsTool "k8s.tars.io/tool"
 	"tarscontroller/controller"
 	"time"
 )
@@ -135,9 +136,9 @@ func (r *TTreeReconciler) reconcile(key string) controller.Result {
 		CreateTime:   k8sMetaV1.Now(),
 		Mark:         "AddByController",
 	}
-	jsonPatch := tarsMeta.JsonPatch{
+	jsonPatch := tarsTool.JsonPatch{
 		{
-			OP:    tarsMeta.JsonPatchAdd,
+			OP:    tarsTool.JsonPatchAdd,
 			Path:  "/apps/-",
 			Value: newTressApp,
 		},

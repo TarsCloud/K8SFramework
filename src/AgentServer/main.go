@@ -26,7 +26,7 @@ func init() {
 }
 
 func main() {
-	runtime.Must(tarsRuntime.CreateContext("", ""))
+	runtime.Must(tarsRuntime.CreateContext("", "", true))
 
 	stopCh := make(chan struct{})
 

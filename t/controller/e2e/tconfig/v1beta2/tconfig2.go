@@ -12,6 +12,7 @@ import (
 	tarsTarsV1beta2 "k8s.tars.io/apis/tars/v1beta2"
 	tarsMeta "k8s.tars.io/meta"
 	tarsRuntime "k8s.tars.io/runtime"
+	tarsTool "k8s.tars.io/tool"
 
 	"strings"
 	"time"
@@ -79,9 +80,9 @@ var _ = ginkgo.Describe("test server level config", func() {
 
 		tryRemoveLabels := []string{tarsMeta.TServerAppLabel, tarsMeta.TServerNameLabel, tarsMeta.TConfigPodSeqLabel, tarsMeta.TConfigVersionLabel}
 		for _, v := range tryRemoveLabels {
-			jsonPath := tarsMeta.JsonPatch{
+			jsonPath := tarsTool.JsonPatch{
 				{
-					OP:   tarsMeta.JsonPatchRemove,
+					OP:   tarsTool.JsonPatchRemove,
 					Path: "/metadata/labels/" + strings.Replace(v, "/", "~1", 1),
 				},
 			}
@@ -108,9 +109,9 @@ var _ = ginkgo.Describe("test server level config", func() {
 
 		tryUpdateLabels := []string{tarsMeta.TServerAppLabel, tarsMeta.TServerNameLabel, tarsMeta.TConfigPodSeqLabel, tarsMeta.TConfigVersionLabel}
 		for _, v := range tryUpdateLabels {
-			jsonPath := tarsMeta.JsonPatch{
+			jsonPath := tarsTool.JsonPatch{
 				{
-					OP:    tarsMeta.JsonPatchReplace,
+					OP:    tarsTool.JsonPatchReplace,
 					Path:  "/metadata/labels/" + strings.Replace(v, "/", "~1", 1),
 					Value: scaffold.RandStringRunes(5),
 				},
@@ -135,9 +136,9 @@ var _ = ginkgo.Describe("test server level config", func() {
 			"/configContent": "NewContent",
 		}
 		for k, v := range immutableFields {
-			jsonPath := tarsMeta.JsonPatch{
+			jsonPath := tarsTool.JsonPatch{
 				{
-					OP:    tarsMeta.JsonPatchReplace,
+					OP:    tarsTool.JsonPatchReplace,
 					Path:  k,
 					Value: v,
 				},
@@ -149,9 +150,9 @@ var _ = ginkgo.Describe("test server level config", func() {
 	})
 
 	ginkgo.It("activated/inactivated tconfig", func() {
-		jsonPath := tarsMeta.JsonPatch{
+		jsonPath := tarsTool.JsonPatch{
 			{
-				OP:    tarsMeta.JsonPatchReplace,
+				OP:    tarsTool.JsonPatchReplace,
 				Path:  "/activated",
 				Value: true,
 			},
@@ -169,9 +170,9 @@ var _ = ginkgo.Describe("test server level config", func() {
 		}
 		assert.True(ginkgo.GinkgoT(), scaffold.CheckLeftInRight(expectedLabels, tconfig.Labels))
 
-		jsonPath = tarsMeta.JsonPatch{
+		jsonPath = tarsTool.JsonPatch{
 			{
-				OP:    tarsMeta.JsonPatchReplace,
+				OP:    tarsTool.JsonPatchReplace,
 				Path:  "/activated",
 				Value: false,
 			},
@@ -199,9 +200,9 @@ var _ = ginkgo.Describe("test server level config", func() {
 		}
 
 		ginkgo.BeforeEach(func() {
-			jsonPath := tarsMeta.JsonPatch{
+			jsonPath := tarsTool.JsonPatch{
 				{
-					OP:    tarsMeta.JsonPatchReplace,
+					OP:    tarsTool.JsonPatchReplace,
 					Path:  "/activated",
 					Value: true,
 				},
@@ -278,9 +279,9 @@ var _ = ginkgo.Describe("test server level config", func() {
 		}
 
 		ginkgo.BeforeEach(func() {
-			jsonPath := tarsMeta.JsonPatch{
+			jsonPath := tarsTool.JsonPatch{
 				{
-					OP:    tarsMeta.JsonPatchReplace,
+					OP:    tarsTool.JsonPatchReplace,
 					Path:  "/activated",
 					Value: true,
 				},

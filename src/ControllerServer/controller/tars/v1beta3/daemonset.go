@@ -167,7 +167,7 @@ func (r *DaemonSetReconciler) reconcile(key string) controller.Result {
 			klog.Errorf(tarsMeta.ResourceGetError, "daemonset", namespace, name, err.Error())
 			return controller.Retry
 		}
-		daemonSet = tarsRuntime.Translator.BuildDaemonset(tserver)
+		daemonSet = tarsRuntime.TarsTranslator.BuildDaemonset(tserver)
 		daemonSetInterface := tarsRuntime.Clients.K8sClient.AppsV1().DaemonSets(namespace)
 		if _, err = daemonSetInterface.Create(context.TODO(), daemonSet, k8sMetaV1.CreateOptions{}); err != nil && !errors.IsAlreadyExists(err) {
 			klog.Errorf(tarsMeta.ResourceCreateError, "daemonset", namespace, name, err.Error())
@@ -188,10 +188,10 @@ func (r *DaemonSetReconciler) reconcile(key string) controller.Result {
 		return controller.Retry
 	}
 
-	update, target := tarsRuntime.Translator.DryRunSyncDaemonset(tserver, daemonSet)
+	update, target := tarsRuntime.TarsTranslator.DryRunSyncDaemonset(tserver, daemonSet)
 	if update {
-		statefulSetInterface := tarsRuntime.Clients.K8sClient.AppsV1().DaemonSets(namespace)
-		if _, err = statefulSetInterface.Update(context.TODO(), target, k8sMetaV1.UpdateOptions{}); err != nil {
+		daemonSetInterface := tarsRuntime.Clients.K8sClient.AppsV1().DaemonSets(namespace)
+		if _, err = daemonSetInterface.Update(context.TODO(), target, k8sMetaV1.UpdateOptions{}); err != nil {
 			klog.Errorf(tarsMeta.ResourceUpdateError, "daemonset", namespace, name, err.Error())
 			return controller.Retry
 		}

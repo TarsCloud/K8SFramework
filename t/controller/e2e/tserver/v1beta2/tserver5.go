@@ -13,6 +13,7 @@ import (
 	tarsV1Beta2 "k8s.tars.io/apis/tars/v1beta2"
 	tarsMeta "k8s.tars.io/meta"
 	tarsRuntime "k8s.tars.io/runtime"
+	tarsTool "k8s.tars.io/tool"
 
 	"strings"
 	"time"
@@ -139,9 +140,9 @@ var _ = ginkgo.Describe("try create/update tars server and check service", func(
 
 	ginkgo.It("add servant", func() {
 		var ThirdObj = "ThirdObj"
-		jsonPatch := tarsMeta.JsonPatch{
+		jsonPatch := tarsTool.JsonPatch{
 			{
-				OP:   tarsMeta.JsonPatchAdd,
+				OP:   tarsTool.JsonPatchAdd,
 				Path: "/spec/tars/servants/0",
 				Value: &tarsV1Beta2.TServerServant{
 					Name:       ThirdObj,
@@ -205,9 +206,9 @@ var _ = ginkgo.Describe("try create/update tars server and check service", func(
 
 	ginkgo.It("update servant", func() {
 		var ThirdObj = "ThirdObj"
-		jsonPatch := tarsMeta.JsonPatch{
+		jsonPatch := tarsTool.JsonPatch{
 			{
-				OP:   tarsMeta.JsonPatchReplace,
+				OP:   tarsTool.JsonPatchReplace,
 				Path: "/spec/tars/servants/1",
 				Value: &tarsV1Beta2.TServerServant{
 					Name:       ThirdObj,
@@ -261,9 +262,9 @@ var _ = ginkgo.Describe("try create/update tars server and check service", func(
 	})
 
 	ginkgo.It("delete servant", func() {
-		jsonPatch := tarsMeta.JsonPatch{
+		jsonPatch := tarsTool.JsonPatch{
 			{
-				OP:   tarsMeta.JsonPatchRemove,
+				OP:   tarsTool.JsonPatchRemove,
 				Path: "/spec/tars/servants/1",
 			},
 		}
@@ -299,9 +300,9 @@ var _ = ginkgo.Describe("try create/update tars server and check service", func(
 	})
 
 	ginkgo.It("daemonset", func() {
-		jsonPatch := tarsMeta.JsonPatch{
+		jsonPatch := tarsTool.JsonPatch{
 			{
-				OP:    tarsMeta.JsonPatchAdd,
+				OP:    tarsTool.JsonPatchAdd,
 				Path:  "/spec/k8s/daemonSet",
 				Value: true,
 			},

@@ -13,8 +13,8 @@ import (
 	patchTypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
 	tarsV1Beta2 "k8s.tars.io/apis/tars/v1beta2"
-	tarsMeta "k8s.tars.io/meta"
 	tarsRuntime "k8s.tars.io/runtime"
+	tarsTool "k8s.tars.io/tool"
 	"time"
 )
 
@@ -75,9 +75,9 @@ var _ = ginkgo.Describe("test account", func() {
 		const updateTimes = 3
 		for i := 0; i < updateTimes; i++ {
 
-			tokensPatch := tarsMeta.JsonPatch{
+			tokensPatch := tarsTool.JsonPatch{
 				{
-					OP:   tarsMeta.JsonPatchAdd,
+					OP:   tarsTool.JsonPatchAdd,
 					Path: "/spec/authentication/tokens",
 					Value: []tarsV1Beta2.TAccountAuthenticationToken{
 						{
@@ -110,9 +110,9 @@ var _ = ginkgo.Describe("test account", func() {
 			assert.NotNil(ginkgo.GinkgoT(), taccount)
 			assert.Equal(ginkgo.GinkgoT(), len(taccount.Spec.Authentication.Tokens), 3)
 			NewPassword := scaffold.RandStringRunes(10)
-			jsonPatch := tarsMeta.JsonPatch{
+			jsonPatch := tarsTool.JsonPatch{
 				{
-					OP:    tarsMeta.JsonPatchAdd,
+					OP:    tarsTool.JsonPatchAdd,
 					Path:  "/spec/authentication/password",
 					Value: NewPassword,
 				},
@@ -136,9 +136,9 @@ var _ = ginkgo.Describe("test account", func() {
 		const updateTimes = 3
 		for i := 0; i < updateTimes; i++ {
 
-			tokensPatch := tarsMeta.JsonPatch{
+			tokensPatch := tarsTool.JsonPatch{
 				{
-					OP:   tarsMeta.JsonPatchAdd,
+					OP:   tarsTool.JsonPatchAdd,
 					Path: "/spec/authentication/tokens",
 					Value: []tarsV1Beta2.TAccountAuthenticationToken{
 						{
@@ -173,9 +173,9 @@ var _ = ginkgo.Describe("test account", func() {
 
 			NewPassword := scaffold.RandStringRunes(10)
 			NewBcryptPassword, _ := generateBcryptPassword(NewPassword)
-			jsonPatch := tarsMeta.JsonPatch{
+			jsonPatch := tarsTool.JsonPatch{
 				{
-					OP:    tarsMeta.JsonPatchAdd,
+					OP:    tarsTool.JsonPatchAdd,
 					Path:  "/spec/authentication/bcryptPassword",
 					Value: string(NewBcryptPassword),
 				},

@@ -19,6 +19,7 @@ import (
 	tarsListerV1beta3 "k8s.tars.io/client-go/listers/tars/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	tarsRuntime "k8s.tars.io/runtime"
+	tarsTool "k8s.tars.io/tool"
 	"strings"
 	"tarscontroller/controller"
 	"time"
@@ -187,7 +188,7 @@ func (r *TExitedRecordReconciler) reconcileBaseTServer(namespace string, name st
 			klog.Errorf(tarsMeta.ResourceGetError, "texitedrecord", namespace, name, err.Error())
 			return controller.Retry
 		}
-		tExitedRecord = tarsRuntime.Translator.BuildTExitedRecord(tserver)
+		tExitedRecord = tarsRuntime.TarsTranslator.BuildTExitedRecord(tserver)
 		tExitedPodInterface := tarsRuntime.Clients.CrdClient.TarsV1beta3().TExitedRecords(namespace)
 		if _, err = tExitedPodInterface.Create(context.TODO(), tExitedRecord, k8sMetaV1.CreateOptions{}); err != nil && !errors.IsAlreadyExists(err) {
 			klog.Errorf(tarsMeta.ResourceCreateError, "texitedrecord", namespace, name, err.Error())
@@ -224,9 +225,9 @@ func (r *TExitedRecordReconciler) reconcileBasePod(namespace string, tExitedPodS
 		}
 	}
 
-	jsonPatch := tarsMeta.JsonPatch{
+	jsonPatch := tarsTool.JsonPatch{
 		{
-			OP:    tarsMeta.JsonPatchAdd,
+			OP:    tarsTool.JsonPatchAdd,
 			Path:  "/pods/0",
 			Value: tExitedEvent.Pods[0],
 		},
@@ -239,8 +240,8 @@ func (r *TExitedRecordReconciler) reconcileBasePod(namespace string, tExitedPodS
 	}
 
 	if recordedPodsLen >= recordsLimit {
-		jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
-			OP:   tarsMeta.JsonPatchRemove,
+		jsonPatch = append(jsonPatch, tarsTool.JsonPatchItem{
+			OP:   tarsTool.JsonPatchRemove,
 			Path: fmt.Sprintf("/pods/%d", recordedPodsLen),
 		})
 	}

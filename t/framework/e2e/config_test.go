@@ -8,7 +8,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
 	tarsV1Beta3 "k8s.tars.io/apis/tars/v1beta3"
-	tarsMeta "k8s.tars.io/meta"
+	tarsTool "k8s.tars.io/tool"
 	"sigs.k8s.io/e2e-framework/klient/decoder"
 	"sigs.k8s.io/e2e-framework/klient/k8s"
 	"sigs.k8s.io/e2e-framework/klient/k8s/resources"
@@ -95,9 +95,9 @@ func TestAppLevelTConfig(t *testing.T) {
 			return ctx
 		}).
 		Assess("activate tconfig", func(ctx context.Context, t *testing.T, config *envconf.Config) context.Context {
-			patch := tarsMeta.JsonPatch{
+			patch := tarsTool.JsonPatch{
 				{
-					OP:    tarsMeta.JsonPatchReplace,
+					OP:    tarsTool.JsonPatchReplace,
 					Path:  "/activated",
 					Value: true,
 				},
@@ -253,9 +253,9 @@ func TestServerLevelTConfig(t *testing.T) {
 			return ctx
 		}).
 		Assess("activate tconfig", func(ctx context.Context, t *testing.T, config *envconf.Config) context.Context {
-			patch := tarsMeta.JsonPatch{
+			patch := tarsTool.JsonPatch{
 				{
-					OP:    tarsMeta.JsonPatchReplace,
+					OP:    tarsTool.JsonPatchReplace,
 					Path:  "/activated",
 					Value: true,
 				},

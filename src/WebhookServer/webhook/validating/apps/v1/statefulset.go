@@ -6,7 +6,7 @@ import (
 	k8sAppsV1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/util/json"
 	tarsMeta "k8s.tars.io/meta"
-	translatorV1beta3 "k8s.tars.io/translator/v1beta3"
+	tarsRuntime "k8s.tars.io/runtime"
 	"tarswebhook/webhook/lister"
 	"tarswebhook/webhook/validating"
 )
@@ -22,11 +22,11 @@ func validStatefulSet(newStatefulset *k8sAppsV1.StatefulSet, oldStatefulset *k8s
 		return fmt.Errorf(tarsMeta.ResourceGetError, "tserver", namespace, newStatefulset.Name, err.Error())
 	}
 
-	translator := translatorV1beta3.Translator{}
-	equal, _ := translator.DryRunSyncStatefulset(tserver, newStatefulset)
+	equal, _ := tarsRuntime.TarsTranslator.DryRunSyncStatefulset(tserver, newStatefulset)
 	if !equal {
 		return fmt.Errorf("resource should be modified through tserver")
 	}
+
 	return nil
 }
 

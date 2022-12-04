@@ -22,7 +22,7 @@ func validDaemonset(newDaemonset, oldDaemonset *k8sAppsV1.DaemonSet, listers *li
 		return fmt.Errorf(tarsMeta.ResourceGetError, "tserver", namespace, newDaemonset.Name, err.Error())
 	}
 
-	equal, _ := tarsRuntime.Translator.DryRunSyncDaemonset(tserver, newDaemonset)
+	equal, _ := tarsRuntime.TarsTranslator.DryRunSyncDaemonset(tserver, newDaemonset)
 	if !equal {
 		return fmt.Errorf("resource should be modified through tserver")
 	}

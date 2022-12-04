@@ -22,7 +22,7 @@ func validService(newService *k8sCoreV1.Service, oldService *k8sCoreV1.Service, 
 		return fmt.Errorf(tarsMeta.ResourceGetError, "tserver", namespace, newService.Name, err.Error())
 	}
 
-	equal, _ := tarsRuntime.Translator.DryRunSyncService(tserver, newService)
+	equal, _ := tarsRuntime.TarsTranslator.DryRunSyncService(tserver, newService)
 	if !equal {
 		return fmt.Errorf("resource should be modified through tserver")
 	}

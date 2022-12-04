@@ -5,7 +5,7 @@ import (
 	k8sAdmissionV1 "k8s.io/api/admission/v1"
 	"k8s.io/apimachinery/pkg/util/json"
 	tarsV1beta2 "k8s.tars.io/apis/tars/v1beta2"
-	tarsMeta "k8s.tars.io/meta"
+	tarsTool "k8s.tars.io/tool"
 	"tarswebhook/webhook/lister"
 	"tarswebhook/webhook/mutating"
 )
@@ -19,13 +19,13 @@ func mutatingCreateTTree(listers *lister.Listers, requestAdmissionView *k8sAdmis
 		businessMap[business.Name] = nil
 	}
 
-	var jsonPatch tarsMeta.JsonPatch
+	var jsonPatch tarsTool.JsonPatch
 
 	for i, app := range newTTree.Apps {
 		if app.BusinessRef != "" {
 			if _, ok := businessMap[app.BusinessRef]; !ok {
-				jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
-					OP:    tarsMeta.JsonPatchReplace,
+				jsonPatch = append(jsonPatch, tarsTool.JsonPatchItem{
+					OP:    tarsTool.JsonPatchReplace,
 					Path:  fmt.Sprintf("/apps/%d/businessRef", i),
 					Value: "",
 				})

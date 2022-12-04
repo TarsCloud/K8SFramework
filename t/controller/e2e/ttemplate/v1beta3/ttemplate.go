@@ -13,6 +13,7 @@ import (
 	tarsTarsV1beta3 "k8s.tars.io/apis/tars/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	tarsRuntime "k8s.tars.io/runtime"
+	tarsTool "k8s.tars.io/tool"
 
 	"time"
 )
@@ -92,9 +93,9 @@ var _ = ginkgo.Describe("ttemplate", func() {
 	})
 
 	ginkgo.It("update ttemplate content", func() {
-		jsonPatch := tarsMeta.JsonPatch{
+		jsonPatch := tarsTool.JsonPatch{
 			{
-				OP:    tarsMeta.JsonPatchReplace,
+				OP:    tarsTool.JsonPatchReplace,
 				Path:  "/spec/content",
 				Value: "new content",
 			},

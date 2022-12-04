@@ -12,6 +12,7 @@ import (
 	tarsV1Beta3 "k8s.tars.io/apis/tars/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	tarsRuntime "k8s.tars.io/runtime"
+	tarsTool "k8s.tars.io/tool"
 
 	"strings"
 	"time"
@@ -149,9 +150,9 @@ var _ = ginkgo.Describe("try update tars server and check filed", func() {
 		})
 
 		ginkgo.It("not exist template", func() {
-			jsonPatch := tarsMeta.JsonPatch{
+			jsonPatch := tarsTool.JsonPatch{
 				{
-					OP:    tarsMeta.JsonPatchReplace,
+					OP:    tarsTool.JsonPatchReplace,
 					Path:  "/spec/tars/template",
 					Value: "notexit",
 				},
@@ -163,9 +164,9 @@ var _ = ginkgo.Describe("try update tars server and check filed", func() {
 		})
 
 		ginkgo.It("", func() {
-			jsonPatch := tarsMeta.JsonPatch{
+			jsonPatch := tarsTool.JsonPatch{
 				{
-					OP:    tarsMeta.JsonPatchReplace,
+					OP:    tarsTool.JsonPatchReplace,
 					Path:  "/spec/tars/template",
 					Value: NewTemplate,
 				},
@@ -187,9 +188,9 @@ var _ = ginkgo.Describe("try update tars server and check filed", func() {
 
 	ginkgo.It("readiness", func() {
 		newReadiness := []string{"newReadiness1", "newReadiness2"}
-		jsonPatch := tarsMeta.JsonPatch{
+		jsonPatch := tarsTool.JsonPatch{
 			{
-				OP:    tarsMeta.JsonPatchReplace,
+				OP:    tarsTool.JsonPatchReplace,
 				Path:  "/spec/k8s/readinessGates",
 				Value: newReadiness,
 			},
@@ -205,9 +206,9 @@ var _ = ginkgo.Describe("try update tars server and check filed", func() {
 	ginkgo.Context("release", func() {
 
 		ginkgo.It("before release", func() {
-			jsonPatch := tarsMeta.JsonPatch{
+			jsonPatch := tarsTool.JsonPatch{
 				{
-					OP:    tarsMeta.JsonPatchReplace,
+					OP:    tarsTool.JsonPatchReplace,
 					Path:  "/spec/k8s/replicas",
 					Value: 3,
 				},
@@ -233,14 +234,14 @@ var _ = ginkgo.Describe("try update tars server and check filed", func() {
 				},
 			}
 
-			jsonPatch := tarsMeta.JsonPatch{
+			jsonPatch := tarsTool.JsonPatch{
 				{
-					OP:    tarsMeta.JsonPatchReplace,
+					OP:    tarsTool.JsonPatchReplace,
 					Path:  "/spec/release",
 					Value: release,
 				},
 				{
-					OP:    tarsMeta.JsonPatchReplace,
+					OP:    tarsTool.JsonPatchReplace,
 					Path:  "/spec/k8s/replicas",
 					Value: 3,
 				},

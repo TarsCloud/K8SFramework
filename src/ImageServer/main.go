@@ -71,7 +71,7 @@ func init() {
 }
 
 func main() {
-	runtime.Must(tarsRuntime.CreateContext("", ""))
+	runtime.Must(tarsRuntime.CreateContext("", "", false))
 
 	glStopChan = make(chan struct{})
 

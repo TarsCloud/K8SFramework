@@ -13,27 +13,9 @@ import (
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/klog/v2"
 	tarsRuntime "k8s.tars.io/runtime"
+	tarsTool "k8s.tars.io/tool"
 	"time"
 )
-
-func hasFinalizer(finalizers []string, finalizer string) bool {
-	for _, f := range finalizers {
-		if f == finalizer {
-			return true
-		}
-	}
-	return false
-}
-
-func removeFinalizer(finalizers []string, finalizer string) []string {
-	var newFinalizers []string
-	for _, f := range finalizers {
-		if f != finalizer {
-			newFinalizers = append(newFinalizers, finalizer)
-		}
-	}
-	return newFinalizers
-}
 
 type Result int
 
@@ -124,7 +106,7 @@ func (r *Reconciler) reconcileClaim(key string) (Result, *time.Duration) {
 			return AllOk, nil
 		}
 
-		if !hasFinalizer(claim.Finalizers, PVCProtectionFinalizer) {
+		if !tarsTool.HasFinalizer(claim.Finalizers, PVCProtectionFinalizer) {
 			klog.Infof("observed the finalizer of terminating claim(%s) is empty, skip", key)
 			return AllOk, nil
 		}
@@ -139,7 +121,7 @@ func (r *Reconciler) reconcileClaim(key string) (Result, *time.Duration) {
 			klog.Infof("observed the volume(%s) bound to terminating claim(%s) released", volumeName, key)
 			klog.Infof("begin to remove finalizer(%s) for terminating claim(%s)", PVCProtectionFinalizer, key)
 			newClaim := claim.DeepCopy()
-			newClaim.Finalizers = removeFinalizer(claim.Finalizers, PVCProtectionFinalizer)
+			newClaim.Finalizers = tarsTool.RemoveFinalizer(claim.Finalizers, PVCProtectionFinalizer)
 			_, err = tarsRuntime.Clients.K8sClient.CoreV1().PersistentVolumeClaims(namespace).Update(context.TODO(), newClaim, k8sMetaV1.UpdateOptions{})
 
 			if err == nil {
@@ -271,7 +253,7 @@ func (r *Reconciler) reconcileVolume(key string) (Result, *time.Duration) {
 
 	if volume.DeletionTimestamp != nil {
 		klog.Infof("observed volume(%s) terminating", key)
-		if !hasFinalizer(volume.Finalizers, PVProtectionFinalizer) {
+		if !tarsTool.HasFinalizer(volume.Finalizers, PVProtectionFinalizer) {
 			klog.Infof("observed the finalizer of terminating volume(%s) is empty, skip", key)
 			return AllOk, nil
 		}
@@ -299,7 +281,7 @@ func (r *Reconciler) reconcileVolume(key string) (Result, *time.Duration) {
 		}
 		klog.Errorf("delete directory for terminating volume(%s) success", key)
 		newVolume := volume.DeepCopy()
-		newVolume.Finalizers = removeFinalizer(volume.Finalizers, PVProtectionFinalizer)
+		newVolume.Finalizers = tarsTool.RemoveFinalizer(volume.Finalizers, PVProtectionFinalizer)
 		klog.Infof("begin to remove finalizer(%s) for terminating volume(%s)", PVProtectionFinalizer, key)
 		_, err = tarsRuntime.Clients.K8sClient.CoreV1().PersistentVolumes().Update(context.TODO(), newVolume, k8sMetaV1.UpdateOptions{})
 		if err == nil {

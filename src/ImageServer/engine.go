@@ -12,6 +12,7 @@ import (
 	tarsV1beta3 "k8s.tars.io/apis/tars/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	tarsRuntime "k8s.tars.io/runtime"
+	tarsTool "k8s.tars.io/tool"
 	"log"
 	"os"
 	"os/exec"
@@ -130,14 +131,8 @@ func prepare(task *Task) error {
 			err = fmt.Errorf("decompress file(%s) err: %s", task.userParams.ServerFile, err.Error())
 			return err
 		}
-	case ".jar":
-		log.Printf("task|%s: copying...\n", task.id)
-		if err = handleJarFile(task.userParams.ServerFile, serverBinDir); err != nil {
-			err = fmt.Errorf("copy file(%s) err: %s", task.userParams.ServerFile, err.Error())
-			return err
-		}
 	default:
-		err = fmt.Errorf("unknown file(%s) type", task.userParams.ServerFile)
+		err = fmt.Errorf("unsupported file(%s) type", task.userParams.ServerFile)
 		return err
 	}
 
@@ -162,16 +157,12 @@ func secret(task *Task) error {
 		dockerConfigContent []byte
 	)
 
-	if task.registrySecret != "" {
-		secretResources[task.registrySecret] = nil
+	if task.taskBuildRunningState.BaseImageSecret != "" {
+		secretResources[task.taskBuildRunningState.BaseImageSecret] = nil
 	}
 
-	if task.userParams.BaseImageSecret != "" {
-		secretResources[task.userParams.BaseImageSecret] = nil
-	}
-
-	if task.userParams.Secret != "" {
-		secretResources[task.userParams.Secret] = nil
+	if task.taskBuildRunningState.Secret != "" {
+		secretResources[task.taskBuildRunningState.Secret] = nil
 	}
 
 	var secretContents [][]byte
@@ -405,15 +396,6 @@ func handleWarFile(sourceFile string, dstDir string) error {
 	return nil
 }
 
-func handleJarFile(sourceFile string, dstDir string) error {
-	cmd := exec.Command("cp", sourceFile, dstDir)
-	err := cmd.Run()
-	if err != nil {
-		fmt.Print(err.Error())
-	}
-	return nil
-}
-
 func NewEngine() *Engine {
 	worker := &Engine{
 		buildChan: make(chan *Task),
@@ -447,9 +429,9 @@ func (e *Engine) onBuildFailed(task *Task, err error) {
 		Last:    &task.taskBuildRunningState,
 	}
 
-	jsonPatch := tarsMeta.JsonPatch{
+	jsonPatch := tarsTool.JsonPatch{
 		{
-			OP:    tarsMeta.JsonPatchAdd,
+			OP:    tarsTool.JsonPatchAdd,
 			Path:  "/build",
 			Value: buildState,
 		},
@@ -496,7 +478,10 @@ func (e *Engine) onBuildSuccess(task *Task) {
 
 	if task.timage.Releases != nil {
 		releases = append(releases, task.timage.Releases...)
-		max := getMaxReleases()
+		max := tarsMeta.DefaultMaxTImageRelease
+		if tfc := tarsRuntime.TFCConfig.GetTFrameworkConfig(tarsRuntime.Namespace); tfc != nil {
+			max = tfc.RecordLimit.TImageRelease
+		}
 		if len(releases) <= max {
 			task.timage.Releases = releases
 		} else {
@@ -504,14 +489,14 @@ func (e *Engine) onBuildSuccess(task *Task) {
 		}
 	}
 
-	jsonPatch := tarsMeta.JsonPatch{
+	jsonPatch := tarsTool.JsonPatch{
 		{
-			OP:    tarsMeta.JsonPatchAdd,
+			OP:    tarsTool.JsonPatchAdd,
 			Path:  "/build",
 			Value: buildState,
 		},
 		{
-			OP:    tarsMeta.JsonPatchAdd,
+			OP:    tarsTool.JsonPatchAdd,
 			Path:  "/releases",
 			Value: releases,
 		},
@@ -544,24 +529,24 @@ func (e *Engine) onBuildSuccess(task *Task) {
 
 func (e *Engine) PostTask(task *Task) (string, error) {
 
-	if task.userParams.ServerTag == "" {
-		task.userParams.ServerTag = task.id
+	tfc := tarsRuntime.TFCConfig.GetTFrameworkConfig(tarsRuntime.Namespace)
+	if tfc == nil {
+		return "", fmt.Errorf("get tars framework config failed")
 	}
 
-	task.repository, task.registrySecret = getRepository()
+	task.repository, task.registrySecret = tfc.ImageUpload.Registry, tfc.ImageUpload.Secret
 	if task.repository == "" {
 		return "", fmt.Errorf("no default repository value set")
 	}
 	task.image = fmt.Sprintf("%s/%s.%s:%s", task.repository, strings.ToLower(task.userParams.ServerApp), strings.ToLower(task.userParams.ServerName), task.userParams.ServerTag)
 
-	tfc := tarsRuntime.TFCConfig.GetTFrameworkConfig(tarsRuntime.Namespace)
-	if tfc == nil {
-		return "", fmt.Errorf("no execute image value set")
-	}
-
 	task.executorImage, task.executorSecret = tfc.ImageBuild.Executor.Image, tfc.ImageBuild.Executor.Secret
 	if task.executorImage == "" {
 		return "", fmt.Errorf("no execute image value set")
+	}
+
+	if task.userParams.ServerTag == "" {
+		task.userParams.ServerTag = task.id
 	}
 
 	task.taskBuildRunningState = tarsV1beta3.TImageBuildState{
@@ -577,6 +562,10 @@ func (e *Engine) PostTask(task *Task) (string, error) {
 		Phase:           BuildPhasePending,
 		Message:         "pending",
 		Handler:         glPodName,
+	}
+
+	if task.taskBuildRunningState.Secret == "" {
+		task.taskBuildRunningState.Secret = task.registrySecret
 	}
 
 	var err error

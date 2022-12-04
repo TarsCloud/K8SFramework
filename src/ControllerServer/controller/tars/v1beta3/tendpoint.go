@@ -186,7 +186,7 @@ func (r *TEndpointReconciler) reconcile(key string) controller.Result {
 			klog.Errorf(tarsMeta.ResourceGetError, "tendpoint", namespace, name, err.Error())
 			return controller.Retry
 		}
-		tendpoint = tarsRuntime.Translator.BuildTEndpoint(tserver)
+		tendpoint = tarsRuntime.TarsTranslator.BuildTEndpoint(tserver)
 		tendpointInterface := tarsRuntime.Clients.CrdClient.TarsV1beta3().TEndpoints(namespace)
 		if _, err = tendpointInterface.Create(context.TODO(), tendpoint, k8sMetaV1.CreateOptions{}); err != nil && !errors.IsAlreadyExists(err) {
 			klog.Errorf(tarsMeta.ResourceCreateError, "tendpoint", namespace, name, err.Error())
@@ -203,7 +203,7 @@ func (r *TEndpointReconciler) reconcile(key string) controller.Result {
 		return controller.Retry
 	}
 
-	update, target := tarsRuntime.Translator.DryRunSyncTEndpoint(tserver, tendpoint)
+	update, target := tarsRuntime.TarsTranslator.DryRunSyncTEndpoint(tserver, tendpoint)
 	if update {
 		tendpointInterface := tarsRuntime.Clients.CrdClient.TarsV1beta3().TEndpoints(namespace)
 		if _, err = tendpointInterface.Update(context.TODO(), target, k8sMetaV1.UpdateOptions{}); err != nil {

@@ -10,7 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
 	tarsV1Beta3 "k8s.tars.io/apis/tars/v1beta3"
-	tarsMeta "k8s.tars.io/meta"
+	tarsTool "k8s.tars.io/tool"
 	"sigs.k8s.io/e2e-framework/klient/decoder"
 	"sigs.k8s.io/e2e-framework/klient/k8s"
 	"sigs.k8s.io/e2e-framework/klient/k8s/resources"
@@ -130,9 +130,9 @@ func TestQueryObj(t *testing.T) {
 				},
 			}
 			tfc := &tarsV1Beta3.TFrameworkConfig{}
-			patch := tarsMeta.JsonPatch{
+			patch := tarsTool.JsonPatch{
 				{
-					OP:    tarsMeta.JsonPatchReplace,
+					OP:    tarsTool.JsonPatchReplace,
 					Path:  "/upChain",
 					Value: upChain,
 				},

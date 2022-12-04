@@ -6,7 +6,7 @@ import (
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/json"
 	tarsV1beta3 "k8s.tars.io/apis/tars/v1beta3"
-	tarsMeta "k8s.tars.io/meta"
+	tarsTool "k8s.tars.io/tool"
 	"strings"
 	"tarswebhook/webhook/lister"
 	"tarswebhook/webhook/mutating"
@@ -16,19 +16,19 @@ func mutatingCreateTImage(listers *lister.Listers, requestAdmissionView *k8sAdmi
 	timage := &tarsV1beta3.TImage{}
 	_ = json.Unmarshal(requestAdmissionView.Request.Object.Raw, timage)
 
-	var jsonPatch tarsMeta.JsonPatch
+	var jsonPatch tarsTool.JsonPatch
 
 	if timage.Labels == nil {
 		labels := map[string]string{}
-		jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
-			OP:    tarsMeta.JsonPatchAdd,
+		jsonPatch = append(jsonPatch, tarsTool.JsonPatchItem{
+			OP:    tarsTool.JsonPatchAdd,
 			Path:  "/metadata/labels",
 			Value: labels,
 		})
 	}
 
-	jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
-		OP:    tarsMeta.JsonPatchAdd,
+	jsonPatch = append(jsonPatch, tarsTool.JsonPatchItem{
+		OP:    tarsTool.JsonPatchAdd,
 		Path:  "/metadata/labels/tars.io~1ImageType",
 		Value: timage.ImageType,
 	})
@@ -47,8 +47,8 @@ func mutatingCreateTImage(listers *lister.Listers, requestAdmissionView *k8sAdmi
 		} else {
 			if strings.HasPrefix(k, "tars.io/Supported.") {
 				v := strings.ReplaceAll(k, "tars.io/", "tars.io~1")
-				jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
-					OP:   tarsMeta.JsonPatchRemove,
+				jsonPatch = append(jsonPatch, tarsTool.JsonPatchItem{
+					OP:   tarsTool.JsonPatchRemove,
 					Path: fmt.Sprintf("/metadata/labels/%s", v),
 				})
 			}
@@ -56,8 +56,8 @@ func mutatingCreateTImage(listers *lister.Listers, requestAdmissionView *k8sAdmi
 	}
 
 	for _, v := range shouldAddSupportedLabel {
-		jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
-			OP:    tarsMeta.JsonPatchAdd,
+		jsonPatch = append(jsonPatch, tarsTool.JsonPatchItem{
+			OP:    tarsTool.JsonPatchAdd,
 			Path:  fmt.Sprintf("/metadata/labels/tars.io~1Supported.%s", v),
 			Value: v,
 		})
@@ -69,8 +69,8 @@ func mutatingCreateTImage(listers *lister.Listers, requestAdmissionView *k8sAdmi
 	for i, v := range timage.Releases {
 		if _, ok := existing[v.ID]; ok {
 			newSeqAfterRemove := i - len(removes)
-			jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
-				OP:   tarsMeta.JsonPatchRemove,
+			jsonPatch = append(jsonPatch, tarsTool.JsonPatchItem{
+				OP:   tarsTool.JsonPatchRemove,
 				Path: fmt.Sprintf("/releases/%d", newSeqAfterRemove),
 			})
 			removes[i] = nil
@@ -86,8 +86,8 @@ func mutatingCreateTImage(listers *lister.Listers, requestAdmissionView *k8sAdmi
 				if i > len(removes) {
 					newSeqAfterRemove = i - len(removes)
 				}
-				jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
-					OP:    tarsMeta.JsonPatchAdd,
+				jsonPatch = append(jsonPatch, tarsTool.JsonPatchItem{
+					OP:    tarsTool.JsonPatchAdd,
 					Path:  fmt.Sprintf("/releases/%d/createTime", newSeqAfterRemove),
 					Value: now,
 				})

@@ -12,6 +12,7 @@ import (
 	tarsV1Beta2 "k8s.tars.io/apis/tars/v1beta2"
 	tarsMeta "k8s.tars.io/meta"
 	tarsRuntime "k8s.tars.io/runtime"
+	tarsTool "k8s.tars.io/tool"
 
 	"time"
 )
@@ -142,9 +143,9 @@ var _ = ginkgo.Describe("try create tars server and check filed", func() {
 			"/spec/k8s":     nil,
 		}
 		for k := range removeFileds {
-			jsonPath := tarsMeta.JsonPatch{
+			jsonPath := tarsTool.JsonPatch{
 				{
-					OP:   tarsMeta.JsonPatchRemove,
+					OP:   tarsTool.JsonPatchRemove,
 					Path: k,
 				},
 			}
@@ -161,9 +162,9 @@ var _ = ginkgo.Describe("try create tars server and check filed", func() {
 			"/spec/subType": scaffold.RandStringRunes(5),
 		}
 		for k, v := range updateFileds {
-			jsonPath := tarsMeta.JsonPatch{
+			jsonPath := tarsTool.JsonPatch{
 				{
-					OP:    tarsMeta.JsonPatchReplace,
+					OP:    tarsTool.JsonPatchReplace,
 					Path:  k,
 					Value: v,
 				},
@@ -175,18 +176,18 @@ var _ = ginkgo.Describe("try create tars server and check filed", func() {
 	})
 
 	ginkgo.It("try update subType", func() {
-		jsonPath := tarsMeta.JsonPatch{
+		jsonPath := tarsTool.JsonPatch{
 			{
-				OP:    tarsMeta.JsonPatchReplace,
+				OP:    tarsTool.JsonPatchReplace,
 				Path:  "/spec/subType",
 				Value: tarsV1Beta2.Normal,
 			},
 			{
-				OP:   tarsMeta.JsonPatchRemove,
+				OP:   tarsTool.JsonPatchRemove,
 				Path: "/spec/tars",
 			},
 			{
-				OP:   tarsMeta.JsonPatchAdd,
+				OP:   tarsTool.JsonPatchAdd,
 				Path: "/spec/normal",
 				Value: &tarsV1Beta2.TServerNormal{
 					Ports: []*tarsV1Beta2.TServerPort{},

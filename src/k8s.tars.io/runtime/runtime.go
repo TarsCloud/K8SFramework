@@ -12,9 +12,10 @@ import (
 	k8sClientCmd "k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/leaderelection"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
+	"k8s.io/klog/v2"
 	crdVersioned "k8s.tars.io/client-go/clientset/versioned"
 	crdScheme "k8s.tars.io/client-go/clientset/versioned/scheme"
-	tarsTranslatorV1beta3 "k8s.tars.io/translator/v1beta3"
+	tarsTranslatorV1beta3 "k8s.tars.io/translator/tars/v1beta3"
 	"os"
 	"time"
 )
@@ -26,12 +27,12 @@ var k8sMetadataClient k8sMetadata.Interface
 var Clients *Client
 var Factories *InformerFactories
 var TFCConfig *TFrameworkConfig
-var Translator *tarsTranslatorV1beta3.Translator
+var TarsTranslator *tarsTranslatorV1beta3.Translator
 
 var Username string
 var Namespace string
 
-func CreateContext(masterUrl, kubeConfigPath string) error {
+func CreateContext(masterUrl, kubeConfigPath string, cluster bool) error {
 
 	clusterConfig, err := k8sClientCmd.BuildConfigFromFlags(masterUrl, kubeConfigPath)
 	if err != nil {
@@ -46,15 +47,16 @@ func CreateContext(masterUrl, kubeConfigPath string) error {
 
 	k8sMetadataClient = k8sMetadata.NewForConfigOrDie(clusterConfig)
 
-	utilRuntime.Must(crdScheme.AddToScheme(k8sSchema.Scheme))
+	err = crdScheme.AddToScheme(k8sSchema.Scheme)
+	if err != nil {
+		return err
+	}
 
 	Clients = &Client{
 		K8sClient:         k8sClient,
 		CrdClient:         tarsClient,
 		K8sMetadataClient: k8sMetadataClient,
 	}
-
-	Factories = newInformerFactories(Clients)
 
 	const namespaceFile = "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
 	bs, err := ioutil.ReadFile(namespaceFile)
@@ -65,10 +67,14 @@ func CreateContext(masterUrl, kubeConfigPath string) error {
 		Namespace = "default"
 	}
 
+	klog.Infof("get namespace value: %s", Namespace)
+
+	Factories = newInformerFactories(Clients, cluster)
+
 	TFCConfig = &TFrameworkConfig{}
 	TFCConfig.setupTFCWatch(Factories)
 
-	Translator = tarsTranslatorV1beta3.NewTranslator(TFCConfig)
+	TarsTranslator = tarsTranslatorV1beta3.NewTranslator(TFCConfig)
 
 	return nil
 }

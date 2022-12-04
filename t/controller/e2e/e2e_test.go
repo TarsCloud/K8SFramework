@@ -15,6 +15,6 @@ func TestRunE2E(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	runtime.Must(tarsRuntime.CreateContext("", filepath.Join(u.HomeDir, ".kube", "config")))
+	runtime.Must(tarsRuntime.CreateContext("", filepath.Join(u.HomeDir, ".kube", "config"), true))
 	ginkgo.RunSpecs(t, "tars k8s e2e test suites")
 }

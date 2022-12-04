@@ -18,6 +18,7 @@ import (
 	tarsV1beta3 "k8s.tars.io/apis/tars/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	tarsRuntime "k8s.tars.io/runtime"
+	tarsTool "k8s.tars.io/tool"
 	"sort"
 	"strings"
 	"tarscontroller/controller"
@@ -126,18 +127,18 @@ func (r *TConfigReconciler) reconcileModified(key string) controller.Result {
 		return controller.Retry
 	}
 
-	jsonPatch := tarsMeta.JsonPatch{
+	jsonPatch := tarsTool.JsonPatch{
 		{
-			OP:   tarsMeta.JsonPatchRemove,
+			OP:   tarsTool.JsonPatchRemove,
 			Path: "/metadata/labels/tars.io~1Deactivate",
 		},
 		{
-			OP:    tarsMeta.JsonPatchAdd,
+			OP:    tarsTool.JsonPatchAdd,
 			Path:  "/metadata/labels/tars.io~1Activated",
 			Value: "false",
 		},
 		{
-			OP:    tarsMeta.JsonPatchReplace,
+			OP:    tarsTool.JsonPatchReplace,
 			Path:  "/activated",
 			Value: false,
 		},

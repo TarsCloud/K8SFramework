@@ -14,6 +14,7 @@ import (
 	tarsV1beta3 "k8s.tars.io/apis/tars/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	tarsRuntime "k8s.tars.io/runtime"
+	tarsTool "k8s.tars.io/tool"
 	"strings"
 	"tarswebhook/webhook/lister"
 
@@ -63,9 +64,9 @@ func prepareActiveTConfig(newTConfig *tarsV1beta3.TConfig, listers *lister.Liste
 		return err
 	}
 
-	jsonPatch := tarsMeta.JsonPatch{
-		tarsMeta.JsonPatchItem{
-			OP:    tarsMeta.JsonPatchAdd,
+	jsonPatch := tarsTool.JsonPatch{
+		tarsTool.JsonPatchItem{
+			OP:    tarsTool.JsonPatchAdd,
 			Path:  "/metadata/labels/tars.io~1Deactivate",
 			Value: "Deactivating",
 		},
@@ -104,9 +105,9 @@ func prepareDeleteTConfig(tconfig *tarsV1beta3.TConfig, listers *lister.Listers)
 		return err
 	}
 
-	jsonPatch := tarsMeta.JsonPatch{
-		tarsMeta.JsonPatchItem{
-			OP:    tarsMeta.JsonPatchAdd,
+	jsonPatch := tarsTool.JsonPatch{
+		tarsTool.JsonPatchItem{
+			OP:    tarsTool.JsonPatchAdd,
 			Path:  "/metadata/labels/tars.io~1Deleting",
 			Value: "Deleting",
 		},

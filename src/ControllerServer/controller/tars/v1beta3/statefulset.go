@@ -224,7 +224,7 @@ func (r *StatefulSetReconciler) reconcile(key string) controller.Result {
 		}
 
 		if !tserver.Spec.K8S.DaemonSet {
-			statefulSet = tarsRuntime.Translator.BuildStatefulset(tserver)
+			statefulSet = tarsRuntime.TarsTranslator.BuildStatefulset(tserver)
 			statefulSetInterface := tarsRuntime.Clients.K8sClient.AppsV1().StatefulSets(namespace)
 			_, err = statefulSetInterface.Create(context.TODO(), statefulSet, k8sMetaV1.CreateOptions{})
 			if err != nil && !errors.IsAlreadyExists(err) {
@@ -246,13 +246,13 @@ func (r *StatefulSetReconciler) reconcile(key string) controller.Result {
 		return controller.Retry
 	}
 
-	volumeClaimTemplates := tarsRuntime.Translator.BuildStatefulsetVolumeClaimTemplates(tserver)
+	volumeClaimTemplates := tarsRuntime.TarsTranslator.BuildStatefulsetVolumeClaimTemplates(tserver)
 	equal, shouldDeletes := diffVolumeClaimTemplate(statefulSet.Spec.VolumeClaimTemplates, volumeClaimTemplates)
 	if !equal {
 		return r.rebuildStatefulset(tserver, shouldDeletes)
 	}
 
-	update, target := tarsRuntime.Translator.DryRunSyncStatefulset(tserver, statefulSet)
+	update, target := tarsRuntime.TarsTranslator.DryRunSyncStatefulset(tserver, statefulSet)
 	if update {
 		statefulSetInterface := tarsRuntime.Clients.K8sClient.AppsV1().StatefulSets(namespace)
 		if _, err = statefulSetInterface.Update(context.TODO(), target, k8sMetaV1.UpdateOptions{}); err != nil {

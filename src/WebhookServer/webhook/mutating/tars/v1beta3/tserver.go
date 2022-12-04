@@ -9,6 +9,7 @@ import (
 	tarsV1beta3 "k8s.tars.io/apis/tars/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	tarsRuntime "k8s.tars.io/runtime"
+	tarsTool "k8s.tars.io/tool"
 	"math"
 	"regexp"
 	"strconv"
@@ -20,38 +21,38 @@ func mutatingCreateTServer(listers *lister.Listers, requestAdmissionView *k8sAdm
 	tserver := &tarsV1beta3.TServer{}
 	_ = json.Unmarshal(requestAdmissionView.Request.Object.Raw, tserver)
 
-	var jsonPatch tarsMeta.JsonPatch
+	var jsonPatch tarsTool.JsonPatch
 
 	if tserver.Labels == nil {
 		labels := map[string]string{}
-		jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
-			OP:    tarsMeta.JsonPatchAdd,
+		jsonPatch = append(jsonPatch, tarsTool.JsonPatchItem{
+			OP:    tarsTool.JsonPatchAdd,
 			Path:  "/metadata/labels",
 			Value: labels,
 		})
 	}
 
-	jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
-		OP:    tarsMeta.JsonPatchAdd,
+	jsonPatch = append(jsonPatch, tarsTool.JsonPatchItem{
+		OP:    tarsTool.JsonPatchAdd,
 		Path:  "/metadata/labels/tars.io~1ServerApp",
 		Value: tserver.Spec.App,
 	})
 
-	jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
-		OP:    tarsMeta.JsonPatchAdd,
+	jsonPatch = append(jsonPatch, tarsTool.JsonPatchItem{
+		OP:    tarsTool.JsonPatchAdd,
 		Path:  "/metadata/labels/tars.io~1ServerName",
 		Value: tserver.Spec.Server,
 	})
 
-	jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
-		OP:    tarsMeta.JsonPatchAdd,
+	jsonPatch = append(jsonPatch, tarsTool.JsonPatchItem{
+		OP:    tarsTool.JsonPatchAdd,
 		Path:  "/metadata/labels/tars.io~1SubType",
 		Value: tserver.Spec.SubType,
 	})
 
 	if tserver.Spec.Tars != nil {
-		jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
-			OP:    tarsMeta.JsonPatchAdd,
+		jsonPatch = append(jsonPatch, tarsTool.JsonPatchItem{
+			OP:    tarsTool.JsonPatchAdd,
 			Path:  "/metadata/labels/tars.io~1Template",
 			Value: tserver.Spec.Tars.Template,
 		})
@@ -67,8 +68,8 @@ func mutatingCreateTServer(listers *lister.Listers, requestAdmissionView *k8sAdm
 			}
 		}
 
-		jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
-			OP:    tarsMeta.JsonPatchAdd,
+		jsonPatch = append(jsonPatch, tarsTool.JsonPatchItem{
+			OP:    tarsTool.JsonPatchAdd,
 			Path:  "/spec/k8s/readinessGates",
 			Value: gatesArray,
 		})
@@ -76,15 +77,15 @@ func mutatingCreateTServer(listers *lister.Listers, requestAdmissionView *k8sAdm
 
 	if tserver.Spec.Normal != nil {
 		if _, ok := tserver.Labels[tarsMeta.TTemplateLabel]; ok {
-			jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
-				OP:   tarsMeta.JsonPatchRemove,
+			jsonPatch = append(jsonPatch, tarsTool.JsonPatchItem{
+				OP:   tarsTool.JsonPatchRemove,
 				Path: "/metadata/labels/tars.io~1Template",
 			})
 		}
 
 		if tserver.Spec.Normal.Ports == nil {
-			jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
-				OP:    tarsMeta.JsonPatchAdd,
+			jsonPatch = append(jsonPatch, tarsTool.JsonPatchItem{
+				OP:    tarsTool.JsonPatchAdd,
 				Path:  "/spec/normal/ports",
 				Value: make([]tarsV1beta3.TServerPort, 0),
 			})
@@ -101,8 +102,8 @@ func mutatingCreateTServer(listers *lister.Listers, requestAdmissionView *k8sAdm
 				}
 			}
 
-			jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
-				OP:    tarsMeta.JsonPatchAdd,
+			jsonPatch = append(jsonPatch, tarsTool.JsonPatchItem{
+				OP:    tarsTool.JsonPatchAdd,
 				Path:  "/spec/k8s/readinessGates",
 				Value: gatesArray,
 			})
@@ -110,8 +111,8 @@ func mutatingCreateTServer(listers *lister.Listers, requestAdmissionView *k8sAdm
 	}
 
 	if len(tserver.Spec.K8S.HostPorts) > 0 || tserver.Spec.K8S.HostIPC {
-		jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
-			OP:    tarsMeta.JsonPatchAdd,
+		jsonPatch = append(jsonPatch, tarsTool.JsonPatchItem{
+			OP:    tarsTool.JsonPatchAdd,
 			Path:  "/spec/k8s/notStacked",
 			Value: true,
 		})
@@ -144,8 +145,8 @@ func mutatingCreateTServer(listers *lister.Listers, requestAdmissionView *k8sAdm
 	}
 
 	if tserver.Spec.Release == nil {
-		jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
-			OP:    tarsMeta.JsonPatchReplace,
+		jsonPatch = append(jsonPatch, tarsTool.JsonPatchItem{
+			OP:    tarsTool.JsonPatchReplace,
 			Path:  "/spec/k8s/replicas",
 			Value: 0,
 		})
@@ -154,23 +155,23 @@ func mutatingCreateTServer(listers *lister.Listers, requestAdmissionView *k8sAdm
 		replicas = integer.IntMax(replicas, minReplicasValue)
 		replicas = integer.IntMin(replicas, maxReplicasValue)
 
-		jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
-			OP:    tarsMeta.JsonPatchReplace,
+		jsonPatch = append(jsonPatch, tarsTool.JsonPatchItem{
+			OP:    tarsTool.JsonPatchReplace,
 			Path:  "/spec/k8s/replicas",
 			Value: replicas,
 		})
 
 		if tserver.Spec.Release.Time.IsZero() {
 			now := k8sMetaV1.Now()
-			jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
-				OP:    tarsMeta.JsonPatchAdd,
+			jsonPatch = append(jsonPatch, tarsTool.JsonPatchItem{
+				OP:    tarsTool.JsonPatchAdd,
 				Path:  "/spec/release/time",
 				Value: now.ToUnstructured(),
 			})
 		}
 
-		jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
-			OP:    tarsMeta.JsonPatchAdd,
+		jsonPatch = append(jsonPatch, tarsTool.JsonPatchItem{
+			OP:    tarsTool.JsonPatchAdd,
 			Path:  "/metadata/labels/tars.io~1ServerID",
 			Value: tserver.Spec.Release.ID,
 		})
@@ -182,14 +183,14 @@ func mutatingCreateTServer(listers *lister.Listers, requestAdmissionView *k8sAdm
 					return nil, fmt.Errorf(tarsMeta.ResourceInvalidError, tserver, "no default node image has been set")
 				}
 
-				jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
-					OP:    tarsMeta.JsonPatchAdd,
+				jsonPatch = append(jsonPatch, tarsTool.JsonPatchItem{
+					OP:    tarsTool.JsonPatchAdd,
 					Path:  "/spec/release/nodeImage",
 					Value: image,
 				})
 
-				jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
-					OP:    tarsMeta.JsonPatchAdd,
+				jsonPatch = append(jsonPatch, tarsTool.JsonPatchItem{
+					OP:    tarsTool.JsonPatchAdd,
 					Path:  "/spec/release/nodeSecret",
 					Value: secret,
 				})
@@ -199,15 +200,15 @@ func mutatingCreateTServer(listers *lister.Listers, requestAdmissionView *k8sAdm
 		if tserver.Spec.Normal != nil {
 			if tserver.Spec.Release.TServerReleaseNode != nil {
 				if tserver.Spec.Release.TServerReleaseNode.Image != "" {
-					jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
-						OP:   tarsMeta.JsonPatchRemove,
+					jsonPatch = append(jsonPatch, tarsTool.JsonPatchItem{
+						OP:   tarsTool.JsonPatchRemove,
 						Path: "/spec/release/nodeImage",
 					})
 				}
 
 				if tserver.Spec.Release.TServerReleaseNode.Secret != "" {
-					jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
-						OP:   tarsMeta.JsonPatchRemove,
+					jsonPatch = append(jsonPatch, tarsTool.JsonPatchItem{
+						OP:   tarsTool.JsonPatchRemove,
 						Path: "/spec/release/nodeSecret",
 					})
 				}

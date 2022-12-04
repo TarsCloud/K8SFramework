@@ -165,7 +165,7 @@ func (r *ServiceReconciler) reconcile(key string) controller.Result {
 			klog.Errorf(tarsMeta.ResourceGetError, "service", namespace, name, err.Error())
 			return controller.Retry
 		}
-		service = tarsRuntime.Translator.BuildService(tserver)
+		service = tarsRuntime.TarsTranslator.BuildService(tserver)
 		serviceInterface := tarsRuntime.Clients.K8sClient.CoreV1().Services(namespace)
 		if _, err = serviceInterface.Create(context.TODO(), service, k8sMetaV1.CreateOptions{}); err != nil && !errors.IsAlreadyExists(err) {
 			klog.Errorf(tarsMeta.ResourceCreateError, "service", namespace, name, err.Error())
@@ -186,7 +186,7 @@ func (r *ServiceReconciler) reconcile(key string) controller.Result {
 		return controller.Retry
 	}
 
-	update, target := tarsRuntime.Translator.DryRunSyncService(tserver, service)
+	update, target := tarsRuntime.TarsTranslator.DryRunSyncService(tserver, service)
 	if update {
 		serviceInterface := tarsRuntime.Clients.K8sClient.CoreV1().Services(namespace)
 		if _, err = serviceInterface.Update(context.TODO(), target, k8sMetaV1.UpdateOptions{}); err != nil {

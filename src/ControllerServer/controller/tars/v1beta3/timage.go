@@ -17,6 +17,7 @@ import (
 	tarsListerV1beta3 "k8s.tars.io/client-go/listers/tars/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	tarsRuntime "k8s.tars.io/runtime"
+	tarsTool "k8s.tars.io/tool"
 	"strings"
 	"tarscontroller/controller"
 	"time"
@@ -135,7 +136,7 @@ func (r *TImageReconciler) reconcile(key string) controller.Result {
 		return controller.Retry
 	}
 
-	var jsonPatch tarsMeta.JsonPatch
+	var jsonPatch tarsTool.JsonPatch
 
 	switch target {
 	case reconcileTargetCheckImageBuildOvertime:
@@ -157,8 +158,8 @@ func (r *TImageReconciler) reconcile(key string) controller.Result {
 				Message:         "task overtime",
 			},
 		}
-		jsonPatch = append(jsonPatch, tarsMeta.JsonPatchItem{
-			OP:    tarsMeta.JsonPatchAdd,
+		jsonPatch = append(jsonPatch, tarsTool.JsonPatchItem{
+			OP:    tarsTool.JsonPatchAdd,
 			Path:  "/build",
 			Value: buildState,
 		})
