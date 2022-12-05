@@ -1,4 +1,4 @@
-## 1.4.0 20221106
+## 1.4.0 20221205
 
 ## en
 
@@ -6,15 +6,19 @@
 - feat: stopped v1beta1 support
 - feat: split the webhook from the controller
 - feat: refactored some golang and package structure
-- feat: fix some bugs related to TarsLocalVolume
+- feat: refactored AgentServer and fix some bugs related to TarsLocalVolume
+- fix:  fix the problem that ImageServer failed to fill the default secret
+- fix:  fix the problem that NodeServer failed to start business processes within the expected time
 
 ## cn
 
 - feat: 升级 client-go 到 v0.20.15
 - feat: 停止了 v1beta1 支持
-- feat: 将 Webhook 从 Controller 中拆分 
+- feat: 将 Webhook 从 Controller 中拆分
 - feat: 重构了 GoLang 代码和一些包结构
-- feat: 修复了一些 TarsLocalVolume 特性相关的 Bug
+- feat: 重构了 AgentServer,修复了一些 TarsLocalVolume 特性相关的 Bug
+- fix:  修复 ImageServer 未能填充默认 secret 的问题
+- fix:  修复 NodeServer 未能在预期时间内启动业务进程的问题
 
 ## 1.3.12 20220915
 
