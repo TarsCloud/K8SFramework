@@ -134,5 +134,5 @@ func CvTFC1b3To1b2(s []runtime.RawExtension) []runtime.RawExtension {
 
 func init() {
 	conversion.Registry(tarsMeta.TFrameworkConfigKind, tarsV1beta3.SchemeGroupVersion, tarsV1beta2.SchemeGroupVersion, CvTFC1b3To1b2)
-	conversion.Registry(tarsMeta.TFrameworkConfigKind, tarsV1beta3.SchemeGroupVersion, tarsV1beta2.SchemeGroupVersion, CvTFC1b2To1b3)
+	conversion.Registry(tarsMeta.TFrameworkConfigKind, tarsV1beta2.SchemeGroupVersion, tarsV1beta3.SchemeGroupVersion, CvTFC1b2To1b3)
 }
