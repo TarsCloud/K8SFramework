@@ -488,6 +488,7 @@ type TImage struct {
 	ImageType            string           `json:"imageType"`
 	SupportedType        []string         `json:"supportedType,omitempty"`
 	Releases             []*TImageRelease `json:"releases"`
+	Default              *string          `json:"default,omitempty"`
 	Build                *TImageBuild     `json:"build,omitempty"`
 	Mark                 string           `json:"mark"`
 }

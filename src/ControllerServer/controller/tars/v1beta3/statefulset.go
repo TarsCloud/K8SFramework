@@ -82,8 +82,8 @@ func NewStatefulSetController(threads int) *StatefulSetReconciler {
 		synced:        []cache.InformerSynced{stsInformer.Informer().HasSynced, tsInformer.Informer().HasSynced},
 		eventRecorder: eventBroadcaster.NewRecorder(scheme.Scheme, k8sCoreV1.EventSource{Component: "daemonset-controller"}),
 	}
-	controller.SetInformerEventHandle(tarsMeta.KStatefulSetKind, stsInformer.Informer(), c)
-	controller.SetInformerEventHandle(tarsMeta.TServerKind, tsInformer.Informer(), c)
+	controller.RegistryInformerEventHandle(tarsMeta.KStatefulSetKind, stsInformer.Informer(), c)
+	controller.RegistryInformerEventHandle(tarsMeta.TServerKind, tsInformer.Informer(), c)
 	return c
 }
 

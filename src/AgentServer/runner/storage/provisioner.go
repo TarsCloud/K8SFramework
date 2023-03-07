@@ -69,7 +69,7 @@ func (p *TLocalProvisioner) GetVolumePathInfo(claim *k8sCoreV1.PersistentVolumeC
 	server, _ := matchLabels[tarsMeta.TServerNameLabel]
 	directory, _ := matchLabels[tarsMeta.TLocalVolumeLabel]
 
-	volumeName := fmt.Sprintf("%s-%s-%s-%s-%s", claim.Namespace, directory, app, server, p.identity)
+	volumeName := fmt.Sprintf("%s-%s-%s-%s-%s", claim.Namespace, directory, strings.ToLower(app), strings.ToLower(server), p.identity)
 	if claim.Spec.VolumeName != "" && claim.Spec.VolumeName != volumeName {
 		return nil, fmt.Errorf("unexecptec claim spec.volumeName value")
 	}
@@ -86,7 +86,7 @@ func (p *TLocalProvisioner) GetVolumePathInfo(claim *k8sCoreV1.PersistentVolumeC
 		directory:   directory,
 		podABSPath:  path.Join(p.podBase, rePath),
 		hostABSPath: path.Join(p.hostBase, rePath),
-		volumeName:  fmt.Sprintf("%s-%s-%s-%s-%s", claim.Namespace, directory, app, server, p.identity),
+		volumeName:  volumeName,
 	}
 	return info, nil
 }
@@ -146,7 +146,7 @@ func (p *TLocalProvisioner) Provision(claim *k8sCoreV1.PersistentVolumeClaim) (*
 		},
 		Spec: k8sCoreV1.PersistentVolumeSpec{
 			Capacity: k8sCoreV1.ResourceList{
-				k8sCoreV1.ResourceName(k8sCoreV1.ResourceStorage): claim.Spec.Resources.Requests[k8sCoreV1.ResourceName(k8sCoreV1.ResourceStorage)],
+				k8sCoreV1.ResourceStorage: claim.Spec.Resources.Requests[k8sCoreV1.ResourceStorage],
 			},
 			PersistentVolumeSource: k8sCoreV1.PersistentVolumeSource{
 				Local: &k8sCoreV1.LocalVolumeSource{

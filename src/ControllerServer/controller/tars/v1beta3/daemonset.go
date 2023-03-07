@@ -50,8 +50,8 @@ func NewDaemonSetController(threads int) *DaemonSetReconciler {
 		eventRecorder: eventBroadcaster.NewRecorder(scheme.Scheme, k8sCoreV1.EventSource{Component: "daemonset-controller"}),
 	}
 
-	controller.SetInformerEventHandle(tarsMeta.KDaemonSetKind, dsInformer.Informer(), c)
-	controller.SetInformerEventHandle(tarsMeta.TServerKind, tsInformer.Informer(), c)
+	controller.RegistryInformerEventHandle(tarsMeta.KDaemonSetKind, dsInformer.Informer(), c)
+	controller.RegistryInformerEventHandle(tarsMeta.TServerKind, tsInformer.Informer(), c)
 
 	return c
 }

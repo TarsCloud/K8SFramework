@@ -27,7 +27,7 @@ const (
 	TImageKind           = "TImage"
 	TConfigKind          = "TConfig"
 	TAccountKind         = "TAccount"
-	TTemplateKind        = "TTemplate"
+	TTemplateKind        = "Template"
 	TEndpointKind        = "TEndpoint"
 	TTreeKind            = "TTree"
 	TExitedRecordKind    = "TExitedRecord"

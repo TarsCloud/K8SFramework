@@ -2,11 +2,6 @@
 
 #include "servant/Application.h"
 
-using namespace tars;
-
-/**
- *  Registry Server
- */
 class RegistryServer : public Application
 {
 protected:

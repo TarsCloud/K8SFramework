@@ -1259,7 +1259,7 @@ daemonset 的映射规则基本一致. 除了以下两种情况:
 
   容器内的日志存储目录为:  /usr/local/app/tars/app_log/${App}/${Server}  
 
-  宿主机的日志存储目录为:  /usr/local/app/tars/app_log/${Namespace}/${PodName}/${App}/${Server}
+  宿主机的日志存储目录为:  /usr/local/app/tars/app_log/${namespace}/${PodName}/${App}/${Server}
 
   
 

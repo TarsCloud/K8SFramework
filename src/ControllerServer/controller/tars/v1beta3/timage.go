@@ -40,7 +40,7 @@ func NewTImageController(threads int) *TImageReconciler {
 		queue:    workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 		synced:   []cache.InformerSynced{tiInformer.Informer().HasSynced},
 	}
-	controller.SetInformerEventHandle(tarsMeta.TServerKind, tiInformer.Informer(), c)
+	controller.RegistryInformerEventHandle(tarsMeta.TServerKind, tiInformer.Informer(), c)
 	return c
 }
 

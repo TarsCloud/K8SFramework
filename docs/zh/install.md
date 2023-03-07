@@ -19,7 +19,8 @@
 > kubectl get nodes -o wide
 > ```
 >
-> 作为选定节点的参考指标, 我们希望您能理解  **TarsCloud K8SFramework** 的磁盘管理策略, 具体请参考 <<[特性](property.md)>> 文档的 "磁盘管理" 一节
+> 作为选定节点的参考指标, 我们希望您能理解  **TarsCloud K8SFramework** 的磁盘管理策略,
+> 具体请参考 <<[特性](property.md)>> 文档的 "磁盘管理" 一节
 
 ### 3. 添加节点标签
 
@@ -48,7 +49,8 @@
 
 在 2 的基础上, 选定支持 tlv( tars local volume) 的节点, 在节点添加 tars.io/SupportLocalVolume 标签
 
-> 关于 tlv 的介绍可以参考 [<<特性>>](property.md) ,  "TServer与Statefulset的映射. tserver.spec.k8s.mounts" 和 "磁盘管理.TLV" 章节
+> 关于 tlv 的介绍可以参考 [<<特性>>](property.md) ,  "TServer与Statefulset的映射. tserver.spec.k8s.mounts" 和 "
+> 磁盘管理.TLV" 章节
 > 如果您仅仅是用于测试, 那么您暂时可以给任意节点添加该标签
 > 您可以使用 以下命令执行该操作:
 
@@ -75,7 +77,8 @@
 
 + 直接下载
 
-  > 您可以在 [github](https://github.com/TarsCloud/K8SFramework/tree/master/charts) 查看并下载 **TarsCloud K8SFramework** 正式发布的 Helm Chart
+  > 您可以在 [github](https://github.com/TarsCloud/K8SFramework/tree/master/charts) 查看并下载 **TarsCloud K8SFramework
+  ** 正式发布的 Helm Chart
 
 + Helm Repo
 
@@ -136,17 +139,17 @@ web: ""
 如果您是通过  "直接下载" 或者 "源码构建" 方式获取的 Helm Chart, 请执行如下命令:
 
 ```shell
-# 您需要将 ${Namespace} 替换成实际 命名空间
+# 您需要将 ${namespace} 替换成实际 命名空间
 # 您需要将 ${Version} 替换成实际 版本号
-helm install tarsframework -n ${Namespace} --create-namespace -f tarsframework.yaml tarsframework-${Version}.tgz
+helm install tarsframework -n ${namespace} --create-namespace -f tarsframework.yaml tarsframework-${Version}.tgz
 ```
 
 如果您是通过 Helm Repo 方式获取 Helm Chart, 请执行如下命令:
 
-```shell 
-# 您需要将 ${Namespace} 替换成实际 命名空间
+```shell
+# 您需要将 ${namespace} 替换成实际 命名空间
 helm update repo tars-k8s
-helm install tarsframework -n ${Namespace} --create-namespace -f tarsframework.yaml tars-k8s/tarsframework
+helm install tarsframework -n ${namespace} --create-namespace -f tarsframework.yaml tars-k8s/tarsframework
 ```
 
 ### 6. 等待 Framework 启动

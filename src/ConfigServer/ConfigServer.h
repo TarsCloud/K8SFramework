@@ -1,5 +1,4 @@
-﻿#ifndef _CONFIG_SERVER_H_
-#define _CONFIG_SERVER_H_
+﻿#pragma once
 
 #include "servant/Application.h"
 
@@ -7,7 +6,7 @@ using namespace tars;
 
 class ConfigServer : public Application
 {
- protected:
+protected:
     /**
      * ooo 初始化, 只会进程调用一次
      */
@@ -18,6 +17,3 @@ class ConfigServer : public Application
      */
     void destroyApp() final;
 };
-
-#endif
-

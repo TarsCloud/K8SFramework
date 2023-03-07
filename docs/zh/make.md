@@ -20,19 +20,23 @@
   您可以通过环境变量或命令行重设 BUILD_VERSION 值, 您也可以通过在 param.sh 文件中设置 \_BUILD_VERSION_ 值来改变默认值
 
 + REGISTRY_URL , REGISTRY_USER, REGISTRY_PASSWORD  
-  在构建 **TarsCloud K8SFramework** 过程中, 会生成多种 Docker 镜像 ，Makefile 会尝试将这些镜像推送到您指定的仓库地址 :REGISTRY_URL,  
+  在构建 **TarsCloud K8SFramework** 过程中, 会生成多种 Docker 镜像 ，Makefile 会尝试将这些镜像推送到您指定的仓库地址 :
+  REGISTRY_URL,  
   如果您的仓库地址开启了账号,密码验证, 您还需要提供账号:REGISTRY_USER, 密码:REGISTRY_PASSWORD参数  
-  您可以通过环境变量, 命令行指定这些参数值,也可以通过在 param.sh 文件中设置 \_REGISTRY_URL_, \_REGISTRY_USER_,\_REGISTRY_PASSWORD_ 来指定参数值  
+  您可以通过环境变量, 命令行指定这些参数值,也可以通过在 param.sh 文件中设置 \_REGISTRY_URL_, \_REGISTRY_USER_
+  ,\_REGISTRY_PASSWORD_ 来指定参数值  
   我们建议您在源码构建时,使用公开仓库, 这个会降低实际部署时的难度.
 
 
 + CHART_VERSION, CHART_APPVERSION, CHART_DST
   CHART_VERSION, CHART_APPVERSION,CHART_DST 分别指生成 chart 包的 version, appversion 值以及 chart 包的存放目录  
   **TarsCloud K8SFramework** 已经在 param.sh 中为这些参数设置了默认值  
-  您可以通过环境变量或命令行重设这些参数值, 您也可以通过在 param.sh 修改 \__CHART_VERSION_, \_CHART_APPVERSION_ ,\_CHART_DST_ 值来改变默认值
+  您可以通过环境变量或命令行重设这些参数值, 您也可以通过在 param.sh 修改 \__CHART_VERSION_, \_CHART_APPVERSION_
+  ,\_CHART_DST_ 值来改变默认值
 
 + UPLOAD_REGISTRY, UPLOAD_SECRET  
-  **TarsCloud K8SFramework** 内置了镜像编译服务将您的原生程序包编译成 Docker镜像, 您需要一个镜像仓库地址:UPLOAD_REGISTRY 来接收和存储这些镜像  
+  **TarsCloud K8SFramework** 内置了镜像编译服务将您的原生程序包编译成 Docker镜像, 您需要一个镜像仓库地址:UPLOAD_REGISTRY
+  来接收和存储这些镜像  
   如果您提供的是一个私有仓库,您还需要新建 Kubernetes Docker-Registry Secret, 并将 Secret 名字赋值给 UPLOAD_SECRET  
   您可以通过环境变量或命令行指定这些参数
 
@@ -68,7 +72,7 @@ controlelr: tarscontroller tarswebhook tarsagent
 framework 是 **TarsCloud K8SFramework** 项目中 Framework 包含的服务集合名,具体包括
 
 ```
-framework: tarskaniko tarsimage tarsnode tarsregistry tarsconfig tarslog tarsnotify
+framework: tarskaniko tarsimage tarsnode tarsregistry tarsAdminRegistry tarsconfig tarslog tarsnotify
 				   tarsstat tarsproperty tarsquerystat tarsqueryproperty tarskevent tarsweb elasticsearch
 ```
 
@@ -82,7 +86,7 @@ framework: tarskaniko tarsimage tarsnode tarsregistry tarsconfig tarslog tarsnot
 chart 是 **TarsCloud K8SFramework** 项目中 Chart 包的集合名,具体包括
 
 ```
-chart: chart.controller chart.framework 为 Controller Helm Chart 包和Framework Helm Chart 包 
+chart: chart.controller chart.framework 为 Controller Helm Chart 包和Framework Helm Chart 包
 ```
 
 您也可以指定 make chart.controller, make chart.framework 来构建指定 Chart
@@ -109,15 +113,18 @@ all 是 base, controller, framework, chart 四个构建目标的集合名
 
 分别用于安装和升级 Controller
 > 您需要提供 CHART 参数，指向 Controller Chart 包
-> 如果您构建 Chart 包时使用的是私有仓库, 您需要在 tars-system 命名空间新建 docker-registry secret , 并指定 CONTROLLER_SECRET=${secret}
+> 如果您构建 Chart 包时使用的是私有仓库, 您需要在 tars-system 命名空间新建 docker-registry secret , 并指定
+> CONTROLLER_SECRET=${secret}
 
 ### install.framework ,upgrade.framework
 
 分别用于安装和升级 framework
 > 您需要提供 CHART 参数，表示 Framework Chart 的路径
 > 您需要提供 NAMESPACE 参数, 表示 Framework Chart 安装的命名空间
-> 您需要提供 UPLOAD_REGISTRY 参数, 如果UPLOAD_REGISTRY 指向私有仓库, 您需要在待安装的命名空间内新建 Kubernetes Docker-Registry Secret 并且指定 UPLOAD_SECRET=${secret}  
-> 如果您在构建 Chart 包时使用的是私有仓库, 您需要在待安装的命名空间内新建 Kubernetes Docker-Registry Secret 并且指定 FRAMEWORK_SECRET=${secret}
+> 您需要提供 UPLOAD_REGISTRY 参数, 如果UPLOAD_REGISTRY 指向私有仓库, 您需要在待安装的命名空间内新建 Kubernetes
+> Docker-Registry Secret 并且指定 UPLOAD_SECRET=${secret}
+> 如果您在构建 Chart 包时使用的是私有仓库, 您需要在待安装的命名空间内新建 Kubernetes Docker-Registry Secret 并且指定
+> FRAMEWORK_SECRET=${secret}
 
 ### help
 

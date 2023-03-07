@@ -44,9 +44,9 @@ func NewTExitedPodController(threads int) *TExitedRecordReconciler {
 		queue:    workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 		synced:   []cache.InformerSynced{podInformer.Informer().HasSynced, teInformer.Informer().HasSynced, tsInformer.Informer().HasSynced},
 	}
-	controller.SetInformerEventHandle(tarsMeta.KPodKind, podInformer.Informer(), c)
-	controller.SetInformerEventHandle(tarsMeta.TExitedRecordKind, teInformer.Informer(), c)
-	controller.SetInformerEventHandle(tarsMeta.TServerKind, tsInformer.Informer(), c)
+	controller.RegistryInformerEventHandle(tarsMeta.KPodKind, podInformer.Informer(), c)
+	controller.RegistryInformerEventHandle(tarsMeta.TExitedRecordKind, teInformer.Informer(), c)
+	controller.RegistryInformerEventHandle(tarsMeta.TServerKind, tsInformer.Informer(), c)
 	return c
 }
 

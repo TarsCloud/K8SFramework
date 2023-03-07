@@ -23,34 +23,27 @@ func (i *InformerFactories) Start(stop chan struct{}) {
 	i.TarsInformerFactory.Start(stop)
 }
 
-func newInformerFactories(clients *Client, cluster bool) *InformerFactories {
-
-	if cluster {
+func newInformerFactories(clients *Client, namespace bool) *InformerFactories {
+	if namespace {
 		return &InformerFactories{
-			K8SInformerFactory: k8sInformers.NewSharedInformerFactory(clients.K8sClient, 0),
-
+			K8SInformerFactory: k8sInformers.NewSharedInformerFactoryWithOptions(clients.K8sClient, 0, k8sInformers.WithNamespace(Namespace)),
 			K8SInformerFactoryWithTarsFilter: k8sInformers.NewSharedInformerFactoryWithOptions(clients.K8sClient, 0, k8sInformers.WithTweakListOptions(
 				func(options *k8sMetaV1.ListOptions) {
 					options.LabelSelector = fmt.Sprintf("%s,%s", tarsMeta.TServerAppLabel, tarsMeta.TServerNameLabel)
-				})),
-
-			MetadataInformerFactor: metadatainformer.NewSharedInformerFactory(clients.K8sMetadataClient, 0),
-
-			TarsInformerFactory: tarsInformers.NewSharedInformerFactoryWithOptions(clients.CrdClient, 0),
+				},
+			), k8sInformers.WithNamespace(Namespace)),
+			MetadataInformerFactor: metadatainformer.NewFilteredSharedInformerFactory(clients.K8sMetadataClient, 0, Namespace, nil),
+			TarsInformerFactory: tarsInformers.NewSharedInformerFactoryWithOptions(clients.CrdClient, 0, tarsInformers.WithNamespace(Namespace)),
 		}
 	}
 
 	return &InformerFactories{
-		K8SInformerFactory: k8sInformers.NewSharedInformerFactoryWithOptions(clients.K8sClient, 0, k8sInformers.WithNamespace(Namespace)),
-
+		K8SInformerFactory: k8sInformers.NewSharedInformerFactory(clients.K8sClient, 0),
 		K8SInformerFactoryWithTarsFilter: k8sInformers.NewSharedInformerFactoryWithOptions(clients.K8sClient, 0, k8sInformers.WithTweakListOptions(
 			func(options *k8sMetaV1.ListOptions) {
 				options.LabelSelector = fmt.Sprintf("%s,%s", tarsMeta.TServerAppLabel, tarsMeta.TServerNameLabel)
-			},
-		), k8sInformers.WithNamespace(Namespace)),
-
-		MetadataInformerFactor: metadatainformer.NewFilteredSharedInformerFactory(clients.K8sMetadataClient, 0, Namespace, nil),
-
-		TarsInformerFactory: tarsInformers.NewSharedInformerFactoryWithOptions(clients.CrdClient, 0, tarsInformers.WithNamespace(Namespace)),
+			})),
+		MetadataInformerFactor: metadatainformer.NewSharedInformerFactory(clients.K8sMetadataClient, 0),
+		TarsInformerFactory: tarsInformers.NewSharedInformerFactoryWithOptions(clients.CrdClient, 0),
 	}
 }

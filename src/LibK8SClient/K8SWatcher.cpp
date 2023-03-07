@@ -2,13 +2,20 @@
 #include "K8SWatcher.h"
 #include "K8SWatcherError.h"
 #include "K8SParams.h"
-#include "HttpParser.h"
-#include <asio/ssl/stream.hpp>
-#include <asio/streambuf.hpp>
-#include <asio/ip/tcp.hpp>
-#include <rapidjson/pointer.h>
-#include <rapidjson/document.h>
 #include <iostream>
+#include <boost/asio/ssl/stream.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/posix/stream_descriptor.hpp>
+#include <boost/asio/write.hpp>
+#include <boost/beast.hpp>
+#include <boost/beast/ssl.hpp>
+
+namespace beast = boost::beast;          // from <boost/beast.hpp>
+namespace http = beast::http;            // from <boost/beast/http.hpp>
+namespace asio = boost::asio;            // from <boost/asio.hpp>
+namespace ssl = asio::ssl;               // from <boost/asio/ssl.hpp>
+namespace json = boost::json;
+
 
 constexpr char ADDEDTypeValue[] = "ADDED";
 constexpr char DELETETypeValue[] = "DELETED";
@@ -47,67 +54,22 @@ std::string K8SWatcherSetting::watchUri() const
     {
         os << "&filedSelector=" << filedFilter_;
     }
-    os << "&resourceVersion=" << newestVersion_;
+    os << "&resourceVersion=" << (newestVersion_.empty() ? "0" : newestVersion_);
     return os.str();
 }
 
-class K8SWatcherSession : public std::enable_shared_from_this<K8SWatcherSession>
+class K8SWatcherSession :public std::enable_shared_from_this<K8SWatcherSession>
 {
-    struct ResponseParserState
+public:
+    explicit K8SWatcherSession(asio::io_context& ioContext, std::atomic<int>& waitSyncCount,
+            std::condition_variable& conditionVariable,
+            const K8SWatcherSetting& callback)
+            :ioContext_(ioContext),
+             waitSyncCount_(waitSyncCount),
+             conditionVariable_(conditionVariable),
+             stream_(ioContext_, K8SParams::SSLContext()),
+             callback_(callback)
     {
-        ResponseParserState() = default;
-
-        bool headComplete_{ false };
-        bool messageComplete_{ false };
-        bool bodyArrive_{ false };
-        unsigned int code_{ 0 };
-        std::string bodyBuffer_{};
-
-        void cleanup()
-        {
-            headComplete_ = false;
-            bodyArrive_ = false;
-            messageComplete_ = false;
-            bodyBuffer_.clear();
-            code_ = 0;
-        }
-    };
-
- public:
-    explicit K8SWatcherSession(asio::io_context& ioContext, std::atomic<int>& waitSyncCount, std::condition_variable& conditionVariable,
-        const K8SWatcherSetting& callback)
-        :
-        ioContext_(ioContext),
-        waitSyncCount_(waitSyncCount),
-        conditionVariable_(conditionVariable),
-        stream_(ioContext_, K8SParams::SSLContext()),
-        callback_(callback)
-    {
-        memset(&responseParser_, 0, sizeof(responseParser_));
-        responseParser_.data = &responseParserState_;
-
-        responseParserSetting_.on_headers_complete = [](http_parser* p) -> int
-        {
-            auto* state = static_cast<ResponseParserState* >(p->data);
-            state->code_ = p->status_code;
-            state->headComplete_ = true;
-            return 0;
-        };
-
-        responseParserSetting_.on_body = [](http_parser* p, const char* at, size_t length) -> int
-        {
-            auto* state = static_cast<ResponseParserState* >(p->data);
-            state->bodyBuffer_.append(at, length);
-            state->bodyArrive_ = true;
-            return 0;
-        };
-
-        responseParserSetting_.on_message_complete = [](http_parser* p) -> int
-        {
-            auto* state = static_cast<ResponseParserState* >(p->data);
-            state->messageComplete_ = true;
-            return 0;
-        };
     }
 
     void start()
@@ -115,22 +77,21 @@ class K8SWatcherSession : public std::enable_shared_from_this<K8SWatcherSession>
         doConnect();
     }
 
- private:
-    void afterError(const std::error_code& ec, const std::string& message) const
+private:
+    void afterError(const boost::system::error_code& ec, const std::string& message) const
     {
         waitSyncCount_--;
         conditionVariable_.notify_all();
         if (callback_.onError)
         {
-            return callback_.onError(ec, message);
+            auto again = callback_.onError(ec, message);
+            if (again)
+            {
+                K8SWatcher::instance().addWatch(callback_);
+            }
+            return;
         }
         std::cout << "K8SWatcher Error, Reason: " << ec.message() << ", Message: " << message << std::endl;
-    }
-
-    void clearResponseState()
-    {
-        responseParserState_.cleanup();
-        http_parser_init(&responseParser_, HTTP_RESPONSE);
     }
 
     void doConnect()
@@ -151,11 +112,11 @@ class K8SWatcherSession : public std::enable_shared_from_this<K8SWatcherSession>
 
         asio::ip::tcp::endpoint endpoint(asio::ip::address::from_string(apiServerIP), apiServerPort);
         auto self = shared_from_this();
-        stream_.next_layer().async_connect(endpoint, [self](std::error_code ec)
-        { self->afterConnect(ec); });
+        stream_.next_layer().async_connect(endpoint, [self](const boost::system::error_code& ec)
+        {self->afterConnect(ec);});
     }
 
-    void afterConnect(const std::error_code& ec)
+    void afterConnect(const boost::system::error_code& ec)
     {
         if (ec)
         {
@@ -167,14 +128,14 @@ class K8SWatcherSession : public std::enable_shared_from_this<K8SWatcherSession>
     void doHandleShake()
     {
         auto self = shared_from_this();
-        stream_.async_handshake(asio::ssl::stream_base::client,
-            [self](std::error_code ec)
-            {
-                self->afterHandshake(ec);
-            });
+        stream_.async_handshake(ssl::stream_base::client,
+                [self](const boost::system::error_code& ec)
+                {
+                    self->afterHandshake(ec);
+                });
     }
 
-    void afterHandshake(const std::error_code& ec)
+    void afterHandshake(const boost::system::error_code& ec)
     {
         if (ec)
         {
@@ -195,86 +156,83 @@ class K8SWatcherSession : public std::enable_shared_from_this<K8SWatcherSession>
         strStream << "Authorization: Bearer " << K8SParams::ClientToken() << "\r\n";
         strStream << "Connection: Keep-Alive\r\n";
         strStream << "\r\n";
-        requestContext_ = strStream.str();
+        requestContent_ = strStream.str();
         auto self = shared_from_this();
-        asio::async_write(stream_, asio::buffer(requestContext_),
-            [self](std::error_code ec, size_t transferred)
-            { self->afterListRequest(ec, transferred); });
+        asio::async_write(stream_, asio::buffer(requestContent_),
+                [self](const boost::system::error_code& ec, size_t transferred)
+                {self->afterListRequest(ec, transferred);});
     }
 
-    void afterListRequest(const std::error_code& ec, std::size_t transferred)
+    void afterListRequest(const boost::system::error_code& ec, std::size_t transferred)
     {
+        boost::ignore_unused(transferred);
         if (ec)
         {
             return afterError(ec, "error when write list request to apiServer");
         }
-        clearResponseState();
+        buffer_.clear();
+        responseParser_ = std::make_shared<http::response_parser < http::string_body>>
+        ();
         doReadListResponse();
     }
 
     void doReadListResponse()
     {
         auto self = shared_from_this();
-        stream_.async_read_some(responseBuffer_.prepare(1024 * 1024 * 2),
-            [self](std::error_code ec, size_t transferred)
-            {
-                self->afterReadListResponse(ec, transferred);
-            });
+        http::async_read(stream_, buffer_, *responseParser_,
+                [self](const boost::system::error_code& ec, size_t transferred)
+                {
+                    self->afterReadListResponse(ec, transferred);
+                });
     }
 
-    void afterReadListResponse(const std::error_code& ec, size_t transferred)
+    void afterReadListResponse(const boost::system::error_code& ec, size_t transferred)
     {
+        boost::ignore_unused(transferred);
         if (ec)
         {
             return afterError(ec, "error when read list response from apiServer");
         }
 
-        responseBuffer_.commit(transferred);
-
-        const char* willParseData = asio::buffer_cast<const char*>(responseBuffer_.data());
-        size_t parserLength = http_parser_execute(&responseParser_, &responseParserSetting_, willParseData, responseBuffer_.size());
-        responseBuffer_.consume(parserLength);
-
-        if (!responseParserState_.messageComplete_)
+        boost::system::error_code er{};
+        assert(responseParser_->is_done());
+        auto&& response = responseParser_->release();
+        auto v = boost::json::parse(response.body(), er);
+        if (er)
         {
-            return doReadListResponse();
+            return afterError(K8SWatcherError::UnexpectedResponse, response.body());
         }
 
-        if (responseParserState_.code_ != HTTP_STATUS_OK)
+        auto&& pItems = v.find_pointer("/items", er);
+        if (er || pItems == nullptr || !pItems->is_array())
         {
-            return afterError(K8SWatcherError::UnexpectedResponse, responseParserState_.bodyBuffer_);
+            return afterError(er, "error when read list response from apiServer");
         }
 
-        rapidjson::Document jsonDocument{};
-        assert(!responseParserState_.bodyBuffer_.empty());
-        jsonDocument.Parse(responseParserState_.bodyBuffer_.data(), responseParserState_.bodyBuffer_.size());
-
-        if (jsonDocument.HasParseError())
-        {
-            return afterError(K8SWatcherError::UnexpectedResponse, responseParserState_.bodyBuffer_);
-        }
-
-        auto&& jsonArray = jsonDocument["items"].GetArray();
         if (callback_.onAdded)
         {
-            for (auto&& item: jsonArray)
+            for (auto&& item:pItems->get_array())
             {
                 callback_.onAdded(item, K8SWatchEventDrive::List);
             }
         }
-        auto pResourceVersion = rapidjson::GetValueByPointer(jsonDocument, "/metadata/resourceVersion");
-        assert(pResourceVersion != nullptr && pResourceVersion->IsString());
-        callback_.newestVersion_ = std::string(pResourceVersion->GetString(), pResourceVersion->GetStringLength());
+        auto pResourceVersion = v.find_pointer("/metadata/resourceVersion", er);
+        if (er || pResourceVersion == nullptr || !pResourceVersion->is_string())
+        {
+            return afterError(er, "error when read list response from apiServer");
+        }
 
-        auto pContinue = rapidjson::GetValueByPointer(jsonDocument, "/metadata/continue");
+        callback_.newestVersion_ = boost::json::value_to<std::string>(*pResourceVersion);
+
+        auto pContinue = v.find_pointer("/metadata/continue", er);
         if (pContinue == nullptr)
         {
             callback_.continue_ = "";
         }
         else
         {
-            assert(pContinue->IsString());
-            callback_.continue_ = std::string(pContinue->GetString(), pContinue->GetStringLength());
+            assert(pContinue->is_string());
+            callback_.continue_ = boost::json::value_to<std::string>(*pContinue);
         }
         if (callback_.continue_.empty())
         {
@@ -298,185 +256,172 @@ class K8SWatcherSession : public std::enable_shared_from_this<K8SWatcherSession>
         strStream << "Authorization: Bearer " << K8SParams::ClientToken() << "\r\n";
         strStream << "Connection: Keep-Alive\r\n";
         strStream << "\r\n";
-        requestContext_ = strStream.str();
+        requestContent_ = strStream.str();
         auto self = shared_from_this();
-        asio::async_write(stream_, asio::buffer(requestContext_),
-            [self](std::error_code ec, size_t transferred)
-            { self->afterWatchRequest(ec, transferred); });
+        asio::async_write(stream_, asio::buffer(requestContent_),
+                [self](boost::system::error_code ec, size_t transferred)
+                {self->afterWatchRequest(ec, transferred);});
     }
 
-    void afterWatchRequest(const std::error_code& ec, std::size_t transferred)
+    void afterWatchRequest(const boost::system::error_code& ec, std::size_t transferred)
     {
+        boost::ignore_unused(transferred);
         if (ec)
         {
             return afterError(ec, "error when write watch request to apiServer");
         }
-        clearResponseState();
+        buffer_.clear();
+        responseParser_ = std::make_shared<http::response_parser < http::string_body>>
+        ();
         doReadWatchResponse();
     }
 
     void doReadWatchResponse()
     {
         auto self = shared_from_this();
-        stream_.async_read_some(responseBuffer_.prepare(1024 * 1024 * 2),
-            [self](std::error_code ec, size_t transferred)
-            { self->afterReadWatchResponse(ec, transferred); });
+        http::async_read_some(stream_, buffer_, *responseParser_,
+                [self](const boost::system::error_code& ec, size_t transferred)
+                {
+                    self->afterReadWatchResponse(ec, transferred);
+                });
     }
 
-    void afterReadWatchResponse(const std::error_code& ec, size_t transferred)
+    void afterReadWatchResponse(const boost::system::error_code& ec, size_t transferred)
     {
+        boost::ignore_unused(transferred);
         if (ec)
         {
             return afterError(ec, "error when read watch response from apiServer");
         }
-        responseBuffer_.commit(transferred);
-        const char* responseData = asio::buffer_cast<const char*>(responseBuffer_.data());
-        size_t parserSize = http_parser_execute(&responseParser_, &responseParserSetting_, responseData, responseBuffer_.size());
-        responseBuffer_.consume(parserSize);
-
-        if (!responseParserState_.headComplete_)
+        if (!responseParser_->is_header_done())
         {
             doReadWatchResponse();
             return;
         }
-
-        assert(responseParserState_.headComplete_);
+        auto&& response = responseParser_->get();
+        auto&& body = response.body();
 
         constexpr unsigned int HTTP_OK = 200;
 
-        if (responseParserState_.code_ != HTTP_OK)
+        if (response.result_int() != HTTP_OK)
         {
-            if (!responseParserState_.messageComplete_)
+            if (!responseParser_->is_done())
             {
                 doReadWatchResponse();
                 return;
             }
-            assert(responseParserState_.messageComplete_);
-            return afterError(K8SWatcherError::UnexpectedResponse, responseParserState_.bodyBuffer_);
+            return afterError(K8SWatcherError::UnexpectedResponse, body);
         }
 
-        if (responseParserState_.bodyArrive_)
+        if (!body.empty())
         {
-            const char* bodyData = responseParserState_.bodyBuffer_.data();
-            size_t bodyDataLength = responseParserState_.bodyBuffer_.size();
-
-            rapidjson::StringStream stream(bodyData);
-            size_t lastTell = 0;
-            while (lastTell < bodyDataLength)
+            boost::system::error_code err{};
+            auto data = body.c_str();
+            auto size = body.size();
+            while (size > 0)
             {
-                rapidjson::Document document{};
-                document.ParseStream<rapidjson::kParseStopWhenDoneFlag>(stream);
-                if (document.HasParseError())
+                auto tell = jsonStreamParser_.write_some(data, size, err);
+                if (err)
                 {
-                    break;
+                    return afterError(K8SWatcherError::UnexpectedResponse, body);
                 }
-                stream.Take();
-                lastTell = stream.Tell();
 
-                auto pType = rapidjson::GetValueByPointer(document, "/type")->GetString();
-                assert(pType != nullptr);
+                assert(size >= tell);
+                size -= tell;
+                data += tell;
 
-                if (strcmp(ERRORTypeValue, pType) == 0)
+                if (jsonStreamParser_.done())
                 {
-                    auto pErrorCode = rapidjson::GetValueByPointer(document, "/object/code");
-                    unsigned int errorCode = pErrorCode->GetUint();
-                    constexpr unsigned int HTTP_GONE = 410;
+                    auto&& document = jsonStreamParser_.release();
+                    jsonStreamParser_.reset();
 
-                    if (errorCode != HTTP_GONE)
+                    auto pType = document.at_pointer("/type");
+                    assert(pType != nullptr && pType.is_string());
+                    auto type = pType.as_string().c_str();
+                    if (strcmp(ERRORTypeValue, type) == 0)
                     {
-                        return afterError(K8SWatcherError::UnexpectedResponse, responseParserState_.bodyBuffer_);
-                    }
+                        auto pErrorCode = document.at_pointer("/object/code");
+                        auto errorCode = pErrorCode.as_int64();
+                        constexpr auto HTTP_GONE = 410;
 
-                    if (responseParserState_.messageComplete_)
-                    {
-                        if (callback_.preList)
+                        if (errorCode != HTTP_GONE)
                         {
-                            callback_.preList();
+                            return afterError(K8SWatcherError::UnexpectedResponse, body);
                         }
-                        return doListRequest();
+
+                        if (responseParser_->is_done())
+                        {
+                            if (callback_.preList)
+                            {
+                                callback_.preList();
+                            }
+                            return doListRequest();
+                        }
+                        return doReadWatchResponse();
                     }
-                    return waitMessageCompleteThenDoListRequest();
+                    dispatchEvent(type, document);
                 }
-                dispatchEvent(pType, document);
             }
-            assert(lastTell <= bodyDataLength);
-            size_t remainingLength = bodyDataLength - lastTell;
-            responseParserState_.bodyBuffer_.replace(0, remainingLength, bodyData + lastTell);
-            responseParserState_.bodyBuffer_.resize(remainingLength);
-            responseParserState_.bodyArrive_ = false;
+            if (size == 0)
+            {
+                body.clear();
+            }
+            else
+            {
+                body.replace(0, size, data);
+                body.resize(size);
+            }
         }
-        responseParserState_.messageComplete_ ? doWatchRequest() : doReadWatchResponse();
+        responseParser_->is_done() ? doWatchRequest() : doReadWatchResponse();
     }
 
-    void dispatchEvent(const char* type, const rapidjson::Document& document)
+    void dispatchEvent(const char* type, const boost::json::value& document)
     {
-        assert(!document.HasParseError());
-
-        auto pResourceVersion = rapidjson::GetValueByPointer(document, "/object/metadata/resourceVersion");
-        assert(pResourceVersion != nullptr && pResourceVersion->IsString());
-        callback_.newestVersion_ = std::string(pResourceVersion->GetString(), pResourceVersion->GetStringLength());
-
-        if (strcmp(BOOKMARKTypeValue, type) == 0)
+        boost::system::error_code er{};
+        auto pResourceVersion = document.find_pointer("/object/metadata/resourceVersion", er);
+        if (er || pResourceVersion == nullptr || !pResourceVersion->is_string())
         {
             return;
         }
-        const auto& object = document["object"];
 
-        if (strcmp(ADDEDTypeValue, type) == 0)
+        callback_.newestVersion_ = boost::json::value_to<std::string>(*pResourceVersion);
+        if (::strcmp(BOOKMARKTypeValue, type) == 0)
+        {
+            return;
+        }
+        const auto& object = document.at("object");
+
+        if (::strcmp(ADDEDTypeValue, type) == 0)
         {
             callback_.onAdded(object, K8SWatchEventDrive::Watch);
             return;
         }
-        if (strcmp(UPDATETypeValue, type) == 0)
+        if (::strcmp(UPDATETypeValue, type) == 0)
         {
             callback_.onModified(object);
             return;
         }
-        if (strcmp(DELETETypeValue, type) == 0)
+        if (::strcmp(DELETETypeValue, type) == 0)
         {
             callback_.onDeleted(object);
             return;
         }
     }
 
-    void waitMessageCompleteThenDoListRequest()
-    {
-        auto self = shared_from_this();
-        stream_.async_read_some(responseBuffer_.prepare(1024 * 1024 * 2),
-            [self](std::error_code ec, size_t transferred)
-            {
-                self->responseBuffer_.commit(transferred);
-                const char* responseData = asio::buffer_cast<const char*>(self->responseBuffer_.data());
-                size_t parserSize = http_parser_execute(&self->responseParser_, &self->responseParserSetting_,
-                    responseData, self->responseBuffer_.size());
-                self->responseBuffer_.consume(parserSize);
-                if (self->responseParserState_.messageComplete_)
-                {
-                    if (self->callback_.preList)
-                    {
-                        self->callback_.preList();
-                    }
-                    self->doListRequest();
-                    return;
-                }
-                self->waitMessageCompleteThenDoListRequest();
-            });
-    }
-
- private:
+private:
     asio::io_context& ioContext_;
     std::atomic<int>& waitSyncCount_;
     std::condition_variable& conditionVariable_;
-    asio::ssl::stream<asio::ip::tcp::socket> stream_;
+    beast::ssl_stream<beast::tcp_stream> stream_;
     K8SWatcherSetting callback_;
-    std::string requestContext_{};
-    asio::streambuf responseBuffer_{};
-    http_parser responseParser_{};
-    http_parser_settings responseParserSetting_{};
-    ResponseParserState responseParserState_{};
+    std::string requestContent_{};
+    json::stream_parser jsonStreamParser_{};
+    beast::flat_buffer buffer_{};
+    std::shared_ptr<http::response_parser < http::string_body>> responseParser_;
 };
 
-K8SWatcherSetting::K8SWatcherSetting(const std::string& group, const std::string& version, const std::string& plural, const std::string& _namespace)
+K8SWatcherSetting::K8SWatcherSetting(const std::string& group, const std::string& version, const std::string& plural,
+        const std::string& _namespace)
 {
     std::ostringstream os;
     if (group.empty())

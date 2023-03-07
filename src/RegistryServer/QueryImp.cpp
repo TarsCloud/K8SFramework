@@ -3,7 +3,8 @@
 #include <string>
 #include "servant/RemoteLogger.h"
 
-static std::string buildLogContent(const CurrentPtr& current, const vector<EndpointF>& activeEp, const vector<EndpointF>* inactiveEp)
+static std::string
+buildLogContent(const CurrentPtr& current, const vector<EndpointF>& activeEp, const vector<EndpointF>* inactiveEp)
 {
     std::ostringstream os;
     if (current)
@@ -45,43 +46,43 @@ while(false)                                             \
 
 static void findObjectById_(const std::string& id, vector<EndpointF>& activeEp, vector<EndpointF>* inactiveEp)
 {
-	constexpr int FixedTimeout = 6000;
+    constexpr int FixedTimeout = 6000;
 
-	constexpr char FixedRegistryServerHost[] = "tars-tarsregistry";
+    constexpr char FixedRegistryServerHost[] = "tars-tarsregistry";
 
-	constexpr char FixedQueryAdapterName[] = "tars.tarsregistry.QueryObj";
-	constexpr int FixedQueryAdapterPort = 17890;
+    constexpr char FixedQueryAdapterName[] = "tars.tarsregistry.QueryObj";
+    constexpr int FixedQueryAdapterPort = 17890;
 
-	constexpr char FixedRegistryAdapterName[] = "tars.tarsregistry.RegistryObj";
-	constexpr int FixedRegistryAdapterPort = 17891;
+    constexpr char FixedRegistryAdapterName[] = "tars.tarsregistry.RegistryObj";
+    constexpr int FixedRegistryAdapterPort = 17891;
 
     std::vector<std::string> v = TC_Common::sepstr<string>(id, ".");
-    if (v.size() != 3)
+    if (v.size() != 3 || v[0].empty() || v[1].empty() || v[2].empty())
     {
         return;
     }
 
-	if (id == FixedQueryAdapterName)
-	{
-		EndpointF endpointF{};
-		endpointF.host = FixedRegistryServerHost;
-		endpointF.port = FixedQueryAdapterPort;
-		endpointF.istcp = true;
-		endpointF.timeout = FixedTimeout;
-		activeEp.push_back(endpointF);
-		return;
-	}
+    if (id == FixedQueryAdapterName)
+    {
+        EndpointF endpointF{};
+        endpointF.host = FixedRegistryServerHost;
+        endpointF.port = FixedQueryAdapterPort;
+        endpointF.istcp = true;
+        endpointF.timeout = FixedTimeout;
+        activeEp.push_back(endpointF);
+        return;
+    }
 
-	if (id == FixedRegistryAdapterName)
-	{
-		EndpointF endpointF{};
-		endpointF.host = FixedRegistryServerHost;
-		endpointF.port = FixedRegistryAdapterPort;
-		endpointF.istcp = true;
-		endpointF.timeout = FixedTimeout;
-		activeEp.push_back(endpointF);
-		return;
-	}
+    if (id == FixedRegistryAdapterName)
+    {
+        EndpointF endpointF{};
+        endpointF.host = FixedRegistryServerHost;
+        endpointF.port = FixedRegistryAdapterPort;
+        endpointF.istcp = true;
+        endpointF.timeout = FixedTimeout;
+        activeEp.push_back(endpointF);
+        return;
+    }
 
     bool serviceExistInCluster = false;
 /*
@@ -92,38 +93,38 @@ static void findObjectById_(const std::string& id, vector<EndpointF>& activeEp, 
 
     Storage::instance().getTEndpoints(
             [&v, &activeEp, &inactiveEp, &serviceExistInCluster](
-                    const std::map<std::string, std::shared_ptr<TEndpoint>>& tendpoints) mutable
+                    const std::map<std::string, std::shared_ptr<TEndpoint>>& endpoints) mutable
             {
-                auto tendpointName = TC_Common::lower(v[0] + "-" + v[1]);
-                auto iterator = tendpoints.find(tendpointName);
-                if (iterator == tendpoints.end())
+                auto endpointName = tars::TC_Common::lower(v[0]) + "-" + tars::TC_Common::lower(v[1]);
+                auto iterator = endpoints.find(endpointName);
+                if (iterator == endpoints.end())
                 {
                     return;
                 }
                 serviceExistInCluster = true;
-                const auto& tendpoint = iterator->second;
-                if (tendpoint == nullptr)
+                const auto& endpoint = iterator->second;
+                if (endpoint == nullptr)
                 {
                     return;
                 }
-                for (auto& tadapter: tendpoint->tAdapters)
+                for (auto&& servant: endpoint->servants)
                 {
-                    if (tadapter->name == v[2])
+                    if (servant.name == v[2])
                     {
                         EndpointF endpointF{};
-                        endpointF.port = tadapter->port;
-                        endpointF.istcp = tadapter->isTcp;
-                        endpointF.timeout = tadapter->timeout;
-                        for (const auto& pod: tendpoint->activatedPods)
+                        endpointF.port = servant.port;
+                        endpointF.istcp = servant.isTcp;
+                        endpointF.timeout = servant.timeout;
+                        for (const auto& pod: endpoint->activatedPods)
                         {
-                            endpointF.host = std::string{}.append(pod).append(".").append(tendpointName);
+                            endpointF.host.append(pod).append(".").append(endpointName);
                             activeEp.push_back(endpointF);
                         }
                         if (inactiveEp != nullptr)
                         {
-                            for (auto&& pod: tendpoint->inActivatedPods)
+                            for (auto&& pod: endpoint->inActivatedPods)
                             {
-                                endpointF.host = std::string{}.append(pod).append(".").append(tendpointName);
+                                endpointF.host.append(pod).append(".").append(endpointName);
                                 inactiveEp->push_back(endpointF);
                             }
                         }
@@ -137,7 +138,7 @@ static void findObjectById_(const std::string& id, vector<EndpointF>& activeEp, 
         return;
     }
 
-    Storage::instance().getUnChain([&id, &activeEp](const std::shared_ptr <UPChain>& upChain)mutable
+    Storage::instance().getUnChain([&id, &activeEp](const std::shared_ptr<UPChain>& upChain)mutable
     {
         if (upChain == nullptr)
         {
@@ -166,7 +167,8 @@ vector<EndpointF> QueryImp::findObjectById(const std::string& id, CurrentPtr cur
     return activeEp;
 }
 
-int QueryImp::findObjectById4Any(const std::string& id, vector<EndpointF>& activeEp, vector<EndpointF>& inactiveEp, CurrentPtr current)
+int QueryImp::findObjectById4Any(const std::string& id, vector<EndpointF>& activeEp, vector<EndpointF>& inactiveEp,
+        CurrentPtr current)
 {
     findObjectById_(id, activeEp, &inactiveEp);
     auto str = buildLogContent(current, activeEp, &inactiveEp);
@@ -186,7 +188,8 @@ QueryImp::findObjectByIdInSameStation(const std::string& id, const std::string& 
 }
 
 
-int QueryImp::findObjectById4All(const std::string& id, vector<EndpointF>& activeEp, vector<EndpointF>& inactiveEp, CurrentPtr current)
+int QueryImp::findObjectById4All(const std::string& id, vector<EndpointF>& activeEp, vector<EndpointF>& inactiveEp,
+        CurrentPtr current)
 {
     findObjectById_(id, activeEp, &inactiveEp);
     auto str = buildLogContent(current, activeEp, &inactiveEp);
@@ -195,14 +198,14 @@ int QueryImp::findObjectById4All(const std::string& id, vector<EndpointF>& activ
 }
 
 int
-QueryImp::findObjectByIdInSameGroup(const std::string& id, vector<EndpointF>& activeEp, vector<EndpointF>& inactiveEp, CurrentPtr current)
+QueryImp::findObjectByIdInSameGroup(const std::string& id, vector<EndpointF>& activeEp, vector<EndpointF>& inactiveEp,
+        CurrentPtr current)
 {
     findObjectById_(id, activeEp, &inactiveEp);
     auto str = buildLogContent(current, activeEp, &inactiveEp);
     DAY_LOG("query_idc", __FUNCTION__, id, "", str);
     return 0;
 }
-
 
 Int32
 QueryImp::findObjectByIdInSameSet(const std::string& id, const std::string& setId, vector<EndpointF>& activeEp,

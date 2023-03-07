@@ -548,33 +548,33 @@ func equalK8SHostPorts(l, r []*tarsV1beta3.TK8SHostPort) bool {
 	return true
 }
 
-func equalTServerAndTEndpoint(tserver *tarsV1beta3.TServer, endpoint *tarsV1beta3.TEndpoint) bool {
+func equalTServerAndTEndpoint(tserver *tarsV1beta3.TServer, tendpoint *tarsV1beta3.TEndpoint) bool {
 
-	if tserver.Spec.App != endpoint.Spec.App {
+	if tserver.Spec.App != tendpoint.Spec.App {
 		return false
 	}
 
-	if tserver.Spec.Server != endpoint.Spec.Server {
+	if tserver.Spec.Server != tendpoint.Spec.Server {
 		return false
 	}
 
-	if tserver.Spec.Important != endpoint.Spec.Important {
+	if tserver.Spec.Important != tendpoint.Spec.Important {
 		return false
 	}
 
-	if !equalK8SHostPorts(tserver.Spec.K8S.HostPorts, endpoint.Spec.HostPorts) {
+	if !equalK8SHostPorts(tserver.Spec.K8S.HostPorts, tendpoint.Spec.HostPorts) {
 		return false
 	}
 
-	if !equality.Semantic.DeepEqual(tserver.Spec.Release, endpoint.Spec.Release) {
+	if !equality.Semantic.DeepEqual(tserver.Spec.Release, tendpoint.Spec.Release) {
 		return false
 	}
 
 	switch tserver.Spec.SubType {
 	case tarsV1beta3.TARS:
-		return equalTars(tserver.Spec.Tars, endpoint.Spec.Tars)
+		return equalTars(tserver.Spec.Tars, tendpoint.Spec.Tars)
 	case tarsV1beta3.Normal:
-		return equalNormal(tserver.Spec.Normal, endpoint.Spec.Normal)
+		return equalNormal(tserver.Spec.Normal, tendpoint.Spec.Normal)
 	}
 
 	//should not reach here
@@ -760,6 +760,11 @@ func equalTServerAndDaemonSet(tserver *tarsV1beta3.TServer, daemonSet *k8sAppsV1
 }
 
 func equalTServerAndStatefulset(tserver *tarsV1beta3.TServer, statefulSet *k8sAppsV1.StatefulSet) bool {
+
+	if tserver.Spec.K8S.Replicas != *statefulSet.Spec.Replicas {
+		return false
+	}
+
 	/*
 		Because updates to statefulset spec for fields other than 'replicas', 'template', 'updateStrategy' and 'minReadySeconds' are forbidden,
 		We skip compare spec.K8S.PodManagementPolicy with statefulSet.Spec.PodManagementPolicy

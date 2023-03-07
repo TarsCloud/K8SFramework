@@ -10,9 +10,11 @@ struct ServerObject
 
     static int restartServer(const std::string& application, const std::string& serverName, std::string& result);
 
-    static int addFile(const std::string& application, const std::string& serverName, const std::string& file, std::string& result);
+    static int addFile(const std::string& application, const std::string& serverName, const std::string& file,
+            std::string& result);
 
-    static int notifyServer(const std::string& application, const std::string& serverName, const std::string& command, std::string& result);
+    static int notifyServer(const std::string& application, const std::string& serverName, const std::string& command,
+            std::string& result);
 
     static void keepActiving(const tars::ServerInfo& serverInfo);
 

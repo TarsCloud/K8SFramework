@@ -4,7 +4,6 @@
 #include "servant/NotifyF.h"
 #include "servant/RemoteLogger.h"
 #include "util/tc_config.h"
-#include <rapidjson/pointer.h>
 
 using namespace tars;
 
@@ -12,7 +11,7 @@ void ConfigImp::initialize()
 {
 }
 
-int ConfigImp::ListConfig(const string& app, const string& server, vector<string>& vf, CurrentPtr current)
+int ConfigImp::ListConfig(const std::string& app, const std::string& server, vector<string>& vf, CurrentPtr current)
 {
     TLOGDEBUG("ListConfig|" << app << "." << server << "|" << current->getIp() << std::endl);
     try
@@ -27,11 +26,11 @@ int ConfigImp::ListConfig(const string& app, const string& server, vector<string
     return 0;
 }
 
-int ConfigImp::loadConfigByHost(const string& appServerName, const string& filename, const string& host, string& config, CurrentPtr current)
+int ConfigImp::loadConfigByHost(const std::string& appServerName, const std::string& filename, const std::string& host,
+        string& config, CurrentPtr current)
 {
     TLOGDEBUG("loadConfigByHost|" << appServerName << "|" << host << "|" << filename << std::endl);
     auto v = TC_Common::sepstr<string>(appServerName, ".");
-
     try
     {
         if (v.size() == 1)
@@ -56,7 +55,9 @@ int ConfigImp::loadConfigByHost(const string& appServerName, const string& filen
     return 0;
 }
 
-int ConfigImp::loadConfig(const std::string& app, const std::string& server, const std::string& fileName, string& result, CurrentPtr current)
+int
+ConfigImp::loadConfig(const std::string& app, const std::string& server, const std::string& fileName, string& result,
+        CurrentPtr current)
 {
     TLOGDEBUG("loadConfig|" << app << "." << server << "|" << current->getIp() << "|" << fileName << std::endl);
     try
@@ -71,8 +72,10 @@ int ConfigImp::loadConfig(const std::string& app, const std::string& server, con
     return 0;
 }
 
-int ConfigImp::checkConfig(const std::string& appServerName, const std::string& fileName, const string& host, string& result, CurrentPtr current)
+int ConfigImp::checkConfig(const std::string& appServerName, const std::string& fileName, const std::string& host,
+        string& result, CurrentPtr current)
 {
+    TLOGDEBUG("checkConfig|" << appServerName << "." << fileName << "|" << host << endl);
     if (loadConfigByHost(appServerName, fileName, host, result, current) != 0)
     {
         return -1;
@@ -92,7 +95,8 @@ int ConfigImp::checkConfig(const std::string& appServerName, const std::string& 
 
 int ConfigImp::ListConfigByInfo(const ConfigInfo& configInfo, vector<string>& vf, CurrentPtr current)
 {
-    TLOGDEBUG("ListConfigByInfo|" << configInfo.appname << "." << configInfo.servername << "|" << configInfo.host << endl);
+    TLOGDEBUG("ListConfigByInfo|" << configInfo.appname << "." << configInfo.servername << "|" << configInfo.host
+                                  << endl);
     try
     {
         if (configInfo.bAppOnly)
@@ -114,7 +118,8 @@ int ConfigImp::ListConfigByInfo(const ConfigInfo& configInfo, vector<string>& vf
 
 int ConfigImp::loadConfigByInfo(const ConfigInfo& configInfo, string& config, CurrentPtr current)
 {
-    TLOGDEBUG("loadConfigByInfo|" << configInfo.appname << "|" << configInfo.servername << "|" << configInfo.filename << endl);
+    TLOGDEBUG("loadConfigByInfo|" << configInfo.appname << "|" << configInfo.servername << "|" << configInfo.filename
+                                  << endl);
     try
     {
         if (configInfo.bAppOnly)
@@ -123,7 +128,8 @@ int ConfigImp::loadConfigByInfo(const ConfigInfo& configInfo, string& config, Cu
         }
         else
         {
-            K8SInterface::loadConfig(configInfo.appname, configInfo.servername, configInfo.filename, configInfo.host, config);
+            K8SInterface::loadConfig(configInfo.appname, configInfo.servername, configInfo.filename, configInfo.host,
+                    config);
         }
     }
     catch (const std::exception& e)
@@ -136,7 +142,8 @@ int ConfigImp::loadConfigByInfo(const ConfigInfo& configInfo, string& config, Cu
 
 int ConfigImp::ListAllConfigByInfo(const GetConfigListInfo& configInfo, vector<std::string>& vf, CurrentPtr current)
 {
-    TLOGDEBUG("ListAllConfigByInfo|" << configInfo.appname << "." << configInfo.servername << "|" << configInfo.host << endl);
+    TLOGDEBUG("ListAllConfigByInfo|" << configInfo.appname << "." << configInfo.servername << "|" << configInfo.host
+                                     << endl);
     try
     {
         if (configInfo.bAppOnly)
@@ -155,6 +162,8 @@ int ConfigImp::ListAllConfigByInfo(const GetConfigListInfo& configInfo, vector<s
 
 int ConfigImp::checkConfigByInfo(const ConfigInfo& configInfo, string& result, CurrentPtr current)
 {
+    TLOGDEBUG("checkConfigByInfo|" << configInfo.appname << "." << configInfo.servername << "|" << configInfo.host
+                                   << endl);
     try
     {
         if (configInfo.bAppOnly)
@@ -163,7 +172,8 @@ int ConfigImp::checkConfigByInfo(const ConfigInfo& configInfo, string& result, C
         }
         else
         {
-            K8SInterface::loadConfig(configInfo.appname, configInfo.servername, configInfo.filename, configInfo.host, result);
+            K8SInterface::loadConfig(configInfo.appname, configInfo.servername, configInfo.filename, configInfo.host,
+                    result);
         }
         TC_Config conf{};
         conf.parseString(result);

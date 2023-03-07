@@ -51,7 +51,7 @@ func (r *TFrameworkConfig) setTFrameworkConfig(tfc *tarsV1beta3.TFrameworkConfig
 	tfcMap.Store(namespace, tfcCopy)
 }
 
-func (r *TFrameworkConfig) setupTFCWatch(factories *InformerFactories) {
+func (r *TFrameworkConfig) setupTFCWatch(factories *InformerFactories, namespace bool) {
 	tfcInformer := factories.TarsInformerFactory.Tars().V1beta3().TFrameworkConfigs()
 	tfcInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {

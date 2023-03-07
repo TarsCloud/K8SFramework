@@ -4,22 +4,23 @@
 
 int ServerImp::keepAlive(const tars::ServerInfo& serverInfo, TarsCurrentPtr current)
 {
-	ServerObject::keepAlive(serverInfo);
-	return 0;
+    ServerObject::keepAlive(serverInfo);
+    return 0;
 }
 
 int ServerImp::keepActiving(const tars::ServerInfo& serverInfo, TarsCurrentPtr current)
 {
-	ServerObject::keepActiving(serverInfo);
-	return 0;
+    ServerObject::keepActiving(serverInfo);
+    return 0;
 }
 
 tars::UInt32 ServerImp::getLatestKeepAliveTime(tars::CurrentPtr current)
 {
-	return TNOW;
+    return TNOW;
 }
 
-int ServerImp::reportVersion(const std::string& app, const std::string& serverName, const std::string& version, TarsCurrentPtr current)
+int ServerImp::reportVersion(const std::string& app, const std::string& serverName, const std::string& version,
+        TarsCurrentPtr current)
 {
-	return 0;
+    return 0;
 }

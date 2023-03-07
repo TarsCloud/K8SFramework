@@ -3,7 +3,7 @@
 
 class Storage
 {
- public:
+public:
 
     static void getSeqMap(const std::function<void(const std::unordered_map<std::string, int>& seqMap)>&);
 
@@ -11,9 +11,9 @@ class Storage
 
     static void postPodList();
 
-    static void onPodAdded(const rapidjson::Value& v, K8SWatchEventDrive drive);
+    static void onPodAdded(const boost::json::value& v, K8SWatchEventDrive drive);
 
-    static void onPodDelete(const rapidjson::Value& v);
+    static void onPodDelete(const boost::json::value& v);
 
-    static void onPodModified(const rapidjson::Value& v);
+    static void onPodModified(const boost::json::value& v);
 };

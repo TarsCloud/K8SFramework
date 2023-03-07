@@ -707,6 +707,11 @@ func (in *TImage) DeepCopyInto(out *TImage) {
 			}
 		}
 	}
+	if in.Default != nil {
+		in, out := &in.Default, &out.Default
+		*out = new(string)
+		**out = **in
+	}
 	if in.Build != nil {
 		in, out := &in.Build, &out.Build
 		*out = new(TImageBuild)

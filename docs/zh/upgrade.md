@@ -8,6 +8,7 @@
         + [检查 Controller 兼容性](#检查Controller兼容性)
         + [执行 Controller 升级](#执行Controller升级)
         + [升级 Controller 常见问题](#升级Controller常见问题)
+
     + [升级 Framework](#升级Framework)
         + [确认 Controller 兼容性](检查Controller兼容性)
         + [生成 Framework 配置文件](#生成Framework配置文件)
@@ -42,7 +43,8 @@
 您可以选择如下一种方式:
 
 + 直接下载
-  > 您可以在 [github](https://github.com/TarsCloud/K8SFramework/tree/master/charts) 查看和下载 Helm Chart，包名分别为 tarscontroller-${vesion}.tgz，tarsframework-${version}.tgz
+  > 您可以在 [github](https://github.com/TarsCloud/K8SFramework/tree/master/charts) 查看和下载 Helm Chart，包名分别为
+  tarscontroller-${vesion}.tgz，tarsframework-${version}.tgz
 
 + Helm Repo
 
@@ -125,7 +127,8 @@ kubectl get pods -n tars-system -o wide
 + "cannot convert int64 to float64" 错误
 
   > 此错误为低版本(<=1.19.15) Kubernetes [bug](https://github.com/kubernetes/kubernetes/issues/87675) 导致,
-  > 此错误也意味着您无法再次使用 helm 执行 upgrade controller 操作，建议您尽快升级集群版本(>=1.19.16), 你也可以参照如下说明执行升级:
+  > 此错误也意味着您无法再次使用 helm 执行 upgrade controller 操作，建议您尽快升级集群版本(>=1.19.16),
+  你也可以参照如下说明执行升级:
   >
   > ```shell
   > # "直接下载" 或者 "源码构建" 方式获取的 Helm Chart: 
@@ -171,7 +174,8 @@ kubectl get pods -n tars-system -o wide
 
   ![](images/crd-error0.jpg)
 
-  > 这是因为您之前手动安装过(kubectl apply ) CRD 资源对象，但这些 CRD 资源没有包含 Helm Chart 管理相关的标签和注解. 您可以执行如下指令，然后重试
+  > 这是因为您之前手动安装过(kubectl apply ) CRD 资源对象，但这些 CRD 资源没有包含 Helm Chart 管理相关的标签和注解.
+  您可以执行如下指令，然后重试
   >
   > ```shell
   > #!/usr/bin/env bash

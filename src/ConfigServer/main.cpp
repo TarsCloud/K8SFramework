@@ -7,7 +7,7 @@ int main(int argc, char* argv[])
 {
     try
     {
-        ConfigServer app;
+        ConfigServer app{};
         app.main(argc, argv);
         app.waitForShutdown();
     }

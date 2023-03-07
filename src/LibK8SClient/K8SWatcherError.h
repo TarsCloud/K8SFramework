@@ -9,17 +9,19 @@ enum class K8SWatcherError
 
 class K8SWatcherErrorCategory : public std::error_category
 {
- public:
+public:
     static K8SWatcherErrorCategory const& instance()
     {
         static K8SWatcherErrorCategory instance;
         return instance;
     }
 
-    char const* name() const noexcept override
-    {
-        return "K8SWatcherError";
-    }
+    char const* name() const
+
+    noexcept override
+            {
+                    return "K8SWatcherError";
+            }
 
     std::string message(int code) const override
     {

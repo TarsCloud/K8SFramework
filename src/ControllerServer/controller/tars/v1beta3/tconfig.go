@@ -244,6 +244,6 @@ func NewTConfigController(threads int) *TConfigReconciler {
 		deleteQueue: workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 		synced:      []cache.InformerSynced{tcInformer.Informer().HasSynced},
 	}
-	controller.SetInformerEventHandle(tarsMeta.TConfigKind, tcInformer.Informer(), c)
+	controller.RegistryInformerEventHandle(tarsMeta.TConfigKind, tcInformer.Informer(), c)
 	return c
 }

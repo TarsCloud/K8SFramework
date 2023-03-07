@@ -11,7 +11,6 @@ struct LauncherSetting
     std::vector<std::string> envs_;
 };
 
-
 class Launcher
 {
 private:
@@ -83,18 +82,18 @@ public:
 
         if (pid == 0)
         {
-			/* Fixme
-				In the high kernel version (>=5.3) system, we can use close_range
-            	But in order to be compatible with low-version kernel systems,
-            	We use a "Fake But Works MaxFd", which is enough for tarsnode
-			*/
+            /* Fixme
+                In the high kernel version (>=5.3) system, we can use close_range
+                But in order to be compatible with low-version kernel systems,
+                We use a fake maximum value, which is enough for tarsnode
+            */
             //int maxFd = static_cast<int>(sysconf(_SC_OPEN_MAX));
-			constexpr int Fake_But_Works_Max_Fd = 10000;
-			int maxFd = Fake_But_Works_Max_Fd;
-			for (int fd = 3; fd < maxFd; ++fd)
-			{
-				close(fd);
-			}
+            constexpr int FakeButWorkMaxFd = 10000;
+            constexpr int maxFd = FakeButWorkMaxFd;
+            for (int fd = 3; fd < maxFd; ++fd)
+            {
+                close(fd);
+            }
 
             if (!setting.redirect_.empty())
             {

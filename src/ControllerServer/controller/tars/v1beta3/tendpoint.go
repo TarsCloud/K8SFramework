@@ -19,6 +19,7 @@ import (
 	tarsListerV1beta3 "k8s.tars.io/client-go/listers/tars/v1beta3"
 	tarsMeta "k8s.tars.io/meta"
 	tarsRuntime "k8s.tars.io/runtime"
+	tarsTool "k8s.tars.io/tool"
 	"strings"
 	"tarscontroller/controller"
 	"time"
@@ -45,24 +46,10 @@ func NewTEndpointController(threads int) *TEndpointReconciler {
 		queue:     workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 		synced:    []cache.InformerSynced{podInformer.Informer().HasSynced, teInformer.Informer().HasSynced, tsInformer.Informer().HasSynced},
 	}
-	controller.SetInformerEventHandle(tarsMeta.KPodKind, podInformer.Informer(), c)
-	controller.SetInformerEventHandle(tarsMeta.TEndpointKind, teInformer.Informer(), c)
-	controller.SetInformerEventHandle(tarsMeta.TServerKind, tsInformer.Informer(), c)
+	controller.RegistryInformerEventHandle(tarsMeta.KPodKind, podInformer.Informer(), c)
+	controller.RegistryInformerEventHandle(tarsMeta.TEndpointKind, teInformer.Informer(), c)
+	controller.RegistryInformerEventHandle(tarsMeta.TServerKind, tsInformer.Informer(), c)
 	return c
-}
-
-func splitTARSConditionReason(reason string) (setting, present, pid string) {
-	v := strings.Split(reason, "/")
-	switch len(v) {
-	case 1:
-		return v[0], "", ""
-	case 2:
-		return v[0], v[1], ""
-	case 3:
-		return v[0], v[1], v[2]
-	default:
-		return "Unknown", "Unknown", ""
-	}
 }
 
 func (r *TEndpointReconciler) processItem() bool {
@@ -259,19 +246,13 @@ func (r *TEndpointReconciler) buildPodStatus(pod *k8sCoreV1.Pod) *tarsV1beta3.TE
 
 	if readyConditions != nil {
 		if readyConditions.Status == k8sCoreV1.ConditionTrue {
-
-			if tarsReadinessGatesCondition != nil {
-				_, _, pid := splitTARSConditionReason(tarsReadinessGatesCondition.Reason)
-				podStatus.SettingState = "Active"
-				podStatus.PresentState = "Active"
-				podStatus.PresentMessage = readyConditions.Message
-				podStatus.PID = pid
-				return podStatus
-			}
-
 			podStatus.SettingState = "Active"
 			podStatus.PresentState = "Active"
-			podStatus.PresentMessage = ""
+			if tarsReadinessGatesCondition != nil {
+				podStatus.PresentMessage = readyConditions.Message
+				_, _, pid := tarsTool.SplitReadinessConditionReason(tarsReadinessGatesCondition.Reason)
+				podStatus.PID = pid
+			}
 			return podStatus
 		}
 	}
@@ -289,7 +270,7 @@ func (r *TEndpointReconciler) buildPodStatus(pod *k8sCoreV1.Pod) *tarsV1beta3.TE
 	}
 
 	if tarsReadinessGatesCondition != nil {
-		podStatus.SettingState, podStatus.PresentState, podStatus.PID = splitTARSConditionReason(tarsReadinessGatesCondition.Reason)
+		podStatus.SettingState, podStatus.PresentState, podStatus.PID = tarsTool.SplitReadinessConditionReason(tarsReadinessGatesCondition.Reason)
 	}
 	return podStatus
 }

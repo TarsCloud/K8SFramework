@@ -32,7 +32,15 @@ var TarsTranslator *tarsTranslatorV1beta3.Translator
 var Username string
 var Namespace string
 
-func CreateContext(masterUrl, kubeConfigPath string, cluster bool) error {
+func CreateContext(masterUrl, kubeConfigPath string, namespace bool) error {
+	const namespaceFile = "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
+	bs, err := ioutil.ReadFile(namespaceFile)
+	if err == nil {
+		Namespace = string(bs)
+	} else {
+		utilRuntime.HandleError(fmt.Errorf("cannot read namespace file : %s", err.Error()))
+		Namespace = "default"
+	}
 
 	clusterConfig, err := k8sClientCmd.BuildConfigFromFlags(masterUrl, kubeConfigPath)
 	if err != nil {
@@ -58,21 +66,10 @@ func CreateContext(masterUrl, kubeConfigPath string, cluster bool) error {
 		K8sMetadataClient: k8sMetadataClient,
 	}
 
-	const namespaceFile = "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
-	bs, err := ioutil.ReadFile(namespaceFile)
-	if err == nil {
-		Namespace = string(bs)
-	} else {
-		utilRuntime.HandleError(fmt.Errorf("cannot read namespace file : %s", err.Error()))
-		Namespace = "default"
-	}
-
-	klog.Infof("get namespace value: %s", Namespace)
-
-	Factories = newInformerFactories(Clients, cluster)
+	Factories = newInformerFactories(Clients, namespace)
 
 	TFCConfig = &TFrameworkConfig{}
-	TFCConfig.setupTFCWatch(Factories)
+	TFCConfig.setupTFCWatch(Factories, namespace)
 
 	TarsTranslator = tarsTranslatorV1beta3.NewTranslator(TFCConfig)
 
@@ -82,7 +79,7 @@ func CreateContext(masterUrl, kubeConfigPath string, cluster bool) error {
 func LeaderElectAndRun(callbacks leaderelection.LeaderCallbacks, namespace, name string) {
 	id, err := os.Hostname()
 	if err != nil {
-		fmt.Printf("GetHostName Error: %s\n", err.Error())
+		klog.Errorf("GetHostName Error: %s\n", err.Error())
 		return
 	}
 	id = id + "_" + string(uuid.NewUUID())
@@ -98,7 +95,7 @@ func LeaderElectAndRun(callbacks leaderelection.LeaderCallbacks, namespace, name
 		})
 
 	if err != nil {
-		fmt.Printf("Create ResourceLock Error: %s\n", err.Error())
+		klog.Errorf("Create ResourceLock Error: %s\n", err.Error())
 		return
 	}
 

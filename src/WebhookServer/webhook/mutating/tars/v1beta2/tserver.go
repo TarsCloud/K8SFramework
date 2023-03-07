@@ -4,6 +4,8 @@ import (
 	"fmt"
 	k8sAdmissionV1 "k8s.io/api/admission/v1"
 	k8sMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/utils/integer"
 	tarsV1beta2 "k8s.tars.io/apis/tars/v1beta2"
@@ -114,6 +116,55 @@ func mutatingCreateTServer(listers *lister.Listers, requestAdmissionView *k8sAdm
 
 		if minReplicasValue > maxReplicasValue {
 			return nil, fmt.Errorf(tarsMeta.ResourceInvalidError, "tserver", "unexpected annotation value")
+		}
+
+		if tserver.Spec.Release == nil {
+			autoRelate, ok := tserver.Annotations[tarsMeta.TAutoReleaseAnnotation]
+			if ok && autoRelate != "false" {
+				appRequired, _ := labels.NewRequirement(tarsMeta.TServerAppLabel, selection.DoubleEquals, []string{tserver.Spec.App})
+				var targetServerName string
+				if tserver.Spec.App != "DCache" {
+					targetServerName = tserver.Spec.Server
+				} else {
+					targetServerName = func(sn string) string {
+						re, _ := regexp.Compile(`^.*(ProxyServer|RouterServer|TCacheServer|MKVCacheServer|DBAccessServer)(\d+-\d+)?`)
+						ms := re.FindStringSubmatch(sn)
+						if len(ms) >= 2 {
+							return ms[1]
+						}
+						return sn
+					}(tserver.Spec.Server)
+				}
+
+				serverRequired, _ := labels.NewRequirement(tarsMeta.TServerNameLabel, selection.DoubleEquals, []string{targetServerName})
+				selector := labels.NewSelector().Add(*appRequired).Add(*serverRequired)
+				tis, _ := listers.TILister.TImages(tserver.Namespace).List(selector)
+				for _, ti := range tis {
+					if ti.Default != nil {
+						id := *ti.Default
+						for _, r := range ti.Releases {
+							if r.ID == id {
+								now := k8sMetaV1.Now()
+								release := &tarsV1beta2.TServerRelease{
+									ID:                 id,
+									Image:              r.Image,
+									Secret:             r.Secret,
+									Time:               &now,
+									TServerReleaseNode: nil,
+								}
+								tserver.Spec.Release = release
+								jsonPatch = append(jsonPatch, tarsTool.JsonPatchItem{
+									OP:    tarsTool.JsonPatchAdd,
+									Path:  "/spec/release",
+									Value: release,
+								})
+								goto autoReleaseExit
+							}
+						}
+					}
+				}
+			autoReleaseExit:
+			}
 		}
 	}
 

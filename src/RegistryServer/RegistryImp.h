@@ -4,8 +4,6 @@
 #include "Registry.h"
 #include <string>
 
-using namespace tars;
-
 class RegistryImp : public Registry
 {
 public:
@@ -15,7 +13,10 @@ public:
 
     void destroy() override;
 
-    Int32 getServerDescriptor(const std::string& serverApp, const std::string& serverName, ServerDescriptor& serverDescriptor, CurrentPtr current) override;
+    int32_t getServerDescriptor(const std::string& endpoints, const std::string& serverName,
+            tars::ServerDescriptor& serverDescriptor,
+            CurrentPtr current) override;
 
-    void updateServerState(const std::string& podName, const std::string& settingState, const std::string& presentState, CurrentPtr current) override;
+    void updateServerState(const std::string& podName, const std::string& settingState, const std::string& presentState,
+            CurrentPtr current) override;
 };

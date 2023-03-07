@@ -60,8 +60,8 @@ func NewPVCController(threads int) *PVCReconciler {
 		queue:     workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 		synced:    []cache.InformerSynced{pvcInformer.Informer().HasSynced, tsInformer.Informer().HasSynced},
 	}
-	controller.SetInformerEventHandle(tarsMeta.KPersistentVolumeClaimKind, tsInformer.Informer(), c)
-	controller.SetInformerEventHandle(tarsMeta.TServerKind, tsInformer.Informer(), c)
+	controller.RegistryInformerEventHandle(tarsMeta.KPersistentVolumeClaimKind, tsInformer.Informer(), c)
+	controller.RegistryInformerEventHandle(tarsMeta.TServerKind, tsInformer.Informer(), c)
 	return c
 }
 

@@ -1,12 +1,13 @@
 #pragma once
 
-#include <asio/io_context.hpp>
-#include <rapidjson/document.h>
+
 #include <mutex>
 #include <string>
 #include <thread>
 #include <functional>
 #include <condition_variable>
+#include <boost/json.hpp>
+#include <boost/asio/io_context.hpp>
 
 enum class K8SWatchEventDrive
 {
@@ -14,12 +15,13 @@ enum class K8SWatchEventDrive
     Watch
 };
 
-struct K8SWatcherSetting
+class K8SWatcherSetting
 {
     friend class K8SWatcherSession;
 
- public:
-    K8SWatcherSetting(const std::string& group, const std::string& version, const std::string& plural, const std::string& _namespace);;
+public:
+    K8SWatcherSetting(const std::string& group, const std::string& version, const std::string& plural,
+            const std::string& _namespace);;
 
     K8SWatcherSetting(const K8SWatcherSetting&) = default;
 
@@ -27,10 +29,10 @@ struct K8SWatcherSetting
 
     std::function<void()> preList;
     std::function<void()> postList;
-    std::function<void(const rapidjson::Value&, K8SWatchEventDrive)> onAdded;
-    std::function<void(const rapidjson::Value&)> onDeleted;
-    std::function<void(const rapidjson::Value&)> onModified;
-    std::function<void(const std::error_code&, const std::string&)> onError;;
+    std::function<void(const boost::json::value&, K8SWatchEventDrive)> onAdded;
+    std::function<void(const boost::json::value&)> onDeleted;
+    std::function<void(const boost::json::value&)> onModified;
+    std::function<bool(const boost::system::error_code&, const std::string&)> onError;;
 
     std::string watchUri() const;
 
@@ -51,19 +53,19 @@ struct K8SWatcherSetting
         limit_ = limit;
     }
 
- private:
+private:
     size_t limit_ = { 30 };
     size_t overtime_ = { 60 * 30 };
     std::string labelFilter_{};
     std::string filedFilter_{};
-    std::string newestVersion_{ "0" };
+    std::string newestVersion_{};
     std::string path_;
     std::string continue_;
 };
 
 class K8SWatcher
 {
- public:
+public:
     static K8SWatcher& instance()
     {
         static K8SWatcher k8SWatcher;
@@ -91,11 +93,11 @@ class K8SWatcher
         ioContext_.stop();
     }
 
- private:
+private:
     K8SWatcher() = default;
 
- private:
-    asio::io_context ioContext_{ 1 };
+private:
+    boost::asio::io_context ioContext_{ 1 };
     std::atomic_int waitSyncCount_{ 0 };
     std::mutex mutex_;
     std::condition_variable conditionVariable_;

@@ -26,7 +26,7 @@ func init() {
 }
 
 func main() {
-	runtime.Must(tarsRuntime.CreateContext("", "", true))
+	runtime.Must(tarsRuntime.CreateContext("", "", false))
 
 	stopCh := make(chan struct{})
 
@@ -40,6 +40,7 @@ func main() {
 			return
 		}
 	}
+
 	tarsRuntime.Factories.Start(stopCh)
 
 	for _, r := range runners {

@@ -10,10 +10,10 @@ if [ -z "${node_image}" ]; then
   #  node_image="kindest/node:v1.18.20"
   #  node_image="kindest/node:v1.19.16"
   #  node_image="kindest/node:v1.20.15"
-  #  node_image="kindest/node:v1.21.12"
-  #  node_image="kindest/node:v1.22.7"
-  #  node_image="kindest/node:v1.23.6"
-  node_image="kindest/node:v1.24.3"
+  #  node_image="kindest/node:v1.21.14"
+  #  node_image="kindest/node:v1.22.15"
+  #  node_image="kindest/node:v1.23.13"
+  node_image="kindest/node:v1.24.7"
 fi
 
 cat <<EOF | kind create cluster --name "${cluster_name}" --image ${node_image} --config=-

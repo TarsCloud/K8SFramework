@@ -9,6 +9,9 @@ type Listers struct {
 	TSLister tarsListerV1beta3.TServerLister
 	TSSynced cache.InformerSynced
 
+	TILister tarsListerV1beta3.TImageLister
+	TISynced cache.InformerSynced
+
 	TTLister cache.GenericLister
 	TTSynced cache.InformerSynced
 

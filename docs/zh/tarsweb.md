@@ -4,7 +4,7 @@
 
 ## TarsWeb 的访问
 
-当您成功安装 Framework , 且观察到 tars-tarsweb-0 pod 成功启动, 即代表 tarweb 部署成功.
+当您成功安装 Framework , 且观察到 tars-tarsweb-0 pod 成功启动, 即代表 tarsweb 部署成功.
 
 但此时, 因为 Kubernetes 本身的限制, 你需要选择一种方式访问 TarsWeb:
 
@@ -31,9 +31,9 @@ kubectl get pods -n ${namespace} tars-tarsweb-0 -o wide
 ```yaml
    spec:
      k8s:
-      hostPorts:
-       - nameRef: http
-         port: 3000
+       hostPorts:
+         - nameRef: http
+           port: 3000
 ```
 
 具体命令为:
@@ -52,7 +52,7 @@ kubectl get pods -n ${namespace} tars-tarsweb-0 -o wide
 
 ### 使用 Ingress 方式访问
 
-如果您的集群已经安装了 Ingress 控制器 , 可以配置ingress 规则指向 ${Namespace}/tars-tarsweb:3000
+如果您的集群已经安装了 Ingress 控制器 , 可以配置ingress 规则指向 ${namespace}/tars-tarsweb:3000
 
 然后可以就可以使用 ingress 规则中的路由地址访问了
 
@@ -136,5 +136,4 @@ upChain:
     port: 10018
 ```
 
-配置完成并重建 tars-tarsweb-0 , 再次访问 tarsweb 管理平台,即可同时看到 tars 信息和 tarsk8s信息.
-
+配置完成并重建 tars-tarsweb-0 , 再次访问 tarsweb 管理平台,即可同时看到 tars 信息和 tarsk8s 信息.

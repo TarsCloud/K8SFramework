@@ -1,6 +1,4 @@
-﻿
-
-#pragma once
+﻿#pragma once
 
 #include <string>
 #include "servant/QueryF.h"
@@ -47,7 +45,8 @@ public:
      * @return:  0-成功  others-失败
      */
     Int32
-    findObjectById4Any(const std::string& id, vector<EndpointF>& activeEp, vector<EndpointF>& inactiveEp, CurrentPtr current) override;
+    findObjectById4Any(const std::string& id, vector<EndpointF>& activeEp, vector<EndpointF>& inactiveEp,
+            CurrentPtr current) override;
 
     /** 根据id获取对象所有endpoint列表
      *
@@ -56,7 +55,8 @@ public:
      * @param inactiveEp 非存活endpoint列表
      * @return:  0-成功  others-失败
      */
-    Int32 findObjectById4All(const std::string& id, vector<EndpointF>& activeEp, vector<EndpointF>& inactiveEp, CurrentPtr current) override;
+    Int32 findObjectById4All(const std::string& id, vector<EndpointF>& activeEp, vector<EndpointF>& inactiveEp,
+            CurrentPtr current) override;
 
     /** 根据id获取对象同组endpoint列表
     *
@@ -65,7 +65,8 @@ public:
     * @param inactiveEp 非存活endpoint列表
     * @return:  0-成功  others-失败
     */
-    Int32 findObjectByIdInSameGroup(const std::string& id, vector<EndpointF>& activeEp, vector<EndpointF>& inactiveEp, CurrentPtr current) override;
+    Int32 findObjectByIdInSameGroup(const std::string& id, vector<EndpointF>& activeEp, vector<EndpointF>& inactiveEp,
+            CurrentPtr current) override;
 
     /** 根据id获取对象指定归属地的endpoint列表
      *
@@ -74,7 +75,8 @@ public:
      * @param inactiveEp 非存活endpoint列表
      * @return:  0-成功  others-失败
      */
-    Int32 findObjectByIdInSameStation(const std::string& id, const std::string& sStation, vector<EndpointF>& activeEp, vector<EndpointF>& inactiveEp,
+    Int32 findObjectByIdInSameStation(const std::string& id, const std::string& sStation, vector<EndpointF>& activeEp,
+            vector<EndpointF>& inactiveEp,
             CurrentPtr current) override;
 
     /** 根据id获取对象同set endpoint列表

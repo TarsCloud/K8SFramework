@@ -1,8 +1,6 @@
-#pragma once
+﻿#pragma once
 
 #include "servant/Application.h"
-
-using namespace tars;
 
 class KEventServer : public Application
 {

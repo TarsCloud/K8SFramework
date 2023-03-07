@@ -29,7 +29,8 @@ int main(int argc, char* argv[])
 
         if (target.empty())
         {
-            std::cout << "should set target parameter when ServerLauncherType is " << SERVER_FOREGROUND_LAUNCH << std::endl;
+            std::cout << "should set target parameter when ServerLauncherType is " << SERVER_FOREGROUND_LAUNCH
+                      << std::endl;
             exit(-1);
         }
 
@@ -43,8 +44,8 @@ int main(int argc, char* argv[])
     try
     {
         NodeServer app;
-        app.target=target;
-        app.outfile=outfile;
+        app.target = target;
+        app.outfile = outfile;
         app.main(argc, argv);
         app.waitForShutdown();
     }

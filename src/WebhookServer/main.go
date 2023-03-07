@@ -8,7 +8,7 @@ import (
 
 func main() {
 	stopCh := make(chan struct{})
-	err := tarsRuntime.CreateContext("", "",true)
+	err := tarsRuntime.CreateContext("", "", false)
 	if err != nil {
 		fmt.Println(err.Error())
 		return

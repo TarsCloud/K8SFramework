@@ -76,6 +76,9 @@ spec:
                 required: [ id , image ]
               minItems: 0
               maxItems: 120
+            default:
+              type: string
+              pattern: ^([0-9A-Za-z][-_.0-9A-Za-z]*)?[0-9A-Za-z]$
             build:
               type: object
               properties:
@@ -225,6 +228,9 @@ spec:
                 required: [ id , image ]
               minItems: 0
               maxItems: 120
+            default:
+              type: string
+              pattern: ^([0-9A-Za-z][-_.0-9A-Za-z]*)?[0-9A-Za-z]$
             build:
               type: object
               properties:
@@ -369,6 +375,9 @@ spec:
                 required: [ id , image ]
               minItems: 0
               maxItems: 120
+            default:
+              type: string
+              pattern: ^([0-9A-Za-z][-_.0-9A-Za-z]*)?[0-9A-Za-z]$
             build:
               type: object
               properties:

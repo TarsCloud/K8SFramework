@@ -20,7 +20,7 @@ type Controller interface {
 	Run(chan struct{})
 }
 
-func SetInformerEventHandle(resourceKind string, resourceInformer cache.SharedInformer, c Controller) {
+func RegistryInformerEventHandle(resourceKind string, resourceInformer cache.SharedInformer, c Controller) {
 	eventHandler := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			c.EnqueueResourceEvent(resourceKind, k8sWatchV1.Added, obj)

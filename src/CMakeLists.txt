@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(Test-TestServer)
+project(TarsK8S)
 
 option(TARS_MYSQL "option for mysql" ON)
 option(TARS_SSL "option for ssl" ON)
@@ -30,6 +30,7 @@ add_subdirectory(LibESClient)
 
 include_directories(./LibK8SClient/)
 include_directories(./LibESClient/)
+include_directories(./TCodec/)
 add_subdirectory(ConfigServer)
 add_subdirectory(NodeServer)
 add_subdirectory(NotifyServer)
@@ -57,4 +58,3 @@ add_subdirectory(WebhookServer)
 install(DIRECTORY ../builder/deploy DESTINATION ${TARS_PATH}
         PATTERN "*.sh"
         PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ)
-

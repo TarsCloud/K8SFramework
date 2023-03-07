@@ -65,7 +65,7 @@ func NewTAccountController(threads int) *TAccountReconciler {
 		queue:    workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 		synced:   []cache.InformerSynced{taInformer.Informer().HasSynced},
 	}
-	controller.SetInformerEventHandle(tarsMeta.TAccountKind, taInformer.Informer(), c)
+	controller.RegistryInformerEventHandle(tarsMeta.TAccountKind, taInformer.Informer(), c)
 	return c
 }
 

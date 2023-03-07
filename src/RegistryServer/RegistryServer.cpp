@@ -6,12 +6,11 @@
 #include "K8SParams.h"
 #include "K8SWatchCallback.h"
 
-static void onError(const std::error_code& ec, const std::string& msg)
+static bool onError(const std::error_code& ec, const std::string& msg)
 {
     TLOGERROR(ec.message() << ": " << msg << std::endl);
     std::cout << ec.message() << ": " << msg << std::endl;
-    exit(-1);
-    //fixme, maybe we should re watch.
+    return false;
 }
 
 static void createK8SContext()
@@ -26,6 +25,7 @@ static void createK8SContext()
     teWatchSetting.onModified = K8SWatchCallback::onTEModified;
     teWatchSetting.onDeleted = K8SWatchCallback::onTEDeleted;
     teWatchSetting.onError = onError;
+    K8SWatcher::instance().addWatch(teWatchSetting);
 
     K8SWatcherSetting ttWatchSetting("k8s.tars.io", "v1beta3", "ttemplates", K8SParams::Namespace());
     ttWatchSetting.preList = K8SWatchCallback::preTTList;
@@ -34,6 +34,7 @@ static void createK8SContext()
     ttWatchSetting.onModified = K8SWatchCallback::onTTModified;
     ttWatchSetting.onDeleted = K8SWatchCallback::onTTDeleted;
     ttWatchSetting.onError = onError;
+    K8SWatcher::instance().addWatch(ttWatchSetting);
 
     K8SWatcherSetting tfcWatchSetting("k8s.tars.io", "v1beta3", "tframeworkconfigs", K8SParams::Namespace());
     tfcWatchSetting.setFiledFilter("metadata.name=tars-framework");
@@ -41,9 +42,6 @@ static void createK8SContext()
     tfcWatchSetting.onModified = K8SWatchCallback::onTFCModified;
     tfcWatchSetting.onDeleted = K8SWatchCallback::onTFCDeleted;
     tfcWatchSetting.onError = onError;
-
-    K8SWatcher::instance().addWatch(teWatchSetting);
-    K8SWatcher::instance().addWatch(ttWatchSetting);
     K8SWatcher::instance().addWatch(tfcWatchSetting);
 }
 
@@ -71,7 +69,8 @@ static void postReadinessGate()
     for (auto i = 0; i < 3; ++i)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(5));
-        auto postReadinessRequest = K8SClient::instance().postRequest(K8SClientRequestMethod::StrategicMergePatch, setActiveUrl, setActiveBody);
+        auto postReadinessRequest = K8SClient::instance().postRequest(K8SClientRequestMethod::StrategicMergePatch,
+                setActiveUrl, setActiveBody);
         bool finish = postReadinessRequest->waitFinish(std::chrono::seconds(2));
         if (!finish)
         {
@@ -81,7 +80,9 @@ static void postReadinessGate()
 
         if (postReadinessRequest->state() != Done)
         {
-            TLOGERROR("Update Registry Server State To \"Active/Active\" Error: " << postReadinessRequest->stateMessage() << std::endl);
+            TLOGERROR(
+                    "Update Registry Server State To \"Active/Active\" Error: " << postReadinessRequest->stateMessage()
+                                                                                << std::endl);
             continue;
         }
         TLOGINFO("Update Registry Server State To \"Active/Active\" Success" << std::endl);

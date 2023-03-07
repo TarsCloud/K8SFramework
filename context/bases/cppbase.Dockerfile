@@ -4,7 +4,6 @@ ENV LANG C.UTF-8
 ENV LANGUAGE C.UTF-8
 
 RUN apt update                                                                            \
-    && apt update                                                                         \
     && apt install                                                                        \
     ca-certificates openssl gdb telnet curl wget default-mysql-client                     \
     gnupg iputils-ping vim tcpdump net-tools binutils procps tree                         \

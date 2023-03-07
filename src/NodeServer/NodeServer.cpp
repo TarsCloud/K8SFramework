@@ -52,7 +52,8 @@ void NodeServer::initialize()
                 exit(0);
             }
 
-            if (target==TARSNODE_DAEMON_TARGET){
+            if (target == TARSNODE_DAEMON_TARGET)
+            {
                 addServant<ServerImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".ServerObj");
                 ServerObject::startForegroundPatrol();
                 return;

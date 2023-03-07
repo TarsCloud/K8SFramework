@@ -47,8 +47,8 @@ func NewServiceController(threads int) *ServiceReconciler {
 		synced:        []cache.InformerSynced{svcInformer.Informer().HasSynced, tsInformer.Informer().HasSynced},
 		eventRecorder: eventBroadcaster.NewRecorder(scheme.Scheme, k8sCoreV1.EventSource{Component: "daemonset-controller"}),
 	}
-	controller.SetInformerEventHandle(tarsMeta.KServiceKind, svcInformer.Informer(), c)
-	controller.SetInformerEventHandle(tarsMeta.TServerKind, tsInformer.Informer(), c)
+	controller.RegistryInformerEventHandle(tarsMeta.KServiceKind, svcInformer.Informer(), c)
+	controller.RegistryInformerEventHandle(tarsMeta.TServerKind, tsInformer.Informer(), c)
 	return c
 }
 

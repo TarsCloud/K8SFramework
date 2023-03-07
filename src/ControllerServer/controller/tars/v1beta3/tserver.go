@@ -42,8 +42,8 @@ func NewTServerController(threads int) *TServerReconciler {
 		queue:     workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 		synced:    []cache.InformerSynced{tsInformer.Informer().HasSynced},
 	}
-	controller.SetInformerEventHandle(tarsMeta.KPodKind, podInformer.Informer(), c)
-	controller.SetInformerEventHandle(tarsMeta.TServerKind, tsInformer.Informer(), c)
+	controller.RegistryInformerEventHandle(tarsMeta.KPodKind, podInformer.Informer(), c)
+	controller.RegistryInformerEventHandle(tarsMeta.TServerKind, tsInformer.Informer(), c)
 	return c
 }
 

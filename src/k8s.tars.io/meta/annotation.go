@@ -8,4 +8,6 @@ const (
 
 	TMaxReplicasAnnotation = "tars.io/MaxReplicas"
 	TMinReplicasAnnotation = "tars.io/MinReplicas"
+
+	TAutoReleaseAnnotation = "tars.io/AutoRelease"
 )

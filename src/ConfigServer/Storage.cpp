@@ -1,32 +1,39 @@
 
 #include "Storage.h"
 #include "util/tc_thread_rwlock.h"
-#include <rapidjson/pointer.h>
+#include "TCodec.h"
 #include <string>
-
-static inline std::string JP2S(const rapidjson::Value* p)
-{
-    assert(p != nullptr && p->IsString());
-    return { p->GetString(), p->GetStringLength() };
-}
 
 static int extractPodSeq(const std::string& sPodName, const std::string& sGenerateName)
 {
-    try
-    {
-        assert(sPodName.size() > sGenerateName.size());
-        auto sPodSeq = sPodName.substr(sGenerateName.size());
-        return std::stoi(sPodSeq, nullptr, 10);
-    }
-    catch (std::exception& exception)
+    auto pos = sGenerateName.size();
+    if (pos == sPodName.size())
     {
         return -1;
     }
+
+    if (sPodName.compare(0, pos, sGenerateName) != 0)
+    {
+        return -1;
+    }
+
+    auto d = 0;
+    for (; pos != sPodName.size(); ++pos)
+    {
+        auto c = sPodName[pos];
+        if (c >= '0' && c <= '9')
+        {
+            d = d * 10 + c - '0';
+            continue;
+        }
+        return -1;
+    }
+    return pos == sPodName.size() ? d : -1;
 }
 
 class StorageImp
 {
- public:
+public:
     static StorageImp& instance()
     {
         static StorageImp imp;
@@ -37,104 +44,79 @@ class StorageImp
 
     ~StorageImp() = default;
 
- private:
+private:
     StorageImp() = default;
 
- public:
+public:
     tars::TC_ThreadRWLocker mutex_;
     std::unordered_map<std::string, int> seqMap_;
     std::unordered_map<std::string, int> cacheSeqMap_;
 };
 
-void Storage::onPodAdded(const rapidjson::Value& v, K8SWatchEventDrive drive)
+void Storage::onPodAdded(const boost::json::value& v, K8SWatchEventDrive drive)
 {
-    auto pGenerateName = rapidjson::GetValueByPointer(v, "/metadata/generateName");
-    if (pGenerateName == nullptr)
+    try
     {
-        return;
-    }
-    assert(pGenerateName->IsString());
-    auto sGenerateName = JP2S(pGenerateName);
-
-    auto pPodName = rapidjson::GetValueByPointer(v, "/metadata/name");
-    assert(pPodName != nullptr && pPodName->IsString());
-    std::string sPodName = JP2S(pPodName);
-
-    auto sDomain = sPodName + "." + sGenerateName.substr(0, sGenerateName.size() - 1);
-
-    std::string sPodIP{};
-    auto pPodIP = rapidjson::GetValueByPointer(v, "/status/podIP");
-    if (pPodIP != nullptr)
-    {
-        assert(pPodIP->IsString());
-        sPodIP = JP2S(pPodIP);
-    }
-
-    int iPodSeq = extractPodSeq(sPodName, sGenerateName);
-    if (iPodSeq == -1)
-    {
-        return;
-    }
-
-    if (drive == K8SWatchEventDrive::List)
-    {
-        StorageImp::instance().cacheSeqMap_[sPodName] = iPodSeq;
-        StorageImp::instance().cacheSeqMap_[sDomain] = iPodSeq;
-        if (!sPodIP.empty())
+        VAR_FROM_JSON(std::string, ip, v.at_pointer("/status/podIP"));
+        if (!ip.empty())
         {
-            StorageImp::instance().cacheSeqMap_[sPodIP] = iPodSeq;
+            return;
+        }
+
+        VAR_FROM_JSON(std::string, generate, v.at_pointer("/metadata/generateName"));
+        if (generate.empty())
+        {
+            return;
+        }
+
+        VAR_FROM_JSON(std::string, name, v.at_pointer("/metadata/name"));
+        if (name.empty())
+        {
+            return;
+        }
+
+        int seq = extractPodSeq(name, generate);
+        if (seq == -1)
+        {
+            return;
+        }
+
+        if (drive == K8SWatchEventDrive::List)
+        {
+            StorageImp::instance().cacheSeqMap_[ip] = seq;
+        }
+        else if (drive == K8SWatchEventDrive::Watch)
+        {
+            StorageImp::instance().mutex_.writeLock();
+            StorageImp::instance().seqMap_[ip] = seq;
+            StorageImp::instance().mutex_.unWriteLock();
         }
     }
-    else if (drive == K8SWatchEventDrive::Watch)
+    catch (...)
     {
-        StorageImp::instance().mutex_.writeLock();
-        StorageImp::instance().seqMap_[sPodName] = iPodSeq;
-        StorageImp::instance().seqMap_[sDomain] = iPodSeq;
-        if (!sPodIP.empty())
-        {
-            StorageImp::instance().seqMap_[sPodIP] = iPodSeq;
-        }
-        StorageImp::instance().mutex_.unWriteLock();
     }
 }
 
-void Storage::onPodModified(const rapidjson::Value& v)
+void Storage::onPodModified(const boost::json::value& v)
 {
     onPodAdded(v, K8SWatchEventDrive::Watch);
 }
 
-void Storage::onPodDelete(const rapidjson::Value& v)
+void Storage::onPodDelete(const boost::json::value& v)
 {
-    auto pGenerateName = rapidjson::GetValueByPointer(v, "/metadata/generateName");
-    if (pGenerateName == nullptr)
+    try
     {
-        return;
+        VAR_FROM_JSON(std::string, ip, v.at_pointer("/status/podIP"));
+        if (!ip.empty())
+        {
+            StorageImp::instance().mutex_.writeLock();
+            StorageImp::instance().seqMap_.erase(ip);
+            StorageImp::instance().mutex_.unWriteLock();
+        }
     }
-    assert(pGenerateName->IsString());
-    auto sGenerateName = JP2S(pGenerateName);
-
-    auto pPodName = rapidjson::GetValueByPointer(v, "/metadata/name");
-    assert(pPodName != nullptr && pPodName->IsString());
-    std::string sPodName = JP2S(pPodName);
-
-    auto sDomain = sPodName + "." + sGenerateName.substr(0, sGenerateName.size() - 1);
-
-    std::string sPodIP{};
-    auto pPodIP = rapidjson::GetValueByPointer(v, "/status/podIP");
-    if (pPodIP != nullptr)
+    catch (...)
     {
-        assert(pPodIP->IsString());
-        sPodIP = JP2S(pPodIP);
     }
-
-    StorageImp::instance().mutex_.writeLock();
-    StorageImp::instance().seqMap_.erase(sPodName);
-    StorageImp::instance().seqMap_.erase(sDomain);
-    if (!sPodIP.empty())
-    {
-        StorageImp::instance().seqMap_.erase(sPodIP);
-    }
-    StorageImp::instance().mutex_.unWriteLock();
 }
 
 void Storage::prePodList()

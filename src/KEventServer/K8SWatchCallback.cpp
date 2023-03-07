@@ -1,44 +1,35 @@
-
 #include "K8SWatchCallback.h"
 #include "ESHelper.h"
+#include "TCodec.h"
 #include "util/tc_timer.h"
-#include <rapidjson/pointer.h>
-#include <rapidjson/writer.h>
 #include <iostream>
 
 static std::function<std::string()> buildESIndex{};
 
-static std::string getJsonString(const rapidjson::Value& v)
+static void buildESPostContent(const boost::json::value& value, std::ostringstream& stream)
 {
-    rapidjson::StringBuffer buffer;
-    buffer.Clear();
-    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-    v.Accept(writer);
-    return { buffer.GetString(), buffer.GetSize() };
-}
-
-static void buildESPostContent(const rapidjson::Value& pDoc, std::ostringstream& stream)
-{
-    auto pUID = rapidjson::GetValueByPointer(pDoc, "/metadata/uid");
-    auto pRV = rapidjson::GetValueByPointer(pDoc, "/metadata/resourceVersion");
-    if (pUID == nullptr || pRV == nullptr)
+    std::string key;
+    try
+    {
+        std::string uid;
+        std::string version;
+        READ_FROM_JSON(uid, value.at_pointer("/metadata/uid"));
+        READ_FROM_JSON(version, value.at_pointer("/metadata/resourceVersion"));
+        key = uid + ":" + version;
+    }
+    catch (...)
     {
         return;
     }
-    assert(pUID->IsString());
-    assert(pRV->IsString());
-    auto key = std::string{ pUID->GetString(), pUID->GetStringLength() } + ":" + std::string{ pRV->GetString(), pRV->GetStringLength() };
-
     stream << (R"({"create":{"_id":")") << key << ("\"}}\n");
-    rapidjson::Document v;
-    v.CopyFrom(pDoc, v.GetAllocator());
-    v.AddMember("@timestamp", TNOW, v.GetAllocator());
-    v.RemoveMember("metadata");
-    stream << getJsonString(v);
+    auto object = value.get_object();
+    object.erase("metadata");
+    object.insert({{ "@timestamp", TNOW }});
+    stream << boost::json::serialize(object);
     stream << "\n";
 }
 
-static void write2ES(const rapidjson::Value& pDoc)
+static void write2ES(const boost::json::value& pDoc)
 {
     static std::ostringstream stream{};
     static TC_Timer timer{};
@@ -64,33 +55,33 @@ void K8SWatchCallback::setESIndex(const string& index)
     };
 }
 
-void K8SWatchCallback::onEventsAdded(const rapidjson::Value& value, K8SWatchEventDrive driver)
+void K8SWatchCallback::onEventsAdded(const boost::json::value& value, K8SWatchEventDrive driver)
 {
     write2ES(value);
 }
 
-void K8SWatchCallback::onEventsModified(const rapidjson::Value& value)
+void K8SWatchCallback::onEventsModified(const boost::json::value& value)
 {
     write2ES(value);
 }
 
-void K8SWatchCallback::onEventsAddedWithFilter(const rapidjson::Value& value, K8SWatchEventDrive driver)
+void K8SWatchCallback::onEventsAddedWithFilter(const boost::json::value& value, K8SWatchEventDrive driver)
 {
-    auto pInvolvedNamespace = rapidjson::GetValueByPointer(value, "/involvedObject/namespace");
-    std::cout << getJsonString(value) << std::endl;
-    if (pInvolvedNamespace != nullptr)
+    boost::json::error_code ec{};
+    auto pInvolvedNamespace = value.find_pointer("/involvedObject/namespace", ec);
+    if (ec || pInvolvedNamespace == nullptr)
     {
+        write2ES(value);
         //We Only Record Cluster Level Events Here , If pInvolvedNamespace!=Null, Means It's Not A Cluster Level Event;
         return;
     }
-    write2ES(value);
 }
 
-void K8SWatchCallback::onEventsModifiedWithFilter(const rapidjson::Value& value)
+void K8SWatchCallback::onEventsModifiedWithFilter(const boost::json::value& value)
 {
     onEventsAddedWithFilter(value, K8SWatchEventDrive::Watch);
 }
 
-void K8SWatchCallback::onEventsDeleted(const rapidjson::Value& value)
+void K8SWatchCallback::onEventsDeleted(const boost::json::value& value)
 {
 }

@@ -34,7 +34,7 @@ func NewNodeController(threads int) *NodeReconciler {
 		queue:      workqueue.NewRateLimitingQueue(workqueue.DefaultItemBasedRateLimiter()),
 		synced:     []cache.InformerSynced{nodeInformer.Informer().HasSynced},
 	}
-	controller.SetInformerEventHandle(tarsMeta.KNodeKind, nodeInformer.Informer(), c)
+	controller.RegistryInformerEventHandle(tarsMeta.KNodeKind, nodeInformer.Informer(), c)
 	return c
 }
 

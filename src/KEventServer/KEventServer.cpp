@@ -1,15 +1,15 @@
-#include "KEventServer.h"
+﻿#include "KEventServer.h"
 #include "K8SWatchCallback.h"
 #include "K8SClient.h"
 #include "K8SWatcher.h"
 #include "K8SParams.h"
 #include "ESHelper.h"
 
-static void onError(const std::error_code& ec, const std::string& msg)
+static bool onError(const std::error_code& ec, const std::string& msg)
 {
     TLOGERROR(ec.message() << ": " << msg << std::endl);
     std::cout << ec.message() << ": " << msg << std::endl;
-    exit(-1);
+    return true;
 }
 
 static void createK8SContext()
@@ -53,13 +53,13 @@ void KEventServer::initialize()
     K8SWatchCallback::setESIndex(index);
 
     auto age = config.get("/tars/elk/age<kevent>", "3d");
-
+    const auto& _template = index;
     const auto& pattern = index;
     const auto& policy = index;
 
     ESHelper::setAddressByTConfig(config);
     ESHelper::createESPolicy(policy, age);
-    ESHelper::createESDataStreamTemplate(index, pattern, policy);
+    ESHelper::createESDataStreamTemplate(_template, pattern, policy);
 
     createK8SContext();
     if (!K8SWatcher::instance().waitSync(std::chrono::seconds(30)))

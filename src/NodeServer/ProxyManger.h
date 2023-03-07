@@ -11,41 +11,41 @@
 class ProxyManger
 {
 public:
-	static ProxyManger& instance()
-	{
-		static ProxyManger manger;
-		return manger;
-	}
+    static ProxyManger& instance()
+    {
+        static ProxyManger manger;
+        return manger;
+    }
 
-	~ProxyManger() = default;
+    ~ProxyManger() = default;
 
-	AdminFPrx getAdminProxy()
-	{
-		AdminFPrx pAdminPrx;
-		Application::getCommunicator()->stringToProxy(FIXED_LOCAL_PROXY_NAME, pAdminPrx);
-		return pAdminPrx;
-	}
+    AdminFPrx getAdminProxy()
+    {
+        AdminFPrx pAdminPrx;
+        Application::getCommunicator()->stringToProxy(FIXED_LOCAL_PROXY_NAME, pAdminPrx);
+        return pAdminPrx;
+    }
 
-	RegistryPrx getRegistryProxy()
-	{
-		RegistryPrx pRegistryPrx;
-		Application::getCommunicator()->stringToProxy(FIXED_REGISTRY_PROXY_NAME, pRegistryPrx);
-		return pRegistryPrx;
-	}
+    RegistryPrx getRegistryProxy()
+    {
+        RegistryPrx pRegistryPrx;
+        Application::getCommunicator()->stringToProxy(FIXED_REGISTRY_PROXY_NAME, pRegistryPrx);
+        return pRegistryPrx;
+    }
 
-	QueryFPrx getQueryProxy()
-	{
-		QueryFPrx pQueryPrx;
-		Application::getCommunicator()->stringToProxy(FIXED_QUERY_PROXY_NAME, pQueryPrx);
-		return pQueryPrx;
-	}
+    QueryFPrx getQueryProxy()
+    {
+        QueryFPrx pQueryPrx;
+        Application::getCommunicator()->stringToProxy(FIXED_QUERY_PROXY_NAME, pQueryPrx);
+        return pQueryPrx;
+    }
 
-	NotifyPrx getNotifyProxy()
-	{
-		NotifyPrx pNotifyPrx;
-		Application::getCommunicator()->stringToProxy(FIXED_NOTIFY_PROXY_NAME, pNotifyPrx);
-		return pNotifyPrx;
-	}
+    NotifyPrx getNotifyProxy()
+    {
+        NotifyPrx pNotifyPrx;
+        Application::getCommunicator()->stringToProxy(FIXED_NOTIFY_PROXY_NAME, pNotifyPrx);
+        return pNotifyPrx;
+    }
 
-	ProxyManger() = default;
+    ProxyManger() = default;
 };
