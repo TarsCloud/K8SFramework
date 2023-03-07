@@ -2,6 +2,8 @@
 {{- $lower_app := lower .Values.app -}}
 {{- $lower_server := lower .Values.server -}}
 {{- $id := (printf "%s-%s" $lower_app $lower_server) -}}
+{{- $exist := (lookup (printf "k8s.tars.io/%s" $.Chart.AppVersion) "TServer" $.Release.Namespace $id ) -}}
+{{- $timages := (lookup (printf "k8s.tars.io/%s" $.Chart.AppVersion) "TImage" $.Release.Namespace $id ) -}} 
 
 apiVersion: k8s.tars.io/{{ .Chart.AppVersion }}
 kind: TServer
@@ -40,7 +42,11 @@ spec:
 {{- end }}
   k8s:
 {{- if .Release.IsUpgrade }}  
-    replicas: {{ (lookup (printf "k8s.tars.io/%s" $.Chart.AppVersion) "TServer" $.Release.Namespace $id ).spec.k8s.replicas }}
+  {{- if $exist.spec }}
+    replicas: {{ $exist.spec.k8s.replicas | default 1}}
+  {{- else }}
+    replicas: {{ .Values.replicas | default 1 }}
+  {{- end }}
 {{- else }}    
     replicas: {{ .Values.replicas | default 1 }}
 {{- end }}    
@@ -170,13 +176,15 @@ releases:
   id: {{ .Values.repo.id }}
   createPerson: {{ $.Values.user | default "helm" | quote }}
   mark: {{ $.Values.reason | default "helm install" | quote }}
-{{- range $index, $service := (lookup (printf "k8s.tars.io/%s" $.Chart.AppVersion) "TImage" $.Release.Namespace $id ).releases }}  
+{{- if $timages }}
+{{- range $index, $service := $timages.releases }}  
 - image: {{ $service.image }}
   secret: {{ $service.secret }}
   id: {{ $service.id }}
   createPerson: {{ $service.createPerson | default "helm" }}
   mark: {{ $service.mark | default "helm install" | quote }}
   createTime: {{ $service.createTime }}
+{{- end}}
 {{- end}}
 
 {{- end }}
