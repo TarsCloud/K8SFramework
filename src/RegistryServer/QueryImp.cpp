@@ -117,14 +117,14 @@ static void findObjectById_(const std::string& id, vector<EndpointF>& activeEp, 
                         endpointF.timeout = servant.timeout;
                         for (const auto& pod: endpoint->activatedPods)
                         {
-                            endpointF.host.append(pod).append(".").append(endpointName);
+                            endpointF.host = pod + "." + endpointName;
                             activeEp.push_back(endpointF);
                         }
                         if (inactiveEp != nullptr)
                         {
                             for (auto&& pod: endpoint->inActivatedPods)
                             {
-                                endpointF.host.append(pod).append(".").append(endpointName);
+                                endpointF.host = pod + "." + endpointName;
                                 inactiveEp->push_back(endpointF);
                             }
                         }
