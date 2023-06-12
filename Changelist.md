@@ -1,3 +1,25 @@
+
+## 1.4.1 20230612
+
+## en
+- fix tarsregistry return wrong endpoints
+- update tarscpp/tarsweb
+- commit miss files
+- using boost instead of rapidjson and asio
+- tserver added "tars.io/AutoRelease" annotation
+- fixed the problem that tserver could not be scaled in version 1.4.0
+- fixed the problem that the uppercase app-server name cannot use TLV
+- upgraded the version of test kind
+
+## cn
+- 修复tarsregistry返回错误端口的bug
+- 更新tarscpp/tarsweb
+- 提交遗漏的文件
+- using boost instead of rapidjson and asio
+- tserver added "tars.io/AutoRelease" annotation
+- fixed the problem that tserver could not be scaled in version 1.4.0
+- fixed the problem that the uppercase app-server name cannot use TLV
+- upgraded the version of test kind
 ## 1.4.0 20221205
 
 ## en
